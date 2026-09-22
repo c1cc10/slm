@@ -1,141 +1,260 @@
 <meta charset="UTF-8">
 <title>SLM — Documentazione</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
-  --bg:      #F7F9FC;
-  --surface: #FFFFFF;
-  --text:    #1C2333;
-  --text-sec:#5A6478;
-  --accent:  #0A6E6E;
-  --border:  #DDE3EE;
-  --card-hover: #F0F5FA;
+  --bg:       #F7F9FC;
+  --surface:  #FFFFFF;
+  --surface2: #F0F5FA;
+  --text:     #1C2333;
+  --text-sec: #5A6478;
+  --accent:   #0A6E6E;
+  --border:   #DDE3EE;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg:      #0D1117; --surface: #161B22; --text: #E6EDF3;
-    --text-sec:#8B949E; --accent: #2BBFBF;  --border: #21262D;
-    --card-hover: #1C2128;
+    --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+    --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
   }
 }
 :root[data-theme="dark"] {
-  --bg:#0D1117; --surface:#161B22; --text:#E6EDF3;
-  --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
-  --card-hover:#1C2128;
+  --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+  --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
 }
 *, *::before, *::after { box-sizing: border-box; }
 body {
   background: var(--bg); color: var(--text);
   font-family: 'IBM Plex Sans', system-ui, sans-serif;
-  font-size: 15px; line-height: 1.6; margin: 0;
-  min-height: 100vh;
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; padding: 40px 20px;
+  font-size: 15px; line-height: 1.65; margin: 0;
+  padding: 0 20px 80px;
 }
-.container { max-width: 560px; width: 100%; }
+.container { max-width: 640px; margin: 0 auto; padding-top: 56px; }
+
 .eyebrow {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.72rem; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--accent);
-  margin-bottom: 8px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 8px;
 }
 h1 {
-  font-size: 2rem; font-weight: 600; margin: 0 0 6px;
-  letter-spacing: -0.02em;
+  font-size: 1.85rem; font-weight: 600; letter-spacing: -0.02em;
+  margin: 0 0 8px; text-wrap: balance; line-height: 1.2;
 }
-.tagline { color: var(--text-sec); margin: 0 0 36px; font-size: 0.95rem; }
-.cards { display: flex; flex-direction: column; gap: 12px; }
-a.card {
-  display: flex; align-items: center; gap: 16px;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 8px; padding: 18px 20px;
-  text-decoration: none; color: var(--text);
-  transition: background 0.15s, border-color 0.15s;
+.tagline { color: var(--text-sec); margin: 0 0 32px; font-size: 0.92rem; }
+
+/* ── Arc ── */
+.section-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-sec); margin-bottom: 20px;
 }
-a.card:hover { background: var(--card-hover); border-color: var(--accent); }
-.card-icon {
-  font-size: 1.5rem; width: 40px; text-align: center; flex-shrink: 0;
+.arc { display: flex; flex-direction: column; margin-bottom: 32px; }
+.arc-item { display: grid; grid-template-columns: 28px 1fr; gap: 0 18px; }
+.arc-left  { display: flex; flex-direction: column; align-items: center; }
+.arc-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; font-weight: 500;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.card-text { min-width: 0; }
-.card-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; }
-.card-desc  { color: var(--text-sec); font-size: 0.83rem; }
+.arc-line { width: 1px; background: var(--border); flex: 1; min-height: 16px; }
+.arc-right { padding-bottom: 28px; }
+.arc-item:last-child .arc-right { padding-bottom: 0; }
+.arc-item:last-child .arc-line  { display: none; }
+
+.arc-title { font-weight: 600; font-size: 0.96rem; margin: 2px 0 5px; }
+.arc-why   {
+  font-style: italic; font-size: 0.83rem;
+  color: var(--text-sec); margin-bottom: 8px; line-height: 1.55;
+}
+.arc-body  { font-size: 0.87rem; margin-bottom: 11px; line-height: 1.65; }
+.arc-body strong { font-weight: 600; }
+.arc-body br + br { display: none; }
+
+.arc-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.arc-link  {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem;
+  color: var(--accent); text-decoration: none;
+  border: 1px solid var(--border); border-radius: 4px; padding: 2px 9px;
+  transition: border-color 0.15s;
+}
+.arc-link:hover { border-color: var(--accent); }
+
+/* ── Status bar ── */
+.status {
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  padding: 12px 0; margin-bottom: 36px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem;
+}
+.status-live { display: flex; align-items: center; gap: 7px; color: var(--accent); }
+.status-dot  {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+  animation: pulse 2.2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+.s-label { color: var(--text-sec); }
+.s-val   { color: var(--text); }
+.progress-row { width: 100%; }
+.progress-track {
+  width: 100%; height: 3px; background: var(--border);
+  border-radius: 2px; overflow: hidden; margin-top: 2px;
+}
+.progress-fill {
+  height: 100%; background: var(--accent); border-radius: 2px;
+  width: 39.2%;  /* 11 750 / 30 000 */
+}
+
+/* ── Reference grid ── */
+.ref-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 28px;
+  margin-bottom: 40px;
+}
+.ref-group h3 {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.69rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--text-sec); margin: 0 0 9px;
+}
+.ref-group ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ref-group a  { font-size: 0.85rem; color: var(--text); text-decoration: none; display: flex; align-items: baseline; gap: 6px; }
+.ref-group a:hover { color: var(--accent); }
+.ref-icon { font-size: 0.8rem; }
+
 .footer {
-  margin-top: 40px; text-align: center;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.75rem; color: var(--text-sec);
+  border-top: 1px solid var(--border); padding-top: 16px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--text-sec);
+}
+
+@media (max-width: 520px) {
+  .ref-grid { grid-template-columns: 1fr 1fr; }
+  h1 { font-size: 1.55rem; }
+}
+@media (max-width: 360px) {
+  .ref-grid { grid-template-columns: 1fr; }
 }
 </style>
 
 <div class="container">
-  <p class="eyebrow">SLM · Small Language Model</p>
-  <h1>Documentazione</h1>
-  <p class="tagline">Modello linguistico italiano decoder-only — costruito da zero in Python/PyTorch</p>
 
-  <div class="cards">
-    <a class="card" href="slm-journal.html">
-      <div class="card-icon">📓</div>
-      <div class="card-text">
-        <div class="card-title">Diario di sviluppo</div>
-        <div class="card-desc">Timeline delle decisioni, analisi Run #3 (11 750 step, val loss 5.46), curva di loss SVG, migrazione a RoPE</div>
+  <p class="eyebrow">SLM · Small Language Model</p>
+  <h1>Un transformer italiano<br>costruito dall'interno</h1>
+  <p class="tagline">Progetto di studio con applicazioni professionali — ogni componente scritto e compreso prima di passare al successivo.</p>
+
+  <!-- ARC -->
+  <p class="section-label">L'arco del progetto</p>
+  <div class="arc">
+
+    <div class="arc-item">
+      <div class="arc-left"><div class="arc-num">1</div><div class="arc-line"></div></div>
+      <div class="arc-right">
+        <div class="arc-title">Capire dall'interno</div>
+        <div class="arc-why">Nessun wrapper, nessun framework — ogni componente scritto dal principio e compreso prima di andare avanti.</div>
+        <div class="arc-body">Attention mechanism, causal mask, positional encoding, transformer block, training loop. Primo run: tokenizer char-level su corpus narrativo italiano, val loss <strong>1.7256</strong> in 46 minuti su Apple MPS.</div>
+        <div class="arc-links">
+          <a class="arc-link" href="slm-intro.html">Come funziona una LLM</a>
+          <a class="arc-link" href="slm-teoria.html">Riferimento teorico</a>
+          <a class="arc-link" href="slm-attention-viz.html">Visualizzazione attenzione</a>
+        </div>
       </div>
-    </a>
-    <a class="card" href="slm-intro.html">
-      <div class="card-icon">🧠</div>
-      <div class="card-text">
-        <div class="card-title">Come funziona una LLM</div>
-        <div class="card-desc">Motore di probabilità, token, finestra di contesto, forward pass con diagramma, temperatura, top-k, decoder-only</div>
+    </div>
+
+    <div class="arc-item">
+      <div class="arc-left"><div class="arc-num">2</div><div class="arc-line"></div></div>
+      <div class="arc-right">
+        <div class="arc-title">L'hardware come vincolo formativo</div>
+        <div class="arc-why">Mac M2 8 GB: batch=32, seq=512 → OOM a step 0. Le limitazioni insegnano ciò che i tutorial saltano.</div>
+        <div class="arc-body">Metal Performance Shaders (MPS), token cache su disco (365 MB), riduzione a batch=16 seq=256. La gestione della memoria — non solo la teoria — è diventata parte integrante del progetto. Upgrade a M5 32 GB pianificato per le fasi successive.</div>
+        <div class="arc-links">
+          <a class="arc-link" href="slm-docs.html">Documentazione</a>
+          <a class="arc-link" href="slm-journal.html">Diario</a>
+        </div>
       </div>
-    </a>
-    <a class="card" href="slm-roadmap.html">
-      <div class="card-icon">🗓</div>
-      <div class="card-text">
-        <div class="card-title">Roadmap di sviluppo</div>
-        <div class="card-desc">11 fasi: architettura, training, tokenizer, sampling avanzato, KV-cache, LoRA, quantizzazione — con stato corrente</div>
+    </div>
+
+    <div class="arc-item">
+      <div class="arc-left"><div class="arc-num">3</div><div class="arc-line"></div></div>
+      <div class="arc-right">
+        <div class="arc-title">Il pavimento qualitativo</div>
+        <div class="arc-why">Loss 1.72 su narrativa: morfologia corretta, zero semantica. Per generare testo utile serviva corpus di scala e tokenizer sub-word.</div>
+        <div class="arc-body">BPE-SPM 16k vocab, Wikipedia IT (47.8 M token). Architettura scalata: 45.9 M parametri, d_model 512, 8 layer. AdamW con warmup + cosine decay e gradient clipping — compresi come necessità di stabilità su 30 000 step, non come iperparametri arbitrari.</div>
+        <div class="arc-links">
+          <a class="arc-link" href="slm-vocabolario.html">Vocabolario ed embedding</a>
+          <a class="arc-link" href="slm-ottimizzatore.html">AdamW</a>
+          <a class="arc-link" href="slm-roadmap.html">Roadmap</a>
+        </div>
       </div>
-    </a>
-    <a class="card" href="slm-docs.html">
-      <div class="card-icon">📖</div>
-      <div class="card-text">
-        <div class="card-title">Documentazione completa</div>
-        <div class="card-desc">Architettura, training loop, cosa aspettarsi, corpus, comandi, roadmap, glossario</div>
+    </div>
+
+    <div class="arc-item">
+      <div class="arc-left"><div class="arc-num">4</div><div class="arc-line"></div></div>
+      <div class="arc-right">
+        <div class="arc-title">Il deployment ha un formato</div>
+        <div class="arc-why">Target: llamafile (Mozilla Foundation). Formato GGUF, architettura LLaMA — che usa RoPE, non PE sinusoidale.</div>
+        <div class="arc-body">L'analisi di compatibilità ha chiarito che migrare a RoPE prima di Run #4 ha costo zero: il PE sinusoidale non ha parametri apprendibili. Run #3 (sinusoidale) e Run #4 (RoPE) andranno entrambi a completamento e saranno comparati su test set mirati. Il converter PyTorch → GGUF è il prossimo componente da scrivere.</div>
+        <div class="arc-links">
+          <a class="arc-link" href="slm-journal.html">Diario — decisione RoPE</a>
+          <a class="arc-link" href="slm-roadmap.html">Roadmap</a>
+        </div>
       </div>
-    </a>
-    <a class="card" href="slm-teoria.html">
-      <div class="card-icon">📐</div>
-      <div class="card-text">
-        <div class="card-title">Riferimento teorico</div>
-        <div class="card-desc">Formule del transformer con rendering matematico — attention, positional encoding, FFN, loss</div>
+    </div>
+
+    <div class="arc-item">
+      <div class="arc-left"><div class="arc-num">5</div><div class="arc-line"></div></div>
+      <div class="arc-right">
+        <div class="arc-title">Doppio scopo — la direzione chiarita</div>
+        <div class="arc-why">Le risorse disponibili hanno chiarito cosa è raggiungibile in ciascuna fase e perché il modello ha quella forma specifica.</div>
+        <div class="arc-body">
+          <strong>Track 1 — uso privato:</strong> LLM di continuità stilistica. Pre-training su Wikipedia + fine-tuning su corpus narrativo personale. Comprensione semantica bassa, coerenza stilistica alta. Non è un chatbot: è uno strumento addestrato su una voce specifica.<br><br>
+          <strong>Track 2 — uso professionale:</strong> lo stesso modello pre-trainato come base per adapter LoRA (~25 MB per dominio). Specializzazione leggera senza ri-addestrare i pesi fondamentali.
+        </div>
+        <div class="arc-links">
+          <a class="arc-link" href="slm-percorso.html">Il Percorso</a>
+          <a class="arc-link" href="slm-intro.html">Come funziona una LLM</a>
+        </div>
       </div>
-    </a>
-    <a class="card" href="slm-attention-viz.html">
-      <div class="card-icon">🔍</div>
-      <div class="card-text">
-        <div class="card-title">Visualizzazione attenzione</div>
-        <div class="card-desc">Heatmap interattiva delle 4 teste di attenzione su una frase italiana di esempio</div>
-      </div>
-    </a>
-    <a class="card" href="slm-percorso.html">
-      <div class="card-icon">🗺</div>
-      <div class="card-text">
-        <div class="card-title">Il Percorso</div>
-        <div class="card-desc">Conoscenza vs capacità, pavimento qualitativo, char vs BPE, due track paralleli, scaling laws</div>
-      </div>
-    </a>
-    <a class="card" href="slm-vocabolario.html">
-      <div class="card-icon">🔢</div>
-      <div class="card-text">
-        <div class="card-title">Vocabolario, Embedding e Parametri</div>
-        <div class="card-desc">Cosa sono i parametri, la embedding table, il rapporto critico embedding/totale, weight tying</div>
-      </div>
-    </a>
-    <a class="card" href="slm-ottimizzatore.html">
-      <div class="card-icon">⚙️</div>
-      <div class="card-text">
-        <div class="card-title">AdamW e Ottimizzazione</div>
-        <div class="card-desc">Gradienti, i due momenti, bias correction, weight decay, warmup + cosine decay, gradient clipping</div>
-      </div>
-    </a>
+    </div>
+
+  </div><!-- /arc -->
+
+  <!-- STATUS -->
+  <div class="status">
+    <div class="status-live"><div class="status-dot"></div>Run #3 in corso</div>
+    <span><span class="s-label">step </span><span class="s-val">~11 750 / 30 000</span></span>
+    <span><span class="s-label">val loss </span><span class="s-val">5.46</span></span>
+    <span><span class="s-label">ETA </span><span class="s-val">~26 sett 2026</span></span>
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill"></div></div>
+    </div>
   </div>
 
-  <p class="footer">Python · PyTorch · Apple MPS · ~46M parametri (medium)</p>
+  <!-- REFERENCE -->
+  <p class="section-label">Documentazione</p>
+  <div class="ref-grid">
+    <div class="ref-group">
+      <h3>Architettura</h3>
+      <ul>
+        <li><a href="slm-intro.html"><span class="ref-icon">🧠</span>Come funziona una LLM</a></li>
+        <li><a href="slm-teoria.html"><span class="ref-icon">📐</span>Riferimento teorico</a></li>
+        <li><a href="slm-attention-viz.html"><span class="ref-icon">🔍</span>Visualizzazione attenzione</a></li>
+      </ul>
+    </div>
+    <div class="ref-group">
+      <h3>Training</h3>
+      <ul>
+        <li><a href="slm-ottimizzatore.html"><span class="ref-icon">⚙️</span>AdamW e ottimizzazione</a></li>
+        <li><a href="slm-vocabolario.html"><span class="ref-icon">🔢</span>Vocabolario ed embedding</a></li>
+        <li><a href="slm-docs.html"><span class="ref-icon">📖</span>Documentazione completa</a></li>
+      </ul>
+    </div>
+    <div class="ref-group">
+      <h3>Progetto</h3>
+      <ul>
+        <li><a href="slm-journal.html"><span class="ref-icon">📓</span>Diario</a></li>
+        <li><a href="slm-roadmap.html"><span class="ref-icon">🗓</span>Roadmap</a></li>
+        <li><a href="slm-percorso.html"><span class="ref-icon">🗺</span>Il Percorso</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="footer">Python · PyTorch · Apple MPS · 45.9 M parametri · BPE-SPM 16k · Wikipedia IT</p>
+
 </div>
