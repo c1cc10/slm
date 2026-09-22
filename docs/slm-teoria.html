@@ -1,0 +1,598 @@
+<meta charset="UTF-8">
+<title>SLM Teoria</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:         #F3F5FB;
+    --surface:    #FFFFFF;
+    --text:       #0F1424;
+    --text-muted: #6470889;
+    --accent:     #0B5EA3;
+    --accent-dim: #D6E5F5;
+    --formula-bg: #EBF0F9;
+    --border:     #D4DAE8;
+    --code-bg:    #1D2133;
+    --code-text:  #CDD5EF;
+    --tag-bg:     #0B5EA3;
+    --tag-text:   #FFFFFF;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:         #0C0E18;
+      --surface:    #151929;
+      --text:       #DDE2F2;
+      --text-muted: #7A839E;
+      --accent:     #4A9FD4;
+      --accent-dim: #142540;
+      --formula-bg: #1A2038;
+      --border:     #252D45;
+      --code-bg:    #0A0C14;
+      --code-text:  #CDD5EF;
+      --tag-bg:     #1B4A7A;
+      --tag-text:   #A8CFEF;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg:         #0C0E18;
+    --surface:    #151929;
+    --text:       #DDE2F2;
+    --text-muted: #7A839E;
+    --accent:     #4A9FD4;
+    --accent-dim: #142540;
+    --formula-bg: #1A2038;
+    --border:     #252D45;
+    --code-bg:    #0A0C14;
+    --code-text:  #CDD5EF;
+    --tag-bg:     #1B4A7A;
+    --tag-text:   #A8CFEF;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { font-size: 16px; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    line-height: 1.7;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ── Page shell ── */
+  .page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+  }
+
+  /* ── Header ── */
+  .doc-header {
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 2rem;
+    margin-bottom: 3rem;
+  }
+
+  .doc-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .75rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 .6rem;
+  }
+
+  .doc-title {
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-wrap: balance;
+    margin: 0 0 .75rem;
+  }
+
+  .doc-subtitle {
+    font-size: .95rem;
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 56ch;
+  }
+
+  .doc-meta {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin-top: 1.25rem;
+  }
+
+  .tag {
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .7rem;
+    letter-spacing: .06em;
+    padding: .2rem .55rem;
+    border-radius: 2px;
+  }
+
+  /* ── Sections ── */
+  .section {
+    margin-bottom: 3.5rem;
+  }
+
+  .section-label {
+    display: flex;
+    align-items: baseline;
+    gap: .75rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .8rem;
+    color: var(--accent);
+    min-width: 1.8rem;
+    opacity: .75;
+  }
+
+  h2 {
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: .9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-muted);
+    margin: 1.5rem 0 .5rem;
+  }
+
+  p {
+    margin: .5rem 0 1rem;
+    max-width: 64ch;
+    color: var(--text);
+  }
+
+  p strong { color: var(--text); }
+
+  /* ── Formula blocks ── */
+  .formula-block {
+    background: var(--formula-bg);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    padding: 1.25rem 1.5rem;
+    margin: 1.25rem 0;
+    overflow-x: auto;
+  }
+
+  .formula-block .MathJax_SVG_Display,
+  .formula-block mjx-container {
+    margin: 0 !important;
+  }
+
+  .formula-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .7rem;
+    letter-spacing: .06em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: .5rem;
+    opacity: .8;
+  }
+
+  /* ── Code blocks ── */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .82rem;
+    line-height: 1.65;
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .85em;
+    background: var(--formula-bg);
+    padding: .1em .35em;
+    border-radius: 2px;
+  }
+
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  /* ── Callout box ── */
+  .callout {
+    background: var(--accent-dim);
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    font-size: .9rem;
+    max-width: 64ch;
+  }
+
+  .callout strong { color: var(--accent); }
+
+  /* ── Divider ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 3rem 0;
+  }
+
+  /* ── Syntax colors (minimal) ── */
+  .kw  { color: #6CB6FF; }
+  .fn  { color: #79C0FF; }
+  .str { color: #A5D6FF; }
+  .cm  { color: #5C6685; font-style: italic; }
+  .num { color: #F0A070; }
+
+  /* ── Architecture diagram ── */
+  .arch-diagram {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .8rem;
+    background: var(--formula-bg);
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    line-height: 1.9;
+    color: var(--text);
+    overflow-x: auto;
+  }
+
+  .arch-box {
+    display: inline-block;
+    border: 1px solid var(--accent);
+    padding: .1rem .5rem;
+    border-radius: 2px;
+    color: var(--accent);
+  }
+
+  /* ── Table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .88rem;
+    margin: 1rem 0;
+  }
+
+  th {
+    text-align: left;
+    font-weight: 600;
+    font-size: .75rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border);
+    padding: .5rem .75rem;
+  }
+
+  td {
+    padding: .55rem .75rem;
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+
+  td:first-child { font-family: 'IBM Plex Mono', monospace; font-size: .82rem; }
+
+  @media (max-width: 600px) {
+    .page { padding: 2rem 1.25rem 4rem; }
+    .doc-title { font-size: 1.5rem; }
+  }
+</style>
+
+<!-- MathJax 3 — SVG renderer, self-contained -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$']],
+    displayMath: [['$$', '$$']],
+    tags: 'none'
+  },
+  svg: { fontCache: 'global', scale: 1.05 },
+  startup: { typeset: true }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
+
+<div class="page">
+
+  <!-- ── Header ── -->
+  <header class="doc-header">
+    <p class="doc-eyebrow">Progetto SLM · Riferimento Teorico</p>
+    <h1 class="doc-title">Fondamenti del Transformer</h1>
+    <p class="doc-subtitle">
+      Formule, intuizioni e implementazione dei meccanismi core del decoder-only
+      Transformer — da <em>attention</em> al blocco completo.
+    </p>
+    <div class="doc-meta">
+      <span class="tag">PyTorch</span>
+      <span class="tag">Decoder-only</span>
+      <span class="tag">Pre-Norm</span>
+      <span class="tag">attention.py</span>
+      <span class="tag">transformer.py</span>
+    </div>
+  </header>
+
+  <!-- ── 1. Scaled Dot-Product Attention ── -->
+  <section class="section">
+    <div class="section-label">
+      <span class="section-num">01</span>
+      <h2>Scaled Dot-Product Attention</h2>
+    </div>
+    <p>
+      Il meccanismo fondamentale. Ogni token <strong>interroga</strong> tutti gli altri
+      tramite tre proiezioni — Query, Key e Value — e ottiene una rappresentazione
+      arricchita dal contesto.
+    </p>
+
+    <h3>Formula</h3>
+    <div class="formula-block">
+      <div class="formula-label">Scaled Dot-Product Attention</div>
+      $$\text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V$$
+    </div>
+
+    <p>
+      Il denominatore $\sqrt{d_k}$ scala il prodotto scalare: senza di esso, con $d_k$ grande,
+      i valori diventano enormi e il softmax satura verso 0 e 1,
+      rendendo i gradienti quasi nulli.
+    </p>
+
+    <h3>Implementazione</h3>
+<pre><code><span class="kw">def</span> <span class="fn">scaled_dot_product_attention</span>(Q, K, V, mask=<span class="kw">None</span>):
+    d_k = Q.size(-<span class="num">1</span>)
+    scores = torch.matmul(Q, K.transpose(-<span class="num">2</span>, -<span class="num">1</span>)) / math.sqrt(d_k)
+    <span class="kw">if</span> mask <span class="kw">is not None</span>:
+        scores = scores.masked_fill(mask == <span class="num">0</span>, float(<span class="str">'-inf'</span>))
+    weights = torch.softmax(scores, dim=-<span class="num">1</span>)
+    <span class="kw">return</span> torch.matmul(weights, V), weights</code></pre>
+  </section>
+
+  <!-- ── 2. Causal Mask ── -->
+  <section class="section">
+    <div class="section-label">
+      <span class="section-num">02</span>
+      <h2>Causal Mask</h2>
+    </div>
+    <p>
+      Durante il training, il modello conosce l'intera sequenza.
+      La <strong>causal mask</strong> gli impedisce di "barare" guardando i token futuri:
+      il token in posizione $i$ può vedere solo le posizioni $0 \ldots i$.
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-label">Matrice triangolare inferiore</div>
+      $$M_{ij} = \begin{cases} 1 & \text{se } j \leq i \\ 0 & \text{se } j > i \end{cases}$$
+    </div>
+
+    <div class="callout">
+      <strong>Perché −∞?</strong> Sostituiamo 0 con $-\infty$ negli score prima del softmax.
+      Il softmax calcola $e^{-\infty} = 0$, quindi quelle posizioni ricevono
+      peso nullo senza destabilizzare i gradienti.
+    </div>
+
+    <div class="arch-diagram">
+      seq_len = 4<br><br>
+      M =<br>
+      &nbsp;&nbsp;[1, 0, 0, 0]&nbsp;&nbsp;← token 0: vede solo sé<br>
+      &nbsp;&nbsp;[1, 1, 0, 0]&nbsp;&nbsp;← token 1: vede 0,1<br>
+      &nbsp;&nbsp;[1, 1, 1, 0]&nbsp;&nbsp;← token 2: vede 0,1,2<br>
+      &nbsp;&nbsp;[1, 1, 1, 1]&nbsp;&nbsp;← token 3: vede tutto
+    </div>
+  </section>
+
+  <!-- ── 3. Multi-Head Attention ── -->
+  <section class="section">
+    <div class="section-label">
+      <span class="section-num">03</span>
+      <h2>Multi-Head Attention</h2>
+    </div>
+    <p>
+      Invece di una singola attention, si eseguono $h$ attention parallele
+      su sottospazi di dimensione $d_k = d_\text{model}/h$.
+      Ogni <em>testa</em> può specializzarsi su un tipo diverso di relazione.
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-label">Multi-Head Attention</div>
+      $$\text{MHA}(Q, K, V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h)\, W^O$$
+      $$\text{head}_i = \text{Attention}(Q W_i^Q,\; K W_i^K,\; V W_i^V)$$
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Parametro</th><th>Ruolo</th><th>Shape</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>$W_i^Q, W_i^K, W_i^V$</td><td>Proiezioni per testa $i$</td><td>$(d_\text{model},\, d_k)$</td></tr>
+        <tr><td>$W^O$</td><td>Proiezione output</td><td>$(d_\text{model},\, d_\text{model})$</td></tr>
+        <tr><td>$d_k$</td><td>Dimensione per testa</td><td>$d_\text{model} / h$</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── 4. Positional Encoding ── -->
+  <section class="section">
+    <div class="section-label">
+      <span class="section-num">04</span>
+      <h2>Positional Encoding</h2>
+    </div>
+    <p>
+      Il Transformer elabora tutti i token in parallelo: senza un segnale
+      di posizione esplicito, "gatto mangia topo" e "topo mangia gatto"
+      sarebbero indistinguibili. La codifica sinusoidale inietta questo segnale
+      <em>sommando</em> un vettore all'embedding di ogni token.
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-label">Sinusoidal Positional Encoding</div>
+      $$PE_{(pos,\, 2i)} = \sin\!\left(\frac{pos}{10000^{\,2i/d_\text{model}}}\right)$$
+      $$PE_{(pos,\, 2i+1)} = \cos\!\left(\frac{pos}{10000^{\,2i/d_\text{model}}}\right)$$
+    </div>
+
+    <p>
+      $pos$ è la posizione nella sequenza, $i$ è l'indice della dimensione.
+      Le frequenze decrescenti creano un "<em>codice binario continuo</em>":
+      le dimensioni basse variano lentamente (distinguono posizioni lontane),
+      quelle alte variano rapidamente (distinguono posizioni vicine).
+    </p>
+  </section>
+
+  <!-- ── 5. Feed-Forward Network ── -->
+  <section class="section">
+    <div class="section-label">
+      <span class="section-num">05</span>
+      <h2>Feed-Forward Network</h2>
+    </div>
+    <p>
+      Dopo l'attention, ogni token passa attraverso una rete fully-connected
+      applicata <strong>indipendentemente e identicamente</strong> a ogni posizione.
+      L'attention aggrega informazioni tra token; il FFN "ragiona" su ogni token
+      individualmente — è qui che risiede gran parte della capacità memorizzativa.
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-label">Position-wise Feed-Forward</div>
+      $$\text{FFN}(x) = \text{GELU}(x W_1 + b_1)\, W_2 + b_2$$
+    </div>
+
+    <p>
+      Per convenzione $d_{ff} = 4 \times d_\text{model}$: il FFN proietta
+      in uno spazio più ampio, applica la non-linearità, poi comprime.
+      GELU è preferito a ReLU nei transformer moderni per la sua smoothness.
+    </p>
+  </section>
+
+  <!-- ── 6. Layer Normalization ── -->
+  <section class="section">
+    <div class="section-label">
+      <span class="section-num">06</span>
+      <h2>Layer Normalization</h2>
+    </div>
+    <p>
+      Normalizza le attivazioni lungo la dimensione delle feature (non del batch),
+      stabilizzando la scala dei valori durante il training.
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-label">Layer Normalization</div>
+      $$\text{LN}(x) = \frac{x - \mu}{\sqrt{\sigma^2 + \varepsilon}} \cdot \gamma + \beta$$
+    </div>
+
+    <p>
+      $\mu$ e $\sigma^2$ sono media e varianza calcolate sull'ultimo asse (le feature).
+      $\gamma$ e $\beta$ sono parametri <em>learnable</em> che permettono al modello
+      di riscalare e shiftare le attivazioni normalizzate.
+      $\varepsilon \approx 10^{-5}$ evita la divisione per zero.
+    </p>
+  </section>
+
+  <!-- ── 7. Residual + Pre-Norm ── -->
+  <section class="section">
+    <div class="section-label">
+      <span class="section-num">07</span>
+      <h2>Residual Connection &amp; Pre-Norm</h2>
+    </div>
+    <p>
+      Le <strong>residual connection</strong> creano un canale diretto attraverso i layer,
+      risolvendo il problema del vanishing gradient nelle reti profonde:
+      il gradiente può fluire direttamente senza attraversare le trasformazioni.
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-label">Pre-Norm (architettura GPT-2 / LLaMA)</div>
+      $$x \leftarrow x + \text{Attention}\!\left(\text{LN}(x)\right)$$
+      $$x \leftarrow x + \text{FFN}\!\left(\text{LN}(x)\right)$$
+    </div>
+
+    <div class="callout">
+      <strong>Pre-Norm vs Post-Norm.</strong>
+      L'articolo originale ("Attention is All You Need", 2017) usava Post-Norm:
+      $x \leftarrow \text{LN}(x + \text{Sublayer}(x))$.
+      I modelli moderni (GPT-2 in poi) usano Pre-Norm: più stabile durante
+      il training, non richiede warm-up del learning rate prolungato.
+    </div>
+  </section>
+
+  <!-- ── 8. Il Blocco Completo ── -->
+  <section class="section">
+    <div class="section-label">
+      <span class="section-num">08</span>
+      <h2>Il Blocco Transformer Completo</h2>
+    </div>
+    <p>
+      Tutti i componenti assemblati. Il GPT è uno stack di $N$ di questi blocchi
+      preceduto da un embedding layer e seguito da una proiezione sul vocabolario.
+    </p>
+
+    <div class="arch-diagram">
+      Input $x$<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+      <span class="arch-box">Embedding + Positional Encoding</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+      ┌───────────────────────────────┐<br>
+      │ &nbsp;<span class="arch-box">LayerNorm</span><br>
+      │ &nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+      │ &nbsp;<span class="arch-box">Multi-Head Self-Attention</span>&nbsp;+ mask<br>
+      │ &nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+      │ &nbsp;x = x + dropout(attn_out)<br>
+      │ &nbsp;<span class="arch-box">LayerNorm</span><br>
+      │ &nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+      │ &nbsp;<span class="arch-box">Feed-Forward Network</span><br>
+      │ &nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+      │ &nbsp;x = x + dropout(ff_out)<br>
+      └───────────────────────────────┘<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;↓ × N blocchi<br>
+      <span class="arch-box">LayerNorm finale</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+      <span class="arch-box">Linear → Vocabolario (logits)</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+      Softmax → Distribuzione sul prossimo token
+    </div>
+
+    <h3>Parametri — Esempio con d_model=64</h3>
+    <table>
+      <thead>
+        <tr><th>Componente</th><th>Parametri</th><th>Formula</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>MHA (W_q, W_k, W_v, W_o)</td><td>16,384</td><td>$4 \cdot d_\text{model}^2$</td></tr>
+        <tr><td>FFN (W_1, W_2)</td><td>32,768</td><td>$2 \cdot d_\text{model} \cdot d_{ff}$</td></tr>
+        <tr><td>LayerNorm ×2</td><td>256</td><td>$2 \cdot 2 \cdot d_\text{model}$</td></tr>
+        <tr><td><strong>Totale per blocco</strong></td><td><strong>49,408</strong></td><td>—</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── 9. Prossimi step ── -->
+  <section class="section">
+    <div class="section-label">
+      <span class="section-num">09</span>
+      <h2>Prossimo: model.py</h2>
+    </div>
+    <p>
+      Il file <code>model.py</code> assemblerà l'intero GPT:
+      embedding del vocabolario, $N$ <code>TransformerBlock</code> impilati,
+      proiezione finale sul vocabolario e la funzione di loss
+      (cross-entropy sul prossimo token).
+    </p>
+    <p>
+      Dopodichè: tokenizer su corpus italiano, dataset loader,
+      training loop con ottimizzatore AdamW, e prima generazione di testo.
+    </p>
+  </section>
+
+</div>

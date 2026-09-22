@@ -1,0 +1,32 @@
+# Corpus e dati di training (grandi, copyright, non pubblici)
+data/
+
+# Checkpoint del modello (grandi file binari)
+checkpoints/*.pt
+checkpoints/*.bin
+
+# Tieni i file del tokenizer SPM (piccoli, utili per riprodurre i risultati)
+!checkpoints/tokenizer.model
+!checkpoints/tokenizer.vocab
+
+# Sessione Claude Code (note di contesto interne, non per repo pubblici)
+CLAUDE.md
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# macOS
+.DS_Store
+
+# PyTorch
+*.pt
+!checkpoints/tokenizer.model
+
+# Log e output temporanei
+*.log
+runs/

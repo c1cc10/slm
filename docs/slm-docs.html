@@ -1,0 +1,825 @@
+<meta charset="UTF-8">
+<title>SLM Docs</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+  MathJax = {
+    tex: { inlineMath: [['$','$'], ['\\(','\\)']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+<style>
+:root {
+  --bg:         #F7F9FC;
+  --surface:    #FFFFFF;
+  --text:       #1C2333;
+  --text-sec:   #5A6478;
+  --accent:     #0A6E6E;
+  --accent-dim: #E0F2F2;
+  --code-bg:    #1A2035;
+  --code-text:  #CBD5E1;
+  --border:     #DDE3EE;
+  --stripe:     #F0F5FA;
+  --pill-bg:    #E6F4F4;
+  --pill-text:  #0A6E6E;
+  --warn-bg:    #FEF9EC;
+  --warn-border:#E4B84A;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:         #0D1117;
+    --surface:    #161B22;
+    --text:       #E6EDF3;
+    --text-sec:   #8B949E;
+    --accent:     #2BBFBF;
+    --accent-dim: #0A2828;
+    --code-bg:    #0D1117;
+    --code-text:  #CBD5E1;
+    --border:     #21262D;
+    --stripe:     #1C2128;
+    --pill-bg:    #0A2828;
+    --pill-text:  #2BBFBF;
+    --warn-bg:    #1A1608;
+    --warn-border:#8B6914;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:         #0D1117;
+  --surface:    #161B22;
+  --text:       #E6EDF3;
+  --text-sec:   #8B949E;
+  --accent:     #2BBFBF;
+  --accent-dim: #0A2828;
+  --code-bg:    #0D1117;
+  --code-text:  #CBD5E1;
+  --border:     #21262D;
+  --stripe:     #1C2128;
+  --pill-bg:    #0A2828;
+  --pill-text:  #2BBFBF;
+  --warn-bg:    #1A1608;
+  --warn-border:#8B6914;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ── Layout ── */
+.page-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 28px 40px 24px;
+}
+.page-header h1 {
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: var(--text);
+}
+.page-header .subtitle {
+  color: var(--text-sec);
+  font-size: 0.9rem;
+  margin: 0;
+}
+.page-header .meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.pill {
+  background: var(--pill-bg);
+  color: var(--pill-text);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  max-width: 1080px;
+  margin: 0 auto;
+  gap: 0;
+  align-items: start;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 32px 0 32px 24px;
+  border-right: 1px solid var(--border);
+  scrollbar-width: thin;
+}
+.sidebar nav { font-size: 0.83rem; }
+.sidebar .toc-section { margin-bottom: 20px; }
+.sidebar .toc-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-sec);
+  margin-bottom: 6px;
+}
+.sidebar a {
+  display: block;
+  color: var(--text-sec);
+  text-decoration: none;
+  padding: 3px 0;
+  line-height: 1.4;
+  transition: color 0.15s;
+}
+.sidebar a:hover, .sidebar a.active { color: var(--accent); }
+
+/* ── Content ── */
+.content {
+  padding: 40px 48px 80px;
+  min-width: 0;
+}
+
+section { margin-bottom: 60px; }
+section:target { scroll-margin-top: 20px; }
+
+h2 {
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 6px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--accent);
+  display: inline-block;
+}
+h3 {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 28px 0 8px;
+}
+h4 {
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-sec);
+  margin: 20px 0 6px;
+}
+p { margin: 0 0 14px; }
+
+/* ── Tables ── */
+.table-wrap { overflow-x: auto; margin: 16px 0 24px; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+th {
+  text-align: left;
+  padding: 9px 14px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+th:first-child { border-radius: 4px 0 0 0; }
+th:last-child  { border-radius: 0 4px 0 0; }
+td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: var(--stripe); }
+tr:last-child td { border-bottom: none; }
+td code { font-size: 0.83rem; }
+
+/* ── Code blocks ── */
+pre {
+  background: var(--code-bg);
+  color: var(--code-text);
+  padding: 18px 20px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.83rem;
+  line-height: 1.6;
+  margin: 14px 0 20px;
+}
+code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85em;
+  background: var(--accent-dim);
+  color: var(--accent);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+pre code { background: none; color: inherit; padding: 0; border-radius: 0; }
+
+.kw  { color: #7DD3FC; }
+.fn  { color: #93C5FD; }
+.st  { color: #86EFAC; }
+.cm  { color: #64748B; font-style: italic; }
+.nb  { color: #FCA5A5; }
+.op  { color: #F9A8D4; }
+
+/* ── Architecture diagram ── */
+.arch-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin: 24px 0 32px;
+  font-size: 0.82rem;
+}
+.arch-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 280px;
+  padding: 11px 20px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.3;
+  position: relative;
+}
+.arch-block.accent {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.arch-block.repeat {
+  border-style: dashed;
+  border-color: var(--accent);
+}
+.arch-block .badge {
+  position: absolute;
+  right: -32px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.72rem;
+  color: var(--text-sec);
+  font-style: italic;
+  white-space: nowrap;
+}
+.arch-arrow {
+  width: 2px;
+  height: 22px;
+  background: var(--border);
+  position: relative;
+}
+.arch-arrow::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--border);
+  border-bottom: none;
+  height: 0; width: 0;
+}
+.arch-label {
+  font-size: 0.75rem;
+  color: var(--text-sec);
+  margin: 2px 0 0;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ── Loss curve visual ── */
+.loss-curve {
+  margin: 16px 0 24px;
+  overflow-x: auto;
+}
+.loss-curve svg text { font-family: 'IBM Plex Mono', monospace; font-size: 11px; fill: var(--text-sec); }
+.loss-curve svg .curve { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.loss-curve svg .area { fill: var(--accent); opacity: 0.08; }
+.loss-curve svg .grid { stroke: var(--border); stroke-width: 1; }
+.loss-curve svg .label { fill: var(--text); font-weight: 500; font-size: 10px; }
+.loss-curve svg .anno  { fill: var(--text-sec); font-size: 9.5px; font-style: italic; }
+
+/* ── Notice box ── */
+.notice {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-dim);
+  padding: 12px 16px;
+  border-radius: 0 6px 6px 0;
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+.warn {
+  border-left: 3px solid var(--warn-border);
+  background: var(--warn-bg);
+  padding: 12px 16px;
+  border-radius: 0 6px 6px 0;
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .content { padding: 24px 20px 60px; }
+  .page-header { padding: 20px; }
+  .arch-block { width: 220px; }
+  .arch-block .badge { display: none; }
+}
+</style>
+
+<header class="page-header">
+  <h1>SLM — Small Language Model</h1>
+  <p class="subtitle">Documentazione tecnica del progetto — architettura, training, roadmap</p>
+  <div class="meta">
+    <span class="pill">Python · PyTorch</span>
+    <span class="pill">Decoder-only Transformer</span>
+    <span class="pill">Char-level · Fase 1</span>
+    <span class="pill">~4.8M parametri</span>
+    <span class="pill">Apple MPS / CUDA</span>
+  </div>
+</header>
+
+<div class="layout">
+<aside class="sidebar">
+  <nav>
+    <div class="toc-section">
+      <div class="toc-label">Progetto</div>
+      <a href="#intro">Introduzione</a>
+      <a href="#obiettivi">Obiettivi</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-label">Architettura</div>
+      <a href="#architettura">Panoramica</a>
+      <a href="#attenzione">Meccanismo di attenzione</a>
+      <a href="#blocco">Blocco Transformer</a>
+      <a href="#modello">Modello GPT</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-label">Training</div>
+      <a href="#tokenizer">Tokenizer</a>
+      <a href="#dataset">Dataset</a>
+      <a href="#loop">Loop di training</a>
+      <a href="#curva">Cosa aspettarsi</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-label">Utilizzo</div>
+      <a href="#corpus">Corpus</a>
+      <a href="#comandi">Comandi</a>
+      <a href="#file">File del progetto</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-label">Futuro</div>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#glossario">Glossario</a>
+    </div>
+  </nav>
+</aside>
+
+<main class="content">
+
+<!-- ─────────────────────────────────────── INTRODUZIONE -->
+<section id="intro">
+  <h2>Introduzione</h2>
+  <p>SLM (<em>Small Language Model</em>) è un modello linguistico decoder-only addestrato interamente da zero in Python con PyTorch. Il modello opera sulla lingua italiana, ed è progettato per essere comprensibile nei suoi meccanismi interni — ogni componente è scritto esplicitamente, senza librerie di alto livello che nascondano i dettagli.</p>
+  <p>L'architettura segue il paradigma GPT: un transformer autoregressivo che, dato un testo in ingresso, impara a prevedere il carattere successivo. Con sufficiente addestramento, questa capacità predittiva si traduce in generazione di testo coerente.</p>
+  <div class="notice">
+    Il progetto è sia didattico che applicativo. La comprensione profonda dei meccanismi interni è parte esplicita degli obiettivi, non un effetto collaterale.
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── OBIETTIVI -->
+<section id="obiettivi">
+  <h2>Obiettivi</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Dimensione</th><th>Obiettivo</th></tr>
+    <tr><td><strong>Studio</strong></td><td>Comprensione profonda di backpropagation, attention, training loop — costruendo ogni componente a mano</td></tr>
+    <tr><td><strong>Prodotto</strong></td><td>Un modello utilizzabile su testi italiani di dominio professionale</td></tr>
+    <tr><td><strong>Professionale</strong></td><td>Base tecnica per applicazioni nei prodotti Hokus, Tributum, Amel-IA</td></tr>
+    <tr><td><strong>Multimodale</strong></td><td>Integrazione futura con pipeline YOLO v3 per analisi di immagini + testo</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── ARCHITETTURA -->
+<section id="architettura">
+  <h2>Architettura</h2>
+  <p>Il modello segue l'architettura <strong>decoder-only Transformer</strong> (variante pre-norm), identica nella struttura ai modelli GPT. L'input è una sequenza di token; l'output è la distribuzione di probabilità sul token successivo per ogni posizione.</p>
+
+  <div class="arch-diagram">
+    <div class="arch-block accent">Token IDs <br><span style="font-weight:400;font-size:0.78em">(interi, es. [73, 108, 32, ...])</span></div>
+    <div class="arch-arrow"></div>
+    <div class="arch-label">(batch, seq_len)</div>
+    <div class="arch-arrow" style="height:8px"></div>
+    <div class="arch-block">Embedding<div class="badge">vocab_size × d_model</div></div>
+    <div class="arch-arrow"></div>
+    <div class="arch-label">(batch, seq_len, 256)</div>
+    <div class="arch-arrow" style="height:8px"></div>
+    <div class="arch-block">Positional Encoding<div class="badge">sinusoidale, fissa</div></div>
+    <div class="arch-arrow"></div>
+    <div class="arch-label">(batch, seq_len, 256)</div>
+    <div class="arch-arrow" style="height:8px"></div>
+    <div class="arch-block repeat">TransformerBlock × 6<div class="badge">ripetuto N=6 volte</div></div>
+    <div class="arch-arrow"></div>
+    <div class="arch-label">(batch, seq_len, 256)</div>
+    <div class="arch-arrow" style="height:8px"></div>
+    <div class="arch-block">LayerNorm finale</div>
+    <div class="arch-arrow"></div>
+    <div class="arch-block">Linear → logits<div class="badge">weight tying con Embedding</div></div>
+    <div class="arch-arrow"></div>
+    <div class="arch-label">(batch, seq_len, vocab_size)</div>
+    <div class="arch-arrow" style="height:8px"></div>
+    <div class="arch-block accent">Probabilità sul prossimo token</div>
+  </div>
+
+  <h3>Configurazione del modello</h3>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Parametro</th><th>Valore</th><th>Significato</th></tr>
+    <tr><td><code>vocab_size</code></td><td>dal corpus</td><td>Caratteri unici nel testo di training (tipicamente 80–120)</td></tr>
+    <tr><td><code>d_model</code></td><td>256</td><td>Dimensione del vettore che rappresenta ogni token</td></tr>
+    <tr><td><code>num_heads</code></td><td>8</td><td>Teste di attenzione parallele (d_k = 32 per testa)</td></tr>
+    <tr><td><code>num_layers</code></td><td>6</td><td>Blocchi Transformer impilati</td></tr>
+    <tr><td><code>d_ff</code></td><td>1024</td><td>Dimensione interna Feed-Forward (4 × d_model)</td></tr>
+    <tr><td><code>max_seq_len</code></td><td>256</td><td>Lunghezza massima del contesto in caratteri</td></tr>
+    <tr><td><code>dropout</code></td><td>0.1</td><td>Regolarizzazione: 10% dei neuroni disattivati durante training</td></tr>
+    <tr><td><code>parametri totali</code></td><td>~4.8M</td><td>~18 MB in fp32, ~9 MB in fp16</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── ATTENZIONE -->
+<section id="attenzione">
+  <h2>Meccanismo di Attenzione</h2>
+  <p>L'attenzione è il meccanismo che permette al modello di considerare il contesto: ogni token può "guardare" tutti i token precedenti e pesarne la rilevanza per la propria rappresentazione.</p>
+
+  <h3>Scaled Dot-Product Attention</h3>
+  <p>Ogni token genera tre vettori: <strong>Query</strong> (cosa cerco?), <strong>Key</strong> (cosa offro?), <strong>Value</strong> (cosa comunico?). I pesi di attenzione si ottengono con:</p>
+  <p>$$\text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V$$</p>
+  <p>La divisione per $\sqrt{d_k}$ previene che il prodotto scalare cresca troppo al crescere della dimensione, rendendo il softmax instabile.</p>
+
+  <h3>Causal Mask</h3>
+  <p>Il modello è <em>autoregressivo</em>: la posizione $t$ non deve vedere le posizioni future $t+1, t+2, \ldots$ La maschera causale è una matrice triangolare inferiore che impone questo vincolo azzerando i pesi di attenzione verso il futuro:</p>
+  <pre><code><span class="cm"># Matrice 4×4 per seq_len=4</span>
+  <span class="cm">#   t=0: vede solo se stesso</span>
+  <span class="cm">#   t=3: vede tutti i precedenti</span>
+[1, 0, 0, 0]
+[1, 1, 0, 0]
+[1, 1, 1, 0]
+[1, 1, 1, 1]</code></pre>
+
+  <h3>Multi-Head Attention</h3>
+  <p>Invece di un'unica attenzione su $d_{model}$ dimensioni, si usano 8 teste parallele ognuna su $d_k = d_{model}/8 = 32$ dimensioni. Ogni testa ha proiezioni $W_Q, W_K, W_V$ indipendenti e impara a "guardare" aspetti diversi delle relazioni tra token — sintattici, semantici, di co-riferimento, ecc.</p>
+  <p>$$\text{MultiHead}(Q,K,V) = \text{Concat}(\text{head}_1,\ldots,\text{head}_h)\,W^O$$</p>
+  <p>La specializzazione non è progettata esplicitamente: emerge durante il training per minimizzare la loss.</p>
+</section>
+
+<!-- ─────────────────────────────────────── BLOCCO -->
+<section id="blocco">
+  <h2>Blocco Transformer</h2>
+  <p>Ogni blocco (<code>TransformerBlock</code>) combina attenzione e feed-forward con connessioni residue e normalizzazione. Si usa la variante <strong>pre-norm</strong>, più stabile del post-norm originale:</p>
+  <pre><code><span class="cm"># Pre-norm: normalizza PRIMA di passare al sotto-strato</span>
+x = x + dropout( Attention( LayerNorm(x) ) )   <span class="cm"># ← residual</span>
+x = x + dropout( FeedForward( LayerNorm(x) ) )  <span class="cm"># ← residual</span></code></pre>
+
+  <h4>Componenti del blocco</h4>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Componente</th><th>Scopo</th><th>Dettaglio</th></tr>
+    <tr><td>Multi-Head Attention</td><td>Contestualizzazione</td><td>Ogni token aggrega info dai token precedenti</td></tr>
+    <tr><td>Feed-Forward Network</td><td>Elaborazione token-wise</td><td>Linear(256→1024) → GELU → Linear(1024→256)</td></tr>
+    <tr><td>LayerNorm</td><td>Stabilizzazione</td><td>Normalizza per feature, parametri γ e β appresi</td></tr>
+    <tr><td>Residual connection</td><td>Flusso del gradiente</td><td>Permette al gradiente di scorrere direttamente ← previene vanishing</td></tr>
+    <tr><td>Dropout</td><td>Regolarizzazione</td><td>10% dei neuroni disattivati a caso durante training</td></tr>
+  </table>
+  </div>
+
+  <h3>Positional Encoding</h3>
+  <p>L'attenzione è <em>invariante alla posizione</em>: senza informazione posizionale il modello non distingue "gatto mangia topo" da "topo mangia gatto". Il positional encoding sinusoidale aggiunge al vettore di ogni token un segnale che codifica la sua posizione nella sequenza:</p>
+  <p>$$PE_{(pos,2i)} = \sin\!\left(\frac{pos}{10000^{2i/d_{model}}}\right), \quad PE_{(pos,2i+1)} = \cos\!\left(\frac{pos}{10000^{2i/d_{model}}}\right)$$</p>
+  <p>Frequenze diverse per dimensioni diverse — le basse frequenze codificano posizioni lontane, le alte posizioni vicine. Non è un parametro appreso: è fisso e aggiunto direttamente all'embedding.</p>
+</section>
+
+<!-- ─────────────────────────────────────── MODELLO -->
+<section id="modello">
+  <h2>Modello GPT</h2>
+  <h3>Embedding e Weight Tying</h3>
+  <p>Ogni token (carattere) viene convertito in un vettore denso da 256 dimensioni tramite una lookup table (<code>nn.Embedding</code>). La matrice di embedding (vocab_size × 256) è la stessa usata dall'ultimo layer lineare che proietta verso il vocabolario. Questa tecnica si chiama <strong>weight tying</strong>:</p>
+  <pre><code>self.lm_head.weight = self.token_embedding.weight  <span class="cm"># stesso tensore</span></code></pre>
+  <p>Motivazione: il carattere 'a' come input e come output atteso condivide la stessa rappresentazione. Riduce il numero di parametri e migliora la generalizzazione.</p>
+
+  <h3>Generazione autoregressiva</h3>
+  <p>Il modello genera un token alla volta. Ad ogni step: (1) forward pass sull'intero contesto, (2) si considera solo il logit dell'ultimo token, (3) si applica temperatura e top-k, (4) si campiona la distribuzione risultante, (5) il nuovo token si aggiunge al contesto e si ripete.</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Parametro</th><th>Effetto</th><th>Valore consigliato</th></tr>
+    <tr><td><code>temperature</code></td><td>= 1.0: distribuzione originale. &lt; 1: più prevedibile. &gt; 1: più creativo/casuale</td><td>0.7 – 0.9</td></tr>
+    <tr><td><code>top_k</code></td><td>Campiona solo tra i k token più probabili. Riduce le uscite incoerenti</td><td>20 – 50</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── TOKENIZER -->
+<section id="tokenizer">
+  <h2>Tokenizer Char-Level</h2>
+  <p>Il tokenizer converte ogni carattere del testo in un intero, costruendo il vocabolario direttamente dal corpus. Non si usano librerie esterne.</p>
+  <pre><code><span class="cm"># Esempio: testo "gatto"</span>
+chars = <span class="nb">sorted</span>(<span class="nb">set</span>(<span class="st">"gatto"</span>))   <span class="cm"># → ['a', 'g', 'o', 't']</span>
+stoi  = {c: i <span class="kw">for</span> i, c <span class="kw">in</span> <span class="nb">enumerate</span>(chars)}  <span class="cm"># → {'a':0, 'g':1, 'o':2, 't':3}</span>
+itos  = {i: c <span class="kw">for</span> c, i <span class="kw">in</span> stoi.items()}        <span class="cm"># inverso</span>
+
+encode(<span class="st">"gatto"</span>, stoi)  <span class="cm"># → [1, 0, 3, 3, 2]</span>
+decode([1,0,3,3,2], itos)  <span class="cm"># → "gatto"</span></code></pre>
+
+  <div class="table-wrap">
+  <table>
+    <tr><th>Approccio</th><th>Vocab size tipico</th><th>Pro</th><th>Contro</th></tr>
+    <tr><td><strong>Char-level</strong> (Fase 1)</td><td>80 – 120</td><td>Zero dipendenze, comprensibile, funziona su testo grezzo</td><td>Sequenze lunghe per parole comuni, meno efficiente</td></tr>
+    <tr><td><strong>BPE</strong> (Fase 2)</td><td>8.000 – 50.000</td><td>Standard industriale, gestisce morfologia italiana, efficiente</td><td>Richiede training separato del tokenizer</td></tr>
+    <tr><td><strong>Word-level</strong></td><td>50.000+</td><td>Intuitivo</td><td>OOV problem, non gestisce parole nuove</td></tr>
+  </table>
+  </div>
+  <p>Il BPE (Byte Pair Encoding) unisce iterativamente le coppie di caratteri più frequenti in token singoli. Un BPE addestrato su testo professionale impara token come "approvazione", "deployment", "milestone" come unità atomiche.</p>
+</section>
+
+<!-- ─────────────────────────────────────── DATASET -->
+<section id="dataset">
+  <h2>Dataset — Finestra Scorrevole</h2>
+  <p>Il training usa la tecnica del <strong>Causal Language Modeling</strong> (CLM): il testo si etichetta da solo. Ogni finestra di <code>seq_len+1</code> caratteri produce una coppia input/target in cui il target è l'input spostato di una posizione:</p>
+  <pre><code>testo tokenizzato:  [g, a, t, t, o, ' ', m, a, n, g, i, ò, ...]
+
+finestra i=0, seq_len=6:
+  input  = [g, a, t, t, o, ' ']
+  target = [a, t, t, o, ' ', m]
+
+  ↳ il modello vede "g" e deve prevedere "a"
+    vede "g,a" e deve prevedere "t"
+    vede "g,a,t" e deve prevedere "t" ... ecc.</code></pre>
+
+  <p>I batch sono campionati in posizioni casuali del corpus ad ogni step. Non si usa un DataLoader tradizionale: il campionamento casuale rompe già le correlazioni temporali.</p>
+</section>
+
+<!-- ─────────────────────────────────────── LOOP -->
+<section id="loop">
+  <h2>Loop di Training</h2>
+  <h3>Ottimizzatore: AdamW</h3>
+  <p>AdamW è la variante standard per i transformer. Combina Adam (learning rate adattivo per parametro, basato su media mobile di gradienti e gradienti²) con <em>weight decay</em> corretto (penalità $\lambda\|w\|^2$ che impedisce ai pesi di crescere senza controllo).</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Iperparametro</th><th>Valore</th><th>Significato</th></tr>
+    <tr><td><code>lr</code></td><td>3 × 10⁻⁴</td><td>Learning rate massimo</td></tr>
+    <tr><td><code>min_lr</code></td><td>3 × 10⁻⁵</td><td>Learning rate minimo al termine del cosine decay</td></tr>
+    <tr><td><code>warmup_steps</code></td><td>200</td><td>Step di salita lineare 0 → lr (con pesi casuali, lr alto = passo errato enorme)</td></tr>
+    <tr><td><code>weight_decay</code></td><td>0.1</td><td>Forza della penalità L2 (solo su pesi ≥ 2D, non su bias/LayerNorm)</td></tr>
+    <tr><td><code>betas</code></td><td>(0.9, 0.95)</td><td>Decadimento memoria: gradienti e gradienti²</td></tr>
+    <tr><td><code>grad_clip</code></td><td>1.0</td><td>Gradient clipping: se ‖∇‖ > 1, scala il gradiente proporzionalmente</td></tr>
+  </table>
+  </div>
+
+  <h3>Learning Rate Schedule</h3>
+  <p>Il learning rate segue una curva in due fasi. La curva sinusoidale (cosine decay) converge meglio di un taglio brusco perché riduce il passo progressivamente man mano che il modello si avvicina al minimo.</p>
+  <div class="loss-curve">
+  <svg viewBox="0 0 520 140" width="100%" style="max-width:520px;display:block">
+    <line x1="50" y1="10" x2="50" y2="110" class="grid"/>
+    <line x1="50" y1="110" x2="490" y2="110" class="grid"/>
+    <!-- warmup region -->
+    <rect x="50" y="10" width="70" height="100" fill="var(--accent)" opacity="0.05"/>
+    <!-- curve: warmup (linear) then cosine decay -->
+    <polyline class="curve" points="
+      50,110
+      120,28
+      180,26
+      240,30
+      310,42
+      380,62
+      440,88
+      490,105
+    "/>
+    <!-- labels -->
+    <text x="50" y="125">0</text>
+    <text x="115" y="125">200</text>
+    <text x="470" y="125">5000</text>
+    <text x="480" y="28" text-anchor="end" class="label">3×10⁻⁴</text>
+    <text x="480" y="108" text-anchor="end" class="label">3×10⁻⁵</text>
+    <!-- annotations -->
+    <text x="56" y="75" class="anno">warmup</text>
+    <text x="200" y="20" class="anno">cosine decay</text>
+    <text x="270" y="135" text-anchor="middle" style="font-family:'IBM Plex Mono',monospace;font-size:10px;fill:var(--text-sec)">step</text>
+    <text x="22" y="70" transform="rotate(-90,22,70)" text-anchor="middle" style="font-family:'IBM Plex Mono',monospace;font-size:10px;fill:var(--text-sec)">lr</text>
+  </svg>
+  </div>
+
+  <h3>Gradient Clipping</h3>
+  <p>Nei transformer profondi il gradiente può "esplodere" propagandosi attraverso molti layer — un singolo step aggiorna i pesi in modo devastante. Il clipping preserva la <em>direzione</em> del gradiente ma ne limita la <em>magnitudine</em>:</p>
+  <p>$$\nabla \leftarrow \nabla \cdot \min\!\left(1,\; \frac{\text{max\_norm}}{\|\nabla\|}\right)$$</p>
+</section>
+
+<!-- ─────────────────────────────────────── CURVA -->
+<section id="curva">
+  <h2>Cosa Aspettarsi Durante il Training</h2>
+  <p>La <strong>loss</strong> è la cross-entropy: $-\log(p_{\text{corretta}})$. Con pesi casuali vale $\log(\text{vocab\_size})$ — per 90 caratteri unici, circa 4.5. Man mano che il modello impara, scende.</p>
+
+  <div class="table-wrap">
+  <table>
+    <tr><th>Loss appross.</th><th>Cosa ha imparato il modello</th><th>Esempio di output</th></tr>
+    <tr><td>~4.5 (inizio)</td><td>Niente — rumore puro. Ogni token è casuale</td><td><code>xkQm2!rLpòàìF...</code></td></tr>
+    <tr><td>~3.2</td><td>La distribuzione di frequenza dei caratteri. Spazi e vocali compaiono con la giusta frequenza</td><td><code>i l  ae oi  n...</code></td></tr>
+    <tr><td>~2.8</td><td>Spazi e punteggiatura al posto giusto. Il testo "respira" come italiano</td><td><code>Il  ato  manò il...</code></td></tr>
+    <tr><td>~2.3</td><td>Parole italiane riconoscibili ma spesso inventate. Morfologia parzialmente corretta</td><td><code>Il gatto mangiò il tropo.</code></td></tr>
+    <tr><td>~2.0</td><td>Parole reali del corpus. Frasi corte grammaticalmente plausibili ma semanticamente deboli</td><td><code>Il progetto di studio il modello.</code></td></tr>
+    <tr><td>~1.7</td><td>Strutture sintattiche più lunghe. Dipendenze a breve raggio. Dialogo riconoscibile</td><td><code>"Devi farlo," disse Marco, "prima di domani."</code></td></tr>
+    <tr><td>~1.4 – 1.5</td><td>Paragrafi con coerenza locale. Il modello "imita" lo stile del corpus</td><td>Frasi narrative plausibili con lessico del corpus</td></tr>
+  </table>
+  </div>
+
+  <div class="notice">
+    <strong>Nota importante:</strong> un char-level model da 4.8M parametri non raggiungerà la coerenza semantica a lungo raggio — quella richiede miliardi di parametri e BPE. L'obiettivo di Fase 1 è vedere il modello imparare la <em>struttura superficiale</em> dell'italiano: ortografia, morfologia, ritmo della prosa.
+  </div>
+
+  <h3>Quando preoccuparsi</h3>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Sintomo</th><th>Causa probabile</th><th>Intervento</th></tr>
+    <tr><td>Loss non scende oltre 3.5</td><td>Learning rate troppo basso, o corpus troppo piccolo</td><td>Aumentare lr o corpus</td></tr>
+    <tr><td>Loss oscilla violentemente</td><td>Learning rate troppo alto, gradient explosion</td><td>Ridurre lr o abbassare grad_clip</td></tr>
+    <tr><td>Val loss cresce mentre train scende</td><td>Overfitting — il modello memorizza il corpus</td><td>Corpus più grande, più dropout</td></tr>
+    <tr><td>Generazione sempre uguale</td><td>Temperature troppo bassa, o modello in eval() senza campionamento</td><td>Aumentare temperature a 0.8–1.0</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── CORPUS -->
+<section id="corpus">
+  <h2>Corpus</h2>
+  <p>La scelta del corpus è determinante per il carattere del modello. L'addestramento su italiano generico non è necessariamente ottimale per un modello con use case professionali definiti.</p>
+
+  <h3>Teoria del corpus domain-focused</h3>
+  <p>Un corpus selezionato per dominio produce un modello che:</p>
+  <ul>
+    <li>Ha nel vocabolario BPE (Fase 2) i termini di dominio come token singoli</li>
+    <li>Apprende le strutture sintattiche tipiche del dominio (comunicazione professionale, documentazione tecnica)</li>
+    <li>Non "spreca" capacità su registri irrilevanti</li>
+  </ul>
+  <p>Una quota di testo generale (~20–30%) rimane utile per evitare <em>brittleness</em>: il modello deve comprendere qualsiasi input dell'utente, non solo testi formali.</p>
+
+  <h3>Caratteri non-ASCII — cosa tenere e cosa pulire</h3>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Carattere</th><th>Codice</th><th>Azione</th><th>Motivazione</th></tr>
+    <tr><td>à â ç è é ì î ò ö ù</td><td>U+00C0–U+00FC</td><td>Tenere</td><td>Lettere accentate italiane e francesi — punteggiatura reale</td></tr>
+    <tr><td>' ' " "</td><td>U+2018–U+201D</td><td>Tenere</td><td>Virgolette tipografiche — struttura del dialogo</td></tr>
+    <tr><td>…</td><td>U+2026</td><td>Tenere</td><td>Punteggiatura narrativa (sospensione)</td></tr>
+    <tr><td><code> </code></td><td>U+202F</td><td><strong>Rimuovere</strong></td><td>Narrow no-break space — artefatto invisibile da Word/tipografia francese</td></tr>
+  </table>
+  </div>
+  <pre><code><span class="cm"># Pulizia u202f (una riga)</span>
+text = open(<span class="st">'data/corpus.txt'</span>).read()
+open(<span class="st">'data/corpus.txt'</span>, <span class="st">'w'</span>).write(text.replace(<span class="st">' '</span>, <span class="st">' '</span>))</code></pre>
+</section>
+
+<!-- ─────────────────────────────────────── COMANDI -->
+<section id="comandi">
+  <h2>Comandi</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Comando</th><th>Funzione</th></tr>
+    <tr><td><code>python3 train.py --download</code></td><td>Scarica corpus di prova (I Promessi Sposi, ~900 KB)</td></tr>
+    <tr><td><code>python3 train.py</code></td><td>Training con configurazione default (5000 step, batch 32, seq 256)</td></tr>
+    <tr><td><code>python3 train.py --steps 2000 --batch 16</code></td><td>Training rapido per test</td></tr>
+    <tr><td><code>python3 train.py --data mio_corpus.txt</code></td><td>Training su corpus personalizzato</td></tr>
+    <tr><td><code>python3 train.py --generate "Il progetto"</code></td><td>Genera testo dal checkpoint migliore</td></tr>
+    <tr><td><code>python3 model.py</code></td><td>Test del modello (forward pass, verifica loss iniziale)</td></tr>
+    <tr><td><code>python3 attention.py</code></td><td>Test del meccanismo di attenzione</td></tr>
+  </table>
+  </div>
+  <div class="notice">
+    Il checkpoint migliore (minor val loss) viene salvato automaticamente in <code>checkpoints/best.pt</code> e include i pesi del modello, la configurazione e il vocabolario — tutto il necessario per riprendere il training o fare inferenza.
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── FILE -->
+<section id="file">
+  <h2>File del Progetto</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>File</th><th>Contenuto</th><th>Dipendenze</th></tr>
+    <tr><td><code>attention.py</code></td><td><code>scaled_dot_product_attention</code>, <code>create_causal_mask</code>, <code>MultiHeadAttention</code></td><td>torch</td></tr>
+    <tr><td><code>transformer.py</code></td><td><code>PositionalEncoding</code>, <code>FeedForward</code>, <code>TransformerBlock</code></td><td>attention.py</td></tr>
+    <tr><td><code>model.py</code></td><td><code>GPTConfig</code>, <code>GPT</code> (forward + generate + weight tying)</td><td>transformer.py</td></tr>
+    <tr><td><code>train.py</code></td><td>Tokenizer, dataset, loop AdamW, checkpoint, generazione</td><td>model.py</td></tr>
+    <tr><td><code>tensor_exercises.py</code></td><td>Esercizi interattivi su shape, view, transpose, Q·Kᵀ</td><td>torch</td></tr>
+    <tr><td><code>matrix_exercises.py</code></td><td>Dot product, matmul, split-heads passo per passo</td><td>torch</td></tr>
+    <tr><td><code>data/corpus.txt</code></td><td>Corpus di training (da fornire)</td><td>—</td></tr>
+    <tr><td><code>checkpoints/best.pt</code></td><td>Checkpoint migliore (generato da train.py)</td><td>—</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── ROADMAP -->
+<section id="roadmap">
+  <h2>Roadmap</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Fase</th><th>Obiettivo</th><th>Stack</th><th>Compute</th></tr>
+    <tr>
+      <td><strong>1 — From scratch</strong><br><em style="color:var(--accent);font-size:0.82em">in corso</em></td>
+      <td>Modello char-level funzionante su italiano. Comprensione completa di ogni componente</td>
+      <td>attention.py → transformer.py → model.py → train.py</td>
+      <td>M2 locale (8 GB)</td>
+    </tr>
+    <tr>
+      <td><strong>2 — BPE tokenizer</strong></td>
+      <td>Sostituire char-level con BPE su corpus di dominio. <code>vocab_size</code> sale a ~8.000. Stessa architettura, più efficiente</td>
+      <td>tiktoken o SentencePiece + corpus domain-focused</td>
+      <td>M2 locale</td>
+    </tr>
+    <tr>
+      <td><strong>3 — Fine-tuning</strong></td>
+      <td>Continued pre-training su modello italiano open-source (Camoscio / Minerva / base LLaMA). Adattamento al dominio specifico</td>
+      <td>HuggingFace Transformers + PEFT/LoRA</td>
+      <td>Pelliconi EC2 (8+ GB VRAM)</td>
+    </tr>
+    <tr>
+      <td><strong>4 — Multimodale</strong></td>
+      <td>Pipeline: immagine → YOLO v3 → oggetti rilevati → testo → LM → analisi</td>
+      <td>ultralytics (YOLO) + pipeline custom</td>
+      <td>TBD</td>
+    </tr>
+  </table>
+  </div>
+  <div class="notice">
+    Le Fasi 2 e 3 non richiedono riscrivere l'architettura. Il codice in <code>model.py</code> e <code>transformer.py</code> rimane invariato: cambia solo il tokenizer (Fase 2) e i pesi iniziali (Fase 3).
+  </div>
+  <p style="margin-top:1.25rem">
+    Il piano completo — 11 fasi dall'architettura alla quantizzazione, con stato corrente e componenti da aggiungere — è nella
+    <a href="slm-roadmap.html" style="color:var(--accent)">Roadmap di sviluppo</a>.
+  </p>
+</section>
+
+<!-- ─────────────────────────────────────── GLOSSARIO -->
+<section id="glossario">
+  <h2>Glossario</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Termine</th><th>Definizione</th></tr>
+    <tr><td><strong>Autoregressive</strong></td><td>Il modello genera un token alla volta, usando i token precedenti come contesto</td></tr>
+    <tr><td><strong>Backpropagation</strong></td><td>Algoritmo che calcola il gradiente della loss rispetto a ogni parametro applicando la chain rule all'indietro nel grafo computazionale</td></tr>
+    <tr><td><strong>BPE</strong></td><td>Byte Pair Encoding — algoritmo che costruisce un vocabolario di sotto-parole fondendo iterativamente le coppie di caratteri più frequenti</td></tr>
+    <tr><td><strong>Causal mask</strong></td><td>Matrice triangolare inferiore che impedisce a ogni token di vedere i token futuri durante l'attenzione</td></tr>
+    <tr><td><strong>Cross-entropy loss</strong></td><td>$-\log(p_{\text{corretta}})$ — misura quanto il modello è sorpreso dal token corretto. Valore atteso con pesi casuali: $\log(\text{vocab\_size})$</td></tr>
+    <tr><td><strong>Decoder-only</strong></td><td>Architettura transformer senza encoder: riceve solo il contesto precedente, genera un token alla volta</td></tr>
+    <tr><td><strong>Dropout</strong></td><td>Regolarizzazione: spegne casualmente una frazione di neuroni durante il training, prevenendo l'overfitting</td></tr>
+    <tr><td><strong>Embedding</strong></td><td>Lookup table che converte un ID intero in un vettore denso. I vettori si avvicinano nello spazio per token semanticamente simili</td></tr>
+    <tr><td><strong>Gradient clipping</strong></td><td>Limita la norma del gradiente a una soglia massima, prevenendo aggiornamenti destabilizzanti</td></tr>
+    <tr><td><strong>LayerNorm</strong></td><td>Normalizza ogni vettore per media e varianza delle sue features. Parametri $\gamma$ e $\beta$ appresi</td></tr>
+    <tr><td><strong>Logit</strong></td><td>Score non normalizzato per ogni token del vocabolario. Il softmax li converte in probabilità</td></tr>
+    <tr><td><strong>Overfitting</strong></td><td>Il modello memorizza il training set invece di generalizzare: val loss cresce, train loss scende</td></tr>
+    <tr><td><strong>Pre-norm</strong></td><td>LayerNorm applicata prima dell'attention e del FFN (al contrario del post-norm originale). Più stabile</td></tr>
+    <tr><td><strong>Residual connection</strong></td><td>$x \leftarrow x + f(x)$. Crea una "corsia diretta" per il gradiente, risolvendo il vanishing gradient problem</td></tr>
+    <tr><td><strong>Self-supervised learning</strong></td><td>Il testo si etichetta da solo: input $[t_0\ldots t_{n-1}]$, target $[t_1\ldots t_n]$. Nessuna annotazione umana</td></tr>
+    <tr><td><strong>Temperature</strong></td><td>Divide i logit prima del softmax: &lt; 1 accentua le differenze (più prevedibile), &gt; 1 le appiattisce (più casuale)</td></tr>
+    <tr><td><strong>Top-k</strong></td><td>Azzera tutti i token tranne i k più probabili prima del campionamento. Riduce le uscite incoerenti</td></tr>
+    <tr><td><strong>Weight tying</strong></td><td>Embedding e layer di output condividono la stessa matrice di pesi. Riduce i parametri e migliora la generalizzazione</td></tr>
+  </table>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+// Evidenzia la voce TOC attiva in base alla sezione visibile
+const sections = document.querySelectorAll('section[id]');
+const links    = document.querySelectorAll('.sidebar a');
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`.sidebar a[href="#${e.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { threshold: 0.3 });
+
+sections.forEach(s => obs.observe(s));
+</script>

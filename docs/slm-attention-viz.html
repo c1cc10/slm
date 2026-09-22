@@ -1,0 +1,374 @@
+<meta charset="UTF-8">
+<title>Attention Heads</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:         #F3F5FB;
+  --surface:    #FFFFFF;
+  --text:       #0F1424;
+  --muted:      #647088;
+  --accent:     #0B5EA3;
+  --accent-dim: #D6E5F5;
+  --border:     #D4DAE8;
+  --mask:       #E8EBF3;
+  --c0r: 240; --c0g: 243; --c0b: 250;
+  --c1r: 11;  --c1g: 94;  --c1b: 163;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:         #0C0E18;
+    --surface:    #151929;
+    --text:       #DDE2F2;
+    --muted:      #7A839E;
+    --accent:     #4A9FD4;
+    --accent-dim: #142540;
+    --border:     #252D45;
+    --mask:       #0F1220;
+    --c0r: 21; --c0g: 25; --c0b: 43;
+    --c1r: 74; --c1g: 159; --c1b: 212;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg:         #0C0E18;
+  --surface:    #151929;
+  --text:       #DDE2F2;
+  --muted:      #7A839E;
+  --accent:     #4A9FD4;
+  --accent-dim: #142540;
+  --border:     #252D45;
+  --mask:       #0F1220;
+  --c0r: 21; --c0g: 25; --c0b: 43;
+  --c1r: 74; --c1g: 159; --c1b: 212;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  margin: 0; padding: 0; line-height: 1.5;
+}
+
+.page { max-width: 760px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+
+/* ── Header ── */
+.hdr { border-bottom: 2px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+.eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .7rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 .35rem;
+}
+h1 {
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-size: 1.6rem; font-weight: 600; margin: 0 0 .4rem; line-height: 1.2;
+}
+.subtitle { font-size: .88rem; color: var(--muted); margin: 0 0 .75rem; max-width: 60ch; }
+.badge {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace; font-size: .68rem;
+  background: var(--accent-dim); color: var(--accent);
+  padding: .2rem .55rem; border-radius: 2px; letter-spacing: .03em;
+}
+
+/* ── Sentence ── */
+.sentence-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: .9rem 1.1rem; margin-bottom: 1.75rem;
+}
+.slabel {
+  font-family: 'IBM Plex Mono', monospace; font-size: .67rem;
+  text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0 0 .35rem;
+}
+.stext {
+  font-family: 'IBM Plex Serif', Georgia, serif; font-style: italic;
+  font-size: 1.05rem; margin: 0 0 .65rem;
+}
+.tokens { display: flex; flex-wrap: wrap; gap: .3rem; }
+.tok {
+  font-family: 'IBM Plex Mono', monospace; font-size: .68rem;
+  background: var(--accent-dim); color: var(--accent);
+  padding: .18rem .4rem; border-radius: 2px;
+}
+.tok sub { font-size: .6rem; opacity: .55; }
+
+/* ── Grid ── */
+.heads-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;
+}
+@media (max-width: 580px) { .heads-grid { grid-template-columns: 1fr; } }
+
+.head-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: .9rem .9rem .75rem;
+}
+.htitle {
+  font-size: .72rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--accent); margin: 0 0 .2rem;
+}
+.hdesc {
+  font-size: .75rem; color: var(--muted); margin: 0 0 .7rem; line-height: 1.45;
+  min-height: 2.6em;
+}
+
+/* ── Heatmap ── */
+.hm-wrap { overflow-x: auto; }
+
+.col-labels {
+  display: flex; padding-left: 46px; margin-bottom: 2px;
+}
+.col-lbl {
+  font-family: 'IBM Plex Mono', monospace; font-size: .58rem; color: var(--muted);
+  width: 27px; writing-mode: vertical-rl; transform: rotate(180deg);
+  height: 44px; overflow: hidden; white-space: nowrap;
+  display: flex; align-items: flex-end;
+}
+
+.hm-row { display: flex; align-items: center; margin-bottom: 1px; }
+.row-lbl {
+  font-family: 'IBM Plex Mono', monospace; font-size: .6rem; color: var(--muted);
+  width: 46px; text-align: right; padding-right: 5px; white-space: nowrap; flex-shrink: 0;
+}
+
+.cell {
+  width: 26px; height: 26px; border-radius: 2px; flex-shrink: 0;
+  margin-right: 1px; cursor: default; position: relative;
+  transition: transform .1s;
+}
+.cell:hover { transform: scale(1.18); z-index: 4; }
+.cell.masked { background: var(--mask) !important; }
+.cell.hl { box-shadow: 0 0 0 2px var(--accent); z-index: 3; }
+
+/* ── Tooltip ── */
+#tip {
+  position: fixed; background: var(--text); color: var(--bg);
+  font-family: 'IBM Plex Mono', monospace; font-size: .7rem;
+  padding: .2rem .5rem; border-radius: 3px; pointer-events: none;
+  z-index: 99; display: none; white-space: nowrap;
+}
+
+/* ── Legend ── */
+.legend {
+  margin-top: 1.5rem; display: flex; align-items: center; gap: .75rem;
+  font-size: .75rem; color: var(--muted); flex-wrap: wrap;
+}
+.lg-scale { display: flex; align-items: center; gap: .4rem; }
+#lg-canvas { border-radius: 2px; }
+.lg-mask-box {
+  width: 14px; height: 14px; background: var(--mask);
+  border-radius: 2px; flex-shrink: 0;
+}
+.lg-sep { opacity: .4; }
+</style>
+
+<div id="tip"></div>
+
+<div class="page">
+
+  <header class="hdr">
+    <p class="eyebrow">Progetto SLM · Visualizzazione</p>
+    <h1>Multi-Head Attention</h1>
+    <p class="subtitle">Stessa formula, proiezioni diverse → relazioni diverse. Ogni cella mostra quanto il token della riga "guarda" il token della colonna.</p>
+    <span class="badge">⚠ Pattern simulati — non un modello addestrato</span>
+  </header>
+
+  <div class="sentence-box">
+    <p class="slabel">Frase analizzata</p>
+    <p class="stext">Il gatto che viveva con Maria mangiò il topo</p>
+    <div class="tokens" id="tok-row"></div>
+  </div>
+
+  <div class="heads-grid" id="hgrid"></div>
+
+  <div class="legend">
+    <div class="lg-scale">
+      <span>peso basso</span>
+      <canvas id="lg-canvas" width="72" height="13"></canvas>
+      <span>peso alto</span>
+    </div>
+    <span class="lg-sep">|</span>
+    <div style="display:flex;align-items:center;gap:.3rem">
+      <div class="lg-mask-box"></div>
+      <span>token futuro (causal mask)</span>
+    </div>
+    <span class="lg-sep">|</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:1px;box-shadow:0 0 0 2px var(--accent);vertical-align:middle;margin-right:.3rem"></span>relazione chiave</span>
+  </div>
+
+</div>
+
+<script>
+const tokens = ['Il','gatto','che','viveva','con','Maria','mangiò','il','topo'];
+
+const heads = [
+  {
+    title: 'Testa 1 — Adiacenza',
+    desc: 'Guarda sé stesso e i token vicini. Tipico dei layer bassi: cattura struttura locale.',
+    hl: [],
+    w: [
+      [1.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00],
+      [0.35,0.65,0.00,0.00,0.00,0.00,0.00,0.00,0.00],
+      [0.10,0.65,0.25,0.00,0.00,0.00,0.00,0.00,0.00],
+      [0.05,0.15,0.55,0.25,0.00,0.00,0.00,0.00,0.00],
+      [0.05,0.10,0.15,0.55,0.15,0.00,0.00,0.00,0.00],
+      [0.05,0.05,0.10,0.15,0.55,0.10,0.00,0.00,0.00],
+      [0.05,0.05,0.05,0.10,0.15,0.50,0.10,0.00,0.00],
+      [0.05,0.05,0.05,0.05,0.10,0.15,0.45,0.10,0.00],
+      [0.05,0.05,0.05,0.05,0.05,0.10,0.15,0.45,0.05],
+    ]
+  },
+  {
+    title: 'Testa 2 — Sintattica',
+    desc: '"mangiò" → "gatto" (soggetto). "topo" → "mangiò" (verbo). "viveva" → "che" (soggetto della relativa).',
+    hl: [[6,1],[8,6],[3,2]],
+    w: [
+      [1.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00],
+      [0.20,0.80,0.00,0.00,0.00,0.00,0.00,0.00,0.00],
+      [0.10,0.20,0.70,0.00,0.00,0.00,0.00,0.00,0.00],
+      [0.05,0.15,0.65,0.15,0.00,0.00,0.00,0.00,0.00],
+      [0.05,0.10,0.20,0.55,0.10,0.00,0.00,0.00,0.00],
+      [0.05,0.05,0.05,0.15,0.10,0.60,0.00,0.00,0.00],
+      [0.05,0.60,0.05,0.05,0.05,0.10,0.10,0.00,0.00],
+      [0.10,0.10,0.05,0.05,0.05,0.05,0.10,0.50,0.00],
+      [0.03,0.05,0.03,0.04,0.03,0.05,0.62,0.10,0.05],
+    ]
+  },
+  {
+    title: 'Testa 3 — Pronome relativo',
+    desc: '"che" e "viveva" puntano entrambi a "gatto": pronome e verbo della relativa riconoscono l\'antecedente.',
+    hl: [[2,1],[3,1]],
+    w: [
+      [1.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00],
+      [0.30,0.70,0.00,0.00,0.00,0.00,0.00,0.00,0.00],
+      [0.10,0.75,0.15,0.00,0.00,0.00,0.00,0.00,0.00],
+      [0.05,0.65,0.15,0.15,0.00,0.00,0.00,0.00,0.00],
+      [0.05,0.10,0.10,0.60,0.15,0.00,0.00,0.00,0.00],
+      [0.05,0.05,0.05,0.30,0.10,0.45,0.00,0.00,0.00],
+      [0.05,0.20,0.05,0.05,0.05,0.05,0.55,0.00,0.00],
+      [0.10,0.10,0.05,0.05,0.05,0.05,0.15,0.45,0.00],
+      [0.05,0.10,0.05,0.05,0.05,0.05,0.10,0.10,0.45],
+    ]
+  },
+  {
+    title: 'Testa 4 — Semantica',
+    desc: '"topo" punta fortemente a "gatto" (predatore-preda). Relazione emergente da co-occorrenze nel corpus, non dalla sintassi.',
+    hl: [[8,1],[6,1]],
+    w: [
+      [1.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00],
+      [0.15,0.85,0.00,0.00,0.00,0.00,0.00,0.00,0.00],
+      [0.10,0.30,0.60,0.00,0.00,0.00,0.00,0.00,0.00],
+      [0.10,0.20,0.20,0.50,0.00,0.00,0.00,0.00,0.00],
+      [0.10,0.15,0.15,0.25,0.35,0.00,0.00,0.00,0.00],
+      [0.05,0.10,0.10,0.20,0.15,0.40,0.00,0.00,0.00],
+      [0.05,0.35,0.05,0.10,0.05,0.15,0.25,0.00,0.00],
+      [0.10,0.15,0.05,0.10,0.10,0.10,0.20,0.20,0.00],
+      [0.03,0.55,0.03,0.05,0.03,0.05,0.15,0.05,0.06],
+    ]
+  }
+];
+
+// ── Token chips ──
+const tokRow = document.getElementById('tok-row');
+tokens.forEach((t,i) => {
+  const s = document.createElement('span');
+  s.className = 'tok';
+  s.innerHTML = `${t}<sub>${i}</sub>`;
+  tokRow.appendChild(s);
+});
+
+// ── Color ──
+function cellColor(w) {
+  const st = getComputedStyle(document.documentElement);
+  const r0 = +st.getPropertyValue('--c0r').trim();
+  const g0 = +st.getPropertyValue('--c0g').trim();
+  const b0 = +st.getPropertyValue('--c0b').trim();
+  const r1 = +st.getPropertyValue('--c1r').trim();
+  const g1 = +st.getPropertyValue('--c1g').trim();
+  const b1 = +st.getPropertyValue('--c1b').trim();
+  const r = Math.round(r0 + (r1-r0)*w);
+  const g = Math.round(g0 + (g1-g0)*w);
+  const b = Math.round(b0 + (b1-b0)*w);
+  return `rgb(${r},${g},${b})`;
+}
+
+// ── Tooltip ──
+const tip = document.getElementById('tip');
+document.addEventListener('mousemove', e => {
+  tip.style.left = (e.clientX+14)+'px';
+  tip.style.top  = (e.clientY-30)+'px';
+});
+
+// ── Build heatmaps ──
+const hgrid = document.getElementById('hgrid');
+const N = tokens.length;
+
+heads.forEach(head => {
+  const card = document.createElement('div');
+  card.className = 'head-card';
+
+  card.innerHTML = `<p class="htitle">${head.title}</p><p class="hdesc">${head.desc}</p>`;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'hm-wrap';
+
+  // col labels
+  const colRow = document.createElement('div');
+  colRow.className = 'col-labels';
+  tokens.forEach(t => {
+    const d = document.createElement('div');
+    d.className = 'col-lbl';
+    d.textContent = t;
+    colRow.appendChild(d);
+  });
+  wrap.appendChild(colRow);
+
+  // rows
+  for (let r = 0; r < N; r++) {
+    const row = document.createElement('div');
+    row.className = 'hm-row';
+
+    const rl = document.createElement('div');
+    rl.className = 'row-lbl';
+    rl.textContent = tokens[r];
+    row.appendChild(rl);
+
+    for (let c = 0; c < N; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      const masked = c > r;
+      const w = head.w[r][c];
+      if (masked) {
+        cell.classList.add('masked');
+      } else {
+        cell.style.background = cellColor(w);
+        if (head.hl.some(([hr,hc]) => hr===r && hc===c)) cell.classList.add('hl');
+      }
+      cell.addEventListener('mouseenter', () => {
+        if (!masked) {
+          tip.textContent = `${tokens[r]} → ${tokens[c]}: ${w.toFixed(3)}`;
+          tip.style.display = 'block';
+        }
+      });
+      cell.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+      row.appendChild(cell);
+    }
+    wrap.appendChild(row);
+  }
+
+  card.appendChild(wrap);
+  hgrid.appendChild(card);
+});
+
+// ── Legend gradient ──
+(function() {
+  const cv = document.getElementById('lg-canvas');
+  const ctx = cv.getContext('2d');
+  const g = ctx.createLinearGradient(0,0,72,0);
+  g.addColorStop(0, cellColor(0));
+  g.addColorStop(1, cellColor(1));
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,72,13);
+})();
+</script>

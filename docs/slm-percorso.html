@@ -1,0 +1,996 @@
+<meta charset="UTF-8">
+<title>SLM — Il Percorso</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ── Token system ── */
+:root {
+  --bg:         #F7F9FC;
+  --surface:    #FFFFFF;
+  --surface-2:  #F0F5FA;
+  --text:       #1C2333;
+  --text-sec:   #5A6478;
+  --text-dim:   #8A94A8;
+  --accent:     #0A6E6E;
+  --accent-2:   #0D8F8F;
+  --accent-bg:  #E6F4F4;
+  --border:     #DDE3EE;
+  --border-soft:#EEF2F8;
+  --code-bg:    #F0F4FF;
+  --yes:        #166534;
+  --yes-bg:     #DCFCE7;
+  --no:         #9B1C1C;
+  --no-bg:      #FEE2E2;
+  --warn:       #854D0E;
+  --warn-bg:    #FEF9C3;
+  --radius:     6px;
+  --shadow:     0 1px 3px rgba(28,35,51,0.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0D1117; --surface:#161B22; --surface-2:#1C2128;
+    --text:#E6EDF3; --text-sec:#8B949E; --text-dim:#6B7280;
+    --accent:#2BBFBF; --accent-2:#1EA8A8; --accent-bg:#0D2626;
+    --border:#21262D; --border-soft:#1A1F27;
+    --code-bg:#1A1F2E;
+    --yes:#4ADE80; --yes-bg:#052E16;
+    --no:#F87171; --no-bg:#2D0A0A;
+    --warn:#FDE68A; --warn-bg:#2D1A00;
+    --shadow:0 1px 3px rgba(0,0,0,0.3);
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --surface-2:#1C2128;
+  --text:#E6EDF3; --text-sec:#8B949E; --text-dim:#6B7280;
+  --accent:#2BBFBF; --accent-2:#1EA8A8; --accent-bg:#0D2626;
+  --border:#21262D; --border-soft:#1A1F27;
+  --code-bg:#1A1F2E;
+  --yes:#4ADE80; --yes-bg:#052E16;
+  --no:#F87171; --no-bg:#2D0A0A;
+  --warn:#FDE68A; --warn-bg:#2D1A00;
+  --shadow:0 1px 3px rgba(0,0,0,0.3);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Layout ── */
+.layout {
+  display: grid;
+  grid-template-columns: 224px 1fr;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  padding: 32px 0 48px;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-brand {
+  padding: 0 20px 24px;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 20px;
+}
+.sidebar-brand .mono {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.sidebar-brand .title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 4px;
+}
+.sidebar nav { flex: 1; padding: 0 12px; }
+.nav-section {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  padding: 14px 8px 6px;
+}
+.nav-link {
+  display: block;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  font-size: 0.83rem;
+  color: var(--text-sec);
+  text-decoration: none;
+  transition: color 0.12s, background 0.12s;
+  line-height: 1.4;
+}
+.nav-link:hover { color: var(--text); background: var(--surface-2); }
+.nav-link.active { color: var(--accent); background: var(--accent-bg); font-weight: 500; }
+.sidebar-back {
+  padding: 0 20px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+.sidebar-back a {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sidebar-back a:hover { color: var(--accent); }
+
+/* ── Content ── */
+.content {
+  max-width: 760px;
+  padding: 64px 56px 120px;
+}
+
+/* ── Headings ── */
+h1 {
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-size: 2.1rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 12px;
+  color: var(--text);
+  text-wrap: balance;
+}
+.lead {
+  font-size: 1.05rem;
+  color: var(--text-sec);
+  line-height: 1.65;
+  max-width: 600px;
+  margin: 0 0 48px;
+}
+h2 {
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 600;
+  margin: 64px 0 18px;
+  color: var(--text);
+  text-wrap: balance;
+  scroll-margin-top: 24px;
+}
+h2:first-of-type { margin-top: 0; }
+h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 28px 0 10px;
+  color: var(--text);
+}
+
+/* ── Body text ── */
+p { margin: 0 0 16px; }
+p:last-child { margin-bottom: 0; }
+strong { font-weight: 600; }
+em { font-style: italic; }
+
+/* ── Pull quote ── */
+.pull {
+  border-left: 3px solid var(--accent);
+  padding: 12px 20px;
+  margin: 24px 0;
+  background: var(--accent-bg);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/* ── Callout ── */
+.callout {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin: 24px 0;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 0.9rem;
+}
+.callout.warn { border-color: var(--warn); background: var(--warn-bg); }
+.callout-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.callout.warn .callout-label { color: var(--warn); }
+
+/* ── Tables ── */
+.table-wrap { overflow-x: auto; margin: 24px 0; border-radius: var(--radius); box-shadow: var(--shadow); }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  font-size: 0.87rem;
+}
+thead th {
+  background: var(--surface-2);
+  padding: 11px 16px;
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+  color: var(--text);
+  font-size: 0.83rem;
+  white-space: nowrap;
+}
+tbody td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: top;
+  line-height: 1.45;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--surface-2); }
+td.dim { color: var(--text-sec); font-size: 0.83rem; }
+td.mono { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge.yes  { background: var(--yes-bg);  color: var(--yes); }
+.badge.no   { background: var(--no-bg);   color: var(--no);  }
+.badge.warn { background: var(--warn-bg); color: var(--warn);}
+.badge.teal { background: var(--accent-bg); color: var(--accent); }
+
+/* ── Code ── */
+code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.83em;
+  background: var(--code-bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--text);
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  overflow-x: auto;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  margin: 20px 0;
+  color: var(--text);
+}
+
+/* ── Two-col ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 24px 0;
+}
+.track-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.track-card h3 { margin-top: 0; font-size: 0.9rem; }
+.track-card ul {
+  padding-left: 18px;
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-sec);
+  line-height: 1.65;
+}
+.track-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+/* ── Divider ── */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-soft);
+  margin: 48px 0;
+}
+
+/* ── Eyebrow ── */
+.eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 800px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+  .content { padding: 32px 24px 80px; }
+  .two-col { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="mono">SLM · Percorso</div>
+      <div class="title">Guida concettuale</div>
+    </div>
+    <nav>
+      <div class="nav-section">Introduzione</div>
+      <a class="nav-link" href="#contesto">Da dove viene questo documento</a>
+
+      <div class="nav-section">Il modello</div>
+      <a class="nav-link" href="#cosa-impara">Cosa impara un LM</a>
+      <a class="nav-link" href="#conoscenza-capacita">Conoscenza vs Capacità</a>
+      <a class="nav-link" href="#pavimento">Pavimento qualitativo</a>
+
+      <div class="nav-section">Tokenizzazione</div>
+      <a class="nav-link" href="#char-bpe">Char-level vs BPE</a>
+      <a class="nav-link" href="#contesto">Il contesto come risorsa</a>
+
+      <div class="nav-section">Strategia</div>
+      <a class="nav-link" href="#due-track">Due percorsi paralleli</a>
+      <a class="nav-link" href="#scaling">Scaling laws</a>
+      <a class="nav-link" href="#corpus">Preparare il corpus BPE</a>
+      <a class="nav-link" href="#roadmap">Roadmap</a>
+    </nav>
+    <div class="sidebar-back">
+      <a href="index.html">← Indice documentazione</a>
+    </div>
+  </aside>
+
+  <!-- ── Content ── -->
+  <main class="content">
+
+    <p class="eyebrow">SLM · Small Language Model</p>
+    <h1>Il Percorso</h1>
+    <p class="lead">
+      Costruire un modello linguistico da zero non è solo un esercizio tecnico — è un modo per acquisire una comprensione profonda di come funzionano davvero questi sistemi. Questo documento raccoglie le domande, le scoperte e le scelte strategiche emerse durante il percorso.
+    </p>
+
+    <!-- ── Contesto ── -->
+    <section id="contesto">
+      <h2>Da dove viene questo documento</h2>
+      <p>
+        Tutto è iniziato con una domanda semplice: è possibile costruire un modello linguistico in italiano partendo da zero, capendo ogni componente dall'interno? La risposta pratica è sì — e il progetto SLM documenta questo percorso passo per passo.
+      </p>
+      <p>
+        Nella <strong>Fase 1</strong> abbiamo scritto da zero in Python/PyTorch tutti i componenti di un transformer decoder-only stile GPT: l'attention mechanism con maschera causale, il positional encoding sinusoidale, i blocchi con pre-norm e residual connections, l'embedding con weight tying. Un modello di <strong>4.8 milioni di parametri</strong>, ~18 MB in float32.
+      </p>
+      <p>
+        Abbiamo addestrato questo modello su un corpus di narrativa italiana contemporanea — testi scritti in prima persona, 552KB, ~175.000 token a livello di carattere. Dopo 5.000 step di training su Apple M2 (46 minuti), la val loss è scesa da 4.6 a <strong>1.7256</strong>.
+      </p>
+
+      <div class="callout">
+        <div class="callout-label">Cosa produce il modello a questo punto</div>
+        <p style="margin:0 0 8px">Il modello ha acquisito la morfologia italiana: suffissi <code>-zione</code>, <code>-mente</code>, <code>-abile</code> funzionano correttamente. Le parole funzione (articoli, preposizioni) sono usate in modo plausibile. La struttura sintattica di superficie è riconoscibile.</p>
+        <p style="margin:0">Non ha acquisito coerenza semantica: i personaggi cambiano nome tra una frase e l'altra, i fili narrativi si perdono dopo poche righe, i dialoghi non hanno logica. È esattamente ciò che ci si aspetta a questa scala — e capire <em>perché</em> è il punto di partenza di questo documento.</p>
+      </div>
+
+      <p>
+        Le domande che sono emerse da questi risultati — quanto serve scala? cosa differenzia un modello che "comprende" da uno che produce testo plausibile? ha senso continuare da zero o è meglio partire da un modello esistente? — sono quelle a cui questo documento cerca di rispondere.
+      </p>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── Cosa impara un LM ── -->
+    <section id="cosa-impara">
+      <h2>Cosa impara davvero un modello linguistico</h2>
+      <p>
+        Un Language Model impara a fare una cosa sola: dato un contesto di token, predire il token successivo. Non c'è comprensione intenzionale, non c'è un modello interno del mondo, non c'è memoria tra sessioni.
+      </p>
+      <p>
+        Quello che succede durante il training è che per predire bene il token successivo in miliardi di contesti diversi, il modello deve sviluppare <strong>rappresentazioni interne</strong> che catturano struttura sempre più profonda. Non è pianificato — emerge come conseguenza della pressione selettiva della loss function.
+      </p>
+
+      <div class="pull">
+        Il modello non impara l'italiano. Impara la distribuzione statistica dell'italiano — e quella distribuzione, se compressa abbastanza bene, contiene struttura sintattica, semantica, e persino ragionamento.
+      </div>
+
+      <p>
+        La progressione è empiricamente osservabile nelle curve di perdita. I primi strati catturano pattern locali: quali caratteri seguono quali, quali n-gram co-occorrono. Gli strati intermedi catturano sintassi e struttura di frase. Gli strati alti catturano semantica e relazioni di lungo raggio.
+      </p>
+
+      <p>
+        Nel nostro SLM da 4.8M parametri su corpus narrativo italiano, questo si vede concretamente: il modello ha acquisito morfologia (suffissi <code>-zione</code>, <code>-mente</code>, <code>-abile</code>), struttura frasale scheletrica, e il ritmo del testo di addestramento. Non ha acquisito coerenza semantica — i personaggi cambiano nome tra una frase e l'altra, i fili narrativi si perdono. È esattamente ciò che ci aspettavamo a questa scala.
+      </p>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── Conoscenza vs Capacità ── -->
+    <section id="conoscenza-capacita">
+      <h2>Conoscenza vs Capacità</h2>
+      <p>
+        Questa è la distinzione più importante da interiorizzare, e quella che emerge più chiaramente costruendo un modello da zero.
+      </p>
+
+      <div class="two-col" style="grid-template-columns: 1fr 1fr; margin: 28px 0;">
+        <div class="track-card">
+          <div class="track-num">Conoscenza</div>
+          <h3>Si inietta con i dati</h3>
+          <ul>
+            <li>Vocabolario di dominio</li>
+            <li>Fatti, nomi, concetti</li>
+            <li>Stile e registro</li>
+            <li>Pattern specifici del dominio</li>
+          </ul>
+        </div>
+        <div class="track-card">
+          <div class="track-num">Capacità</div>
+          <h3>Richiede scala per emergere</h3>
+          <ul>
+            <li>Output strutturato affidabile (JSON)</li>
+            <li>Ragionamento multi-step</li>
+            <li>Instruction following</li>
+            <li>Dipendenze a lungo raggio</li>
+          </ul>
+        </div>
+      </div>
+
+      <p>
+        Aggiungere documenti assicurativi al corpus del nostro SLM gli insegnerebbe il vocabolario delle polizze — <em>franchigia</em>, <em>underwriter</em>, <em>SLA</em>. Ma non gli darebbe la capacità di analizzare una tabella KPI, produrre JSON affidabile, o ragionare in più passi su un problema. Quelle non sono capacità linguistiche — emergono oltre una certa soglia di scala che questo modello non raggiunge.
+      </p>
+
+      <p>
+        Un esempio reale: Microsoft ha usato GPT-4 per generare dati di training curati con cura maniacale, poi ha addestrato <strong>Phi-3</strong> (3.8B parametri) su quei dati. Phi-3 supera modelli da 30B su certi benchmark — non perché abbia più parametri, ma perché i dati erano di qualità eccezionale. La conoscenza viene dai dati; le capacità richiedono sia dati che scala.
+      </p>
+
+      <div class="callout">
+        <div class="callout-label">Analogia</div>
+        <p style="margin:0">
+          Un parlante che conosce 500 parole di una lingua può produrre frasi grammaticalmente corrette in un dominio ristretto. Un madrelingua colto può tenere una conferenza su epistemologia. La differenza non è solo vocabolario — è capacità cognitiva disponibile.
+        </p>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── Pavimento qualitativo ── -->
+    <section id="pavimento">
+      <h2>Il pavimento qualitativo</h2>
+      <p>
+        Alcune capacità non si degradano gradualmente con la riduzione della scala — scompaiono quasi di colpo sotto una certa soglia. Questo fenomeno, documentato in letteratura come <em>emergent capabilities</em>, ha conseguenze pratiche molto concrete.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Parametri</th>
+              <th>RAM (4-bit)</th>
+              <th>Cosa funziona</th>
+              <th>Cosa non funziona</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">5M (SLM)</td>
+              <td class="dim">~20 MB</td>
+              <td>Morfologia, stile di superficie</td>
+              <td>Coerenza semantica, ragionamento</td>
+            </tr>
+            <tr>
+              <td class="mono">50–125M</td>
+              <td class="dim">~200–500 MB</td>
+              <td>Coerenza di paragrafo, classificazione</td>
+              <td>Instruction following, JSON affidabile</td>
+            </tr>
+            <tr>
+              <td class="mono" style="color:var(--accent); font-weight:600">350M–1B</td>
+              <td class="dim">~600MB–2GB</td>
+              <td><strong>Generazione di dominio, Q&A semplice, writing assistant</strong></td>
+              <td>Ragionamento complesso</td>
+            </tr>
+            <tr>
+              <td class="mono">3B</td>
+              <td class="dim">~2–4 GB</td>
+              <td>Generazione fluente, tool use semplice</td>
+              <td>Ragionamento multi-hop sofisticato</td>
+            </tr>
+            <tr>
+              <td class="mono">7B+</td>
+              <td class="dim">~4–8 GB</td>
+              <td>Instruction following robusto, ragionamento, JSON strutturato</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        Il task determina il pavimento. Un assistente alla scrittura letteraria (dove un'imprecisione è una scelta stilistica, non un errore logico) ha un pavimento molto più basso di un agente che deve produrre JSON affidabile per un sistema esterno. Questo è il motivo per cui due use case con requisiti diversi richiedono architetture diverse.
+      </p>
+
+      <div class="callout warn">
+        <div class="callout-label">Nota pratica</div>
+        <p style="margin:0">
+          I modelli sotto soglia non fanno le cose "peggio" — le fanno in modo non prevedibile. A volte funzionano, a volte no, senza pattern chiaro. In produzione questo è più pericoloso di un fallimento consistente.
+        </p>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── Char vs BPE ── -->
+    <section id="char-bpe">
+      <h2>Char-level vs BPE</h2>
+      <p>
+        La tokenizzazione a carattere è il punto di partenza più didattico perché il vocabolario è piccolo (80-120 simboli) e ogni aspetto del modello è visibile. Ma ha un costo specifico: il <strong>contesto</strong>.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tokenizer</th>
+              <th>Token per "assicurazione"</th>
+              <th>seq_len=256 copre</th>
+              <th>Apprende da</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">Char-level</td>
+              <td>14 token</td>
+              <td>~40 parole</td>
+              <td>Ortografia, morfologia</td>
+            </tr>
+            <tr>
+              <td class="mono">BPE 8k</td>
+              <td>3–4 token</td>
+              <td>~180 parole</td>
+              <td>Parole, semantica, sintassi</td>
+            </tr>
+            <tr>
+              <td class="mono">BPE 32k</td>
+              <td>2–3 token</td>
+              <td>~220 parole</td>
+              <td>Parole intere, composti, semantica ricca</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        Il codebase attuale supporta già tutti e tre i backend (<code>--tokenizer char</code>, <code>--tokenizer bpe-tiktoken</code>, <code>--tokenizer bpe-spm</code>). Il passaggio a BPE non richiede modifiche all'architettura — solo un corpus più grande e un tokenizer addestrato.
+      </p>
+    </section>
+
+    <!-- ── Il contesto come risorsa ── -->
+    <section id="contesto">
+      <h2>Il contesto come risorsa scarsa</h2>
+      <p>
+        Con seq_len=256 e tokenizzazione a carattere, la "finestra di attenzione" del modello copre circa 40 parole — a malapena un paragrafo breve. Il modello non può vedere l'inizio del capoverso mentre scrive la fine, né ricordare un personaggio introdotto due frasi prima.
+      </p>
+      <p>
+        Con BPE e seq_len=512–1024, la stessa architettura può condizionarsi su 400–800 parole — un paragrafo completo, una scena, un dialogo. Questo è il cambio più impattante per l'uso letterario: non la dimensione del modello, ma quanto passato riesce a tenere in campo visivo.
+      </p>
+
+      <div class="pull">
+        La qualità del testo generato dipende tanto dalla lunghezza del contesto quanto dal numero di parametri. Un modello piccolo con contesto lungo produce testo più coerente di uno grande con contesto breve, per task di continuazione.
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── Due track ── -->
+    <section id="due-track">
+      <h2>Due percorsi paralleli</h2>
+      <p>
+        La discussione strategica ha portato a identificare due direzioni complementari. Non si escludono — anzi, la comprensione profonda del primo rende il secondo molto più consapevole.
+      </p>
+
+      <div class="two-col">
+        <div class="track-card" style="border-top: 3px solid var(--accent);">
+          <div class="track-num">Track 1 — Formazione</div>
+          <h3>SLM from scratch</h3>
+          <p style="font-size:0.85rem; color:var(--text-sec); margin:8px 0 12px">
+            Ogni componente scritto e compreso. Obiettivo secondario: assistente alla scrittura addestrato sulla propria voce narrativa.
+          </p>
+          <ul>
+            <li>Corpus BPE (Wikipedia IT + corpus narrativo)</li>
+            <li>SPM tokenizer + architettura ~50M, seq_len 512</li>
+            <li>Pre-training su italiano letterario</li>
+            <li>Fine-tuning sul corpus personale</li>
+          </ul>
+        </div>
+        <div class="track-card" style="border-top: 3px solid #6B7280;">
+          <div class="track-num">Track 2 — Produzione</div>
+          <h3>LoRA/QLoRA su base esistente</h3>
+          <p style="font-size:0.85rem; color:var(--text-sec); margin:8px 0 12px">
+            Le capacità già ci sono. Il fine-tuning porta la conoscenza di dominio. Target: uso operativo in ambito di prodotto.
+          </p>
+          <ul>
+            <li>Base model: LLaMA 3.1 8B o Mistral 7B (4-bit ≈ 4-5GB)</li>
+            <li>500–2000 esempi di dominio curati</li>
+            <li>QLoRA su M2 o EC2 (ore, non giorni)</li>
+            <li>Adapter LoRA per dominio (~25MB per specializzazione)</li>
+          </ul>
+        </div>
+      </div>
+
+      <p>
+        Quello che si impara nel Track 1 — come l'attention traccia le dipendenze, perché il learning rate schedule conta, come i pesi codificano il dominio — è esattamente ciò che serve per fare scelte consapevoli nel Track 2. LoRA smette di essere una "ricetta" e diventa uno strumento che si capisce dall'interno.
+      </p>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── Scaling laws ── -->
+    <section id="scaling">
+      <h2>Scaling laws e il modello attuale</h2>
+      <p>
+        Le <em>scaling laws</em> di Chinchilla (Hoffmann et al., 2022) stabiliscono che un modello addestrato in modo ottimale ha bisogno di circa <strong>20 token per ogni parametro</strong>. Con meno token, il modello è <em>undertrained</em> — non ha visto abbastanza dati per sfruttare la sua capacità.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Modello</th>
+              <th>Parametri</th>
+              <th>Token necessari (ottimale)</th>
+              <th>Token disponibili (corpus attuale)</th>
+              <th>Stato</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SLM attuale</td>
+              <td class="mono">4.8M</td>
+              <td class="mono">~96M</td>
+              <td class="mono">~175K</td>
+              <td><span class="badge warn">fortemente undertrained</span></td>
+            </tr>
+            <tr>
+              <td>Target Fase 2</td>
+              <td class="mono">50M</td>
+              <td class="mono">~1B</td>
+              <td class="mono">50–200M (corpus BPE)</td>
+              <td><span class="badge warn">undertrained ma utile</span></td>
+            </tr>
+            <tr>
+              <td>Writing assistant</td>
+              <td class="mono">350M</td>
+              <td class="mono">~7B</td>
+              <td class="mono">post fine-tuning personale</td>
+              <td><span class="badge teal">target realistico</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        Questo spiega perché la val loss smette di scendere pur non avendo saturato la capacità del modello: semplicemente non ci sono abbastanza dati. Il corpus da 552KB (~175K token) è ottimale per un modello di circa 8.750 parametri — il nostro ne ha 550 volte di più.
+      </p>
+
+      <p>
+        La conseguenza pratica: nel passaggio alla Fase 2, aumentare il corpus è <em>più importante</em> che aumentare i parametri. Un modello da 20M ben addestrato supera uno da 50M undertrained.
+      </p>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── Corpus BPE ── -->
+    <section id="corpus">
+      <h2>Preparare il corpus BPE</h2>
+      <p>
+        Il passaggio a BPE richiede un corpus molto più grande. L'obiettivo è ~200MB di italiano pulito per il pre-training — abbastanza da coprire un vocabolario ampio senza introdurre rumore.
+      </p>
+
+      <h3>Strategia a due fasi</h3>
+      <div class="two-col">
+        <div class="track-card" style="border-top: 3px solid var(--accent);">
+          <div class="track-num">Fase A — Pre-training</div>
+          <h3>Italiano generale</h3>
+          <p style="font-size:0.85rem; color:var(--text-sec); margin:8px 0 10px">
+            Vocabolario ampio, grammatica solida, registro formale e informale.
+          </p>
+          <ul>
+            <li><strong>Wikipedia IT</strong> — ~800MB testo pulito, vocabolario ricco, struttura enciclopedica. Il punto di partenza consigliato.</li>
+            <li><strong>Paisà</strong> (opzionale) — corpus web italiano curato, aggiunge varietà di registro</li>
+          </ul>
+        </div>
+        <div class="track-card" style="border-top: 3px solid #6B7280;">
+          <div class="track-num">Fase B — Fine-tuning</div>
+          <h3>Italiano letterario</h3>
+          <p style="font-size:0.85rem; color:var(--text-sec); margin:8px 0 10px">
+            Stile narrativo, ritmo, voce personale. Poca quantità, alta qualità.
+          </p>
+          <ul>
+            <li><strong>Corpus personale</strong> — i tuoi testi (552KB attuale, espandibile)</li>
+            <li><strong>EPUB narrativa contemporanea</strong> in prima persona — lo stesso registro che vuoi produrre. La distribuzione del fine-tuning domina quella del pre-training.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout">
+        <div class="callout-label">Dipendenze installate</div>
+        <pre style="margin:4px 0 0; background:none; border:none; padding:0; font-size:0.82rem">pip3 install wikiextractor          # estrazione dump Wikipedia
+pip3 install ebooklib beautifulsoup4 # estrazione testo EPUB</pre>
+      </div>
+
+      <h3>Confronto tra corpora disponibili</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Corpus</th>
+              <th>Qualità</th>
+              <th>Registro</th>
+              <th>Dimensione utile</th>
+              <th>Consigliato</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Wikipedia IT</strong></td>
+              <td>Alta, curata</td>
+              <td>Formale/enciclopedico</td>
+              <td>~800MB testo pulito</td>
+              <td><span class="badge yes">Sì — backbone</span></td>
+            </tr>
+            <tr>
+              <td>Paisà</td>
+              <td>Buona, filtrata</td>
+              <td>Web (news, blog)</td>
+              <td>~250M parole</td>
+              <td><span class="badge teal">Opzionale</span></td>
+            </tr>
+            <tr>
+              <td>CC-100 Italian</td>
+              <td>Variabile, rumorosa</td>
+              <td>Web grezzo</td>
+              <td>~60GB (troppo)</td>
+              <td><span class="badge no">No — serve filtraggio</span></td>
+            </tr>
+            <tr>
+              <td>mC4 Italian</td>
+              <td>Discreta</td>
+              <td>Web + news</td>
+              <td>Troppo grande</td>
+              <td><span class="badge no">No — pensato per 10B+ token</span></td>
+            </tr>
+            <tr>
+              <td>EPUB letterari</td>
+              <td>Altissima</td>
+              <td>Narrativo — esatto</td>
+              <td>Dipende dalla libreria</td>
+              <td><span class="badge yes">Sì — fine-tuning</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Download e pulizia Wikipedia IT</h3>
+      <p>
+        Lo script <code>tools/wiki_to_corpus.py</code> gestisce l'intera pipeline: estrazione dal dump XML, rimozione di markup e titoli di sezione, normalizzazione unicode, filtro articoli troppo corti, limite di dimensione configurabile.
+      </p>
+
+      <pre># Step 1 — scarica il dump (una sola volta, ~1.5 GB)
+curl -L "https://dumps.wikimedia.org/itwiki/latest/itwiki-latest-pages-articles.xml.bz2" \
+     -o data/itwiki.xml.bz2
+
+# Step 2 — estrai e pulisci (5–15 min su M2)
+pip install wikiextractor
+python3 tools/wiki_to_corpus.py data/itwiki.xml.bz2 --max-mb 200
+
+# Step 3 — combina con il corpus narrativo esistente
+cat data/wiki_it.txt data/corpus.txt > data/corpus_bpe.txt
+
+# Step 4 — training con tokenizer SPM
+python3 train.py --tokenizer bpe-spm \
+                 --bpe-corpus data/corpus_bpe.txt \
+                 --bpe-vocab 16000 \
+                 --data data/corpus_bpe.txt</pre>
+
+      <h3>Pulizia dei caratteri speciali</h3>
+      <p>
+        Gli EPUB contengono spesso caratteri tipografici invisibili o artefatti di conversione che non fanno parte del vocabolario narrativo e inquinano il corpus. <code>epub_to_text.py</code> li rimuove automaticamente:
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Codepoint</th>
+              <th>Carattere</th>
+              <th>Nome</th>
+              <th>Origine</th>
+              <th>Trattamento</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">U+202F</td>
+              <td class="mono">&amp;#8239;</td>
+              <td>Narrow no-break space</td>
+              <td>Word, tipografia francese</td>
+              <td>→ spazio normale</td>
+            </tr>
+            <tr>
+              <td class="mono">U+00A0</td>
+              <td class="mono">&amp;nbsp;</td>
+              <td>Non-breaking space</td>
+              <td>HTML, conversioni EPUB</td>
+              <td>→ spazio normale</td>
+            </tr>
+            <tr>
+              <td class="mono">U+FEFF</td>
+              <td class="mono">﻿</td>
+              <td>BOM / zero-width NBSP</td>
+              <td>Header UTF-8, artefatto Windows</td>
+              <td>→ rimosso</td>
+            </tr>
+            <tr>
+              <td class="mono">U+00A9</td>
+              <td>©</td>
+              <td>Copyright sign</td>
+              <td>Pagine copyright degli ebook</td>
+              <td>→ rimosso</td>
+            </tr>
+            <tr>
+              <td class="mono">U+2026</td>
+              <td>…</td>
+              <td>Horizontal ellipsis</td>
+              <td>Tipografia editoriale</td>
+              <td>→ <code>...</code> (ASCII)</td>
+            </tr>
+            <tr>
+              <td class="mono">U+FFFD</td>
+              <td>&#xFFFD;</td>
+              <td>Replacement character</td>
+              <td>Byte non decodificabile in UTF-8</td>
+              <td>→ rimosso</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        L'ellissi tipografica (…) viene convertita in tre punti ASCII (<code>...</code>) invece di essere rimossa — preserva il significato sintattico nel testo. Tutti gli altri sono artefatti senza valore semantico.
+      </p>
+
+      <div class="callout">
+        <div class="callout-label">Verifica corpus dopo l'estrazione</div>
+        <pre style="margin:4px 0 0; background:none; border:none; padding:0; font-size:0.82rem">python3 - &lt;&lt;'EOF'
+import unicodedata
+text  = open('data/corpus_letterario.txt').read()
+chars = sorted(set(c for c in text if ord(c) > 127))
+for c in chars[:40]:
+    print(f"  U+{ord(c):04X}  {repr(c)}  {unicodedata.name(c, '?')}")
+print(f"Totale non-ASCII: {len(chars)}")
+EOF</pre>
+      </div>
+
+      <div class="callout">
+        <div class="callout-label">Perché 200 MB e non di più</div>
+        <p style="margin:0">
+          Per un modello da 50M parametri, la legge di Chinchilla suggerisce ~1B token come training ottimale. 200MB di testo italiano ≈ 140M token BPE — siamo ancora nel regime undertrained, ma ordini di grandezza meglio della Fase 1. Aumentare oltre i 500MB porta benefici marginali senza aumentare l'architettura: meglio scalare insieme corpus e parametri.
+        </p>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── Roadmap ── -->
+    <section id="roadmap">
+      <h2>Roadmap — Track 1</h2>
+      <p>Le fasi in sequenza logica, con le dipendenze indicate.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Fase</th>
+              <th>Obiettivo</th>
+              <th>Dipendenza</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono" style="color:var(--accent)">✓</td>
+              <td><strong>Fase 1 — Char-level</strong></td>
+              <td>Architettura completa, training loop, val loss 1.7256</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td class="mono">2</td>
+              <td><strong>Corpus BPE</strong></td>
+              <td>50–200MB italiano: Wikipedia IT + corpus narrativo</td>
+              <td>Fase 1 ✓</td>
+            </tr>
+            <tr>
+              <td class="mono">3</td>
+              <td><strong>SPM + architettura 50M</strong></td>
+              <td>BPE 16k token, d_model 512, 8 layer, seq_len 512</td>
+              <td>Corpus BPE</td>
+            </tr>
+            <tr>
+              <td class="mono">4</td>
+              <td><strong>Sampling strategies</strong></td>
+              <td>Top-p (nucleus sampling), temperature — impatto immediato sulla qualità percepita</td>
+              <td>Fase 1 ✓</td>
+            </tr>
+            <tr>
+              <td class="mono">5</td>
+              <td><strong>Metriche qualitative</strong></td>
+              <td>PPL, TTR, self-BLEU, repetition rate — misura indipendente dalla loss</td>
+              <td>Fase 3</td>
+            </tr>
+            <tr>
+              <td class="mono">6</td>
+              <td><strong>Fine-tuning sul corpus personale</strong></td>
+              <td>Adatta stile e voce narrativa sopra il pre-training generale</td>
+              <td>Fase 3 + corpus personale</td>
+            </tr>
+            <tr>
+              <td class="mono">7</td>
+              <td><strong>Architettura moderna</strong></td>
+              <td>RoPE, SwiGLU, RMSNorm — i componenti dei LLM reali</td>
+              <td>Fase 3</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <div class="callout-label">Prossimo passo concreto</div>
+        <p style="margin:0">
+          Raccogliere il corpus BPE. Il codice è già pronto in <code>train.py</code> — basta il dataset. Wikipedia IT è disponibile come dump pubblico (~800MB testo pulito). Combinato con il corpus narrativo esistente dà un pre-training bilanciato: italiano generale + italiano letterario.
+        </p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function() {
+  const links = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('section[id]');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => obs.observe(s));
+})();
+</script>

@@ -1,0 +1,141 @@
+<meta charset="UTF-8">
+<title>SLM — Documentazione</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+:root {
+  --bg:      #F7F9FC;
+  --surface: #FFFFFF;
+  --text:    #1C2333;
+  --text-sec:#5A6478;
+  --accent:  #0A6E6E;
+  --border:  #DDE3EE;
+  --card-hover: #F0F5FA;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:      #0D1117; --surface: #161B22; --text: #E6EDF3;
+    --text-sec:#8B949E; --accent: #2BBFBF;  --border: #21262D;
+    --card-hover: #1C2128;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --text:#E6EDF3;
+  --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+  --card-hover:#1C2128;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px; line-height: 1.6; margin: 0;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 40px 20px;
+}
+.container { max-width: 560px; width: 100%; }
+.eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent);
+  margin-bottom: 8px;
+}
+h1 {
+  font-size: 2rem; font-weight: 600; margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+.tagline { color: var(--text-sec); margin: 0 0 36px; font-size: 0.95rem; }
+.cards { display: flex; flex-direction: column; gap: 12px; }
+a.card {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 18px 20px;
+  text-decoration: none; color: var(--text);
+  transition: background 0.15s, border-color 0.15s;
+}
+a.card:hover { background: var(--card-hover); border-color: var(--accent); }
+.card-icon {
+  font-size: 1.5rem; width: 40px; text-align: center; flex-shrink: 0;
+}
+.card-text { min-width: 0; }
+.card-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; }
+.card-desc  { color: var(--text-sec); font-size: 0.83rem; }
+.footer {
+  margin-top: 40px; text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem; color: var(--text-sec);
+}
+</style>
+
+<div class="container">
+  <p class="eyebrow">SLM · Small Language Model</p>
+  <h1>Documentazione</h1>
+  <p class="tagline">Modello linguistico italiano decoder-only — costruito da zero in Python/PyTorch</p>
+
+  <div class="cards">
+    <a class="card" href="slm-journal.html">
+      <div class="card-icon">📓</div>
+      <div class="card-text">
+        <div class="card-title">Diario di sviluppo</div>
+        <div class="card-desc">Timeline delle decisioni, analisi Run #3 (11 750 step, val loss 5.46), curva di loss SVG, migrazione a RoPE</div>
+      </div>
+    </a>
+    <a class="card" href="slm-intro.html">
+      <div class="card-icon">🧠</div>
+      <div class="card-text">
+        <div class="card-title">Come funziona una LLM</div>
+        <div class="card-desc">Motore di probabilità, token, finestra di contesto, forward pass con diagramma, temperatura, top-k, decoder-only</div>
+      </div>
+    </a>
+    <a class="card" href="slm-roadmap.html">
+      <div class="card-icon">🗓</div>
+      <div class="card-text">
+        <div class="card-title">Roadmap di sviluppo</div>
+        <div class="card-desc">11 fasi: architettura, training, tokenizer, sampling avanzato, KV-cache, LoRA, quantizzazione — con stato corrente</div>
+      </div>
+    </a>
+    <a class="card" href="slm-docs.html">
+      <div class="card-icon">📖</div>
+      <div class="card-text">
+        <div class="card-title">Documentazione completa</div>
+        <div class="card-desc">Architettura, training loop, cosa aspettarsi, corpus, comandi, roadmap, glossario</div>
+      </div>
+    </a>
+    <a class="card" href="slm-teoria.html">
+      <div class="card-icon">📐</div>
+      <div class="card-text">
+        <div class="card-title">Riferimento teorico</div>
+        <div class="card-desc">Formule del transformer con rendering matematico — attention, positional encoding, FFN, loss</div>
+      </div>
+    </a>
+    <a class="card" href="slm-attention-viz.html">
+      <div class="card-icon">🔍</div>
+      <div class="card-text">
+        <div class="card-title">Visualizzazione attenzione</div>
+        <div class="card-desc">Heatmap interattiva delle 4 teste di attenzione su una frase italiana di esempio</div>
+      </div>
+    </a>
+    <a class="card" href="slm-percorso.html">
+      <div class="card-icon">🗺</div>
+      <div class="card-text">
+        <div class="card-title">Il Percorso</div>
+        <div class="card-desc">Conoscenza vs capacità, pavimento qualitativo, char vs BPE, due track paralleli, scaling laws</div>
+      </div>
+    </a>
+    <a class="card" href="slm-vocabolario.html">
+      <div class="card-icon">🔢</div>
+      <div class="card-text">
+        <div class="card-title">Vocabolario, Embedding e Parametri</div>
+        <div class="card-desc">Cosa sono i parametri, la embedding table, il rapporto critico embedding/totale, weight tying</div>
+      </div>
+    </a>
+    <a class="card" href="slm-ottimizzatore.html">
+      <div class="card-icon">⚙️</div>
+      <div class="card-text">
+        <div class="card-title">AdamW e Ottimizzazione</div>
+        <div class="card-desc">Gradienti, i due momenti, bias correction, weight decay, warmup + cosine decay, gradient clipping</div>
+      </div>
+    </a>
+  </div>
+
+  <p class="footer">Python · PyTorch · Apple MPS · ~46M parametri (medium)</p>
+</div>

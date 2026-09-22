@@ -1,0 +1,389 @@
+<meta charset="UTF-8">
+<title>Come funziona una LLM</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:        #F7F6F3;
+    --surface:   #FFFFFF;
+    --border:    #DDD9D0;
+    --text:      #1A1916;
+    --muted:     #6B6760;
+    --accent:    #0A6E6E;
+    --accent-bg: #EAF4F4;
+    --code-bg:   #F0EDE8;
+    --warn-bg:   #FFF8E7;
+    --warn-bdr:  #D4A017;
+    --good-bg:   #EAF4F4;
+    --good-bdr:  #0A6E6E;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:#141412; --surface:#1E1C1A; --border:#333028;
+      --text:#EAE8E3; --muted:#8A8780; --accent:#2BB5B5;
+      --accent-bg:#0D2828; --code-bg:#252320;
+      --warn-bg:#1F1A08; --warn-bdr:#B8891A;
+      --good-bg:#0D2828; --good-bdr:#2BB5B5;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:#141412; --surface:#1E1C1A; --border:#333028;
+    --text:#EAE8E3; --muted:#8A8780; --accent:#2BB5B5;
+    --accent-bg:#0D2828; --code-bg:#252320;
+    --warn-bg:#1F1A08; --warn-bdr:#B8891A;
+    --good-bg:#0D2828; --good-bdr:#2BB5B5;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Serif',Georgia,serif; font-size:17px; line-height:1.75; }
+  .layout { display:grid; grid-template-columns:220px 1fr; min-height:100vh; max-width:1100px; margin:0 auto; }
+
+  nav { position:sticky; top:0; height:100vh; overflow-y:auto; padding:2.5rem 1.25rem 2.5rem 1.5rem; border-right:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:13px; }
+  nav .nav-label { font-size:10px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:1rem; }
+  nav ol { margin:0; padding:0; list-style:none; counter-reset:toc; }
+  nav ol li { counter-increment:toc; margin-bottom:.2rem; }
+  nav ol li::before { content:counter(toc) ". "; color:var(--muted); font-size:11px; }
+  nav a { color:var(--muted); text-decoration:none; transition:color .15s; }
+  nav a:hover, nav a.active { color:var(--accent); }
+  nav .back-link { display:block; margin-bottom:2rem; color:var(--accent); font-size:12px; text-decoration:none; }
+  nav .back-link::before { content:"← "; }
+
+  main { padding:3rem 3.5rem 5rem; min-width:0; }
+  .doc-label { font-family:'IBM Plex Sans',sans-serif; font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:.75rem; }
+  h1 { font-size:2.2rem; font-weight:600; line-height:1.2; text-wrap:balance; margin:0 0 .5rem; }
+  .subtitle { font-size:1.05rem; color:var(--muted); font-style:italic; margin-bottom:2.5rem; padding-bottom:2rem; border-bottom:1px solid var(--border); }
+  h2 { font-size:1.4rem; font-weight:600; margin:3rem 0 .75rem; scroll-margin-top:1.5rem; }
+  h3 { font-size:1.05rem; font-weight:600; font-family:'IBM Plex Sans',sans-serif; margin:2rem 0 .5rem; color:var(--accent); }
+  p { margin:0 0 1rem; max-width:68ch; }
+  ul { margin:0 0 1.25rem; padding-left:1.5rem; max-width:68ch; }
+  li { margin-bottom:.3rem; }
+
+  code { font-family:'IBM Plex Mono',monospace; font-size:.82em; background:var(--code-bg); padding:.1em .35em; border-radius:3px; }
+  pre { font-family:'IBM Plex Mono',monospace; font-size:.82rem; background:var(--code-bg); border:1px solid var(--border); border-radius:6px; padding:1.1rem 1.25rem; overflow-x:auto; line-height:1.6; margin:1rem 0 1.5rem; }
+  pre .cm { color:var(--muted); font-style:italic; }
+
+  .box { border-radius:6px; padding:1rem 1.25rem; margin:1.5rem 0; max-width:72ch; }
+  .box-warn { background:var(--warn-bg); border-left:3px solid var(--warn-bdr); }
+  .box-good { background:var(--good-bg); border-left:3px solid var(--good-bdr); }
+  .box p { margin:0; font-size:.93rem; }
+
+  .table-wrap { overflow-x:auto; margin:1.25rem 0 1.75rem; }
+  table { width:100%; border-collapse:collapse; font-family:'IBM Plex Sans',sans-serif; font-size:.88rem; }
+  thead th { text-align:left; font-weight:600; font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); border-bottom:2px solid var(--border); padding:.5rem .75rem; white-space:nowrap; }
+  tbody td { padding:.55rem .75rem; border-bottom:1px solid var(--border); vertical-align:top; }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr:hover td { background:var(--accent-bg); }
+  td.hl { font-weight:600; color:var(--accent); }
+
+  .fwd-diagram { margin:1.5rem 0 2rem; max-width:500px; }
+  .fwd-diagram svg { width:100%; height:auto; }
+
+  .temp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:1.25rem 0 1.75rem; max-width:72ch; }
+  .temp-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:.9rem 1rem; font-family:'IBM Plex Sans',sans-serif; font-size:.82rem; }
+  .temp-card .val { font-family:'IBM Plex Mono',monospace; font-size:1.2rem; font-weight:500; color:var(--accent); display:block; margin-bottom:.3rem; }
+  .temp-card .desc { color:var(--muted); line-height:1.5; }
+
+  .link-card { display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px 20px; text-decoration:none; color:var(--text); transition:border-color .15s, background .15s; margin:1.5rem 0; max-width:440px; }
+  .link-card:hover { border-color:var(--accent); background:var(--accent-bg); }
+  .link-card .icon { font-size:1.4rem; flex-shrink:0; }
+  .link-card strong { display:block; font-size:.95rem; margin-bottom:2px; }
+  .link-card span { font-size:.82rem; color:var(--muted); font-family:'IBM Plex Sans',sans-serif; }
+
+  @media (max-width:720px) {
+    .layout { grid-template-columns:1fr; }
+    nav { position:static; height:auto; border-right:none; border-bottom:1px solid var(--border); }
+    main { padding:2rem 1.25rem 3rem; }
+    .temp-grid { grid-template-columns:1fr; }
+  }
+</style>
+
+<div class="layout">
+  <nav id="toc">
+    <a class="back-link" href="index.html">Indice</a>
+    <div class="nav-label">In questa pagina</div>
+    <ol>
+      <li><a href="#motore">Motore di probabilità</a></li>
+      <li><a href="#token">Il token</a></li>
+      <li><a href="#contesto">Finestra di contesto</a></li>
+      <li><a href="#forward">La forward pass</a></li>
+      <li><a href="#sampling">Dal logit alla parola</a></li>
+      <li><a href="#conoscenza">Cosa sa il modello</a></li>
+      <li><a href="#genesi">Genesi e vincoli</a></li>
+      <li><a href="#decoder-only">Decoder-only</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="doc-label">SLM · Fondamenti</div>
+    <h1>Come funziona una LLM</h1>
+    <p class="subtitle">Un motore di probabilità sui token: cosa calcola, come genera, cosa sa davvero — e perché funziona.</p>
+
+    <h2 id="motore">1. Motore di probabilità</h2>
+    <p>Un Large Language Model non "capisce" il testo nel senso ordinario del termine. Esegue un calcolo: data una sequenza di token in ingresso, restituisce una <strong>distribuzione di probabilità</strong> sull'intero vocabolario.</p>
+    <pre>P( token_{t+1}  |  token_1, token_2, ..., token_t )</pre>
+    <p>La domanda a cui risponde il modello è: <em>"Dati questi token in quest'ordine, qual è la probabilità di ciascun token del vocabolario come prossima uscita?"</em></p>
+    <p>Esempio concreto. Dato il contesto <code>"il cane abbaia nel"</code>, il modello potrebbe restituire:</p>
+    <pre>P("cortile")  = 0.18
+P("parco")    = 0.12
+P("bosco")    = 0.09
+P("silenzio") = 0.06
+...             <span class="cm">← altri 15.995 token con probabilità residua</span></pre>
+    <p>Non esiste una risposta giusta. Esiste una distribuzione. Il testo generato nasce dal <strong>campionamento ripetuto</strong> da questa distribuzione — un token alla volta, ogni token aggiunto al contesto per il passo successivo.</p>
+
+    <h2 id="token">2. Il token — unità atomica</h2>
+    <p>Il modello non lavora con parole intere né con singoli caratteri. Lavora con <strong>token</strong>: sotto-unità di testo determinate statisticamente dal corpus di addestramento tramite BPE (Byte-Pair Encoding).</p>
+    <p>BPE parte dai caratteri e unisce iterativamente le coppie più frequenti finché non raggiunge la dimensione del vocabolario target. Il risultato: parole frequenti diventano un token singolo, parole rare si spezzano in pezzi.</p>
+    <pre>"programmare"  →  [4721]          <span class="cm"># token unico — parola comune</span>
+"trasparenza"  →  [8843, 12041]   <span class="cm"># due token</span>
+"antidisestablishmentarianism"  →  [5-6 token]  <span class="cm"># parola rarissima</span></pre>
+    <p>Nel nostro SLM con vocabolario da 16.000 token addestrato su italiano:</p>
+    <ul>
+      <li>Parole frequenti ("il", "di", "che", "questo") → 1 token ciascuna</li>
+      <li>Parole composte o rare → 2–4 token</li>
+      <li>Wikipedia italiana (~200 MB) → ~50 milioni di token</li>
+    </ul>
+    <div class="box box-good">
+      <p>Il tokenizer è un contratto tra dati e modello. Il modello addestrato con SPM da 16k non può usare un tokenizer diverso — ogni checkpoint è inseparabile dal suo vocabolario. Vedi <a href="slm-vocabolario.html">Vocabolario, Embedding e Parametri</a> per i dettagli.</p>
+    </div>
+
+    <h2 id="contesto">3. La finestra di contesto</h2>
+    <p>Il modello non ha memoria illimitata. Vede solo gli ultimi <code>seq_len</code> token — la <strong>finestra di contesto</strong>. Tutto il testo precedente è invisibile.</p>
+    <pre>seq_len = 512  →  ~350 parole  →  ~2 pagine di testo</pre>
+    <p>Quando si supera <code>seq_len</code>, i token più vecchi vengono scartati. Non è una limitazione accidentale — l'attention ha complessità <code>O(seq_len²)</code> in memoria. Raddoppiare <code>seq_len</code> quadruplica la RAM richiesta.</p>
+    <p>Nel progetto SLM abbiamo ridotto da 512 a 256 per restare nei limiti degli 8 GB di memoria unificata disponibili. Su macchine da 24–32 GB si può tornare a 512 o oltre.</p>
+
+    <h2 id="forward">4. La forward pass</h2>
+    <p>Ogni volta che il modello elabora un batch di token, attraversa sempre lo stesso percorso deterministico e differenziabile. Durante il training questo percorso viene eseguito miliardi di volte.</p>
+
+    <div class="fwd-diagram">
+      <svg viewBox="0 0 490 480" xmlns="http://www.w3.org/2000/svg" aria-label="Pipeline della forward pass da token_id a distribuzione di probabilità">
+
+        <!-- token input -->
+        <rect x="100" y="12" width="220" height="38" rx="6"
+              style="fill:var(--code-bg);stroke:var(--border);stroke-width:1.5"/>
+        <text x="210" y="31" style="font-family:'IBM Plex Mono',monospace;font-size:12px;fill:var(--text);text-anchor:middle;dominant-baseline:central">token_id = 42</text>
+        <text x="332" y="31" style="font-family:'IBM Plex Sans',sans-serif;font-size:10px;fill:var(--muted);dominant-baseline:central">[batch, seq_len]</text>
+
+        <line x1="210" y1="51" x2="210" y2="62" style="stroke:var(--border);stroke-width:1.5"/>
+        <polygon points="210,72 204,63 216,63" style="fill:var(--border)"/>
+
+        <!-- embedding -->
+        <rect x="100" y="72" width="220" height="38" rx="6"
+              style="fill:var(--surface);stroke:var(--border);stroke-width:1.5"/>
+        <text x="210" y="91" style="font-family:'IBM Plex Mono',monospace;font-size:12px;fill:var(--text);text-anchor:middle;dominant-baseline:central">Embedding</text>
+        <text x="332" y="83" style="font-family:'IBM Plex Sans',sans-serif;font-size:10px;fill:var(--muted);dominant-baseline:central">[B, S] →</text>
+        <text x="332" y="96" style="font-family:'IBM Plex Sans',sans-serif;font-size:10px;fill:var(--muted);dominant-baseline:central">[B, S, d_model]</text>
+
+        <line x1="210" y1="111" x2="210" y2="122" style="stroke:var(--border);stroke-width:1.5"/>
+        <polygon points="210,132 204,123 216,123" style="fill:var(--border)"/>
+
+        <!-- positional encoding -->
+        <rect x="100" y="132" width="220" height="38" rx="6"
+              style="fill:var(--surface);stroke:var(--border);stroke-width:1.5"/>
+        <text x="210" y="151" style="font-family:'IBM Plex Mono',monospace;font-size:12px;fill:var(--text);text-anchor:middle;dominant-baseline:central">+ Pos. Encoding</text>
+        <text x="332" y="151" style="font-family:'IBM Plex Sans',sans-serif;font-size:10px;fill:var(--muted);dominant-baseline:central">[B, S, d_model]</text>
+
+        <line x1="210" y1="171" x2="210" y2="182" style="stroke:var(--border);stroke-width:1.5"/>
+        <polygon points="210,192 204,183 216,183" style="fill:var(--border)"/>
+
+        <!-- transformer block stacked -->
+        <rect x="106" y="198" width="220" height="86" rx="8"
+              style="fill:var(--accent-bg);stroke:var(--accent);stroke-width:1;opacity:0.45"/>
+        <rect x="103" y="195" width="220" height="86" rx="8"
+              style="fill:var(--accent-bg);stroke:var(--accent);stroke-width:1;opacity:0.65"/>
+        <rect x="100" y="192" width="220" height="96" rx="8"
+              style="fill:var(--accent-bg);stroke:var(--accent);stroke-width:1.5"/>
+        <text x="210" y="208" style="font-family:'IBM Plex Sans',sans-serif;font-size:9.5px;fill:var(--accent);text-anchor:middle;font-weight:600;letter-spacing:.09em">TRANSFORMERBLOCK × N</text>
+        <rect x="116" y="214" width="188" height="27" rx="4"
+              style="fill:var(--surface);stroke:var(--border);stroke-width:1"/>
+        <text x="210" y="227" style="font-family:'IBM Plex Mono',monospace;font-size:11px;fill:var(--text);text-anchor:middle;dominant-baseline:central">Multi-Head Attention</text>
+        <rect x="116" y="247" width="188" height="27" rx="4"
+              style="fill:var(--surface);stroke:var(--border);stroke-width:1"/>
+        <text x="210" y="260" style="font-family:'IBM Plex Mono',monospace;font-size:11px;fill:var(--text);text-anchor:middle;dominant-baseline:central">Feed-Forward (GELU)</text>
+        <text x="332" y="237" style="font-family:'IBM Plex Sans',sans-serif;font-size:10px;fill:var(--muted);dominant-baseline:central">[B, S, d_model]</text>
+
+        <line x1="210" y1="289" x2="210" y2="300" style="stroke:var(--border);stroke-width:1.5"/>
+        <polygon points="210,310 204,301 216,301" style="fill:var(--border)"/>
+
+        <!-- layernorm -->
+        <rect x="100" y="310" width="220" height="38" rx="6"
+              style="fill:var(--surface);stroke:var(--border);stroke-width:1.5"/>
+        <text x="210" y="329" style="font-family:'IBM Plex Mono',monospace;font-size:12px;fill:var(--text);text-anchor:middle;dominant-baseline:central">LayerNorm</text>
+        <text x="332" y="329" style="font-family:'IBM Plex Sans',sans-serif;font-size:10px;fill:var(--muted);dominant-baseline:central">[B, S, d_model]</text>
+
+        <line x1="210" y1="349" x2="210" y2="360" style="stroke:var(--border);stroke-width:1.5"/>
+        <polygon points="210,370 204,361 216,361" style="fill:var(--border)"/>
+
+        <!-- lm_head -->
+        <rect x="100" y="370" width="220" height="38" rx="6"
+              style="fill:var(--surface);stroke:var(--border);stroke-width:1.5"/>
+        <text x="210" y="389" style="font-family:'IBM Plex Mono',monospace;font-size:12px;fill:var(--text);text-anchor:middle;dominant-baseline:central">lm_head (Linear)</text>
+        <text x="332" y="381" style="font-family:'IBM Plex Sans',sans-serif;font-size:10px;fill:var(--muted);dominant-baseline:central">[B, S, d_model] →</text>
+        <text x="332" y="394" style="font-family:'IBM Plex Sans',sans-serif;font-size:10px;fill:var(--muted);dominant-baseline:central">[B, S, vocab_size]</text>
+
+        <line x1="210" y1="409" x2="210" y2="420" style="stroke:var(--border);stroke-width:1.5"/>
+        <polygon points="210,430 204,421 216,421" style="fill:var(--border)"/>
+
+        <!-- softmax / output -->
+        <rect x="100" y="430" width="220" height="38" rx="6"
+              style="fill:var(--code-bg);stroke:var(--border);stroke-width:1.5"/>
+        <text x="210" y="449" style="font-family:'IBM Plex Mono',monospace;font-size:12px;fill:var(--text);text-anchor:middle;dominant-baseline:central">Softmax → P(token)</text>
+        <text x="332" y="449" style="font-family:'IBM Plex Sans',sans-serif;font-size:10px;fill:var(--muted);dominant-baseline:central">∑ = 1 · [vocab_size]</text>
+      </svg>
+    </div>
+
+    <p>Il passaggio critico è <strong>lm_head</strong>: uno strato <code>Linear</code> che proietta ogni posizione da <code>d_model</code> (es. 512) a <code>vocab_size</code> (16.000). Produce un numero per ogni token del vocabolario — i <strong>logit</strong>. Softmax normalizza i logit in probabilità.</p>
+    <p>Durante il training, la <strong>cross-entropy loss</strong> misura quanto la distribuzione predetta si discosta dal token corretto. Il gradiente di questa loss rispetto a ogni parametro guida l'aggiornamento AdamW. Vedi <a href="slm-ottimizzatore.html">AdamW e Ottimizzazione</a>.</p>
+
+    <h2 id="sampling">5. Dal logit alla parola</h2>
+    <p>Il modello produce 16.000 logit. Come si sceglie quale token emettere? Dipende dalla <strong>strategia di sampling</strong>.</p>
+
+    <h3>Greedy decoding</h3>
+    <p>Prende sempre il token con probabilità massima: <code>argmax(logits)</code>. Deterministico e veloce, ma produce output prevedibili e ripetitivi. È quello che usa attualmente <code>--generate</code> in <code>train.py</code>.</p>
+
+    <h3>Temperature scaling</h3>
+    <p>Prima del softmax, divide tutti i logit per un valore T:</p>
+    <pre>logits_scalati = logits / T
+probabilità = softmax(logits_scalati)</pre>
+
+    <div class="temp-grid">
+      <div class="temp-card">
+        <span class="val">T &lt; 1</span>
+        <span class="desc">I picchi di probabilità si accentuano. Output più coerente e prevedibile.</span>
+      </div>
+      <div class="temp-card">
+        <span class="val">T = 1</span>
+        <span class="desc">Distribuzione originale del modello. Nessuna modifica.</span>
+      </div>
+      <div class="temp-card">
+        <span class="val">T &gt; 1</span>
+        <span class="desc">La distribuzione si appiattisce. Output più vario, più soggetto a errori.</span>
+      </div>
+    </div>
+
+    <h3>Top-k sampling</h3>
+    <p>Considera solo i <code>k</code> token con probabilità più alta, azzera tutti gli altri, poi campiona. Con <code>k=50</code>, ogni step sceglie tra i 50 candidati più plausibili.</p>
+
+    <h3>Top-p (nucleus) sampling</h3>
+    <p>Considera il minimo insieme di token la cui probabilità cumulata raggiunge <code>p</code>. Se i primi 3 token coprono già il 90% della probabilità, con <code>p=0.9</code> si campiona solo da quei 3. L'insieme si adatta dinamicamente alla forma della distribuzione.</p>
+
+    <div class="box box-good">
+      <p>Temperatura, top-k e top-p si usano tipicamente insieme. Valori comuni per testo narrativo: <code>T=0.8</code>, <code>top_k=50</code>, <code>top_p=0.95</code>. Sono i parametri della <strong>fase 5</strong> nel piano di sviluppo — vedi la <a href="slm-roadmap.html">roadmap</a>.</p>
+    </div>
+
+    <h2 id="conoscenza">6. Cosa sa davvero il modello</h2>
+    <p>Il modello non ha un dizionario di regole grammaticali. Ha <strong>distribuzioni condizionali</strong> compresse in milioni di parametri float32.</p>
+    <p>"Sa" che dopo <code>"il"</code> viene quasi sempre un sostantivo o aggettivo maschile — non perché glielo abbia detto qualcuno, ma perché ha osservato questa co-occorrenza miliardi di volte nel corpus. "Sa" che <code>"non"</code> precede spesso un verbo — stessa ragione. La conoscenza è <strong>implicita e distribuita</strong>: nessun singolo parametro codifica una regola; le regole emergono dall'interazione dell'intero sistema durante la forward pass.</p>
+    <div class="box box-warn">
+      <p>Il nostro SLM da 46M parametri, addestrato su Wikipedia italiana, conosce la distribuzione superficiale della lingua. Non ragiona, non pianifica, non verifica. Produce token statisticamente plausibili dato il contesto. La comprensione emerge solo a scale molto più grandi (1B+ parametri, dati enormi e variegati).</p>
+    </div>
+
+    <h2 id="genesi">7. Genesi del progetto: obiettivi e vincoli</h2>
+    <p>Prima di scegliere un'architettura vale la pena capire cosa stiamo costruendo, perché, e con quali vincoli concreti. Le scelte tecniche — scala dei parametri, tokenizer, seq_len — non sono arbitrarie: sono la risposta a questi vincoli.</p>
+
+    <h3>L'obiettivo: un modello base riaddestrabilee</h3>
+    <p>Il SLM da 46 milioni di parametri non è pensato per la produzione conversazionale diretta — quella scala richiede almeno 1–3B parametri per qualità accettabile. Il suo scopo è duplice:</p>
+    <ul>
+      <li><strong>Formativo.</strong> Costruire ogni componente dall'interno — attention, FFN, tokenizer, optimizer — per capirne il funzionamento reale, non solo l'interfaccia di libreria.</li>
+      <li><strong>Writing assistant.</strong> Dopo il pre-training su Wikipedia italiana, un fine-tuning sul corpus narrativo personale (~550 KB) crea un modello che conosce la distribuzione stilistica dell'autore e può supportare la scrittura in italiano.</li>
+    </ul>
+
+    <h3>I due track paralleli</h3>
+    <p>Il progetto segue due binari simultanei e complementari:</p>
+    <ul>
+      <li><strong>Track 1 — SLM from scratch (questo modello).</strong> Comprensione profonda di ogni meccanismo. Scala piccola, controllo totale. Output: competenze trasferibili + writing assistant fine-tunato sulla propria voce.</li>
+      <li><strong>Track 2 — LoRA su modelli esistenti.</strong> Fine-tuning di LLaMA 3.1 8B o Mistral 7B con adapter LoRA per i prodotti operativi. ~25 MB di adapter per dominio, modello base condiviso in RAM. Le competenze acquisite nel Track 1 si applicano direttamente qui.</li>
+    </ul>
+
+    <h3>Vincoli hardware: sviluppo su Mac</h3>
+    <p>Training, inferenza e iterazione girano su un singolo Mac. Non è negoziabile: non ci si può appoggiare a un server cloud per ogni esperimento intermedio. Apple Silicon usa <strong>memoria unificata</strong> — CPU e GPU (MPS) condividono lo stesso pool fisico, eliminando i trasferimenti PCIe tipici di NVIDIA ma rendendo ogni GB occupato dal sistema un GB sottratto al training.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Macchina</th><th>RAM unificata</th><th>Limite pratico SLM</th><th>Stato</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Mac Air M2</td><td>8 GB</td>
+            <td><code>seq_len=256</code>, <code>batch=8</code>, modello ~46M fp32</td>
+            <td>Attuale</td>
+          </tr>
+          <tr>
+            <td class="hl">Mac Air M5</td><td class="hl">32 GB</td>
+            <td class="hl"><code>seq_len=512+</code>, <code>batch=16+</code>, modelli 1B+</td>
+            <td class="hl">Target</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Il vincolo si manifesta soprattutto nell'attention: la matrice di attenzione scala come <code>batch × seq_len²</code>. Con <code>batch=16</code> e <code>seq_len=512</code> su 8 GB si va in OOM (out of memory). Ridurre <code>seq_len</code> da 512 a 256 dimezza le sequenze ma quadruplica la capienza effettiva in RAM — è il compromesso che usiamo attualmente.</p>
+
+    <h3>Strategia: pre-training → fine-tuning → LoRA</h3>
+    <p>Il percorso pianificato:</p>
+    <ul>
+      <li><strong>Pre-training</strong> su Wikipedia italiana (~200 MB, ~50M token) — il modello apprende la distribuzione statistica dell'italiano.</li>
+      <li><strong>Fine-tuning letterario</strong> sul corpus narrativo personale — il modello adatta la propria distribuzione alla voce e allo stile dell'autore.</li>
+      <li><strong>Adapter LoRA</strong> per specializzazioni ulteriori — senza ri-addestrare l'intero modello. I pesi base rimangono congelati; si aggiungono coppie di matrici sottili (~25 MB) che modificano il comportamento su un dominio specifico.</li>
+    </ul>
+    <div class="box box-good">
+      <p>LoRA è nella <a href="slm-roadmap.html">fase 10 della roadmap</a>. Il pre-training attuale (fase 1–4) è il prerequisito: serve un modello base ben addestrato prima di applicarci qualunque tecnica di adattamento.</p>
+    </div>
+
+    <h2 id="decoder-only">8. Decoder-only — perché solo generazione</h2>
+    <p>Esistono tre architetture principali di transformer, con usi diversi:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Architettura</th><th>Esempi</th><th>Attenzione</th><th>Uso tipico</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Encoder-only</strong></td>
+            <td>BERT, RoBERTa</td>
+            <td>Bidirezionale — vede tutto il testo in entrambe le direzioni</td>
+            <td>Classificazione, NER, similarity</td>
+          </tr>
+          <tr>
+            <td class="hl"><strong>Decoder-only</strong></td>
+            <td class="hl">GPT, LLaMA, <strong>SLM</strong></td>
+            <td class="hl">Causale — ogni token vede solo i token alla sua sinistra</td>
+            <td class="hl">Generazione testuale</td>
+          </tr>
+          <tr>
+            <td><strong>Encoder-Decoder</strong></td>
+            <td>T5, BART, mT5</td>
+            <td>Encoder bidirezionale + decoder causale</td>
+            <td>Traduzione, summarization</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Il nostro SLM è decoder-only. La <strong>causal mask</strong> garantisce che il token in posizione <code>t</code> veda solo i token nelle posizioni <code>0..t</code> — mai quelli futuri. Questo rende possibile il training in parallelo (la loss si calcola su tutti i token del batch in una sola forward pass) e la generazione autoregressiva (si genera un token alla volta, ognuno aggiunto al contesto per il passo successivo).</p>
+    <p>Per il writing assistant descritto nella <a href="#genesi">sezione precedente</a> — generazione di continuazioni nello stile dell'autore — decoder-only è la scelta corretta. Un encoder-only (BERT) non genera; un encoder-decoder (T5) genera ma è pensato per trasformazioni input→output strutturate, non per completamento libero.</p>
+
+    <a class="link-card" href="slm-roadmap.html">
+      <span class="icon">🗓</span>
+      <div>
+        <strong>Roadmap di sviluppo</strong>
+        <span>Dove siamo e cosa viene dopo: sampling avanzato, KV-cache, LoRA, quantizzazione.</span>
+      </div>
+    </a>
+  </main>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('main h2[id]');
+  const links    = document.querySelectorAll('#toc a');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => a.classList.remove('active'));
+        const a = document.querySelector(`#toc a[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  sections.forEach(s => obs.observe(s));
+</script>

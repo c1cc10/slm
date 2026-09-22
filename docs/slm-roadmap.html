@@ -1,0 +1,379 @@
+<meta charset="UTF-8">
+<title>Roadmap di sviluppo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:        #F7F6F3;
+    --surface:   #FFFFFF;
+    --border:    #DDD9D0;
+    --text:      #1A1916;
+    --muted:     #6B6760;
+    --accent:    #0A6E6E;
+    --accent-bg: #EAF4F4;
+    --code-bg:   #F0EDE8;
+
+    --done-fg:   #0A6E6E;
+    --done-bg:   #EAF4F4;
+    --next-fg:   #9A6200;
+    --next-bg:   #FFF3D6;
+    --plan-fg:   #2B5AC4;
+    --plan-bg:   #EAF0FF;
+    --fut-fg:    #6B6760;
+    --fut-bg:    #F7F6F3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:#141412; --surface:#1E1C1A; --border:#333028;
+      --text:#EAE8E3; --muted:#8A8780; --accent:#2BB5B5;
+      --accent-bg:#0D2828; --code-bg:#252320;
+      --done-fg:#2BB5B5; --done-bg:#0D2828;
+      --next-fg:#D4A030; --next-bg:#1F1800;
+      --plan-fg:#6B9AF0; --plan-bg:#0D1628;
+      --fut-fg:#8A8780;  --fut-bg:#252320;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:#141412; --surface:#1E1C1A; --border:#333028;
+    --text:#EAE8E3; --muted:#8A8780; --accent:#2BB5B5;
+    --accent-bg:#0D2828; --code-bg:#252320;
+    --done-fg:#2BB5B5; --done-bg:#0D2828;
+    --next-fg:#D4A030; --next-bg:#1F1800;
+    --plan-fg:#6B9AF0; --plan-bg:#0D1628;
+    --fut-fg:#8A8780;  --fut-bg:#252320;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Serif',Georgia,serif; font-size:17px; line-height:1.75; }
+  .layout { display:grid; grid-template-columns:220px 1fr; min-height:100vh; max-width:1100px; margin:0 auto; }
+
+  nav { position:sticky; top:0; height:100vh; overflow-y:auto; padding:2.5rem 1.25rem 2.5rem 1.5rem; border-right:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:13px; }
+  nav .nav-label { font-size:10px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:1rem; }
+  nav .back-link { display:block; margin-bottom:2rem; color:var(--accent); font-size:12px; text-decoration:none; }
+  nav .back-link::before { content:"← "; }
+  nav .legend { margin-top:1.5rem; }
+  nav .legend-item { display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem; font-size:.8rem; color:var(--muted); }
+  nav .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  nav .dot.done { background:var(--done-fg); }
+  nav .dot.next { background:var(--next-fg); }
+  nav .dot.plan { background:var(--plan-fg); }
+  nav .dot.fut  { background:var(--fut-fg); }
+
+  main { padding:3rem 3.5rem 5rem; min-width:0; }
+  .doc-label { font-family:'IBM Plex Sans',sans-serif; font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:.75rem; }
+  h1 { font-size:2.2rem; font-weight:600; line-height:1.2; text-wrap:balance; margin:0 0 .5rem; }
+  .subtitle { font-size:1.05rem; color:var(--muted); font-style:italic; margin-bottom:1.5rem; padding-bottom:1.5rem; border-bottom:1px solid var(--border); }
+  p { margin:0 0 1rem; max-width:68ch; }
+
+  /* progress bar */
+  .progress-wrap { margin-bottom:2.5rem; }
+  .progress-label { font-family:'IBM Plex Sans',sans-serif; font-size:.82rem; color:var(--muted); margin-bottom:.5rem; }
+  .progress-bar { display:flex; gap:4px; height:8px; }
+  .seg { flex:1; border-radius:2px; }
+  .seg.done { background:var(--done-fg); }
+  .seg.next { background:var(--next-fg); }
+  .seg.plan { background:var(--plan-fg); }
+  .seg.fut  { background:var(--border); }
+
+  /* phase grid */
+  .phases { display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem; margin-top:1.5rem; }
+
+  .phase {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:1.2rem 1.25rem 1rem;
+    display:flex; flex-direction:column; gap:.6rem;
+  }
+  .phase[data-s="done"] { border-left:3px solid var(--done-fg); }
+  .phase[data-s="next"] { border-left:3px solid var(--next-fg); }
+  .phase[data-s="plan"] { border-left:3px solid var(--plan-fg); }
+  .phase[data-s="fut"]  { border-left:3px solid var(--fut-fg); }
+
+  .phase-header { display:flex; align-items:baseline; justify-content:space-between; gap:.5rem; flex-wrap:wrap; }
+  .phase-num { font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--muted); flex-shrink:0; }
+  .phase-name { font-family:'IBM Plex Sans',sans-serif; font-size:.97rem; font-weight:600; flex:1; }
+
+  .badge {
+    font-family:'IBM Plex Sans',sans-serif; font-size:.7rem; font-weight:600;
+    padding:.18em .65em; border-radius:100px; white-space:nowrap; flex-shrink:0;
+  }
+  .badge.done { background:var(--done-bg); color:var(--done-fg); }
+  .badge.next { background:var(--next-bg); color:var(--next-fg); }
+  .badge.plan { background:var(--plan-bg); color:var(--plan-fg); }
+  .badge.fut  { background:var(--fut-bg);  color:var(--fut-fg); border:1px solid var(--border); }
+
+  .phase-desc { font-family:'IBM Plex Sans',sans-serif; font-size:.83rem; color:var(--muted); line-height:1.55; }
+
+  .chips { display:flex; flex-wrap:wrap; gap:.3rem; }
+  .chip {
+    font-family:'IBM Plex Mono',monospace; font-size:.71rem;
+    padding:.18em .5em; border-radius:4px;
+    background:var(--code-bg); color:var(--muted);
+  }
+  .chip.f { color:var(--accent); }
+
+  .phase-note {
+    font-family:'IBM Plex Sans',sans-serif; font-size:.77rem;
+    color:var(--muted); border-top:1px solid var(--border); padding-top:.5rem; margin-top:.1rem;
+  }
+  .phase-note a { color:var(--accent); text-decoration:none; }
+  .phase-note a:hover { text-decoration:underline; }
+
+  .link-row { display:flex; gap:1rem; flex-wrap:wrap; margin-top:2.5rem; }
+  .link-card { display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px 18px; text-decoration:none; color:var(--text); transition:border-color .15s, background .15s; flex:1; min-width:200px; }
+  .link-card:hover { border-color:var(--accent); background:var(--accent-bg); }
+  .link-card .ic { font-size:1.2rem; flex-shrink:0; }
+  .link-card strong { display:block; font-size:.88rem; font-family:'IBM Plex Sans',sans-serif; margin-bottom:1px; }
+  .link-card span { font-size:.78rem; color:var(--muted); font-family:'IBM Plex Sans',sans-serif; }
+
+  @media (max-width:820px) {
+    .layout { grid-template-columns:1fr; }
+    nav { position:static; height:auto; border-right:none; border-bottom:1px solid var(--border); }
+    main { padding:2rem 1.25rem 3rem; }
+    .phases { grid-template-columns:1fr; }
+  }
+</style>
+
+<div class="layout">
+  <nav>
+    <a class="back-link" href="index.html">Indice</a>
+
+    <div class="nav-label">Stato fasi</div>
+    <div class="legend">
+      <div class="legend-item"><span class="dot done"></span> Completato (4)</div>
+      <div class="legend-item"><span class="dot next"></span> Prossimo sprint (1)</div>
+      <div class="legend-item"><span class="dot plan"></span> Pianificato (3)</div>
+      <div class="legend-item"><span class="dot fut"></span> Futuro (3)</div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="doc-label">SLM · Sviluppo</div>
+    <h1>Piano di sviluppo</h1>
+    <p class="subtitle">11 fasi dalla architettura di base al deployment edge — stato corrente e componenti da aggiungere.</p>
+
+    <div class="progress-wrap">
+      <div class="progress-label">Avanzamento · 4 di 11 fasi completate</div>
+      <div class="progress-bar">
+        <div class="seg done"></div>
+        <div class="seg done"></div>
+        <div class="seg done"></div>
+        <div class="seg done"></div>
+        <div class="seg next"></div>
+        <div class="seg plan"></div>
+        <div class="seg plan"></div>
+        <div class="seg plan"></div>
+        <div class="seg fut"></div>
+        <div class="seg fut"></div>
+        <div class="seg fut"></div>
+      </div>
+    </div>
+
+    <div class="phases">
+
+      <!-- 01 -->
+      <div class="phase" data-s="done">
+        <div class="phase-header">
+          <span class="phase-num">01</span>
+          <span class="phase-name">Architettura</span>
+          <span class="badge done">Completato</span>
+        </div>
+        <div class="phase-desc">Scaled dot-product attention, causal mask, Multi-Head Attention, Feed-Forward (GELU), positional encoding sinusoidale, LayerNorm pre-norm, residual connections, weight tying.</div>
+        <div class="chips">
+          <span class="chip f">attention.py</span>
+          <span class="chip f">transformer.py</span>
+          <span class="chip f">model.py</span>
+        </div>
+      </div>
+
+      <!-- 02 -->
+      <div class="phase" data-s="done">
+        <div class="phase-header">
+          <span class="phase-num">02</span>
+          <span class="phase-name">Training loop</span>
+          <span class="badge done">Completato</span>
+        </div>
+        <div class="phase-desc">AdamW con warmup lineare + cosine decay, gradient clipping, sliding-window dataset, checkpoint automatico, flag <code>--resume</code> per continued pre-training.</div>
+        <div class="chips">
+          <span class="chip f">train.py</span>
+          <span class="chip">AdamW</span>
+          <span class="chip">LR schedule</span>
+          <span class="chip">checkpoint</span>
+        </div>
+        <div class="phase-note">
+          Dettagli in <a href="slm-ottimizzatore.html">AdamW e Ottimizzazione</a>
+        </div>
+      </div>
+
+      <!-- 03 -->
+      <div class="phase" data-s="done">
+        <div class="phase-header">
+          <span class="phase-num">03</span>
+          <span class="phase-name">Tokenizer</span>
+          <span class="badge done">Completato</span>
+        </div>
+        <div class="phase-desc">Tre backend: char-level (default), BPE tiktoken (cl100k_base), SentencePiece BPE con training opzionale. Token cache su disco — encoding eseguito una sola volta, riusato ad ogni restart.</div>
+        <div class="chips">
+          <span class="chip f">train.py</span>
+          <span class="chip">char-level</span>
+          <span class="chip">tiktoken</span>
+          <span class="chip">SPM · 16k</span>
+          <span class="chip">token cache</span>
+        </div>
+        <div class="phase-note">
+          Dettagli in <a href="slm-vocabolario.html">Vocabolario, Embedding e Parametri</a>
+        </div>
+      </div>
+
+      <!-- 04 -->
+      <div class="phase" data-s="done">
+        <div class="phase-header">
+          <span class="phase-num">04</span>
+          <span class="phase-name">Generazione di base</span>
+          <span class="badge done">Completato</span>
+        </div>
+        <div class="phase-desc">Greedy decoding (<code>argmax</code>), flag <code>--generate "testo"</code> per inferenza da checkpoint, campione generato automaticamente ogni N step durante training per monitorare qualità.</div>
+        <div class="chips">
+          <span class="chip f">train.py</span>
+          <span class="chip">greedy decoding</span>
+          <span class="chip">--generate</span>
+        </div>
+      </div>
+
+      <!-- 05 -->
+      <div class="phase" data-s="next">
+        <div class="phase-header">
+          <span class="phase-num">05</span>
+          <span class="phase-name">Sampling avanzato</span>
+          <span class="badge next">Prossimo sprint</span>
+        </div>
+        <div class="phase-desc">Temperatura (T) per controllare l'entropia dell'output, top-k per limitare il campionamento ai k candidati più probabili, top-p (nucleus) per adattare dinamicamente la finestra di campionamento, repetition penalty per evitare loop.</div>
+        <div class="chips">
+          <span class="chip f">train.py</span>
+          <span class="chip">temperatura</span>
+          <span class="chip">top-k</span>
+          <span class="chip">top-p</span>
+          <span class="chip">rep. penalty</span>
+        </div>
+        <div class="phase-note">
+          Concetti introdotti in <a href="slm-intro.html">Come funziona una LLM — §5</a>
+        </div>
+      </div>
+
+      <!-- 06 -->
+      <div class="phase" data-s="plan">
+        <div class="phase-header">
+          <span class="phase-num">06</span>
+          <span class="phase-name">Valutazione quantitativa</span>
+          <span class="badge plan">Pianificato</span>
+        </div>
+        <div class="phase-desc">Loop di valutazione su validation set separato, calcolo della perplexity (= exp(loss_val)), loss curves su training e validation, confronto automatico tra checkpoint.</div>
+        <div class="chips">
+          <span class="chip f">eval.py</span>
+          <span class="chip">perplexity</span>
+          <span class="chip">loss curve</span>
+          <span class="chip">val split</span>
+        </div>
+      </div>
+
+      <!-- 07 -->
+      <div class="phase" data-s="plan">
+        <div class="phase-header">
+          <span class="phase-num">07</span>
+          <span class="phase-name">Efficienza del training</span>
+          <span class="badge plan">Pianificato</span>
+        </div>
+        <div class="phase-desc">Gradient accumulation per simulare batch più grandi senza aumentare la RAM. BF16 mixed precision per dimezzare la memoria dei pesi mantenendo la stabilità numerica. Prerequisito per scalare a seq_len 512+ su 24 GB.</div>
+        <div class="chips">
+          <span class="chip f">train.py</span>
+          <span class="chip">grad. accum.</span>
+          <span class="chip">BF16</span>
+          <span class="chip">amp</span>
+        </div>
+      </div>
+
+      <!-- 08 -->
+      <div class="phase" data-s="plan">
+        <div class="phase-header">
+          <span class="phase-num">08</span>
+          <span class="phase-name">Inference ottimizzata</span>
+          <span class="badge plan">Pianificato</span>
+        </div>
+        <div class="phase-desc">KV-cache: riuso delle chiavi e dei valori già calcolati nei token precedenti, riduce la complessità per token da O(n²) a O(n). Streaming token-by-token. Batch inference per più prompt in parallelo.</div>
+        <div class="chips">
+          <span class="chip f">model.py</span>
+          <span class="chip f">inference.py</span>
+          <span class="chip">KV-cache</span>
+          <span class="chip">streaming</span>
+        </div>
+      </div>
+
+      <!-- 09 -->
+      <div class="phase" data-s="fut">
+        <div class="phase-header">
+          <span class="phase-num">09</span>
+          <span class="phase-name">Fine-tuning supervisionato</span>
+          <span class="badge fut">Futuro</span>
+        </div>
+        <div class="phase-desc">Loop SFT su dataset instruction-following in formato prompt→risposta. Fine-tuning sul corpus narrativo personale per adattare il modello alla voce dell'autore. Prerequisito per il writing assistant.</div>
+        <div class="chips">
+          <span class="chip f">finetune.py</span>
+          <span class="chip">SFT</span>
+          <span class="chip">instruction dataset</span>
+          <span class="chip">corpus letterario</span>
+        </div>
+      </div>
+
+      <!-- 10 -->
+      <div class="phase" data-s="fut">
+        <div class="phase-header">
+          <span class="phase-num">10</span>
+          <span class="phase-name">LoRA — Low-Rank Adaptation</span>
+          <span class="badge fut">Futuro</span>
+        </div>
+        <div class="phase-desc">Frozen base model + adapter trainabili a basso rango (A·B matrici). ~25 MB per dominio invece di 190 MB di fine-tuning completo. Più adapter possono coesistere in RAM. Stesso approccio del Track 2 (LLaMA/Mistral).</div>
+        <div class="chips">
+          <span class="chip f">lora.py</span>
+          <span class="chip f">model.py</span>
+          <span class="chip">rank=8</span>
+          <span class="chip">~25 MB / adpt.</span>
+        </div>
+      </div>
+
+      <!-- 11 -->
+      <div class="phase" data-s="fut">
+        <div class="phase-header">
+          <span class="phase-num">11</span>
+          <span class="phase-name">Quantizzazione e deployment</span>
+          <span class="badge fut">Futuro</span>
+        </div>
+        <div class="phase-desc">INT8/INT4 per ridurre il footprint in memoria, compatibilità GGUF per esportazione verso llama.cpp, inferenza edge su CPU senza dipendenza da MPS/CUDA. Necessario per deployment in ambienti a RAM limitata.</div>
+        <div class="chips">
+          <span class="chip f">quantize.py</span>
+          <span class="chip">INT4/INT8</span>
+          <span class="chip">GGUF</span>
+          <span class="chip">llama.cpp</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="link-row">
+      <a class="link-card" href="slm-intro.html">
+        <span class="ic">🧠</span>
+        <div>
+          <strong>Come funziona una LLM</strong>
+          <span>Motore di probabilità, forward pass, sampling</span>
+        </div>
+      </a>
+      <a class="link-card" href="slm-docs.html">
+        <span class="ic">📖</span>
+        <div>
+          <strong>Documentazione completa</strong>
+          <span>Architettura, corpus, comandi, training</span>
+        </div>
+      </a>
+    </div>
+  </main>
+</div>

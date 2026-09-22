@@ -1,0 +1,1092 @@
+<meta charset="UTF-8">
+<title>Vocabolario, Embedding, Parametri</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:        #F7F6F3;
+    --surface:   #FFFFFF;
+    --border:    #DDD9D0;
+    --text:      #1A1916;
+    --muted:     #6B6760;
+    --accent:    #0A6E6E;
+    --accent-bg: #EAF4F4;
+    --code-bg:   #F0EDE8;
+    --warn-bg:   #FFF8E7;
+    --warn-bdr:  #D4A017;
+    --good-bg:   #EAF4F4;
+    --good-bdr:  #0A6E6E;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:        #141412;
+      --surface:   #1E1C1A;
+      --border:    #333028;
+      --text:      #EAE8E3;
+      --muted:     #8A8780;
+      --accent:    #2BB5B5;
+      --accent-bg: #0D2828;
+      --code-bg:   #252320;
+      --warn-bg:   #1F1A08;
+      --warn-bdr:  #B8891A;
+      --good-bg:   #0D2828;
+      --good-bdr:  #2BB5B5;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg:        #141412;
+    --surface:   #1E1C1A;
+    --border:    #333028;
+    --text:      #EAE8E3;
+    --muted:     #8A8780;
+    --accent:    #2BB5B5;
+    --accent-bg: #0D2828;
+    --code-bg:   #252320;
+    --warn-bg:   #1F1A08;
+    --warn-bdr:  #B8891A;
+    --good-bg:   #0D2828;
+    --good-bdr:  #2BB5B5;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.75;
+  }
+
+  /* ── Layout ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 100vh;
+    max-width: 1100px;
+    margin: 0 auto;
+    gap: 0;
+  }
+
+  /* ── Sidebar ── */
+  nav {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 2.5rem 1.25rem 2.5rem 1.5rem;
+    border-right: 1px solid var(--border);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+  }
+
+  nav .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  nav ol { margin: 0; padding: 0; list-style: none; counter-reset: toc; }
+  nav ol li { counter-increment: toc; margin-bottom: .2rem; }
+  nav ol li::before {
+    content: counter(toc) ". ";
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    font-size: 11px;
+  }
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .15s;
+  }
+  nav a:hover, nav a.active { color: var(--accent); }
+
+  nav .back-link {
+    display: block;
+    margin-bottom: 2rem;
+    color: var(--accent);
+    font-size: 12px;
+    text-decoration: none;
+  }
+  nav .back-link::before { content: "← "; }
+
+  /* ── Main content ── */
+  main {
+    padding: 3rem 3.5rem 5rem;
+    min-width: 0;
+  }
+
+  .doc-label {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: .75rem;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-wrap: balance;
+    margin: 0 0 .5rem;
+  }
+
+  .subtitle {
+    font-size: 1.05rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 3rem 0 .75rem;
+    scroll-margin-top: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    font-family: 'IBM Plex Sans', sans-serif;
+    margin: 2rem 0 .5rem;
+    color: var(--accent);
+  }
+
+  p { margin: 0 0 1rem; max-width: 68ch; }
+
+  /* ── Code ── */
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .82em;
+    background: var(--code-bg);
+    padding: .1em .35em;
+    border-radius: 3px;
+    color: var(--text);
+  }
+
+  pre {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .82rem;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.1rem 1.25rem;
+    overflow-x: auto;
+    line-height: 1.6;
+    margin: 1rem 0 1.5rem;
+    max-width: 100%;
+  }
+
+  pre .cm  { color: var(--muted); font-style: italic; }  /* comment */
+  pre .kw  { color: var(--accent); }                      /* keyword */
+  pre .nm  { color: var(--text); font-weight: 500; }      /* number */
+  pre .st  { color: #B87333; }                            /* string/highlight */
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0 1.75rem; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: .88rem;
+  }
+
+  thead th {
+    text-align: left;
+    font-weight: 600;
+    font-size: .78rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 2px solid var(--border);
+    padding: .5rem .75rem;
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: .55rem .75rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    font-variant-numeric: tabular-nums;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--accent-bg); }
+
+  td.hl { font-weight: 600; color: var(--accent); }
+  td.warn { font-weight: 600; color: #B8891A; }
+  td.ok   { font-weight: 600; color: var(--accent); }
+
+  /* ── Callout boxes ── */
+  .box {
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+    max-width: 72ch;
+  }
+
+  .box-warn {
+    background: var(--warn-bg);
+    border-left: 3px solid var(--warn-bdr);
+  }
+
+  .box-good {
+    background: var(--good-bg);
+    border-left: 3px solid var(--good-bdr);
+  }
+
+  .box p { margin: 0; font-size: .93rem; }
+  .box strong { color: var(--text); }
+
+  /* ── Formula display ── */
+  .formula {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .92rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .9rem 1.2rem;
+    margin: 1rem 0 1.5rem;
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* ── Visual embedding diagram ── */
+  .embed-diagram {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    margin: 1.5rem 0;
+    max-width: 640px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .8rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .embed-col-ids {
+    background: var(--code-bg);
+    padding: .75rem .9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .embed-col-matrix {
+    flex: 1;
+    background: var(--surface);
+    padding: .75rem .9rem;
+  }
+
+  .embed-col-label {
+    background: var(--accent-bg);
+    padding: .75rem .9rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: .78rem;
+    color: var(--accent);
+    font-weight: 500;
+    min-width: 120px;
+  }
+
+  .embed-row {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin-bottom: 3px;
+    white-space: nowrap;
+  }
+
+  .embed-row .token-id {
+    color: var(--muted);
+    min-width: 2.5ch;
+    text-align: right;
+  }
+
+  .embed-row .arrow { color: var(--muted); margin: 0 6px; }
+
+  .embed-row .vec {
+    display: flex;
+    gap: 3px;
+  }
+
+  .vec-cell {
+    width: 28px;
+    height: 18px;
+    border-radius: 2px;
+    background: var(--accent-bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .68rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .vec-cell.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .vec-cell.dots {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: .9rem;
+  }
+
+  /* ── Bar chart for parameter breakdown ── */
+  .param-bar {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    margin: 1.25rem 0 1.75rem;
+    max-width: 520px;
+  }
+
+  .param-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: .82rem;
+  }
+
+  .param-label {
+    width: 120px;
+    flex-shrink: 0;
+    color: var(--muted);
+    text-align: right;
+    font-size: .78rem;
+  }
+
+  .param-track {
+    flex: 1;
+    height: 22px;
+    background: var(--code-bg);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .param-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width .4s ease;
+  }
+
+  .param-fill-emb  { background: var(--warn-bdr); }
+  .param-fill-trf  { background: var(--accent); }
+
+  .param-pct {
+    width: 42px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: .82rem;
+  }
+
+  .param-pct.warn { color: #B8891A; }
+  .param-pct.ok   { color: var(--accent); }
+
+  .param-legend {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: .5rem;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  .legend-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    margin-right: .35rem;
+    vertical-align: middle;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; }
+    nav { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    main { padding: 2rem 1.25rem 3rem; }
+  }
+</style>
+
+<div class="layout">
+
+  <!-- Sidebar TOC -->
+  <nav id="toc">
+    <a class="back-link" href="index.html">Indice</a>
+    <div class="nav-label">In questa pagina</div>
+    <ol>
+      <li><a href="#vocabolario">Vocabolario</a></li>
+      <li><a href="#embedding">La embedding table</a></li>
+      <li><a href="#parametri">Cosa sono i parametri</a></li>
+      <li><a href="#rapporto">Il rapporto critico</a></li>
+      <li><a href="#weight-tying">Weight tying</a></li>
+      <li><a href="#riepilogo">Riepilogo numerico</a></li>
+      <li><a href="#tokenizer">Il tokenizer</a></li>
+      <li><a href="#preset">I preset architetturali</a></li>
+      <li><a href="#dmodel-codice">d_model nel codice</a></li>
+      <li><a href="#mps-cuda">CPU, GPU, CUDA e MPS</a></li>
+      <li><a href="#ottimizzare">Ottimizzare il training</a></li>
+    </ol>
+  </nav>
+
+  <!-- Main -->
+  <main>
+    <div class="doc-label">SLM · Concetti fondamentali</div>
+    <h1>Vocabolario, Embedding e Parametri</h1>
+    <p class="subtitle">Cosa sa il modello, come lo rappresenta, e perché "50 milioni di parametri" è una misura concreta.</p>
+
+    <!-- ── 1. Vocabolario ── -->
+    <h2 id="vocabolario">1. Vocabolario</h2>
+
+    <p>Il <em>vocabolario</em> è l'elenco di tutte le unità elementari che il modello riconosce. Non parole intere, non lettere singole in generale: <strong>token</strong> — le unità decise dal tokenizer.</p>
+
+    <h3>Char-level</h3>
+    <p>Ogni carattere Unicode distinto nel corpus è un token. Il corpus italiano di partenza produce ~102 token: le 26 lettere latine, le vocali accentate (à é ì ò ù), la punteggiatura, le cifre, lo spazio.</p>
+
+    <pre><code>vocab_size = 102
+token("a") = 65,  token("è") = 87,  token(".") = 12</code></pre>
+
+    <h3>BPE — Byte Pair Encoding</h3>
+    <p>Il tokenizer parte dai singoli byte, poi fonde iterativamente le coppie più frequenti. Dopo 16.000 iterazioni di merge si ottengono <code>vocab_size = 16.000</code> token: combinazioni come <code>zione</code>, <code>mente</code>, <code>dell'</code>, <code>ing</code>.</p>
+
+    <pre><code><span class="cm"># Esempio: stessa frase, tokenizzazione diversa</span>
+char-level : ["c","a","p","i","t","o","l","o"]   → 8 token
+BPE 16k    : ["cap","ito","lo"]                  → 3 token</code></pre>
+
+    <p>Con BPE ogni token trasporta più informazione semantica, e la stessa frase occupa 3–5 volte meno posizioni nel contesto — il che rende il training molto più efficiente.</p>
+
+    <div class="box box-good">
+      <p><strong>vocab_size</strong> non è il numero di parole che il modello "conosce". È il numero di unità lessicali primitive nel suo alfabeto. Le parole emergono come combinazioni di questi token durante il training.</p>
+    </div>
+
+    <!-- ── 2. Embedding table ── -->
+    <h2 id="embedding">2. La embedding table</h2>
+
+    <p>Quando un token entra nella rete, il modello deve convertire il suo ID intero (es. <code>42</code>) in un vettore numerico su cui i calcoli hanno senso. Questo è il compito dell'<strong>embedding table</strong>.</p>
+
+    <pre><code><span class="kw">nn.Embedding</span>(vocab_size, d_model)
+<span class="cm"># = una matrice   vocab_size × d_model
+# = una tabella di lookup: token_id → vettore</span></code></pre>
+
+    <p>Concretamente: una matrice di <code>vocab_size</code> righe e <code>d_model</code> colonne. Quando il modello vede il token ID <code>42</code>, prende la riga 42 — questo è tutto. Non c'è calcolo: è un accesso a memoria.</p>
+
+    <div class="embed-diagram" aria-label="Schema embedding table">
+      <div class="embed-col-ids">
+        <div style="color:var(--muted);font-size:.72rem;margin-bottom:.4rem;">token ID</div>
+        <div class="embed-row"><span class="token-id">0</span><span class="arrow">→</span></div>
+        <div class="embed-row"><span class="token-id">1</span><span class="arrow">→</span></div>
+        <div class="embed-row" style="background:var(--accent-bg);border-radius:3px;padding:1px 0"><span class="token-id" style="color:var(--accent);font-weight:500">42</span><span class="arrow" style="color:var(--accent)">→</span></div>
+        <div class="embed-row"><span class="token-id muted">…</span><span class="arrow">→</span></div>
+        <div class="embed-row"><span class="token-id">N-1</span><span class="arrow">→</span></div>
+      </div>
+      <div class="embed-col-matrix">
+        <div style="color:var(--muted);font-size:.72rem;margin-bottom:.4rem;">d_model = 512 valori float</div>
+        <div class="embed-row"><div class="vec"><div class="vec-cell">0.1</div><div class="vec-cell">-0.3</div><div class="vec-cell">0.7</div><div class="vec-cell dots">…</div></div></div>
+        <div class="embed-row"><div class="vec"><div class="vec-cell">-0.2</div><div class="vec-cell">0.5</div><div class="vec-cell">0.1</div><div class="vec-cell dots">…</div></div></div>
+        <div class="embed-row" style="background:var(--accent-bg);border-radius:3px;padding:1px 0"><div class="vec"><div class="vec-cell active">0.8</div><div class="vec-cell active">-0.1</div><div class="vec-cell active">0.4</div><div class="vec-cell dots" style="color:var(--accent)">…</div></div></div>
+        <div class="embed-row"><div class="vec"><div class="vec-cell">0.0</div><div class="vec-cell">0.2</div><div class="vec-cell">-0.6</div><div class="vec-cell dots">…</div></div></div>
+        <div class="embed-row"><div class="vec"><div class="vec-cell">-0.5</div><div class="vec-cell">0.3</div><div class="vec-cell">0.2</div><div class="vec-cell dots">…</div></div></div>
+      </div>
+      <div class="embed-col-label">
+        <div>riga 42</div>
+        <div style="margin-top:.25rem;font-size:.72rem;opacity:.7">selezionata dal lookup</div>
+      </div>
+    </div>
+
+    <h3>Cosa impara la embedding table</h3>
+    <p>Durante il training, backprop modifica questi valori finché token semanticamente simili producono vettori vicini nello spazio. Il famoso esempio:</p>
+
+    <div class="formula">
+      vec("re") − vec("uomo") + vec("donna") ≈ vec("regina")
+    </div>
+
+    <p>Questo non viene programmato: emerge dall'ottimizzazione sulla distribuzione del testo. Con 552KB di corpus italiano otteniamo morfologia (suffissi, accordo); con 200MB di Wikipedia aggiungiamo semantica lessicale più ricca.</p>
+
+    <!-- ── 3. Parametri ── -->
+    <h2 id="parametri">3. Cosa sono i parametri</h2>
+
+    <p>Un <strong>parametro</strong> è un singolo numero <code>float32</code> dentro la rete. Non i token, non le attivazioni, non l'input: i <em>pesi</em> — i valori che backpropagation aggiusta a ogni step di training.</p>
+
+    <p>Ogni layer ha la sua matrice di pesi. Esempio: un linear layer che trasforma 512 dimensioni in 512 dimensioni ha:</p>
+
+    <div class="formula">
+      nn.Linear(512, 512)  →  512 × 512 = 262.144 parametri
+    </div>
+
+    <p>Contare i parametri di un modello significa sommare le dimensioni di tutte queste matrici.</p>
+
+    <h3>Formula per un TransformerBlock</h3>
+
+    <p>Ogni blocco contiene: quattro proiezioni di attenzione (Q, K, V, O) e due proiezioni feed-forward.</p>
+
+    <div class="formula">
+      parametri per blocco ≈ 4 × d_model² &nbsp;+&nbsp; 2 × d_model × d_ff
+    </div>
+
+    <p>Con <code>d_model=512</code> e <code>d_ff=2048</code>:</p>
+
+    <pre><code>Q, K, V, O   = 4 × 512² = 1.048.576
+FF (up+down)  = 2 × 512 × 2048 = 2.097.152
+─────────────────────────────────────
+Totale/blocco ≈ 3.145.728  (~3.1M)</code></pre>
+
+    <h3>Parametri totali — preset medium</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Componente</th>
+            <th>Formula</th>
+            <th>Parametri</th>
+            <th>Memoria fp32</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Embedding table</td>
+            <td><code>16.000 × 512</code></td>
+            <td class="ok">8.192.000</td>
+            <td>31 MB</td>
+          </tr>
+          <tr>
+            <td>12 TransformerBlock</td>
+            <td><code>12 × 3.145.728</code></td>
+            <td>37.748.736</td>
+            <td>144 MB</td>
+          </tr>
+          <tr>
+            <td>LayerNorm finale</td>
+            <td>trascurabile</td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>Totale (con weight tying)</strong></td>
+            <td></td>
+            <td class="hl">≈ 46.000.000</td>
+            <td class="hl">≈ 175 MB</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>46 milioni di numeri <code>float32</code> = 46M × 4 byte = 175 MB su disco. In addestramento la RAM è 3–5× superiore (gradienti, ottimizzatore), quindi ~500–800 MB. Su M2 con MPS è gestibile.</p>
+
+    <!-- ── 4. Il rapporto critico ── -->
+    <h2 id="rapporto">4. Il rapporto critico: embedding / totale</h2>
+
+    <p>L'embedding table è parametri "passivi": memorizzano un vocabolario ma non ragionano. I TransformerBlock sono parametri "attivi": catturano relazioni tra token, generalizzano, costruiscono rappresentazioni. Il rapporto tra i due determina quanto del modello <em>pensa</em>.</p>
+
+    <h3>Preset small — BPE 16k (il problema)</h3>
+
+    <div class="param-bar">
+      <div style="font-family:'IBM Plex Sans',sans-serif;font-size:.78rem;color:var(--muted);margin-bottom:.25rem;">small: d_model=256, 4.8M parametri totali</div>
+      <div class="param-row">
+        <div class="param-label">Embedding</div>
+        <div class="param-track"><div class="param-fill param-fill-emb" style="width:85%"></div></div>
+        <div class="param-pct warn">85%</div>
+      </div>
+      <div class="param-row">
+        <div class="param-label">Transformer</div>
+        <div class="param-track"><div class="param-fill param-fill-trf" style="width:15%"></div></div>
+        <div class="param-pct ok">15%</div>
+      </div>
+    </div>
+
+    <div class="box box-warn">
+      <p><strong>Problema:</strong> con vocab 16k e d_model=256, la tabella di lookup occupa 4.1M dei 4.8M totali. I sei TransformerBlock si spartiscono solo 700K parametri — quasi nulla per imparare relazioni linguistiche.</p>
+    </div>
+
+    <h3>Preset medium — BPE 16k (soluzione)</h3>
+
+    <div class="param-bar">
+      <div style="font-family:'IBM Plex Sans',sans-serif;font-size:.78rem;color:var(--muted);margin-bottom:.25rem;">medium: d_model=512, 46M parametri totali</div>
+      <div class="param-row">
+        <div class="param-label">Embedding</div>
+        <div class="param-track"><div class="param-fill param-fill-emb" style="width:18%"></div></div>
+        <div class="param-pct warn">18%</div>
+      </div>
+      <div class="param-row">
+        <div class="param-label">Transformer</div>
+        <div class="param-track"><div class="param-fill param-fill-trf" style="width:82%"></div></div>
+        <div class="param-pct ok">82%</div>
+      </div>
+    </div>
+
+    <div class="box box-good">
+      <p><strong>Corretto:</strong> l'embedding è il 18% del totale — nella norma per i modelli moderni (tipicamente 10–20%). I 12 TransformerBlock dispongono di 37M parametri per costruire rappresentazioni linguistiche.</p>
+    </div>
+
+    <p>La regola pratica: con BPE, <code>d_model</code> deve essere abbastanza grande da rendere l'embedding table una <em>minoranza ragionevole</em> del totale. Un rapporto 80:20 o 85:15 (transformer:embedding) è salutare.</p>
+
+    <!-- ── 5. Weight tying ── -->
+    <h2 id="weight-tying">5. Weight tying</h2>
+
+    <p>Il modello usa la stessa matrice <strong>due volte</strong>: all'ingresso per convertire token ID → vettori, e all'uscita per convertire vettori → logit (probabilità sul vocabolario).</p>
+
+    <pre><code><span class="cm"># In model.py — stessa matrice, usata in entrambe le direzioni</span>
+self.token_embedding = nn.Embedding(vocab_size, d_model)
+self.lm_head         = nn.Linear(d_model, vocab_size, bias=False)
+
+<span class="kw">self.lm_head.weight  = self.token_embedding.weight</span>
+<span class="cm"># lm_head non aggiunge parametri: usa la trasposta dell'embedding</span></code></pre>
+
+    <p>Ha senso geometricamente: se il vettore di "gatto" punta in una certa direzione nello spazio, proiettare un'attivazione in quella stessa direzione dovrebbe dare alta probabilità a "gatto" in output. La simmetria è reale, non una scorciatoia.</p>
+
+    <p>Effetto pratico: risparmiamo <code>vocab_size × d_model</code> parametri in uscita — con 16k vocab e d_model=512 sono 8.2M parametri in meno. E il training converge più velocemente perché il gradiente dell'output affina anche l'embedding.</p>
+
+    <!-- ── 6. Riepilogo numerico ── -->
+    <h2 id="riepilogo">6. Riepilogo numerico del progetto</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Configurazione</th>
+            <th>vocab_size</th>
+            <th>d_model</th>
+            <th>Embedding</th>
+            <th>Transformer</th>
+            <th>Totale</th>
+            <th>RAM train</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>char-level small ✓</td>
+            <td>102</td>
+            <td>256</td>
+            <td>26K (0.5%)</td>
+            <td>4.8M</td>
+            <td class="ok">4.8M</td>
+            <td>~50 MB</td>
+          </tr>
+          <tr>
+            <td>BPE small ⚠</td>
+            <td>16.000</td>
+            <td>256</td>
+            <td class="warn">4.1M (85%)</td>
+            <td>0.7M</td>
+            <td>4.8M</td>
+            <td>~50 MB</td>
+          </tr>
+          <tr>
+            <td><strong>BPE medium ← target</strong></td>
+            <td>16.000</td>
+            <td>512</td>
+            <td class="ok">8.2M (18%)</td>
+            <td>37.8M</td>
+            <td class="hl">46M</td>
+            <td>~600 MB</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box box-good">
+      <p><strong>Prossimo step:</strong> riavviare il training con <code>--preset medium</code> sul corpus letterario (2.9MB), riusando il tokenizer SPM già addestrato. Pre-training su Wikipedia → fine-tuning sulla propria voce.</p>
+    </div>
+
+    <!-- ── 7. Il tokenizer ── -->
+    <h2 id="tokenizer">7. Il tokenizer</h2>
+
+    <p>Il tokenizer fa una cosa sola: converte testo in una sequenza di numeri interi.</p>
+
+    <pre><code>"capitolo" → [<span class="nm">423</span>, <span class="nm">17</span>, <span class="nm">891</span>]          <span class="cm"># BPE 16k</span>
+"capitolo" → [<span class="nm">99</span>, <span class="nm">14</span>, <span class="nm">7</span>, <span class="nm">3</span>, <span class="nm">22</span>, <span class="nm">8</span>, <span class="nm">11</span>, <span class="nm">8</span>]  <span class="cm"># char-level</span></code></pre>
+
+    <p>Non è una rete neurale. Non ha pesi. Non impara durante il training del modello. È un <strong>algoritmo deterministico</strong> con una tabella di regole fissa.</p>
+
+    <h3>Cosa contiene fisicamente</h3>
+
+    <p><code>checkpoints/tokenizer.model</code> è un file SentencePiece binario con due cose:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Contenuto</th><th>Esempio</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Vocabolario</strong> — 16.000 righe, una per token</td>
+            <td><code>{"zione": 0, "ment": 1, "dell": 2, …}</code></td>
+          </tr>
+          <tr>
+            <td><strong>Regole di merge</strong> — ordine in cui fondere le coppie di byte</td>
+            <td><code>z + i → zi, zi + one → zione, …</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Dato "capitolo", il tokenizer esegue le regole nell'ordine fisso e restituisce sempre gli stessi ID. Nessuna casualità.</p>
+
+    <h3>Perché possiamo riusarlo</h3>
+
+    <p>La embedding table del modello ha <code>vocab_size</code> righe — una per ogni token. La riga 423 contiene il vettore che rappresenta il token <code>zione</code>, aggiornato durante il training.</p>
+
+    <p>Se usiamo lo stesso tokenizer, il token <code>zione</code> è <strong>sempre</strong> l'ID 423 — in Wikipedia, nel corpus letterario, nel pre-training, nel fine-tuning. La riga 423 mantiene il suo significato in tutti i run.</p>
+
+    <pre><code><span class="cm"># Tokenizer A (riusato) → contratto stabile</span>
+"zione" → ID <span class="nm">423</span>   embedding[<span class="nm">423</span>] imparata in pre-training ✓
+
+<span class="cm"># Tokenizer B (nuovo) → contratto rotto</span>
+"zione" → ID <span class="nm">7801</span>  embedding[<span class="nm">423</span>] ora punta a "ing" — checkpoint corrotto ✗</code></pre>
+
+    <div class="box box-warn">
+      <p><strong>Il tokenizer è il contratto tra i dati e il modello.</strong> Finché il contratto non cambia, il checkpoint è valido e il fine-tuning funziona. Addestrare un nuovo tokenizer invalida ogni checkpoint precedente.</p>
+    </div>
+
+    <!-- ── 8. Preset architetturali ── -->
+    <h2 id="preset">8. I preset architetturali</h2>
+
+    <p><code>--preset</code> è una scorciatoia che evita di passare ogni iperparametro architetturale a mano:</p>
+
+    <pre><code><span class="cm"># Senza preset — verboso</span>
+python3 train.py --d-model <span class="nm">512</span> --num-layers <span class="nm">12</span> --num-heads <span class="nm">8</span> --d-ff <span class="nm">2048</span> --seq-len <span class="nm">512</span>
+
+<span class="cm"># Con preset — equivalente</span>
+python3 train.py --preset medium</code></pre>
+
+    <p>I valori definiti in <code>train.py</code>:</p>
+
+    <pre><code>_PRESETS = {
+    <span class="st">'small'</span>:  dict(d_model=<span class="nm">256</span>, num_layers=<span class="nm">6</span>,  num_heads=<span class="nm">8</span>, d_ff=<span class="nm">1024</span>, seq_len=<span class="nm">256</span>),
+    <span class="st">'medium'</span>: dict(d_model=<span class="nm">512</span>, num_layers=<span class="nm">12</span>, num_heads=<span class="nm">8</span>, d_ff=<span class="nm">2048</span>, seq_len=<span class="nm">512</span>),
+}</code></pre>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Parametro</th><th>small</th><th>medium</th><th>Effetto</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>d_model</code></td><td>256</td><td class="hl">512</td><td>larghezza di ogni vettore interno</td></tr>
+          <tr><td><code>num_layers</code></td><td>6</td><td class="hl">12</td><td>profondità della rete</td></tr>
+          <tr><td><code>num_heads</code></td><td>8</td><td>8</td><td>teste di attenzione parallele</td></tr>
+          <tr><td><code>d_ff</code></td><td>1024</td><td class="hl">2048</td><td>larghezza del feed-forward (= 4 × d_model)</td></tr>
+          <tr><td><code>seq_len</code></td><td>256</td><td class="hl">512</td><td>contesto massimo in token</td></tr>
+          <tr><td><strong>Parametri totali</strong></td><td>~4.8M</td><td class="hl">~46M</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>I preset si possono sovrascrivere parzialmente — il valore esplicito vince sul preset:</p>
+
+    <pre><code><span class="cm"># medium ma con 16 layer invece di 12</span>
+python3 train.py --preset medium --num-layers <span class="nm">16</span></code></pre>
+
+    <!-- ── 9. d_model nel codice ── -->
+    <h2 id="dmodel-codice">9. d_model nel codice</h2>
+
+    <p><code>d_model</code> è la <strong>larghezza</strong> di ogni vettore che scorre attraverso la rete. Non è un parametro astratto — è letteralmente la seconda dimensione di ogni tensore intermedio.</p>
+
+    <pre><code><span class="cm"># Input: batch di token ID</span>
+x = token_ids                            <span class="cm"># shape: [batch, seq_len]</span>
+
+<span class="cm"># 1. Embedding: ogni ID → vettore di d_model numeri</span>
+x = self.token_embedding(x)              <span class="cm"># [batch, seq_len, d_model]</span>
+
+<span class="cm"># 2. Positional encoding: somma un vettore di d_model alle posizioni</span>
+x = x + pos_enc                          <span class="cm"># [batch, seq_len, d_model]</span>
+
+<span class="cm"># 3. Dentro ogni TransformerBlock:</span>
+
+<span class="cm">#    — Proiezioni Q, K, V, O</span>
+Q = nn.Linear(d_model, d_model)(x)       <span class="cm"># [batch, seq_len, d_model]</span>
+K = nn.Linear(d_model, d_model)(x)
+V = nn.Linear(d_model, d_model)(x)
+O = nn.Linear(d_model, d_model)(attn)
+
+<span class="cm">#    — Feed-forward: si allarga a d_ff poi rientra</span>
+x = nn.Linear(d_model, d_ff)(x)          <span class="cm"># [batch, seq_len, d_ff]  ← si allarga</span>
+x = nn.Linear(d_ff,    d_model)(x)       <span class="cm"># [batch, seq_len, d_model] ← rientra</span>
+
+<span class="cm"># 4. LayerNorm finale</span>
+x = nn.LayerNorm(d_model)(x)             <span class="cm"># [batch, seq_len, d_model]</span>
+
+<span class="cm"># 5. LM head: d_model → vocab_size (logit per ogni token)</span>
+logits = nn.Linear(d_model, vocab_size)(x)  <span class="cm"># [batch, seq_len, vocab_size]</span></code></pre>
+
+    <div class="box box-good">
+      <p><strong><code>d_model</code> è il contratto interno del modello.</strong> Ogni componente riceve un tensore largo <code>d_model</code> e restituisce un tensore largo <code>d_model</code>. L'unica eccezione è il feed-forward, che si allarga temporaneamente a <code>d_ff = 4 × d_model</code> per poi rientrare.</p>
+    </div>
+
+    <p>Raddoppiare <code>d_model</code> da 256 a 512 non cambia la struttura — cambia la <em>capacità</em>:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Effetto</th><th>d_model = 256</th><th>d_model = 512</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Ogni <code>nn.Linear(d, d)</code></td><td>65.536 param</td><td class="hl">262.144 param (+4×)</td></tr>
+          <tr><td>Dimensione d_k per testa</td><td>32</td><td class="hl">64</td></tr>
+          <tr><td>Informazione per token</td><td>256 dimensioni</td><td class="hl">512 dimensioni</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── 10. CPU, GPU, CUDA e MPS ── -->
+    <h2 id="mps-cuda">10. CPU, GPU, CUDA e MPS</h2>
+
+    <p>Il training di una rete neurale è quasi interamente moltiplicazioni di matrici. Una CPU esegue queste operazioni in sequenza sui suoi core; una GPU le esegue in parallelo su migliaia di core più piccoli. Per un modello da 46M parametri la differenza è 10–50×.</p>
+
+    <h3>Le tre opzioni di PyTorch</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Device</th><th>Hardware</th><th>Velocità</th><th>Disponibile su</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>cpu</code></td>
+            <td>Processore</td>
+            <td>lento</td>
+            <td>ovunque</td>
+          </tr>
+          <tr>
+            <td><code>cuda</code></td>
+            <td>GPU NVIDIA</td>
+            <td class="hl">velocissimo</td>
+            <td>PC/server con scheda NVIDIA</td>
+          </tr>
+          <tr>
+            <td><code>mps</code></td>
+            <td>GPU Apple M-series</td>
+            <td class="ok">veloce</td>
+            <td>Mac con M1/M2/M3/M4</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Il tuo M2 ha una GPU integrata nello stesso chip della CPU — non è una scheda separata. <strong>MPS</strong> (Metal Performance Shaders) è l'API di Apple che permette a PyTorch di usarla.</p>
+
+    <h3>CUDA e Metal: due linguaggi per la stessa idea</h3>
+
+    <p>La GPU non esegue Python. Esegue programmi scritti in un linguaggio specializzato per il calcolo parallelo:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Produttore</th><th>Linguaggio GPU</th><th>API PyTorch</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>NVIDIA</td><td>CUDA</td><td><code>device="cuda"</code></td></tr>
+          <tr><td>Apple</td><td>Metal</td><td><code>device="mps"</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>PyTorch contiene le operazioni in forma generica (<code>matmul</code>, <code>softmax</code>, <code>gelu</code>…). Per eseguirle sulla GPU deve compilare una versione specializzata nel linguaggio della GPU — uno <strong>shader</strong> — ottimizzata per le dimensioni esatte di quel tensore.</p>
+
+    <h3>Compilazione degli shader: prima run lenta</h3>
+
+    <p>La prima volta che PyTorch esegue un'operazione su MPS con dimensioni specifiche — <code>d_model=512</code>, <code>batch=16</code>, <code>seq_len=512</code> — deve compilare lo shader Metal corrispondente e salvarlo in cache su disco:</p>
+
+    <pre><code><span class="cm"># Percorso della cache shader su macOS</span>
+~/Library/Caches/com.apple.metal/
+
+<span class="cm"># Prima run — compila e salva (I/O disco intenso, 5-15 minuti)</span>
+<span class="cm"># Run successive con le stesse dimensioni — carica dalla cache (secondi)</span></code></pre>
+
+    <p>Questo spiega il comportamento alla prima avviata del preset medium: CPU bassa, disco a 140–240 MB/s, silenzio prolungato prima che parta il training. Non è un blocco — è il compilatore Metal al lavoro.</p>
+
+    <h3>Il pattern <code>.to(device)</code> in PyTorch</h3>
+
+    <p>Tutto quello che deve girare sulla GPU va esplicitamente spostato su di essa. I tensori e il modello vivono in RAM (CPU) per default:</p>
+
+    <pre><code>device = torch.device(<span class="st">"mps"</span>)        <span class="cm"># seleziona la GPU Apple</span>
+
+model = GPT(config).to(device)      <span class="cm"># sposta i 46M parametri sulla GPU</span>
+
+<span class="cm"># Nel training loop, ogni batch deve essere sul device corretto</span>
+x, y = x.to(device), y.to(device)  <span class="cm"># input e target → GPU</span>
+
+loss.backward()                      <span class="cm"># gradienti calcolati sulla GPU</span>
+optimizer.step()                     <span class="cm"># pesi aggiornati sulla GPU</span>
+
+<span class="cm"># Solo per stampare la loss, il valore torna sulla CPU</span>
+print(loss.item())                   <span class="cm"># .item() copia il singolo scalare in RAM</span></code></pre>
+
+    <div class="box box-good">
+      <p><strong>Su M2:</strong> la GPU condivide la RAM con la CPU (Unified Memory) — lo spostamento <code>.to(device)</code> non copia fisicamente i dati, cambia solo i metadati che dicono dove il tensore è accessibile. È uno dei vantaggi dell'architettura Apple Silicon rispetto a una scheda NVIDIA separata con VRAM dedicata.</p>
+    </div>
+
+    <!-- ── 11. Ottimizzare il training ── -->
+    <h2 id="ottimizzare">11. Ottimizzare il training</h2>
+
+    <p>Alla prima avviata su un corpus grande (200MB+), <code>train.py</code> trascorre la maggior parte del tempo in silenzio prima ancora che parta il training. Questa sezione spiega le leve disponibili e il loro impatto.</p>
+
+    <h3>Le fasi di avvio e dove si perde tempo</h3>
+
+    <pre><code><span class="nm">1.</span> Lettura corpus da disco          ~ secondi      (I/O, veloce)
+<span class="nm">2.</span> SPM encoding 40M token           ~ 10–20 min    <span class="st">← bottleneck principale</span>
+<span class="nm">3.</span> Costruzione tensor PyTorch        ~ 1–2 min      (allocazione RAM)
+<span class="nm">4.</span> Compilazione shader Metal (MPS)   ~ 5–15 min     (solo prima run)
+<span class="nm">5.</span> Step 1/30000 — loss: X.XXXX      ← training partito</code></pre>
+
+    <h3>Intervento 1 — Cache dei token (implementato)</h3>
+
+    <p>Dopo il primo encoding, il tensore viene salvato su disco come file <code>.tokens.pt</code>. Le run successive lo caricano direttamente — saltando completamente la fase 2.</p>
+
+    <pre><code><span class="cm"># Prima run: encoding + salvataggio cache</span>
+data/wiki_it.txt.bpe-spm.v16000.tokens.pt   <span class="cm">← creato (~160 MB)</span>
+
+<span class="cm"># Run successive: caricamento diretto</span>
+  Cache   : data/wiki_it.txt.bpe-spm.v16000.tokens.pt
+  Token   : 39,847,203  (da cache — avvio istantaneo)</code></pre>
+
+    <p>La cache viene invalidata automaticamente se il corpus o il tokenizer SPM sono stati modificati dopo la creazione del file. Per forzare il re-encoding:</p>
+
+    <pre><code>python3 train.py --tokenizer bpe-spm --data data/wiki_it.txt \
+    --preset medium --no-cache</code></pre>
+
+    <div class="box box-good">
+      <p><strong>Risparmio:</strong> da 10–20 minuti di attesa silenziosa a 2–3 secondi. Impatto maggiore su corpus grandi (100MB+). Sul corpus letterario (3MB) l'encoding era già veloce.</p>
+    </div>
+
+    <h3>Come funziona l'invalidazione</h3>
+
+    <p>Il file cache ha un nome che incorpora il tipo di tokenizer e il vocab size:</p>
+
+    <div class="formula">
+      &lt;corpus&gt;.&lt;tokenizer&gt;.v&lt;vocab_size&gt;.tokens.pt
+    </div>
+
+    <p>All'avvio, <code>train.py</code> controlla tre condizioni prima di usare la cache:</p>
+    <ol style="max-width:64ch;line-height:1.9">
+      <li>Il file cache esiste</li>
+      <li>Il corpus non è stato modificato dopo la cache (<code>mtime</code>)</li>
+      <li>Il file <code>tokenizer.model</code> SPM non è stato modificato dopo la cache</li>
+    </ol>
+    <p>Se anche una sola condizione fallisce, re-encoding e sovrascrittura della cache.</p>
+
+    <h3>Intervento 2 — Ridurre seq_len</h3>
+
+    <p>Il costo computazionale dell'attention scala con il <strong>quadrato</strong> della lunghezza di sequenza. Dimezzare <code>seq_len</code> da 512 a 256 rende ogni forward pass circa 4× più veloce:</p>
+
+    <div class="formula">
+      costo attention ∝ seq_len²&nbsp;&nbsp;&nbsp;→&nbsp;&nbsp;&nbsp;256² / 512² = 1/4
+    </div>
+
+    <pre><code><span class="cm"># medium con seq_len ridotto — più veloce, contesto dimezzato</span>
+python3 train.py --tokenizer bpe-spm --data data/wiki_it.txt \
+    --preset medium --seq-len <span class="nm">256</span></code></pre>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>seq_len</th><th>Step/sec (M2)</th><th>Contesto</th><th>Uso consigliato</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>256</td><td class="ok">~2–3×</td><td>256 token</td><td>esperimenti veloci, corpus piccoli</td></tr>
+          <tr><td>512</td><td>baseline</td><td>512 token</td><td>pre-training Wikipedia (preset medium)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Intervento 3 — Aumentare batch_size</h3>
+
+    <p>Batch più grandi aumentano il throughput della GPU (più token per step) e stabilizzano i gradienti. Il limite è la RAM disponibile.</p>
+
+    <pre><code><span class="cm"># medium su M2 con 16GB — batch 32 è sicuro</span>
+python3 train.py --tokenizer bpe-spm --data data/wiki_it.txt \
+    --preset medium --batch <span class="nm">32</span></code></pre>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>batch</th><th>RAM stimata</th><th>Stabilità gradienti</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>8</td><td>~400 MB</td><td>rumorosi</td></tr>
+          <tr><td>16</td><td>~550 MB</td><td>buona</td></tr>
+          <tr><td class="ok">32</td><td class="ok">~850 MB</td><td class="ok">ottima — consigliato</td></tr>
+          <tr><td>64</td><td>~1.5 GB</td><td>eccellente</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Riepilogo delle leve</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Intervento</th><th>Impatto</th><th>Trade-off</th><th>Flag</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cache token</td>
+            <td class="ok">elimina 10–20 min attesa</td>
+            <td>~160 MB su disco</td>
+            <td>automatica; <code>--no-cache</code> per disabilitare</td>
+          </tr>
+          <tr>
+            <td>seq_len 256 → 512</td>
+            <td class="ok">4× più veloce per step</td>
+            <td>contesto dimezzato</td>
+            <td><code>--seq-len 256</code></td>
+          </tr>
+          <tr>
+            <td>batch 16 → 32</td>
+            <td>~1.5× throughput</td>
+            <td>+300 MB RAM</td>
+            <td><code>--batch 32</code></td>
+          </tr>
+          <tr>
+            <td>Corpus ridotto (50 MB)</td>
+            <td>encoding più rapido</td>
+            <td>meno vocabolario</td>
+            <td><code>--max-mb 50</code> su wiki_to_corpus.py</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // IntersectionObserver per evidenziare la voce di menu attiva
+  const sections = document.querySelectorAll('main h2[id]');
+  const links    = document.querySelectorAll('#toc a');
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => a.classList.remove('active'));
+        const a = document.querySelector(`#toc a[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+
+  sections.forEach(s => obs.observe(s));
+</script>

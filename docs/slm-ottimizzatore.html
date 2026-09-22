@@ -1,0 +1,386 @@
+<meta charset="UTF-8">
+<title>AdamW e Ottimizzazione</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:        #F7F6F3;
+    --surface:   #FFFFFF;
+    --border:    #DDD9D0;
+    --text:      #1A1916;
+    --muted:     #6B6760;
+    --accent:    #0A6E6E;
+    --accent-bg: #EAF4F4;
+    --code-bg:   #F0EDE8;
+    --warn-bg:   #FFF8E7;
+    --warn-bdr:  #D4A017;
+    --good-bg:   #EAF4F4;
+    --good-bdr:  #0A6E6E;
+    --svg-line:  #0A6E6E;
+    --svg-muted: #C8C2B8;
+    --svg-text:  #6B6760;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:        #141412; --surface:   #1E1C1A; --border:    #333028;
+      --text:      #EAE8E3; --muted:     #8A8780; --accent:    #2BB5B5;
+      --accent-bg: #0D2828; --code-bg:   #252320;
+      --warn-bg:   #1F1A08; --warn-bdr:  #B8891A;
+      --good-bg:   #0D2828; --good-bdr:  #2BB5B5;
+      --svg-line:  #2BB5B5; --svg-muted: #444038; --svg-text:  #8A8780;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:        #141412; --surface:   #1E1C1A; --border:    #333028;
+    --text:      #EAE8E3; --muted:     #8A8780; --accent:    #2BB5B5;
+    --accent-bg: #0D2828; --code-bg:   #252320;
+    --warn-bg:   #1F1A08; --warn-bdr:  #B8891A;
+    --good-bg:   #0D2828; --good-bdr:  #2BB5B5;
+    --svg-line:  #2BB5B5; --svg-muted: #444038; --svg-text:  #8A8780;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    font-size: 17px; line-height: 1.75;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 100vh;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  nav {
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: 2.5rem 1.25rem 2.5rem 1.5rem;
+    border-right: 1px solid var(--border);
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 13px;
+  }
+  nav .nav-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 1rem;
+  }
+  nav ol { margin: 0; padding: 0; list-style: none; counter-reset: toc; }
+  nav ol li { counter-increment: toc; margin-bottom: .2rem; }
+  nav ol li::before { content: counter(toc) ". "; color: var(--muted); font-size: 11px; }
+  nav a { color: var(--muted); text-decoration: none; transition: color .15s; }
+  nav a:hover, nav a.active { color: var(--accent); }
+  nav .back-link { display: block; margin-bottom: 2rem; color: var(--accent); font-size: 12px; text-decoration: none; }
+  nav .back-link::before { content: "← "; }
+
+  main { padding: 3rem 3.5rem 5rem; min-width: 0; }
+
+  .doc-label {
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 11px; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: .75rem;
+  }
+  h1 { font-size: 2.2rem; font-weight: 600; line-height: 1.2; text-wrap: balance; margin: 0 0 .5rem; }
+  .subtitle { font-size: 1.05rem; color: var(--muted); font-style: italic; margin-bottom: 2.5rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+  h2 { font-size: 1.4rem; font-weight: 600; margin: 3rem 0 .75rem; scroll-margin-top: 1.5rem; }
+  h3 { font-size: 1.05rem; font-weight: 600; font-family: 'IBM Plex Sans', sans-serif; margin: 2rem 0 .5rem; color: var(--accent); }
+  p { margin: 0 0 1rem; max-width: 68ch; }
+
+  code {
+    font-family: 'IBM Plex Mono', monospace; font-size: .82em;
+    background: var(--code-bg); padding: .1em .35em; border-radius: 3px;
+  }
+  pre {
+    font-family: 'IBM Plex Mono', monospace; font-size: .82rem;
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 1.1rem 1.25rem;
+    overflow-x: auto; line-height: 1.6; margin: 1rem 0 1.5rem;
+  }
+  pre .cm { color: var(--muted); font-style: italic; }
+  pre .kw { color: var(--accent); }
+  pre .nm { color: var(--text); font-weight: 500; }
+  pre .hi { color: #B87333; font-weight: 500; }
+
+  .formula {
+    font-family: 'IBM Plex Mono', monospace; font-size: .92rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: .9rem 1.2rem;
+    margin: 1rem 0 1.5rem; display: block; max-width: 100%; overflow-x: auto;
+  }
+  .formula .lbl { color: var(--muted); font-size: .8em; }
+
+  .box { border-radius: 6px; padding: 1rem 1.25rem; margin: 1.5rem 0; max-width: 72ch; }
+  .box-warn { background: var(--warn-bg); border-left: 3px solid var(--warn-bdr); }
+  .box-good { background: var(--good-bg); border-left: 3px solid var(--good-bdr); }
+  .box p { margin: 0; font-size: .93rem; }
+
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0 1.75rem; }
+  table { width: 100%; border-collapse: collapse; font-family: 'IBM Plex Sans', sans-serif; font-size: .88rem; }
+  thead th { text-align: left; font-weight: 600; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--border); padding: .5rem .75rem; white-space: nowrap; }
+  tbody td { padding: .55rem .75rem; border-bottom: 1px solid var(--border); vertical-align: top; font-variant-numeric: tabular-nums; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--accent-bg); }
+  td.hl { font-weight: 600; color: var(--accent); }
+  td code { background: var(--code-bg); }
+
+  /* ── Diagram: beta decay ── */
+  .beta-diagram {
+    display: flex; gap: 1rem; margin: 1.25rem 0 1.75rem; flex-wrap: wrap;
+  }
+  .beta-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: .9rem 1.1rem; flex: 1; min-width: 200px;
+    font-family: 'IBM Plex Sans', sans-serif; font-size: .82rem;
+  }
+  .beta-card .val {
+    font-family: 'IBM Plex Mono', monospace; font-size: 1.3rem; font-weight: 500;
+    color: var(--accent); display: block; margin-bottom: .2rem;
+  }
+  .beta-card .desc { color: var(--muted); line-height: 1.5; }
+
+  /* ── LR schedule SVG ── */
+  .lr-chart {
+    margin: 1.25rem 0 1.75rem;
+    max-width: 580px;
+  }
+  .lr-chart svg { width: 100%; height: auto; }
+
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; }
+    nav { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    main { padding: 2rem 1.25rem 3rem; }
+  }
+</style>
+
+<div class="layout">
+  <nav id="toc">
+    <a class="back-link" href="index.html">Indice</a>
+    <div class="nav-label">In questa pagina</div>
+    <ol>
+      <li><a href="#gradiente">Il gradiente</a></li>
+      <li><a href="#naive">L'aggiornamento naïve</a></li>
+      <li><a href="#beta">Beta: memoria del passato</a></li>
+      <li><a href="#due-momenti">I due momenti</a></li>
+      <li><a href="#bias">Correzione del bias</a></li>
+      <li><a href="#adam-update">L'aggiornamento Adam</a></li>
+      <li><a href="#weight-decay">Weight decay e AdamW</a></li>
+      <li><a href="#lr-schedule">Learning rate schedule</a></li>
+      <li><a href="#grad-clip">Gradient clipping</a></li>
+      <li><a href="#train-py">In train.py</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="doc-label">SLM · Ottimizzazione</div>
+    <h1>AdamW e Ottimizzazione</h1>
+    <p class="subtitle">Come il modello impara: gradienti, momenti, weight decay, learning rate schedule e gradient clipping — ogni pezzo spiegato dall'inizio.</p>
+
+    <!-- 1 -->
+    <h2 id="gradiente">1. Il gradiente</h2>
+    <p>Il training è un ciclo ripetuto migliaia di volte. Ad ogni step il modello riceve un batch di testo, fa una previsione su quale token viene dopo, e calcola quanto ha sbagliato — la <strong>loss</strong>.</p>
+    <p>Backpropagation calcola poi, per ogni singolo parametro del modello, quanto la loss cambierebbe se quel parametro aumentasse di un piccolo epsilon. Quel valore è il <strong>gradiente</strong>.</p>
+    <samp class="formula">g_t  =  ∂Loss / ∂w          <span class="lbl">← derivata della loss rispetto al peso w al passo t</span></samp>
+    <p><code>g_t</code> è un numero con segno. Se <code>g_t = +0.3</code>: aumentare <code>w</code> fa salire la loss → devi diminuire <code>w</code>. Se <code>g_t = −0.8</code>: il contrario. Il segno dice la direzione, il valore assoluto dice quanto è ripida la pendenza.</p>
+    <p><code>t</code> è il numero dello step corrente: <code>t=1</code> al primo step, <code>t=2</code> al secondo, e così via. Il pedice ricorda che il gradiente cambia ad ogni step — dipende dal batch.</p>
+
+    <!-- 2 -->
+    <h2 id="naive">2. L'aggiornamento naïve e i suoi problemi</h2>
+    <p>L'idea più semplice: sposta ogni peso nella direzione opposta al gradiente, scalato da un passo fisso.</p>
+    <samp class="formula">w  ←  w  −  lr × g_t          <span class="lbl">← SGD base</span></samp>
+    <p>Due problemi fondamentali:</p>
+    <p><strong>Rumore.</strong> Il gradiente calcolato su un singolo batch è una stima rumorosa della direzione vera. Un batch fa sembrare che <code>w</code> vada aumentato, il successivo che vada diminuito — il peso zigzaga invece di convergere.</p>
+    <p><strong>Passo unico per tutti.</strong> Il modello ha 46 milioni di parametri con dinamiche completamente diverse. Il peso della riga 423 della embedding table vede gradienti solo quando quel token appare nel batch — raramente. Un parametro del feed-forward centrale riceve gradienti ad ogni step. Lo stesso <code>lr</code> fisso per entrambi è inevitabilmente sbagliato per uno dei due.</p>
+
+    <!-- 3 -->
+    <h2 id="beta">3. β — la memoria del passato</h2>
+    <p><strong>β</strong> (beta) è un numero tra 0 e 1 che controlla quanto peso dare al passato in una media mobile esponenziale. La formula generale:</p>
+    <samp class="formula">media_t  =  β × media_{t−1}  +  (1 − β) × valore_nuovo</samp>
+    <p>Ad ogni step, il nuovo valore contribuisce per <code>(1−β)</code> e tutto il passato — compresso in <code>media_{t−1}</code> — contribuisce per <code>β</code>.</p>
+
+    <div class="beta-diagram">
+      <div class="beta-card">
+        <span class="val">β = 0.0</span>
+        <span class="desc">Nessuna memoria. La media <em>è</em> il valore corrente. Nessuno smorzamento del rumore.</span>
+      </div>
+      <div class="beta-card">
+        <span class="val">β = 0.9</span>
+        <span class="desc">Ogni nuovo valore pesa il 10%, il passato il 90%. La media segue la tendenza reale e ignora i picchi casuali.</span>
+      </div>
+      <div class="beta-card">
+        <span class="val">β = 0.99</span>
+        <span class="desc">Memoria molto lunga. La media è stabile ma reattiva come un transatlantico — cambia direzione lentamente.</span>
+      </div>
+    </div>
+
+    <p>Intuitivamente: con β = 0.9 la "finestra effettiva" di memoria è circa <code>1/(1−0.9) = 10</code> step. Con β = 0.95 è circa 20 step.</p>
+
+    <!-- 4 -->
+    <h2 id="due-momenti">4. I due momenti di Adam</h2>
+    <p>Adam mantiene due medie mobili per ogni parametro, aggiornate ad ogni step.</p>
+
+    <h3>Primo momento m_t — la direzione media</h3>
+    <samp class="formula">m_t  =  β₁ × m_{t−1}  +  (1 − β₁) × g_t          <span class="lbl">← con β₁ = 0.9</span></samp>
+    <p><code>m_t</code> è la media mobile dei gradienti delle ultime decine di step. Risponde alla domanda: <em>in quale direzione si muove questo parametro in media?</em></p>
+    <p>Se due step consecutivi danno <code>g=+0.5</code> e poi <code>g=−0.3</code>, l'aggiornamento naïve zigzaga. Con <code>m_t</code>, la direzione media è più stabile e il parametro avanza nella direzione dominante invece di rimbalzare. In fisica si chiama <em>momento lineare</em> — da qui il nome.</p>
+
+    <h3>Secondo momento v_t — la varianza storica</h3>
+    <samp class="formula">v_t  =  β₂ × v_{t−1}  +  (1 − β₂) × g_t²          <span class="lbl">← con β₂ = 0.95</span></samp>
+    <p><code>v_t</code> è la media mobile dei <strong>quadrati</strong> dei gradienti. Il quadrato è sempre positivo — il segno non conta. Risponde alla domanda: <em>quanto è stato grande il gradiente di questo parametro storicamente?</em></p>
+    <p>Un parametro che riceve gradienti grandi e frequenti ha <code>v_t</code> alto. Un parametro raro (come un token infrequente nella embedding table) ha <code>v_t</code> basso. Questa differenza viene usata per adattare il passo.</p>
+
+    <!-- 5 -->
+    <h2 id="bias">5. La correzione del bias iniziale</h2>
+    <p>C'è un problema di avvio: all'inizio del training, <code>m_0 = 0</code> e <code>v_0 = 0</code>. Nelle prime iterazioni le medie mobili sono ancora "fredde" — sottostimano i valori reali perché il passato era tutto zero.</p>
+    <p>Esempio: al passo 1 con β₁ = 0.9 e g₁ = 0.5:</p>
+    <pre><code>m_1 = 0.9 × 0  +  0.1 × 0.5  =  0.05    <span class="cm">← dovrebbe essere ~0.5, non 0.05</span></code></pre>
+    <p>La correzione divide per <code>(1 − β^t)</code>, un termine che parte vicino a zero (amplifica il valore reale) e si avvicina a 1 dopo molti step (effetto trascurabile):</p>
+    <samp class="formula">m̂_t  =  m_t / (1 − β₁ᵗ)
+v̂_t  =  v_t / (1 − β₂ᵗ)</samp>
+    <pre><code><span class="cm"># Al passo t=1, β₁=0.9:</span>
+m̂_1  =  0.05 / (1 − 0.9¹)  =  0.05 / 0.1  =  0.5   ✓
+
+<span class="cm"># Al passo t=100, β₁=0.9:</span>
+(1 − 0.9¹⁰⁰)  ≈  0.99999   → divisione quasi irrilevante</code></pre>
+
+    <!-- 6 -->
+    <h2 id="adam-update">6. L'aggiornamento Adam completo</h2>
+    <samp class="formula">w  ←  w  −  lr ×  m̂_t / (√v̂_t + ε)          <span class="lbl">← ε = 1e-8</span></samp>
+
+    <p><strong><code>m̂_t</code> al numeratore</strong> dà la direzione smorzata e corretta — il gradiente medio stabilizzato.</p>
+    <p><strong><code>√v̂_t</code> al denominatore</strong> scala il passo in base alla storia del parametro:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Parametro</th><th>Storico gradienti</th><th>v̂_t</th><th>Passo effettivo</th><th>Effetto</th></tr></thead>
+        <tbody>
+          <tr><td>Embedding token frequente</td><td>grandi e continui</td><td>alto</td><td>piccolo</td><td>rallenta chi è già attivo</td></tr>
+          <tr><td>Embedding token raro</td><td>piccoli, episodici</td><td>basso</td><td class="hl">grande</td><td>accelera chi è poco aggiornato</td></tr>
+          <tr><td>Peso FFN centrale</td><td>medi, regolari</td><td>medio</td><td>medio</td><td>passo proporzionale</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong><code>ε = 1e-8</code></strong> è un numero infinitesimale aggiunto per evitare la divisione per zero quando <code>v̂_t ≈ 0</code>.</p>
+    <p>Il risultato: ogni parametro ha un learning rate effettivo diverso, che si adatta automaticamente alla sua storia. Non serve tarare manualmente un lr per ogni layer.</p>
+
+    <!-- 7 -->
+    <h2 id="weight-decay">7. Weight decay — e perché AdamW non è Adam</h2>
+    <p>I pesi tendono a crescere durante il training se non vengono frenati — il modello impara a fare affidamento su pochi parametri molto forti invece di distribuire l'informazione. Il <strong>weight decay</strong> contrasta questo con una piccola penalità proporzionale alla dimensione del peso.</p>
+
+    <h3>Il problema di Adam classico</h3>
+    <p>In Adam classico, il weight decay veniva implementato aggiungendo una penalità al gradiente prima dell'update:</p>
+    <pre><code>g_t_modificato  =  g_t  +  λ × w      <span class="cm">← λ = 0.1</span>
+w  ←  w  −  lr × m̂(g_t_modificato) / √v̂(g_t_modificato)</code></pre>
+    <p>Il problema: la penalità <code>λ × w</code> finiva <strong>dentro</strong> la divisione per <code>√v̂_t</code>. Parametri con alta varianza storica (gradienti grandi) ricevevano meno regolarizzazione di parametri con bassa varianza. La penalità non era uniforme — non era quello che si voleva.</p>
+
+    <h3>AdamW: i due passi separati</h3>
+    <p>AdamW (Loshchilov & Hutter, 2019) risolve separando i due aggiornamenti:</p>
+    <pre><code><span class="cm"># Passo 1 — Adam puro: trova la direzione ottimale</span>
+w  ←  w  −  lr × m̂_t / (√v̂_t + ε)
+
+<span class="cm"># Passo 2 — weight decay diretto: regolarizza uniformemente</span>
+w  ←  w  −  lr × <span class="hi">λ</span> × w
+<span class="cm">#  equivalente a:  w ← w × (1 − lr × λ)</span>
+<span class="cm">#  con lr=3e-4 e λ=0.1 → ogni step moltiplica w per 0.99997</span></code></pre>
+
+    <div class="box box-good">
+      <p><strong>Intuitivamente:</strong> il weight decay applica un piccolo "restringimento" costante verso zero ad ogni step. Con <code>λ=0.1</code> e <code>lr=3×10⁻⁴</code>, ogni peso viene moltiplicato per <code>0.99997</code> — quasi nulla per step, ma dopo 30.000 step il contributo cumulativo è significativo.</p>
+    </div>
+
+    <div class="box box-warn">
+      <p><strong>Nota:</strong> il weight decay si applica solo ai pesi matriciali (<code>nn.Linear</code>, embedding) — non ai bias né ai parametri LayerNorm. Questi ultimi sono vettori unidimensionali che non partecipano alla regolarizzazione. In <code>train.py</code>, <code>decay_params</code> e <code>no_decay_params</code> separano esattamente questi due gruppi.</p>
+    </div>
+
+    <!-- 8 -->
+    <h2 id="lr-schedule">8. Learning rate schedule</h2>
+    <p>AdamW usa un <code>lr</code> passato al momento dell'aggiornamento — ma in <code>train.py</code> quel valore non è costante. Segue una curva in due fasi.</p>
+
+    <div class="lr-chart">
+      <svg viewBox="0 0 560 160" xmlns="http://www.w3.org/2000/svg" aria-label="Curva del learning rate: warmup lineare poi cosine decay">
+        <!-- grid -->
+        <line x1="60" y1="20" x2="60" y2="120" stroke="var(--svg-muted)" stroke-width="1"/>
+        <line x1="60" y1="120" x2="520" y2="120" stroke="var(--svg-muted)" stroke-width="1"/>
+        <!-- horizontal guides -->
+        <line x1="58" y1="30" x2="520" y2="30" stroke="var(--svg-muted)" stroke-width="0.5" stroke-dasharray="4 4"/>
+        <line x1="58" y1="110" x2="520" y2="110" stroke="var(--svg-muted)" stroke-width="0.5" stroke-dasharray="4 4"/>
+        <!-- warmup region shading -->
+        <rect x="60" y="20" width="46" height="100" fill="var(--accent-bg)" opacity="0.5"/>
+        <!-- warmup label -->
+        <text x="83" y="145" text-anchor="middle" font-family="IBM Plex Sans,sans-serif" font-size="10" fill="var(--svg-text)">warmup</text>
+        <text x="83" y="155" text-anchor="middle" font-family="IBM Plex Sans,sans-serif" font-size="10" fill="var(--svg-text)">200 step</text>
+        <!-- cosine decay label -->
+        <text x="300" y="155" text-anchor="middle" font-family="IBM Plex Sans,sans-serif" font-size="10" fill="var(--svg-text)">cosine decay → 30 000 step</text>
+        <!-- y-axis labels -->
+        <text x="52" y="33" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="10" fill="var(--svg-text)">3e-4</text>
+        <text x="52" y="113" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="10" fill="var(--svg-text)">3e-5</text>
+        <!-- x-axis labels -->
+        <text x="60" y="132" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" fill="var(--svg-text)">0</text>
+        <text x="520" y="132" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" fill="var(--svg-text)">30k</text>
+        <!-- LR curve: warmup (linear 60,120 → 106,30) then cosine (106,30 → 520,110) -->
+        <path d="M60,120 L106,30" stroke="var(--svg-line)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <!-- cosine segment, approximated with cubic bezier -->
+        <path d="M106,30 C250,30 350,110 520,110" stroke="var(--svg-line)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <!-- dot at peak -->
+        <circle cx="106" cy="30" r="4" fill="var(--svg-line)"/>
+      </svg>
+    </div>
+
+    <h3>Fase 1 — Warmup lineare (step 0 → 200)</h3>
+    <p>Il learning rate cresce linearmente da <code>0</code> a <code>lr_max = 3×10⁻⁴</code> nei primi 200 step.</p>
+    <p>Perché? All'inizio del training, i momenti <code>m_t</code> e <code>v_t</code> sono ancora "freddi" — la correzione del bias li aggiusta ma non li rende perfetti. Partire con un lr grande farebbe aggiornamenti grandi e inaffidabili, destabilizzando il modello prima che abbia imparato qualcosa. Il warmup lascia tempo alle statistiche di stabilizzarsi.</p>
+
+    <h3>Fase 2 — Cosine decay (step 200 → 30.000)</h3>
+    <samp class="formula">lr_t  =  lr_min  +  ½ × (lr_max − lr_min) × (1 + cos(π × progresso))</samp>
+    <p>dove <code>progresso</code> va da 0 a 1 durante il decay.</p>
+    <p>Il coseno scende dolcemente — inizia quasi piatto vicino al massimo (passi ancora grandi quando il modello ha molto da imparare), poi accelera verso il minimo, poi si appiattisce di nuovo vicino al minimo <code>3×10⁻⁵</code>. Questo profilo funziona meglio di un taglio brusco perché riduce il passo progressivamente mentre il modello si avvicina al minimo della loss — passi grandi vicino al minimo farebbero rimbalzare il modello senza convergere.</p>
+
+    <!-- 9 -->
+    <h2 id="grad-clip">9. Gradient clipping</h2>
+    <p>Occasionalmente, per un batch sfortunato o durante le prime fasi del training, il gradiente può diventare molto grande — un cosiddetto <em>gradient spike</em>. Un singolo aggiornamento enorme può distruggere i progressi fatti nei mille step precedenti.</p>
+    <p>Il gradient clipping risolve in modo semplice: calcola la norma L2 dell'intero vettore di gradienti (come se tutti i 46 milioni di gradienti fossero un singolo vettore), e se supera una soglia lo scala proporzionalmente.</p>
+    <samp class="formula">se  ‖g‖ > soglia:   g  ←  g × (soglia / ‖g‖)          <span class="lbl">← soglia = 1.0</span></samp>
+    <p>La direzione non cambia — solo il modulo viene limitato. È l'equivalente di dire: "non fare mai un passo più lungo di 1.0, qualunque cosa dica il gradiente."</p>
+    <pre><code><span class="cm"># In train.py, applicato prima di optimizer.step()</span>
+torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=<span class="nm">1.0</span>)</code></pre>
+    <div class="box box-good">
+      <p>Il gradient clipping non è sempre necessario, ma per i transformer è prassi standard. Senza di esso, un singolo batch anomalo può portare la loss a esplodere a <code>NaN</code> e rendere il checkpoint inutilizzabile.</p>
+    </div>
+
+    <!-- 10 -->
+    <h2 id="train-py">10. Come si leggono gli iperparametri in train.py</h2>
+    <pre><code>AdamW(
+    params,
+    lr          = <span class="nm">3e-4</span>,        <span class="cm"># learning rate massimo (raggiunto dopo il warmup)</span>
+    betas       = (<span class="nm">0.9</span>, <span class="nm">0.95</span>), <span class="cm"># β₁ per m_t, β₂ per v_t</span>
+    weight_decay= <span class="nm">0.1</span>,        <span class="cm"># λ — forza della regolarizzazione</span>
+    eps         = <span class="nm">1e-8</span>,        <span class="cm"># ε — stabilità numerica</span>
+)</code></pre>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Parametro</th><th>Valore</th><th>Significato</th></tr></thead>
+        <tbody>
+          <tr><td><code>lr</code></td><td class="hl">3 × 10⁻⁴</td><td>Passo massimo — raggiunto al termine del warmup</td></tr>
+          <tr><td><code>min_lr</code></td><td>3 × 10⁻⁵</td><td>Passo minimo al termine del cosine decay (= lr/10)</td></tr>
+          <tr><td><code>warmup_steps</code></td><td>200</td><td>Step di salita lineare prima del decay</td></tr>
+          <tr><td><code>β₁</code></td><td>0.9</td><td>Memoria gradienti — finestra effettiva ~10 step</td></tr>
+          <tr><td><code>β₂</code></td><td>0.95</td><td>Memoria varianza — finestra effettiva ~20 step (più alto del default 0.999 usato per i transformer)</td></tr>
+          <tr><td><code>weight_decay</code></td><td>0.1</td><td>Restringimento per pesi matriciali (non su bias/LayerNorm)</td></tr>
+          <tr><td><code>grad_clip</code></td><td>1.0</td><td>Soglia norma L2 del gradiente globale</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('main h2[id]');
+  const links    = document.querySelectorAll('#toc a');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => a.classList.remove('active'));
+        const a = document.querySelector(`#toc a[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  sections.forEach(s => obs.observe(s));
+</script>
