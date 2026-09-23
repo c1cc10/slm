@@ -1,0 +1,174 @@
+<meta charset="UTF-8">
+<title>SLM — Il Progetto</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg:      #F7F9FC;
+  --surface: #FFFFFF;
+  --surface2:#F0F5FA;
+  --text:    #1C2333;
+  --text-sec:#5A6478;
+  --accent:  #0A6E6E;
+  --pub:     #7A4F1E;
+  --border:  #DDE3EE;
+  --callout: #F5F0E8;
+  --callout-border: #D6C9B0;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+    --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF;
+    --pub:#C97B30; --border:#21262D;
+    --callout:#1A1710; --callout-border:#3A3220;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+  --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF;
+  --pub:#C97B30; --border:#21262D;
+  --callout:#1A1710; --callout-border:#3A3220;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 16px; line-height: 1.75; margin: 0;
+  padding: 0 24px 80px;
+}
+.container { max-width: 600px; margin: 0 auto; padding-top: 52px; }
+
+/* ── Header ── */
+.back {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem;
+  color: var(--text-sec); text-decoration: none;
+  letter-spacing: 0.04em; display: inline-flex; align-items: center;
+  gap: 5px; margin-bottom: 28px;
+}
+.back:hover { color: var(--pub); }
+.eyebrow {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--pub); margin-bottom: 8px;
+}
+h1 {
+  font-size: 1.9rem; font-weight: 600; letter-spacing: -0.02em;
+  margin: 0 0 28px; line-height: 1.15; text-wrap: balance;
+}
+
+/* ── Callout box ── */
+.callout {
+  background: var(--callout); border: 1px solid var(--callout-border);
+  border-radius: 7px; padding: 15px 18px; margin-bottom: 36px;
+  font-size: 0.88rem; line-height: 1.6; color: var(--text-sec);
+}
+.callout strong { color: var(--text); font-weight: 600; }
+
+/* ── Essay ── */
+.essay p {
+  margin: 0 0 1.4em;
+}
+.essay p:last-child { margin-bottom: 0; }
+.essay .break {
+  border: none; border-top: 1px solid var(--border);
+  margin: 2.2em 0;
+}
+.essay em { font-style: italic; }
+.essay strong { font-weight: 600; }
+.essay a { color: var(--accent); text-decoration: none; }
+.essay a:hover { text-decoration: underline; }
+
+/* ── Footer ── */
+.footer {
+  margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border);
+}
+.footer-title {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-sec); margin-bottom: 14px;
+}
+.footer-links {
+  display: flex; flex-direction: column; gap: 9px;
+  margin-bottom: 24px;
+}
+.footer-links a {
+  font-size: 0.9rem; color: var(--text); text-decoration: none;
+  display: flex; align-items: baseline; gap: 8px;
+}
+.footer-links a:hover { color: var(--accent); }
+.fl-label {
+  font-size: 0.8rem; color: var(--text-sec);
+}
+.finale {
+  font-style: italic; font-size: 0.9rem; color: var(--text-sec);
+  border-left: 3px solid var(--pub); padding-left: 14px; margin-top: 20px;
+}
+</style>
+
+<div class="container">
+
+  <a class="back" href="index.html">← SLM</a>
+
+  <p class="eyebrow">SLM · Il Progetto</p>
+  <h1>L'idea, il percorso, il perché</h1>
+
+  <div class="callout">
+    <strong>In breve:</strong> SLM è un programma che impara a generare testo in italiano, costruito da zero per capirne i meccanismi dall'interno.
+    Questo non è il manuale tecnico, è la storia del progetto. Per chi vuole capire cosa sta succedendo, senza formule.
+    Chi vuole scendere nell'architettura trova tutto nella <a href="slm-docs.html" style="color:var(--accent)">documentazione tecnica</a>.
+  </div>
+
+  <div class="essay">
+
+    <p>Leggo spesso di AI, è parte del mio lavoro. Le notizie delle grandi aziende, le valutazioni degli esperti portano spesso a pensieri contraddittori. Mi sembra che la sensazione prevalente sia quella di non controllare questa tecnologia.</p>
+
+    <p>Di solito, quando qualcosa mi interessa davvero, posso fare due cose: smontare l'esistente, o costruirne una versione mia. I grandi modelli AI non si smontano: sono sistemi chiusi, spesso inaccessibili per chi vuole capire cosa c'è davvero dentro. Volevo sapere se un'AI costruita da zero, pensata verso una direzione specifica, potesse essere compresa, e in qualche misura controllata. Ho scelto di costruirla.</p>
+
+    <hr class="break">
+
+    <p>Fin dall'inizio ho scoperto competenze che pensavo di avere e invece avevo solo sfiorato, e che avrebbero avuto un peso sia per capire il processo che per relazionarmi con il suo risultato. Per questo ho documentato quanto più possibile: lo scopo, le scelte fatte lungo la strada, i vincoli reali, le domande rimaste aperte. Pensando che potesse essere utile anche ad altri.</p>
+
+    <p>L'obiettivo è un modello linguistico addestrato da zero sul corpus di Wikipedia in italiano: una base comune, capace di leggere e scrivere nella lingua, ma non ancora di "capire" nel senso in cui lo intendiamo nella vita quotidiana. Ho dovuto affrontare la domanda su cosa significhi davvero "comprensione" per un programma di questo tipo, e ho scelto di postporla: prima costruire la fondamenta, poi farla crescere, con risorse più grandi, quando sarà il momento.</p>
+
+    <hr class="break">
+
+    <p>Accettare questo limite è stata la scelta più produttiva del progetto. Il modello non sarà mai un assistente conversazionale come ChatGPT, e non deve esserlo. Il limite ha definito le condizioni d'uso: <strong>un assistente alla scrittura</strong>, addestrato su una voce narrativa specifica, capace di mantenere uno stile anche laddove la comprensione astratta manca; e <strong>una base</strong> su cui costruire specializzazioni leggere per domini professionali precisi.</p>
+
+    <p>C'è una seconda sfida che sto portando avanti in parallelo: vorrei che il risultato fosse utilizzabile in spazi hardware piccoli, non solo su macchine potenti e costose. Vedrò se sarà possibile. Per ora sto dirigendo il progetto verso un formato di distribuzione che permetta questo, con le implicazioni architetturali che ne conseguono.</p>
+
+    <hr class="break">
+
+    <p>Una parola sull'hardware. Ho lavorato su un Mac Air con 8 GB di memoria condivisa tra CPU e scheda grafica. Non è poco, ma non è nemmeno molto per addestrare un modello linguistico. Ogni volta che il sistema si fermava per mancanza di risorse c'era qualcosa da capire: come funziona davvero la memoria di questi acceleratori grafici, come si gestisce il tradeoff tra la quantità di testo che il modello vede in un colpo solo e la velocità con cui impara. Le limitazioni hanno insegnato cose che nessun tutorial esplicita.</p>
+
+    <hr class="break">
+
+    <p>Lascio in eredità i file che sto usando, insieme ai risultati intermedi del training. Addestrare un modello richiede molto tempo, come vedrete se leggete il <a href="slm-journal.html">diario di bordo</a>, e mi sembra giusto che chi viene dopo non debba ricominciare da zero.</p>
+
+    <p>Spero di aver fatto qualcosa che aiuti la nostra comunità a capire meglio l'animale che stiamo cavalcando, e a valutare con più consapevolezza le notizie con cui siamo bombardati.</p>
+
+    <p class="finale">A ciascuno il giudizio finale.</p>
+
+  </div>
+
+  <div class="footer">
+    <p class="footer-title">Vuoi saperne di più</p>
+    <div class="footer-links">
+      <a href="slm-journal.html">
+        <span>📓 Diario di bordo</span>
+        <span class="fl-label">le decisioni, i momenti chiave, la curva di apprendimento del modello</span>
+      </a>
+      <a href="slm-intro.html">
+        <span>🧠 Come funziona una LLM</span>
+        <span class="fl-label">spiegazione accessibile del meccanismo di base</span>
+      </a>
+      <a href="slm-docs.html">
+        <span>📖 Documentazione tecnica</span>
+        <span class="fl-label">architettura, training, codice, risultati</span>
+      </a>
+      <a href="https://github.com/c1cc10/slm" target="_blank">
+        <span>💻 Codice sorgente</span>
+        <span class="fl-label">github.com/c1cc10/slm</span>
+      </a>
+    </div>
+  </div>
+
+</div>
