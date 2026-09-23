@@ -1,5 +1,5 @@
 <meta charset="UTF-8">
-<title>Diario SLM</title>
+<title>SLM — Diario di Bordo</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -21,6 +21,8 @@
   --chart-ref: #E0E7EF;
   --chart-now: #D97706;
   --chart-text:#5A6478;
+  --narr-bg:   #F0F5FA;
+  --narr-br:   #0A6E6E;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -33,6 +35,7 @@
     --chart-line:#2BBFBF; --chart-area:rgba(43,191,191,0.10);
     --chart-grid:#21262D; --chart-ref:#21262D;
     --chart-now:#F59E0B; --chart-text:#8B949E;
+    --narr-bg:#1A2634; --narr-br:#2BBFBF;
   }
 }
 :root[data-theme="dark"] {
@@ -45,6 +48,7 @@
   --chart-line:#2BBFBF; --chart-area:rgba(43,191,191,0.10);
   --chart-grid:#21262D; --chart-ref:#21262D;
   --chart-now:#F59E0B; --chart-text:#8B949E;
+  --narr-bg:#1A2634; --narr-br:#2BBFBF;
 }
 *, *::before, *::after { box-sizing: border-box; }
 body {
@@ -67,7 +71,6 @@ h1 { font-size: 1.85rem; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 
   color: var(--text-sec); padding-bottom: 24px; margin-bottom: 36px;
   border-bottom: 1px solid var(--border);
 }
-.meta-row .k { }
 .meta-row .v { color: var(--text); }
 .nav-links {
   display: flex; flex-wrap: wrap; gap: 6px 20px;
@@ -85,7 +88,17 @@ p { margin: 0 0 12px; }
 ul, ol { margin: 8px 0 12px; padding-left: 22px; }
 li { margin-bottom: 4px; }
 
-/* — Timeline — */
+/* ── Narrative head ── */
+.narr {
+  font-size: 0.92rem; line-height: 1.7;
+  color: var(--text);
+  background: var(--narr-bg);
+  border-left: 3px solid var(--narr-br);
+  padding: 9px 13px; border-radius: 0 5px 5px 0;
+  margin-bottom: 14px;
+}
+
+/* ── Timeline ── */
 .timeline { display: flex; flex-direction: column; }
 .tl-entry {
   display: grid; grid-template-columns: 104px 1fr;
@@ -97,24 +110,20 @@ li { margin-bottom: 4px; }
 }
 .tl-date {
   font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem;
-  color: var(--text-sec); text-align: right; line-height: 1.4;
-  white-space: nowrap;
+  color: var(--text-sec); text-align: right; line-height: 1.4; white-space: nowrap;
 }
 .tl-dot-wrap {
   display: flex; flex-direction: column; align-items: center;
-  width: 16px; margin-top: 6px; margin-right: 0; align-self: flex-end;
+  width: 16px; margin-top: 6px; align-self: flex-end;
 }
-.tl-dot {
-  width: 9px; height: 9px; border-radius: 50%;
-  background: var(--accent); flex-shrink: 0;
-}
+.tl-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
 .tl-line { width: 1px; background: var(--border); flex: 1; min-height: 28px; }
 .tl-right { padding-bottom: 36px; }
 .tl-right h3 { margin-top: 0; font-size: 0.96rem; }
 .tl-entry:last-child .tl-right { padding-bottom: 0; }
 .tl-entry:last-child .tl-line { display: none; }
 
-/* — Badges — */
+/* ── Badges ── */
 .badge {
   display: inline-block; padding: 1px 7px; border-radius: 4px;
   font-size: 0.72rem; font-weight: 500; margin-right: 4px;
@@ -125,27 +134,22 @@ li { margin-bottom: 4px; }
 .badge-info { background: var(--info-bg); color: var(--info-text); border: 1px solid var(--info-br); }
 .badge-now  { background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; }
 
-/* — Architecture grid — */
+/* ── Architecture grid ── */
 .arch-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
   gap: 10px; margin: 14px 0;
 }
-.arch-cell {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 6px; padding: 11px 14px;
-}
+.arch-cell { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 11px 14px; }
 .arch-cell .lbl {
   font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
-  color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.07em;
-  margin-bottom: 3px;
+  color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 3px;
 }
 .arch-cell .val { font-size: 0.93rem; font-weight: 600; }
 
-/* — Chart — */
+/* ── Chart ── */
 .chart-wrap {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 8px; padding: 20px 16px 14px; margin: 20px 0;
-  overflow-x: auto;
+  border-radius: 8px; padding: 20px 16px 14px; margin: 20px 0; overflow-x: auto;
 }
 .chart-caption {
   font-size: 0.77rem; color: var(--text-sec);
@@ -153,7 +157,7 @@ li { margin-bottom: 4px; }
 }
 svg text { font-family: 'IBM Plex Mono', monospace; }
 
-/* — Val loss table — */
+/* ── Val loss table ── */
 .table-wrap { overflow-x: auto; margin: 16px 0; }
 table { width: 100%; border-collapse: collapse; font-size: 0.84rem; min-width: 440px; }
 th {
@@ -170,20 +174,14 @@ td.good { color: var(--done-text); font-weight: 500; }
 td.note-cell { color: var(--text-sec); font-size: 0.78rem; }
 tr.hl td { background: var(--surface2); }
 
-/* — Milestone cards — */
+/* ── Milestone cards ── */
 .milestones { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
-.ms-card {
-  border: 1px solid var(--border); border-radius: 7px; overflow: hidden;
-}
+.ms-card { border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
 .ms-header {
   display: flex; align-items: center; gap: 10px;
-  padding: 9px 14px; background: var(--surface2);
-  font-size: 0.78rem;
+  padding: 9px 14px; background: var(--surface2); font-size: 0.78rem;
 }
-.ms-step {
-  font-family: 'IBM Plex Mono', monospace; color: var(--accent);
-  font-weight: 500; white-space: nowrap;
-}
+.ms-step { font-family: 'IBM Plex Mono', monospace; color: var(--accent); font-weight: 500; white-space: nowrap; }
 .ms-label { color: var(--text-sec); }
 .ms-qual { margin-left: auto; }
 .ms-body {
@@ -193,7 +191,7 @@ tr.hl td { background: var(--surface2); }
 }
 .ms-body.anomaly { color: #FF7B72; }
 
-/* — Note / info boxes — */
+/* ── Note / info boxes ── */
 .note {
   background: var(--info-bg); border: 1px solid var(--info-br);
   border-radius: 6px; padding: 13px 16px; margin: 16px 0;
@@ -203,15 +201,14 @@ tr.hl td { background: var(--surface2); }
 .note.done { background: var(--done-bg); border-color: var(--done-br); color: var(--done-text); }
 .note b { font-weight: 600; }
 
-/* — Decision box — */
+/* ── Decision box ── */
 .decision {
   border: 2px solid var(--accent); border-radius: 8px;
   padding: 20px 22px; margin: 24px 0; background: var(--surface);
 }
 .decision-label {
   font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem;
-  text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent);
-  margin-bottom: 8px;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px;
 }
 .decision-title { font-size: 1.02rem; font-weight: 600; margin: 0 0 12px; }
 .decision-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; margin-top: 14px; }
@@ -219,7 +216,7 @@ tr.hl td { background: var(--surface2); }
 .decision-side ul { margin: 0; padding-left: 18px; font-size: 0.87rem; }
 .decision-side li { margin-bottom: 4px; }
 
-/* — Command block — */
+/* ── Command block ── */
 .cmd {
   background: var(--code-bg); color: #A8D8A0;
   font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem;
@@ -236,18 +233,19 @@ tr.hl td { background: var(--surface2); }
 
 <div class="wrapper">
 
-  <p class="eyebrow">SLM · Diario di Sviluppo</p>
-  <h1>Tracciamento del progetto</h1>
-  <p class="subtitle">Decisioni architetturali, run di training, osservazioni empiriche — aggiornato in itinere</p>
+  <p class="eyebrow">SLM · Diario di Bordo</p>
+  <h1>Quello che è successo, e perché</h1>
+  <p class="subtitle">Ogni voce ha una testa narrativa accessibile a tutti, seguita dal dettaglio tecnico per chi vuole scendere più in profondità.</p>
   <div class="meta-row">
-    <span><span class="k">aggiornato</span> <span class="v">2026-09-21</span></span>
-    <span><span class="k">run corrente</span> <span class="v">step ~11 750 / 30 000</span></span>
-    <span><span class="k">val loss</span> <span class="v">5.4584</span></span>
-    <span><span class="k">hardware</span> <span class="v">Mac M2 8 GB · MPS</span></span>
+    <span><span class="k">aggiornato </span><span class="v">2026-09-23</span></span>
+    <span><span class="k">run corrente </span><span class="v">step ~12 850 / 30 000</span></span>
+    <span><span class="k">val loss </span><span class="v">5.38</span></span>
+    <span><span class="k">hardware </span><span class="v">Mac M2 8 GB · MPS</span></span>
   </div>
 
   <nav class="nav-links">
     <a href="index.html">← Indice</a>
+    <a href="slm-storia.html">Il Progetto</a>
     <a href="slm-docs.html">Documentazione</a>
     <a href="slm-intro.html">Come funziona una LLM</a>
     <a href="slm-roadmap.html">Roadmap</a>
@@ -255,6 +253,7 @@ tr.hl td { background: var(--surface2); }
 
   <!-- ARCHITETTURA CORRENTE -->
   <h2>Architettura corrente — preset medium</h2>
+  <div class="narr">Il modello ha circa 46 milioni di parametri e pesa 175 MB. È addestrato sul corpus integrale di Wikipedia in italiano. Le celle seguono mostrano i dettagli tecnici della sua struttura.</div>
   <div class="arch-grid">
     <div class="arch-cell"><div class="lbl">Parametri</div><div class="val">45 997 056</div></div>
     <div class="arch-cell"><div class="lbl">Dimensione (fp32)</div><div class="val">175.5 MB</div></div>
@@ -275,64 +274,74 @@ tr.hl td { background: var(--surface2); }
 
   <div class="timeline">
 
+    <!-- ENTRY 1 -->
     <div class="tl-entry">
       <div class="tl-left">
         <div class="tl-date">2026-09-14</div>
         <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
       </div>
       <div class="tl-right">
-        <h3>Run #1 — char-level, corpus narrativo <span class="badge badge-done">completato</span></h3>
-        <p>Primo training dall'architettura di base: decoder-only GPT, tokenizer char-level (102 caratteri), corpus narrativo personale 552 KB. Obiettivo: validare che ogni componente funzioni correttamente prima di scalare. Val loss finale <strong>1.7256</strong> in 46 minuti su MPS. Il modello produce morfologia italiana corretta (suffissi <em>-zione</em>, <em>-mente</em>) ma nessuna coerenza semantica — atteso a questa scala e con questo corpus.</p>
+        <h3>Run #1 — primo training dall'architettura di base <span class="badge badge-done">completato</span></h3>
+        <div class="narr">Dopo 46 minuti, il modello formava parole italiane morfologicamente corrette: le desinenze giuste, la struttura riconoscibile. Nessun senso logico. Era esattamente quello che mi aspettavo, e confermava che i meccanismi di base funzionavano.</div>
+        <p>Tokenizer char-level (102 caratteri unici), corpus narrativo personale 552 KB. Obiettivo: validare che ogni componente funzioni correttamente prima di scalare. Val loss finale <strong>1.7256</strong> in 46 minuti su MPS. Il modello produce morfologia italiana corretta (suffissi <em>-zione</em>, <em>-mente</em>) ma nessuna coerenza semantica, atteso a questa scala e con questo corpus.</p>
         <p>Checkpoint: <code>checkpoints/best.pt</code> (char-level, non BPE-compatibile).</p>
       </div>
     </div>
 
+    <!-- ENTRY 2 -->
     <div class="tl-entry">
       <div class="tl-left">
         <div class="tl-date">2026-09-14</div>
         <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
       </div>
       <div class="tl-right">
-        <h3>Decisione: BPE-SPM + Wikipedia IT</h3>
-        <p>Per superare il pavimento qualitativo del char-level è necessario un corpus di scala enciclopedica e un tokenizer sub-word. Scelte: tokenizer BPE via SentencePiece (<code>bpe-spm</code>), vocab 16 000 token, corpus Wikipedia IT estratto da dump ufficiale (~208 M caratteri → 47.8 M token). Preset architettura scalato a <em>medium</em>: d_model 512, 8 layer, 45.9 M parametri.</p>
+        <h3>Decisione: corpus Wikipedia IT e tokenizer sub-word</h3>
+        <div class="narr">Morfologia corretta non basta: il modello non capisce nulla di quello che genera. Per imparare la struttura della lingua serviva molto più testo, e un sistema più intelligente per leggerlo. Wikipedia offre milioni di frasi ben formate, in italiano standard.</div>
+        <p>Per superare il pavimento qualitativo del char-level serve un corpus di scala enciclopedica e un tokenizer sub-word. Scelte: tokenizer BPE via SentencePiece (<code>bpe-spm</code>), vocab 16 000 token, corpus Wikipedia IT da dump ufficiale (~208 M caratteri, 47.8 M token). Preset architettura scalato a <em>medium</em>: d_model 512, 8 layer, 45.9 M parametri.</p>
         <p>Motivazione per Wikipedia: dominio linguistico ampio e uniforme, struttura prevedibile (articoli enciclopedici), frase ben formata, italiano standard. Limitazione nota: markup residuo (wikitext, tag HTML) parzialmente rimosso.</p>
       </div>
     </div>
 
+    <!-- ENTRY 3 -->
     <div class="tl-entry">
       <div class="tl-left">
         <div class="tl-date">2026-09-14</div>
         <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
       </div>
       <div class="tl-right">
-        <h3>OOM su Mac M2 8 GB — fix batch + token cache <span class="badge badge-warn">bloccante risolto</span></h3>
-        <p>Primo tentativo BPE: <code>batch=32, seq_len=512</code> → out-of-memory a step 0 su MPS con 8 GB RAM. Fix: riduzione a <code>batch=16, seq_len=256</code>. Implementazione token cache (365 MB su disco) per evitare tokenizzazione al volo ad ogni epoch — riduce overhead e rende il training deterministico rispetto al corpus.</p>
+        <h3>Out-of-memory su Mac M2 8 GB — riduzione batch e token cache <span class="badge badge-warn">bloccante risolto</span></h3>
+        <div class="narr">La macchina si è bloccata prima ancora di iniziare. Otto gigabyte di memoria condivisa tra processore e grafica non sono molti per addestrare un modello. Capire perché, e trovare il compromesso giusto, ha insegnato come funziona davvero la memoria di un acceleratore grafico.</div>
+        <p>Primo tentativo BPE: <code>batch=32, seq_len=512</code> produce out-of-memory a step 0 su MPS con 8 GB RAM. Fix: riduzione a <code>batch=16, seq_len=256</code>. Implementazione token cache (365 MB su disco) per evitare tokenizzazione al volo ad ogni epoch, riducendo overhead e rendendo il training deterministico.</p>
         <p>Con <code>batch=16, seq_len=256</code>: 4 096 token per batch, 122.9 M token totali a 30 000 step. Throughput MPS steady-state: ~22 secondi/step.</p>
       </div>
     </div>
 
+    <!-- ENTRY 4 -->
     <div class="tl-entry">
       <div class="tl-left">
-        <div class="tl-date">2026-09-18<br><em>(~72h fa)</em></div>
+        <div class="tl-date">2026-09-18</div>
         <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
       </div>
       <div class="tl-right">
         <h3>Run #3 avviato — BPE-SPM, 30 000 step <span class="badge badge-now">in corso</span></h3>
-        <p>Training BPE-SPM su Wikipedia IT, architettura sinusoidale, preset medium. Comando:</p>
+        <div class="narr">Il training principale è partito. Trenta mila passi sull'enciclopedia italiana. Quello che il modello imparerà, lo imparerà da solo, passo dopo passo, leggendo milioni di frasi.</div>
+        <p>Training BPE-SPM su Wikipedia IT, architettura sinusoidale, preset medium:</p>
         <div class="cmd">python3 train.py --tokenizer bpe-spm --data data/wiki_it.txt \
   --preset medium --steps 30000 --batch 16 --seq-len 256</div>
-        <p>Stato al 2026-09-21: step ~11 750 / 30 000, ~72 h elapsed, val loss 5.4584. Dettaglio nella sezione Analisi sotto.</p>
+        <p>Stato al 2026-09-23: step ~12 850 / 30 000, ~149 h elapsed, val loss 5.38. Dettaglio nella sezione Analisi sotto.</p>
       </div>
     </div>
 
+    <!-- ENTRY 5 -->
     <div class="tl-entry">
       <div class="tl-left">
         <div class="tl-date">2026-09-21</div>
         <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
       </div>
       <div class="tl-right">
-        <h3>Decisione: completare Run #3, poi Run #4 con RoPE → comparazione A/B <span class="badge badge-info">tecnica</span></h3>
-        <p>Analisi di compatibilità con llamafile/llama.cpp (target GGUF) porta a pianificare Run #4 con RoPE. Run #3 prosegue fino a completamento (30 000 step): i due modelli finali saranno comparati con un test set progettato per far emergere le differenze tra PE sinusoidale e RoPE. RoPE non è più veloce — il costo per step è ~3–5% superiore (rotazioni element-wise su Q e K), la convergenza in step è sostanzialmente identica. L'unico argomento è architetturale, non computazionale. Dettaglio nella sezione Decisione.</p>
+        <h3>Decisione: completare Run #3, poi Run #4 con sistema di posizionamento diverso <span class="badge badge-info">tecnica</span></h3>
+        <div class="narr">Il formato in cui voglio distribuire il modello usa internamente un sistema diverso per tenere traccia dell'ordine delle parole. Adeguarsi non costa nulla: nessun apprendimento precedente viene perso. I due training finiranno entrambi, e si confronteranno i risultati.</div>
+        <p>Analisi di compatibilità con llamafile/llama.cpp (target GGUF) porta a pianificare Run #4 con RoPE (Rotary Position Embedding). Run #3 prosegue fino a completamento (30 000 step): i due modelli finali saranno comparati con test mirati. RoPE non è più veloce, il costo per step è ~3-5% superiore, la convergenza in step è identica. La motivazione è architetturale, non computazionale. Dettaglio nella sezione Decisione.</p>
       </div>
     </div>
 
@@ -341,7 +350,7 @@ tr.hl td { background: var(--surface2); }
   <!-- RUN #3 ANALISI -->
   <h2>Run #3 — Analisi approfondita</h2>
 
-  <p>Di seguito lo stato del training al momento dell'interruzione pianificata (~step 11 750, 72 h elapsed). La curva di loss è sana e stabile; il modello produce già output di qualità Wikipedia apprezzabile.</p>
+  <div class="narr">Quello che segue è il dettaglio tecnico del training in corso. La parte più leggibile per tutti è la sezione sui testi generati, più avanti: mostra concretamente cosa scriveva il modello ai diversi stadi dell'apprendimento.</div>
 
   <!-- CHART -->
   <div class="chart-wrap">
@@ -354,16 +363,12 @@ tr.hl td { background: var(--surface2); }
         </linearGradient>
         <clipPath id="plotClip"><rect x="65" y="18" width="502" height="196"/></clipPath>
       </defs>
-
-      <!-- Grid lines -->
-      <!-- y=10 → 20, y=9 → 56, y=8 → 93, y=7 → 129, y=6 → 166, y=5 → 202 -->
       <line x1="65" y1="20"  x2="567" y2="20"  stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
       <line x1="65" y1="56"  x2="567" y2="56"  stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
       <line x1="65" y1="93"  x2="567" y2="93"  stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
       <line x1="65" y1="129" x2="567" y2="129" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
       <line x1="65" y1="166" x2="567" y2="166" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
       <line x1="65" y1="202" x2="567" y2="202" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
-      <!-- x grid (every 5000 steps) -->
       <line x1="65"  y1="18" x2="65"  y2="214" stroke="var(--chart-grid)" stroke-width="1"/>
       <line x1="149" y1="18" x2="149" y2="214" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
       <line x1="232" y1="18" x2="232" y2="214" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
@@ -371,40 +376,29 @@ tr.hl td { background: var(--surface2); }
       <line x1="399" y1="18" x2="399" y2="214" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
       <line x1="483" y1="18" x2="483" y2="214" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
       <line x1="567" y1="18" x2="567" y2="214" stroke="var(--chart-grid)" stroke-width="1"/>
-      <!-- x bottom axis -->
       <line x1="65" y1="214" x2="567" y2="214" stroke="var(--chart-grid)" stroke-width="1"/>
-
-      <!-- Random baseline: loss=log(16000)=9.68 → y=33 -->
+      <!-- Random baseline: loss=9.68 → y=33 -->
       <line x1="65" y1="33" x2="567" y2="33" stroke="var(--chart-ref)" stroke-width="1" stroke-dasharray="4,5"/>
       <text x="569" y="36" font-size="9" fill="var(--chart-text)">random</text>
-
-      <!-- Area fill (clipped) -->
+      <!-- Area fill -->
       <path clip-path="url(#plotClip)"
-        d="M65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178 Z"
+        d="M65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178 280,180 Z"
         fill="url(#areaGrad)"/>
-
       <!-- Loss curve -->
       <polyline clip-path="url(#plotClip)"
-        points="65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178"
+        points="65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178 280,180"
         fill="none" stroke="var(--chart-line)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-
       <!-- Milestone markers -->
-      <!-- Step 8000 x=199, y=168 -->
       <circle cx="199" cy="168" r="3.5" fill="var(--chart-line)"/>
-      <!-- Step 10000 x=232, y=175 -->
       <circle cx="232" cy="175" r="3.5" fill="var(--warn-text)"/>
-      <!-- Step 11000 x=249, y=177 -->
       <circle cx="249" cy="177" r="3.5" fill="var(--chart-line)"/>
-
-      <!-- Current position: step ~11750 x=262 -->
-      <line x1="262" y1="18" x2="262" y2="214" stroke="var(--chart-now)" stroke-width="1.5" stroke-dasharray="4,3"/>
-      <text x="264" y="28" font-size="9" fill="var(--chart-now)" font-weight="500">siamo qui</text>
-
+      <!-- Current position: step ~12850 x=280 -->
+      <line x1="280" y1="18" x2="280" y2="214" stroke="var(--chart-now)" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="282" y="28" font-size="9" fill="var(--chart-now)" font-weight="500">siamo qui</text>
       <!-- Milestone labels -->
       <text x="181" y="161" font-size="8.5" fill="var(--chart-text)">step 8k</text>
       <text x="234" y="172" font-size="8.5" fill="var(--warn-text)">10k⚠</text>
       <text x="251" y="185" font-size="8.5" fill="var(--chart-text)">11k★</text>
-
       <!-- Y axis labels -->
       <text x="59" y="23"  font-size="9.5" fill="var(--chart-text)" text-anchor="end">10.0</text>
       <text x="59" y="59"  font-size="9.5" fill="var(--chart-text)" text-anchor="end">9.0</text>
@@ -413,7 +407,6 @@ tr.hl td { background: var(--surface2); }
       <text x="59" y="169" font-size="9.5" fill="var(--chart-text)" text-anchor="end">6.0</text>
       <text x="59" y="205" font-size="9.5" fill="var(--chart-text)" text-anchor="end">5.0</text>
       <text x="57" y="240" font-size="9.5" fill="var(--text-sec)" text-anchor="end" font-style="italic">val loss</text>
-
       <!-- X axis labels -->
       <text x="65"  y="228" font-size="9.5" fill="var(--chart-text)" text-anchor="middle">0</text>
       <text x="149" y="228" font-size="9.5" fill="var(--chart-text)" text-anchor="middle">5k</text>
@@ -423,12 +416,11 @@ tr.hl td { background: var(--surface2); }
       <text x="483" y="228" font-size="9.5" fill="var(--chart-text)" text-anchor="middle">25k</text>
       <text x="567" y="228" font-size="9.5" fill="var(--chart-text)" text-anchor="middle">30k</text>
       <text x="316" y="244" font-size="9.5" fill="var(--text-sec)" text-anchor="middle" font-style="italic">step</text>
-
       <!-- Legend -->
       <line x1="320" y1="35" x2="340" y2="35" stroke="var(--chart-line)" stroke-width="2"/>
       <text x="343" y="38" font-size="9.5" fill="var(--chart-text)">val loss (checkpoint)</text>
       <line x1="320" y1="49" x2="340" y2="49" stroke="var(--chart-now)" stroke-width="1.5" stroke-dasharray="4,3"/>
-      <text x="343" y="52" font-size="9.5" fill="var(--chart-text)">step corrente (~11 750)</text>
+      <text x="343" y="52" font-size="9.5" fill="var(--chart-text)">step corrente (~12 850)</text>
       <line x1="320" y1="63" x2="340" y2="63" stroke="var(--chart-ref)" stroke-width="1" stroke-dasharray="4,5"/>
       <text x="343" y="66" font-size="9.5" fill="var(--chart-text)">baseline random (loss 9.68)</text>
     </svg>
@@ -439,17 +431,11 @@ tr.hl td { background: var(--surface2); }
   <div class="table-wrap">
     <table>
       <thead>
-        <tr>
-          <th>Step</th>
-          <th>Val loss</th>
-          <th>Perplexity</th>
-          <th>Δ loss / 500 step</th>
-          <th>Note</th>
-        </tr>
+        <tr><th>Step</th><th>Val loss</th><th>Perplexity</th><th>Δ loss / 500 step</th><th>Note</th></tr>
       </thead>
       <tbody>
         <tr><td class="num">0</td><td class="num">9.8258</td><td class="num">18 541</td><td class="num">—</td><td class="note-cell">random, atteso log(16000) = 9.68</td></tr>
-        <tr><td class="num">500</td><td class="num">7.5156</td><td class="num">1 829</td><td class="num good">−2.31</td><td class="note-cell">funzione del token freq — frasi di funzione emergenti</td></tr>
+        <tr><td class="num">500</td><td class="num">7.5156</td><td class="num">1 829</td><td class="num good">−2.31</td><td class="note-cell">frequenza token, frasi di funzione emergenti</td></tr>
         <tr><td class="num">1 000</td><td class="num">7.0777</td><td class="num">1 187</td><td class="num good">−0.44</td><td class="note-cell">nomi comuni, prime coppie articolo + nome</td></tr>
         <tr><td class="num">1 500</td><td class="num">6.9932</td><td class="num">1 088</td><td class="num">−0.08</td><td class="note-cell">apostrofi ripetuti (wikitext markup)</td></tr>
         <tr><td class="num">2 000</td><td class="num">6.8173</td><td class="num">910</td><td class="num">−0.18</td><td class="note-cell"></td></tr>
@@ -457,34 +443,34 @@ tr.hl td { background: var(--surface2); }
         <tr><td class="num">3 000</td><td class="num">6.5763</td><td class="num">718</td><td class="num">−0.10</td><td class="note-cell">prime strutture da enciclopedia</td></tr>
         <tr><td class="num">3 500</td><td class="num">6.4433</td><td class="num">629</td><td class="num">−0.13</td><td class="note-cell"></td></tr>
         <tr><td class="num">4 000</td><td class="num">6.2337</td><td class="num">508</td><td class="num">−0.21</td><td class="note-cell">prime frasi concettualmente coerenti</td></tr>
-        <tr><td class="num">4 500</td><td class="num">6.2031</td><td class="num">493</td><td class="num">−0.03</td><td class="note-cell"></td></tr>
         <tr><td class="num">5 000</td><td class="num">6.0849</td><td class="num">440</td><td class="num">−0.12</td><td class="note-cell"></td></tr>
         <tr><td class="num">6 000</td><td class="num">5.9704</td><td class="num">391</td><td class="num">−0.11</td><td class="note-cell">struttura frasale stabile</td></tr>
         <tr><td class="num">7 000</td><td class="num">5.8267</td><td class="num">339</td><td class="num">−0.14</td><td class="note-cell"></td></tr>
         <tr><td class="num">8 000</td><td class="num">5.7426</td><td class="num">311</td><td class="num">−0.08</td><td class="note-cell">stile Wikipedia apprezzabile</td></tr>
         <tr><td class="num">9 000</td><td class="num">5.6512</td><td class="num">284</td><td class="num">−0.09</td><td class="note-cell"></td></tr>
-        <tr><td class="num">10 000</td><td class="num">5.5424</td><td class="num">255</td><td class="num">−0.11</td><td class="note-cell note-warn">HTML entity leak (markup chimico residuo)</td></tr>
-        <tr class="hl"><td class="num">11 000</td><td class="num">5.4844</td><td class="num good">241</td><td class="num">−0.06</td><td class="note-cell">primo "comune italiano" corretto</td></tr>
-        <tr class="hl"><td class="num">11 500</td><td class="num">5.4584</td><td class="num good">234</td><td class="num">−0.03</td><td class="note-cell">train=5.2245 · gap train↔val = 0.23</td></tr>
+        <tr><td class="num">10 000</td><td class="num">5.5424</td><td class="num">255</td><td class="num">−0.11</td><td class="note-cell">HTML entity leak (markup chimico residuo)</td></tr>
+        <tr><td class="num">11 000</td><td class="num">5.4844</td><td class="num">241</td><td class="num">−0.06</td><td class="note-cell">primo "comune italiano" corretto</td></tr>
+        <tr><td class="num">11 500</td><td class="num">5.4584</td><td class="num">234</td><td class="num">−0.03</td><td class="note-cell">train=5.2245 · gap train/val = 0.23</td></tr>
+        <tr class="hl"><td class="num">12 500</td><td class="num good">5.3787</td><td class="num good">216</td><td class="num good">−0.08</td><td class="note-cell">strutture architettoniche con anno e stile</td></tr>
         <tr><td class="num" colspan="3" style="color:var(--text-sec);font-size:0.78rem">Proiezione step 30 000</td><td class="num" style="color:var(--text-sec)">~4.6–4.8</td><td class="note-cell">perplexity ~100–120 (sinusoidale)</td></tr>
       </tbody>
     </table>
   </div>
 
   <div class="note">
-    <b>Train–val gap stabile.</b> A step 11 500: train loss 5.2245, val loss 5.4584, gap 0.234. Il gap si mantiene costante da step 8 000 — segnale che non c'è overfitting. La loss di training inferiore è fisiologica: il modello ha visto i batch di training; la val è freshdata non in-context.
+    <b>Train–val gap stabile.</b> A step 11 500: train loss 5.2245, val loss 5.4584, gap 0.234. Il gap si mantiene costante da step 8 000: segnale che non c'è overfitting. La loss di training inferiore è fisiologica — il modello ha visto quei batch; la val è testo che non ha mai letto.
   </div>
 
-  <!-- TESTO GENERATO — MILESTONES -->
-  <h3>Qualità del testo generato — tappe</h3>
-  <p>Sample estratti dal log di training a ogni checkpoint significativo. Il modello genera a temperatura 0.8 con top-k 40.</p>
+  <!-- MILESTONES -->
+  <h3>Cosa scriveva il modello — tappe</h3>
+  <p>Questa è la parte più leggibile di tutto il diario. I testi sotto sono generati dal modello ai diversi stadi del training: mostrano concretamente come l'apprendimento progredisce, da puro rumore statistico a frasi riconoscibili. Temperatura 0.8, top-k 40.</p>
 
   <div class="milestones">
 
     <div class="ms-card">
       <div class="ms-header">
         <span class="ms-step">step 500</span>
-        <span class="ms-label">token frequency — nessuna struttura</span>
+        <span class="ms-label">solo le parole più frequenti, nessuna struttura</span>
       </div>
       <div class="ms-body">che il a è e, e che. Nel in...</div>
     </div>
@@ -500,7 +486,7 @@ tr.hl td { background: var(--surface2); }
     <div class="ms-card">
       <div class="ms-header">
         <span class="ms-step">step 1 500–2 000</span>
-        <span class="ms-label">apostrofi ripetuti — artefatto wikitext markup</span>
+        <span class="ms-label">apostrofi ripetuti — il modello impara la frequenza prima del significato</span>
         <span class="ms-qual"><span class="badge badge-warn">anomalia corpus</span></span>
       </div>
       <div class="ms-body">dei un punto del centro della Repubblica di popolazione a Chiesa della territorio
@@ -519,7 +505,7 @@ di una quale l'''''Italia dei uninterno di Santa</div>
     <div class="ms-card">
       <div class="ms-header">
         <span class="ms-step">step 4 000</span>
-        <span class="ms-label">prima frase concettualmente coerente</span>
+        <span class="ms-label">prima frase con senso concettuale</span>
       </div>
       <div class="ms-body">e in cui la sua parte a un punto, come si possono dei suoi di più: si è di una velocità. Per cui, la formula spazio</div>
     </div>
@@ -535,7 +521,7 @@ di una quale l'''''Italia dei uninterno di Santa</div>
     <div class="ms-card">
       <div class="ms-header">
         <span class="ms-step">step 8 000</span>
-        <span class="ms-label">stile Wikipedia — geografico/toponomastico ★</span>
+        <span class="ms-label">toponomastica italiana, stile Wikipedia ★</span>
       </div>
       <div class="ms-body">, che si trovava nella strada, in posizione dell'area di San Giovanni, la prima domenica del paese</div>
     </div>
@@ -543,7 +529,7 @@ di una quale l'''''Italia dei uninterno di Santa</div>
     <div class="ms-card">
       <div class="ms-header">
         <span class="ms-step">step 10 000</span>
-        <span class="ms-label">HTML entity leak — markup chimico non rimosso</span>
+        <span class="ms-label">tag HTML non rimossi — residuo di articoli di chimica</span>
         <span class="ms-qual"><span class="badge badge-warn">anomalia</span></span>
       </div>
       <div class="ms-body anomaly">meth" (18gt;) { &lt; &lt;chem&gt;(lt;&lt;/chem&gt;</div>
@@ -552,7 +538,7 @@ di una quale l'''''Italia dei uninterno di Santa</div>
     <div class="ms-card">
       <div class="ms-header">
         <span class="ms-step">step 11 000</span>
-        <span class="ms-label">primo "comune italiano" — frase Wikipedia corretta ★★</span>
+        <span class="ms-label">primo "comune italiano" corretto ★★</span>
       </div>
       <div class="ms-body">è un comune italiano di abitanti della metropolitana di Asti in Lombardia. Geografia fisica. Il territorio comunale comp</div>
     </div>
@@ -565,48 +551,56 @@ di una quale l'''''Italia dei uninterno di Santa</div>
       <div class="ms-body">ani di un altro di "Coms" (che non può essere una provincia di Bolzano, la provincia di Verona), una regione calcistica.</div>
     </div>
 
-  </div><!-- /milestones -->
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 12 500</span>
+        <span class="ms-label">strutture architettoniche con anno e stile ★★★</span>
+      </div>
+      <div class="ms-body">di Cacerno. La chiesa fu costruito in stile romanico nel 1786 e successivamente ristrutturata in possesso dell'antico ca</div>
+    </div>
 
-  <h3>Lettura della curva</h3>
-  <p>La loss scende in tre fasi distinte che corrispondono ad acquisizioni linguistiche riconoscibili:</p>
+  </div>
+
+  <h3>Come leggere la curva di apprendimento</h3>
+  <p>La discesa avviene in tre fasi, ognuna delle quali corrisponde a qualcosa di riconoscibile nel testo generato.</p>
   <ul>
-    <li><strong>Step 0–2 000 (−2.9 loss):</strong> il modello impara la distribuzione di frequenza dei token. Output: funtion words, bigram comuni. Velocità di discesa molto alta — informazione "facile".</li>
-    <li><strong>Step 2 000–8 000 (−1.0 loss):</strong> acquisizione della struttura sintattica. Compaiono frasi con articolo, nome, verbo. Il fenomeno degli apostrofi si risolve verso step 3 000: il modello capisce il contesto del markup wikitext prima ancora di capire il contesto grammaticale.</li>
-    <li><strong>Step 8 000–11 500 (−0.3 loss):</strong> coerenza di dominio. Il modello produce stile enciclopedico riconoscibile, toponomastica italiana corretta, struttura "comune italiano di X in Y" — pattern molto frequenti in Wikipedia. La discesa rallenta — siamo nella fase dove ogni unit di loss costa più capacità.</li>
+    <li><strong>Step 0–2 000 (loss da 9.8 a 6.8):</strong> il modello impara quali parole sono più frequenti. L'output sono le parole comuni dell'italiano. La discesa è rapida perché questa "informazione" è la più semplice.</li>
+    <li><strong>Step 2 000–8 000 (loss da 6.8 a 5.7):</strong> emerge la struttura della frase. Compaiono articolo, nome, verbo nell'ordine giusto. Il fenomeno degli apostrofi si risolve intorno a step 3 000: il modello capisce che gli apostrofi multipli compaiono in un contesto specifico (la formattazione di Wikipedia), prima ancora di capire la grammatica vera.</li>
+    <li><strong>Step 8 000–12 500 (loss da 5.7 a 5.38):</strong> coerenza di dominio. Il modello produce il registro enciclopedico, la toponomastica italiana, la struttura "comune di X in regione Y". Ogni decimale di loss costa più capacità di prima — siamo nella fase lenta.</li>
   </ul>
-  <p>La perplexity a step 11 500 è ~234: il modello assegna in media probabilità significativa a ~234 token possibili per ogni posizione. Sui token comuni (articoli, preposizioni, nomi geografici frequenti) la predizione è molto più precisa — il numero alto è trainato da token rari.</p>
 
-  <h3>Anomalie del corpus — note per la prossima run</h3>
+  <h3>Note sulle anomalie del corpus</h3>
   <div class="note warn">
-    <b>Apostrofi ripetuti (step 500–2 500).</b> Wikipedia usa <code>''testo''</code> per <em>italics</em> e <code>'''testo'''</code> per <strong>bold</strong>. Il tokenizer BPE ha imparato l'alta frequenza degli apostrofi prima del loro contesto grammaticale. Il modello genera sequenze <code>''''''''</code> nei primissimi step. Si risolve spontaneamente verso step 3 000 — non è un bug, è il modello che impara la co-occorrenza prima del significato. Per la prossima run: pulizia più aggressiva del markup wikitext prima della tokenizzazione ridurrebbe questo rumore iniziale.
+    <b>Apostrofi ripetuti (step 500–2 500).</b> Wikipedia usa <code>''testo''</code> per <em>corsivo</em> e <code>'''testo'''</code> per <strong>grassetto</strong>. Il modello ha imparato l'alta frequenza degli apostrofi prima del loro contesto grammaticale, producendo sequenze di apostrofi nei primissimi step. Si risolve spontaneamente verso step 3 000. Per il prossimo run: pulizia più aggressiva del markup wikitext ridurrebbe questo rumore.
   </div>
   <div class="note warn">
-    <b>HTML entity leak (step 10 000).</b> Tag <code>&lt;chem&gt;</code>, entità <code>&amp;lt;</code>/<code>&amp;gt;</code> da articoli di chimica e matematica non completamente ripuliti da <code>wiki_to_corpus.py</code>. Il modello genera questo output raramente — è statistica di addestramento, non un difetto architetturale. Non impatta la qualità complessiva ma è rumore evitabile. Action item: aggiornare <code>wiki_to_corpus.py</code> con regex per rimuovere <code>&lt;chem&gt;</code>, <code>&lt;math&gt;</code>, <code>&lt;ref&gt;</code> e entità HTML numeriche prima del prossimo run.
+    <b>Tag HTML (step 10 000).</b> Tag <code>&lt;chem&gt;</code> e entità HTML da articoli di chimica e matematica non completamente rimossi dalla fase di estrazione. Il modello genera questo output raramente. Non impatta la qualità complessiva ma è rumore evitabile. Action item: aggiornare <code>wiki_to_corpus.py</code> con regex per <code>&lt;chem&gt;</code>, <code>&lt;math&gt;</code>, <code>&lt;ref&gt;</code> e entità HTML numeriche.
   </div>
 
   <h3>Timing e proiezione</h3>
-  <p>I primi ~1 500 step mostrano tempi per-step anomalmente più lunghi: molto probabilmente compilazione degli shader MPS al primo utilizzo dell'architettura su questo hardware. Dal step ~2 000 il throughput si stabilizza a ~22 secondi/step.</p>
   <ul>
-    <li>Step 0–11 750: ~72 ore elapsed (confermato dall'utente)</li>
-    <li>Step rimanenti: 18 250 × 22 s ≈ 401 500 s ≈ <strong>111 ore (~4.6 giorni)</strong></li>
-    <li>ETA completamento Run #3: ~18-19 settembre + 111 h ≈ <strong>26 settembre 2026</strong></li>
-    <li>Run #4 (RoPE) avvierà dopo completamento Run #3. ETA fine Run #4: ~26 sett. + 7.5 gg ≈ <strong>~4 ottobre 2026</strong></li>
+    <li>Step 0–12 500: ~149 ore elapsed (8 947 min, da log di training)</li>
+    <li>Rate medio: 1.397 step/min</li>
+    <li>Step rimanenti da 12 850: 17 150 × ~43 s ≈ 736 000 s ≈ <strong>~204 ore (~8.5 giorni)</strong></li>
+    <li>ETA completamento Run #3: <strong>~1 ottobre 2026</strong></li>
+    <li>ETA fine Run #4 (RoPE): <strong>~9 ottobre 2026</strong></li>
   </ul>
 
   <!-- DECISIONE ROPE -->
   <h2>Decisione architetturale — da PE sinusoidale a RoPE</h2>
 
+  <div class="narr">Il sistema che il modello usa per tenere traccia dell'ordine delle parole (dove si trova ogni parola nella frase) non è compatibile con il formato di distribuzione scelto. Il prossimo training usa il sistema corretto. Il lavoro già fatto non va perso: i due approcci si confronteranno a parità di condizioni.</div>
+
   <div class="decision">
     <div class="decision-label">Decisione — 2026-09-21</div>
-    <div class="decision-title">Run #3 (sinusoidale) e Run #4 (RoPE) entrambi a completamento → comparazione A/B</div>
-    <p style="font-size:0.9rem;margin-bottom:12px">Run #3 prosegue fino a 30 000 step. Al completamento si implementa RoPE (~50 righe di diff, zero migrazione di pesi) e si avvia Run #4 con parametri identici. Il target di deployment (llamafile/llama.cpp via GGUF con architettura LLaMA) usa RoPE nativamente — questa è la motivazione primaria. La comparazione diretta dei due modelli finali aggiunge valore: quantifica empiricamente il beneficio di RoPE a questa scala e su questo corpus.</p>
+    <div class="decision-title">Run #3 (sinusoidale) e Run #4 (RoPE) entrambi a completamento, comparazione A/B</div>
+    <p style="font-size:0.9rem;margin-bottom:12px">Run #3 prosegue fino a 30 000 step. Al completamento si implementa RoPE (~50 righe di diff, zero migrazione di pesi) e si avvia Run #4 con parametri identici. Il target di deployment (llamafile/llama.cpp via GGUF con architettura LLaMA) usa RoPE nativamente. La comparazione diretta dei due modelli finali quantifica empiricamente il beneficio di RoPE a questa scala e su questo corpus.</p>
     <div class="decision-grid">
       <div class="decision-side">
         <h4>PE sinusoidale — cosa lasciamo</h4>
         <ul>
-          <li>PE(pos, 2i) = sin(pos / 10000^(2i/d))</li>
-          <li>Fissa, senza parametri apprendibili</li>
-          <li>Codifica posizione assoluta in Q e K</li>
+          <li>Formula fissa, senza parametri apprendibili</li>
+          <li>Codifica la posizione assoluta di ogni parola</li>
           <li>Generalizzazione scarsa a sequenze più lunghe del training</li>
           <li>Non è l'encoding atteso da llama.cpp</li>
         </ul>
@@ -614,76 +608,61 @@ di una quale l'''''Italia dei uninterno di Santa</div>
       <div class="decision-side">
         <h4>RoPE — cosa acquistiamo</h4>
         <ul>
-          <li>Ruota Q e K di un angolo proporzionale alla posizione</li>
-          <li>Qᵢ·Kⱼ dipende solo dalla distanza relativa i−j</li>
-          <li>Nessun parametro apprendibile → costo di migrazione = 0</li>
+          <li>Codifica la distanza relativa tra parole, non la posizione assoluta</li>
+          <li>Nessun parametro apprendibile: costo di migrazione = 0</li>
           <li>Migliore generalizzazione a sequenze più lunghe</li>
           <li>Standard de facto: LLaMA, Mistral, Qwen, Gemma</li>
-          <li>Compatibilità nativa con llama.cpp / GGUF LLaMA arch</li>
+          <li>Compatibilità nativa con llama.cpp / GGUF</li>
         </ul>
       </div>
     </div>
   </div>
 
   <h3>Costo della migrazione</h3>
-  <p>PE sinusoidale non ha parametri apprendibili: non compare in <code>model_state_dict</code> come tensor con gradient. Il checkpoint <code>best.pt</code> di Run #3 non contiene nulla da migrare. La migrazione consiste solo in modifiche al codice:</p>
+  <p>PE sinusoidale non ha parametri apprendibili: non compare nel checkpoint come tensor con gradient. Il checkpoint di Run #3 non contiene nulla da migrare. La migrazione consiste solo in modifiche al codice:</p>
   <ul>
     <li><code>attention.py</code> — aggiungere <code>apply_rope()</code>, modificare <code>MultiHeadAttention.forward()</code> per applicare RoPE a Q e K prima del dot-product</li>
     <li><code>transformer.py</code> — rimuovere <code>PositionalEncoding</code>, passare <code>rope_freq</code> come argomento ai blocchi</li>
-    <li><code>model.py</code> — pre-calcolare le frequenze RoPE (cos θ e sin θ per ogni posizione) nel costruttore di <code>GPT</code></li>
+    <li><code>model.py</code> — pre-calcolare le frequenze RoPE (cos θ e sin θ per ogni posizione) nel costruttore</li>
   </ul>
   <p>Stima: ~50 righe di diff. Zero impatto sulla semantica del resto dell'architettura.</p>
 
   <h3>Cosa rimane invariato in Run #4</h3>
-  <p>Tutte le altre scelte architetturali e di training restano identiche — questo ci permette di comparare direttamente Run #3 e Run #4 sulla stessa curva:</p>
   <ul>
     <li>Corpus: Wikipedia IT identico (stessa token cache)</li>
     <li>Tokenizer: BPE-SPM 16 000 vocab</li>
     <li>Preset: medium (45.9 M parametri, d_model 512, 8 layer)</li>
     <li>Iperparametri: batch 16, seq 256, 30 000 step, AdamW lr 3e-4, warmup 200 step, cosine decay, gradient clip 1.0</li>
-    <li>Norma: LayerNorm pre-norm (RMSNorm è una variante possibile ma secondaria rispetto a RoPE)</li>
   </ul>
-
-  <!-- PROSSIMA RUN -->
-  <h2>Run #4 — pianificata (dopo completamento Run #3)</h2>
-  <p>Dopo il completamento di Run #3, si implementa RoPE (~50 righe di diff, nessuna migrazione di pesi) e si avvia Run #4 con lo stesso comando e parametri identici:</p>
-  <div class="cmd">python3 train.py --tokenizer bpe-spm --data data/wiki_it.txt \
-  --preset medium --steps 30000 --batch 16 --seq-len 256</div>
-
-  <p>La curva di loss attesa è sostanzialmente identica a Run #3 — RoPE non velocizza la convergenza, non aumenta la capacità espressiva a seq_len=256. Quello che cambia è il comportamento fuori distribuzione (sequenze più lunghe del training) e la compatibilità GGUF nativa. Se la curva di Run #4 diverge significativamente, va documentato come segnale interessante.</p>
 
   <!-- PIANO COMPARAZIONE -->
   <h2>Piano di comparazione Run #3 vs Run #4</h2>
 
-  <p>Entrambi i modelli saranno valutati con un test set progettato specificamente per le dimensioni dove PE sinusoidale e RoPE si differenziano. La differenza più attesa e misurabile è l'<strong>extrapolazione oltre seq_len=256</strong> — tutto il resto sarà probabilmente dentro il margine di rumore a questa scala.</p>
+  <div class="narr">Quando entrambi i training saranno completati, i due modelli verranno confrontati su cinque prove progettate per far emergere le differenze tra i due sistemi di posizionamento. La prova più discriminante è la seconda: vedere come si comportano oltre i limiti di lunghezza su cui sono stati addestrati.</div>
 
-  <h3>Test 1 — Perplexity su val set comune <span class="badge badge-info">quantitativo</span></h3>
-  <p>Il confronto diretto più pulito: misurare la val loss finale di entrambi sul medesimo held-out set di Wikipedia IT. Se la differenza è &lt;0.1, le due architetture sono equivalenti a questa scala. Se RoPE supera di più, è un segnale reale.</p>
-  <div class="cmd">python3 train.py --generate "" --tokenizer bpe-spm   # val loss da checkpoint</div>
+  <h3>Prova 1 — Perplexity su val set comune <span class="badge badge-info">quantitativa</span></h3>
+  <p>Il confronto diretto più pulito: misurare la val loss finale di entrambi sullo stesso insieme di testi non visti durante il training. Se la differenza è &lt;0.1, le due architetture sono equivalenti a questa scala.</p>
 
-  <h3>Test 2 — Extrapolazione: generazione oltre 256 token <span class="badge badge-warn">discriminante</span></h3>
-  <p>Il test più discriminante. Entrambi i modelli sono stati addestrati su sequenze di al massimo 256 token. Si genera con un prompt da 100 token e si osservano le posizioni 257–512.</p>
+  <h3>Prova 2 — Generazione oltre i limiti di training <span class="badge badge-warn">più discriminante</span></h3>
+  <p>Entrambi i modelli sono stati addestrati su sequenze di al massimo 256 parole (token). Si genera con un testo iniziale di 100 token e si osserva cosa succede tra le posizioni 257 e 512, dove il modello non è mai stato.</p>
   <ul>
-    <li><strong>Sinusoidale</strong>: la formula PE(pos, 2i) = sin(pos / 10000^(2i/d)) è matematicamente continua per qualsiasi pos, ma le posizioni &gt;255 non compaiono mai nel training. L'attenzione non ha mai imparato a pesare quei valori di PE. Probabilmente: incoerenza, ripetizione, loop.</li>
-    <li><strong>RoPE</strong>: la rotazione è relativa — Qᵢ·Kⱼ dipende solo da i−j. Il modello non vede mai pos=300 in assoluto; vede solo distanze relative che ha già visto. Teoricamente più robusto, in pratica dipende da quanto la distribuzione delle distanze si conserva.</li>
+    <li><strong>Sinusoidale:</strong> la formula è matematicamente continua, ma quelle posizioni non compaiono mai nel training. L'attenzione non sa pesare quei valori. Probabilmente: incoerenza, ripetizione, loop.</li>
+    <li><strong>RoPE:</strong> codifica la distanza relativa, non la posizione assoluta. Il modello non vede mai la posizione 300 in assoluto, vede solo distanze relative che ha già imparato. Teoricamente più robusto.</li>
   </ul>
-  <p>Metrica: perplexity sulle posizioni 257–512. Stima: Run #3 perplexity cresce rapidamente (>500), Run #4 dovrebbe mantenersi più stabile (&lt;300).</p>
 
-  <h3>Test 3 — Struttura ripetuta a distanza variabile <span class="badge badge-info">qualitativo</span></h3>
-  <p>Prompt con un pattern ripetuto dove la risposta richiede di "contare" posizioni relative:</p>
+  <h3>Prova 3 — Struttura ripetuta a distanza variabile <span class="badge badge-info">qualitativa</span></h3>
+  <p>Un pattern ripetuto dove rispondere correttamente richiede di tenere il conto delle posizioni relative:</p>
   <div class="cmd">Primo comune: Roma. Secondo comune: Milano. Terzo comune: Napoli. Quarto comune: Torino. Quinto comune:</div>
-  <p>RoPE codifica distanze relative in modo diretto; sinusoidale dipende dalla posizione assoluta nella sequenza. La differenza potrebbe emergere quando lo stesso prompt viene dato all'inizio del contesto vs a metà (posizione 128).</p>
 
-  <h3>Test 4 — Coerenza di argomento su sequenza lunga <span class="badge badge-info">qualitativo</span></h3>
-  <p>Generare 256 token di testo libero con entrambi i modelli a temperatura 0.7, stesso seed. Contare manualmente (o con una regex euristica) quante volte il testo cambia argomento. PE sinusoidale potrebbe avere più deriva tematica a distanze lunghe.</p>
+  <h3>Prova 4 — Coerenza di argomento su testo lungo <span class="badge badge-info">qualitativa</span></h3>
+  <p>Generare 256 token di testo libero con entrambi i modelli, stesso punto di partenza. Contare quante volte il testo cambia argomento. PE sinusoidale potrebbe avere più deriva tematica a distanze lunghe.</p>
 
-  <h3>Test 5 — Retrieval in contesto <span class="badge badge-info">qualitativo</span></h3>
-  <p>Inserire un'informazione specifica all'inizio del contesto (posizione ~20) e chiedere al modello di riutilizzarla alla fine (posizione ~220). Esempio:</p>
-  <div class="cmd">La capitale della Sardegna è Cagliari. [150 token di testo neutro su altro argomento] La capitale della Sardegna è</div>
+  <h3>Prova 5 — Recupero di informazione nel contesto <span class="badge badge-info">qualitativa</span></h3>
+  <p>Inserire un'informazione specifica all'inizio del testo e chiedere al modello di riutilizzarla alla fine:</p>
+  <div class="cmd">La capitale della Sardegna è Cagliari. [150 token su altro argomento] La capitale della Sardegna è</div>
   <p>RoPE, avendo codifica relativa, dovrebbe gestire meglio le dipendenze a lunga distanza.</p>
 
   <h3>Script di comparazione</h3>
-  <p>Da implementare in <code>tools/compare_runs.py</code> dopo il completamento di entrambi i run:</p>
   <div class="cmd">python3 tools/compare_runs.py \
   --model-a checkpoints/run3_sinusoidal_best.pt \
   --model-b checkpoints/run4_rope_best.pt \
@@ -692,17 +671,17 @@ di una quale l'''''Italia dei uninterno di Santa</div>
   --extrapolation-len 512</div>
 
   <div class="note">
-    <b>Nota sulle aspettative.</b> A 46 M parametri e seq_len=256, la differenza qualitativa <em>all'interno della distribuzione di training</em> sarà probabilmente minima — dentro il margine di rumore stocastico. Il vantaggio di RoPE si manifesta chiaramente solo nell'extrapolazione e nella compatibilità GGUF. Il confronto è comunque utile come dato empirico e come esercizio metodologico: qualsiasi differenza significativa nella val loss finale sarebbe una sorpresa interessante da documentare.
+    <b>Cosa aspettarsi.</b> A 46 M parametri e seq_len=256, la differenza qualitativa all'interno della distribuzione di training sarà probabilmente minima. Il vantaggio di RoPE emerge chiaramente nell'extrapolazione e nella compatibilità GGUF. Il confronto è comunque utile come dato empirico: qualsiasi differenza significativa nella val loss finale sarebbe una sorpresa interessante da documentare.
   </div>
 
-  <h3>Dopo i due run — prossimi step</h3>
+  <h3>Dopo i due run</h3>
   <ul>
-    <li>Scegliere il checkpoint migliore (Run #3 o Run #4) per il deployment</li>
+    <li>Scegliere il checkpoint migliore per il deployment</li>
     <li>Implementare <code>tools/slm_to_gguf.py</code> (converter PyTorch → GGUF, schema LLaMA)</li>
     <li>Quantizzazione Q4_K_M via <code>llama-quantize</code> (target: ~28 MB)</li>
-    <li>Test con llamafile (Mozilla Foundation) — API OpenAI-compatibile via <code>POST /v1/completions</code></li>
+    <li>Test con llamafile (Mozilla Foundation)</li>
     <li>Fine-tuning su corpus narrativo personale via LoRA adapter</li>
   </ul>
-  <p>Dettaglio completo → <a href="slm-roadmap.html">Roadmap di sviluppo</a> · <a href="slm-docs.html">Documentazione</a></p>
+  <p>Dettaglio completo: <a href="slm-roadmap.html">Roadmap di sviluppo</a> · <a href="slm-docs.html">Documentazione</a></p>
 
-</div><!-- /wrapper -->
+</div>
