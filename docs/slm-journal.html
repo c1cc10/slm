@@ -237,8 +237,8 @@ tr.hl td { background: var(--surface2); }
   <h1>Quello che è successo, e perché</h1>
   <p class="subtitle">Ogni voce ha una testa narrativa accessibile a tutti, seguita dal dettaglio tecnico per chi vuole scendere più in profondità.</p>
   <div class="meta-row">
-    <span><span class="k">aggiornato </span><span class="v">2026-09-23</span></span>
-    <span><span class="k">run corrente </span><span class="v">step ~12 850 / 30 000</span></span>
+    <span><span class="k">aggiornato </span><span class="v">2026-09-24</span></span>
+    <span><span class="k">run corrente </span><span class="v">step ~13 300 / 30 000</span></span>
     <span><span class="k">val loss </span><span class="v">5.38</span></span>
     <span><span class="k">hardware </span><span class="v">Mac M2 8 GB · MPS</span></span>
   </div>
@@ -281,7 +281,7 @@ tr.hl td { background: var(--surface2); }
         <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
       </div>
       <div class="tl-right">
-        <h3>Run #1 — primo training dall'architettura di base <span class="badge badge-done">completato</span></h3>
+        <h3 id="run1">Run #1 — primo training dall'architettura di base <span class="badge badge-done">completato</span></h3>
         <div class="narr">Dopo 46 minuti, il modello formava parole italiane morfologicamente corrette: le desinenze giuste, la struttura riconoscibile. Nessun senso logico. Era esattamente quello che mi aspettavo, e confermava che i meccanismi di base funzionavano.</div>
         <p>Tokenizer char-level (102 caratteri unici), corpus narrativo personale 552 KB. Obiettivo: validare che ogni componente funzioni correttamente prima di scalare. Val loss finale <strong>1.7256</strong> in 46 minuti su MPS. Il modello produce morfologia italiana corretta (suffissi <em>-zione</em>, <em>-mente</em>) ma nessuna coerenza semantica, atteso a questa scala e con questo corpus.</p>
         <p>Checkpoint: <code>checkpoints/best.pt</code> (char-level, non BPE-compatibile).</p>
@@ -323,7 +323,7 @@ tr.hl td { background: var(--surface2); }
         <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
       </div>
       <div class="tl-right">
-        <h3>Run #3 avviato — BPE-SPM, 30 000 step <span class="badge badge-now">in corso</span></h3>
+        <h3 id="run3">Run #3 avviato — BPE-SPM, 30 000 step <span class="badge badge-now">in corso</span></h3>
         <div class="narr">Il training principale è partito. Trenta mila passi sull'enciclopedia italiana. Quello che il modello imparerà, lo imparerà da solo, passo dopo passo, leggendo milioni di frasi.</div>
         <p>Training BPE-SPM su Wikipedia IT, architettura sinusoidale, preset medium:</p>
         <div class="cmd">python3 train.py --tokenizer bpe-spm --data data/wiki_it.txt \
@@ -339,7 +339,7 @@ tr.hl td { background: var(--surface2); }
         <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
       </div>
       <div class="tl-right">
-        <h3>Decisione: completare Run #3, poi Run #4 con sistema di posizionamento diverso <span class="badge badge-info">tecnica</span></h3>
+        <h3 id="run4">Decisione: completare Run #3, poi Run #4 con sistema di posizionamento diverso <span class="badge badge-info">tecnica</span></h3>
         <div class="narr">Il formato in cui voglio distribuire il modello usa internamente un sistema diverso per tenere traccia dell'ordine delle parole. Adeguarsi non costa nulla: nessun apprendimento precedente viene perso. I due training finiranno entrambi, e si confronteranno i risultati.</div>
         <p>Analisi di compatibilità con llamafile/llama.cpp (target GGUF) porta a pianificare Run #4 con RoPE (Rotary Position Embedding). Run #3 prosegue fino a completamento (30 000 step): i due modelli finali saranno comparati con test mirati. RoPE non è più veloce, il costo per step è ~3-5% superiore, la convergenza in step è identica. La motivazione è architetturale, non computazionale. Dettaglio nella sezione Decisione.</p>
       </div>
@@ -348,7 +348,7 @@ tr.hl td { background: var(--surface2); }
   </div><!-- /timeline -->
 
   <!-- RUN #3 ANALISI -->
-  <h2>Run #3 — Analisi approfondita</h2>
+  <h2><a href="#run3" style="color:inherit;text-decoration:none">Run #3</a> — Analisi approfondita</h2>
 
   <div class="narr">Quello che segue è il dettaglio tecnico del training in corso. La parte più leggibile per tutti è la sezione sui testi generati, più avanti: mostra concretamente cosa scriveva il modello ai diversi stadi dell'apprendimento.</div>
 
@@ -382,19 +382,19 @@ tr.hl td { background: var(--surface2); }
       <text x="569" y="36" font-size="9" fill="var(--chart-text)">random</text>
       <!-- Area fill -->
       <path clip-path="url(#plotClip)"
-        d="M65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178 280,180 Z"
+        d="M65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178 283,188 Z"
         fill="url(#areaGrad)"/>
       <!-- Loss curve -->
       <polyline clip-path="url(#plotClip)"
-        points="65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178 280,180"
+        points="65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178 283,188"
         fill="none" stroke="var(--chart-line)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
       <!-- Milestone markers -->
       <circle cx="199" cy="168" r="3.5" fill="var(--chart-line)"/>
       <circle cx="232" cy="175" r="3.5" fill="var(--warn-text)"/>
       <circle cx="249" cy="177" r="3.5" fill="var(--chart-line)"/>
-      <!-- Current position: step ~12850 x=280 -->
-      <line x1="280" y1="18" x2="280" y2="214" stroke="var(--chart-now)" stroke-width="1.5" stroke-dasharray="4,3"/>
-      <text x="282" y="28" font-size="9" fill="var(--chart-now)" font-weight="500">siamo qui</text>
+      <!-- Current position: step ~13300 x=287 -->
+      <line x1="287" y1="18" x2="287" y2="214" stroke="var(--chart-now)" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="289" y="28" font-size="9" fill="var(--chart-now)" font-weight="500">siamo qui</text>
       <!-- Milestone labels -->
       <text x="181" y="161" font-size="8.5" fill="var(--chart-text)">step 8k</text>
       <text x="234" y="172" font-size="8.5" fill="var(--warn-text)">10k⚠</text>
@@ -420,7 +420,7 @@ tr.hl td { background: var(--surface2); }
       <line x1="320" y1="35" x2="340" y2="35" stroke="var(--chart-line)" stroke-width="2"/>
       <text x="343" y="38" font-size="9.5" fill="var(--chart-text)">val loss (checkpoint)</text>
       <line x1="320" y1="49" x2="340" y2="49" stroke="var(--chart-now)" stroke-width="1.5" stroke-dasharray="4,3"/>
-      <text x="343" y="52" font-size="9.5" fill="var(--chart-text)">step corrente (~12 850)</text>
+      <text x="343" y="52" font-size="9.5" fill="var(--chart-text)">step corrente (~13 300)</text>
       <line x1="320" y1="63" x2="340" y2="63" stroke="var(--chart-ref)" stroke-width="1" stroke-dasharray="4,5"/>
       <text x="343" y="66" font-size="9.5" fill="var(--chart-text)">baseline random (loss 9.68)</text>
     </svg>
@@ -451,7 +451,8 @@ tr.hl td { background: var(--surface2); }
         <tr><td class="num">10 000</td><td class="num">5.5424</td><td class="num">255</td><td class="num">−0.11</td><td class="note-cell">HTML entity leak (markup chimico residuo)</td></tr>
         <tr><td class="num">11 000</td><td class="num">5.4844</td><td class="num">241</td><td class="num">−0.06</td><td class="note-cell">primo "comune italiano" corretto</td></tr>
         <tr><td class="num">11 500</td><td class="num">5.4584</td><td class="num">234</td><td class="num">−0.03</td><td class="note-cell">train=5.2245 · gap train/val = 0.23</td></tr>
-        <tr class="hl"><td class="num">12 500</td><td class="num good">5.3787</td><td class="num good">216</td><td class="num good">−0.08</td><td class="note-cell">strutture architettoniche con anno e stile</td></tr>
+        <tr><td class="num">12 500</td><td class="num">5.3787</td><td class="num">216</td><td class="num good">−0.08</td><td class="note-cell">strutture architettoniche con anno e stile</td></tr>
+        <tr class="hl"><td class="num">13 000</td><td class="num">5.3842</td><td class="num">218</td><td class="num" style="color:var(--warn-text)">+0.006</td><td class="note-cell">plateau; train 5.1683, gap 0.216; testo "Cosenza in Piemonte" (struttura ok, geografia confusa)</td></tr>
         <tr><td class="num" colspan="3" style="color:var(--text-sec);font-size:0.78rem">Proiezione step 30 000</td><td class="num" style="color:var(--text-sec)">~4.6–4.8</td><td class="note-cell">perplexity ~100–120 (sinusoidale)</td></tr>
       </tbody>
     </table>
@@ -559,14 +560,23 @@ di una quale l'''''Italia dei uninterno di Santa</div>
       <div class="ms-body">di Cacerno. La chiesa fu costruito in stile romanico nel 1786 e successivamente ristrutturata in possesso dell'antico ca</div>
     </div>
 
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 13 000</span>
+        <span class="ms-label">struttura geografica/amministrativa corretta, fatti geografici sbagliati</span>
+      </div>
+      <div class="ms-body">della provincia di Cosenza in Piemonte, nel quale furono abolite con i comuni di Como in Italia per le Olimpiadi di Se</div>
+    </div>
+
   </div>
 
   <h3>Come leggere la curva di apprendimento</h3>
   <p>La discesa avviene in tre fasi, ognuna delle quali corrisponde a qualcosa di riconoscibile nel testo generato.</p>
   <ul>
-    <li><strong>Step 0–2 000 (loss da 9.8 a 6.8):</strong> il modello impara quali parole sono più frequenti. L'output sono le parole comuni dell'italiano. La discesa è rapida perché questa "informazione" è la più semplice.</li>
-    <li><strong>Step 2 000–8 000 (loss da 6.8 a 5.7):</strong> emerge la struttura della frase. Compaiono articolo, nome, verbo nell'ordine giusto. Il fenomeno degli apostrofi si risolve intorno a step 3 000: il modello capisce che gli apostrofi multipli compaiono in un contesto specifico (la formattazione di Wikipedia), prima ancora di capire la grammatica vera.</li>
-    <li><strong>Step 8 000–12 500 (loss da 5.7 a 5.38):</strong> coerenza di dominio. Il modello produce il registro enciclopedico, la toponomastica italiana, la struttura "comune di X in regione Y". Ogni decimale di loss costa più capacità di prima — siamo nella fase lenta.</li>
+    <li><strong>Step 0–2 000 (loss da 9.8 a 6.8):</strong> il modello impara quali parole sono più frequenti. L'output sono le parole comuni dell'italiano. La discesa è rapida perché questa "informazione" è la più semplice. Osservazione: morfologia corretta (suffissi -zione, -mente) comparsa già a step 500, ma nessuna struttura frasale.</li>
+    <li><strong>Step 2 000–8 000 (loss da 6.8 a 5.7):</strong> emerge la struttura della frase. Compaiono articolo, nome, verbo nell'ordine giusto. Il fenomeno degli apostrofi si risolve intorno a step 3 000: il modello capisce che gli apostrofi multipli compaiono in un contesto specifico (la formattazione di Wikipedia), prima ancora di capire la grammatica vera. Osservazione: prime frasi concettualmente coerenti a step 4 000.</li>
+    <li><strong>Step 8 000–12 500 (loss da 5.7 a 5.38):</strong> coerenza di dominio. Il modello produce il registro enciclopedico, la toponomastica italiana, la struttura "comune di X in regione Y". Ogni decimale di loss costa più capacità di prima — siamo nella fase lenta. Anomalia puntuale a step 10 000: entità HTML da articoli di chimica non filtrate.</li>
+    <li><strong>Step 12 500–13 000+ (loss ~5.38, plateau):</strong> struttura senza fatto. Il modello costruisce frasi geografiche e amministrative corrette nella forma ("della provincia di X in Y, nel quale…"), ma le associazioni fattuali sono sbagliate: Cosenza finisce in Piemonte, Como nelle Olimpiadi. Questo è il confine tra ciò che il modello ha imparato e ciò che non ha ancora appreso: il <em>template</em> della lingua è acquisito, il contenuto che quel template dovrebbe veicolare no. A questa profondità del training, il modello riconosce le strutture ricorrenti dell'enciclopedia italiana senza sapere quali fatti ci vadano dentro. È il limite atteso: un modello addestrato senza supervisione su un corpus impara la forma prima del contenuto.</li>
   </ul>
 
   <h3>Note sulle anomalie del corpus</h3>
@@ -579,11 +589,11 @@ di una quale l'''''Italia dei uninterno di Santa</div>
 
   <h3>Timing e proiezione</h3>
   <ul>
-    <li>Step 0–12 500: ~149 ore elapsed (8 947 min, da log di training)</li>
-    <li>Rate medio: 1.397 step/min</li>
-    <li>Step rimanenti da 12 850: 17 150 × ~43 s ≈ 736 000 s ≈ <strong>~204 ore (~8.5 giorni)</strong></li>
-    <li>ETA completamento Run #3: <strong>~1 ottobre 2026</strong></li>
-    <li>ETA fine Run #4 (RoPE): <strong>~9 ottobre 2026</strong></li>
+    <li>Step 0–13 000: ~172.8 ore elapsed (10 368 min, da log di training)</li>
+    <li>Rate effettivo: ~47.8 s/step (il Mac non gira in continuo)</li>
+    <li>Step rimanenti da 13 300: 16 700 × ~47.8 s ≈ 799 000 s ≈ <strong>~222 ore (~9.2 giorni)</strong></li>
+    <li>ETA completamento <a href="#run3">Run #3</a>: <strong>~3–4 ottobre 2026</strong></li>
+    <li>ETA fine <a href="#run4">Run #4</a> (RoPE): <strong>~13 ottobre 2026</strong></li>
   </ul>
 
   <!-- DECISIONE ROPE -->
@@ -593,7 +603,7 @@ di una quale l'''''Italia dei uninterno di Santa</div>
 
   <div class="decision">
     <div class="decision-label">Decisione — 2026-09-21</div>
-    <div class="decision-title">Run #3 (sinusoidale) e Run #4 (RoPE) entrambi a completamento, comparazione A/B</div>
+    <div class="decision-title"><a href="#run3" style="color:inherit;text-decoration:none">Run #3</a> (sinusoidale) e <a href="#run4" style="color:inherit;text-decoration:none">Run #4</a> (RoPE) entrambi a completamento, comparazione A/B</div>
     <p style="font-size:0.9rem;margin-bottom:12px">Run #3 prosegue fino a 30 000 step. Al completamento si implementa RoPE (~50 righe di diff, zero migrazione di pesi) e si avvia Run #4 con parametri identici. Il target di deployment (llamafile/llama.cpp via GGUF con architettura LLaMA) usa RoPE nativamente. La comparazione diretta dei due modelli finali quantifica empiricamente il beneficio di RoPE a questa scala e su questo corpus.</p>
     <div class="decision-grid">
       <div class="decision-side">
@@ -636,7 +646,7 @@ di una quale l'''''Italia dei uninterno di Santa</div>
   </ul>
 
   <!-- PIANO COMPARAZIONE -->
-  <h2>Piano di comparazione Run #3 vs Run #4</h2>
+  <h2>Piano di comparazione <a href="#run3" style="color:inherit;text-decoration:none">Run #3</a> vs <a href="#run4" style="color:inherit;text-decoration:none">Run #4</a></h2>
 
   <div class="narr">Quando entrambi i training saranno completati, i due modelli verranno confrontati su cinque prove progettate per far emergere le differenze tra i due sistemi di posizionamento. La prova più discriminante è la seconda: vedere come si comportano oltre i limiti di lunghezza su cui sono stati addestrati.</div>
 
