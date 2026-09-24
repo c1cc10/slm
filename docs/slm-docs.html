@@ -399,8 +399,8 @@ pre code { background: none; color: inherit; padding: 0; border-radius: 0; }
 <!-- ─────────────────────────────────────── INTRODUZIONE -->
 <section id="intro">
   <h2>Introduzione</h2>
-  <p>SLM (<em>Small Language Model</em>) è un modello linguistico decoder-only addestrato interamente da zero in Python con PyTorch. Il modello opera sulla lingua italiana, ed è progettato per essere comprensibile nei suoi meccanismi interni — ogni componente è scritto esplicitamente, senza librerie di alto livello che nascondano i dettagli.</p>
-  <p>L'architettura segue il paradigma GPT: un transformer autoregressivo che, dato un testo in ingresso, impara a prevedere il carattere successivo. Con sufficiente addestramento, questa capacità predittiva si traduce in generazione di testo coerente.</p>
+  <p>SLM (<em>Small Language Model</em>) è un modello linguistico decoder-only addestrato interamente da zero in Python con PyTorch. Il modello opera sulla lingua italiana, ed è progettato per essere comprensibile nei suoi meccanismi interni, ogni componente è scritto esplicitamente, senza librerie di alto livello che nascondano i dettagli.</p>
+  <p>L'architettura segue il paradigma GPT: un transformer autoregressivo che, dato un testo in ingresso, impara a prevedere il token successivo. Con sufficiente addestramento, questa capacità predittiva si traduce in generazione di testo coerente.</p>
   <div class="notice">
     Il progetto è sia didattico che applicativo. La comprensione profonda dei meccanismi interni è parte esplicita degli obiettivi, non un effetto collaterale.
   </div>
@@ -523,9 +523,9 @@ x = x + dropout( FeedForward( LayerNorm(x) ) )  <span class="cm"># ← residual<
 <section id="modello">
   <h2>Modello GPT</h2>
   <h3>Embedding e Weight Tying</h3>
-  <p>Ogni token (carattere) viene convertito in un vettore denso da 256 dimensioni tramite una lookup table (<code>nn.Embedding</code>). La matrice di embedding (vocab_size × 256) è la stessa usata dall'ultimo layer lineare che proietta verso il vocabolario. Questa tecnica si chiama <strong>weight tying</strong>:</p>
+  <p>Ogni token viene convertito in un vettore denso da 512 dimensioni tramite una lookup table (<code>nn.Embedding</code>). La matrice di embedding (vocab_size × 512) è la stessa usata dall'ultimo layer lineare che proietta verso il vocabolario. Questa tecnica si chiama <strong>weight tying</strong>:</p>
   <pre><code>self.lm_head.weight = self.token_embedding.weight  <span class="cm"># stesso tensore</span></code></pre>
-  <p>Motivazione: il carattere 'a' come input e come output atteso condivide la stessa rappresentazione. Riduce il numero di parametri e migliora la generalizzazione.</p>
+  <p>Motivazione: il token "chiesa" come input e come output atteso condivide la stessa rappresentazione. Riduce il numero di parametri e migliora la generalizzazione. Vale per qualsiasi tokenizer — char-level o BPE.</p>
 
   <h3>Generazione autoregressiva</h3>
   <p>Il modello genera un token alla volta. Ad ogni step: (1) forward pass sull'intero contesto, (2) si considera solo il logit dell'ultimo token, (3) si applica temperatura e top-k, (4) si campiona la distribuzione risultante, (5) il nuovo token si aggiunge al contesto e si ripete.</p>
@@ -540,25 +540,38 @@ x = x + dropout( FeedForward( LayerNorm(x) ) )  <span class="cm"># ← residual<
 
 <!-- ─────────────────────────────────────── TOKENIZER -->
 <section id="tokenizer">
-  <h2>Tokenizer Char-Level</h2>
-  <p>Il tokenizer converte ogni carattere del testo in un intero, costruendo il vocabolario direttamente dal corpus. Non si usano librerie esterne.</p>
-  <pre><code><span class="cm"># Esempio: testo "gatto"</span>
-chars = <span class="nb">sorted</span>(<span class="nb">set</span>(<span class="st">"gatto"</span>))   <span class="cm"># → ['a', 'g', 'o', 't']</span>
-stoi  = {c: i <span class="kw">for</span> i, c <span class="kw">in</span> <span class="nb">enumerate</span>(chars)}  <span class="cm"># → {'a':0, 'g':1, 'o':2, 't':3}</span>
-itos  = {i: c <span class="kw">for</span> c, i <span class="kw">in</span> stoi.items()}        <span class="cm"># inverso</span>
-
-encode(<span class="st">"gatto"</span>, stoi)  <span class="cm"># → [1, 0, 3, 3, 2]</span>
-decode([1,0,3,3,2], itos)  <span class="cm"># → "gatto"</span></code></pre>
+  <h2>Tokenizer</h2>
+  <p>Il progetto ha usato due tokenizer in fasi successive. Il passaggio da char-level a BPE-SPM non ha richiesto modifiche all'architettura: solo il vocabolario e la dimensione dell'embedding sono cambiate.</p>
 
   <div class="table-wrap">
   <table>
-    <tr><th>Approccio</th><th>Vocab size tipico</th><th>Pro</th><th>Contro</th></tr>
-    <tr><td><strong>Char-level</strong> (Fase 1)</td><td>80 – 120</td><td>Zero dipendenze, comprensibile, funziona su testo grezzo</td><td>Sequenze lunghe per parole comuni, meno efficiente</td></tr>
-    <tr><td><strong>BPE</strong> (Fase 2)</td><td>8.000 – 50.000</td><td>Standard industriale, gestisce morfologia italiana, efficiente</td><td>Richiede training separato del tokenizer</td></tr>
-    <tr><td><strong>Word-level</strong></td><td>50.000+</td><td>Intuitivo</td><td>OOV problem, non gestisce parole nuove</td></tr>
+    <tr><th>Approccio</th><th>Vocab size</th><th>Fase</th><th>Pro</th><th>Contro</th></tr>
+    <tr><td><strong>Char-level</strong></td><td>102</td><td>Run #1 — completata</td><td>Zero dipendenze, comprensibile, baseline ideale</td><td>Sequenze lunghe, meno efficiente, nessuna morfologia appresa</td></tr>
+    <tr><td><strong>BPE-SPM</strong></td><td>16 000</td><td>Run #3 — in corso</td><td>Standard industriale, gestisce morfologia italiana, efficiente su corpus enciclopedico</td><td>Richiede training separato del tokenizer (SentencePiece)</td></tr>
+    <tr><td><strong>Word-level</strong></td><td>50.000+</td><td>non usato</td><td>Intuitivo</td><td>OOV problem, non gestisce parole nuove o morfologia flessiva</td></tr>
   </table>
   </div>
-  <p>Il BPE (Byte Pair Encoding) unisce iterativamente le coppie di caratteri più frequenti in token singoli. Un BPE addestrato su testo professionale impara token come "approvazione", "deployment", "milestone" come unità atomiche.</p>
+
+  <h3>Fase 1 — Char-level (Run #1, completato)</h3>
+  <p>Il tokenizer converte ogni carattere del testo in un intero, costruendo il vocabolario direttamente dal corpus. 102 caratteri unici sul corpus narrativo italiano (552 KB). Nessuna dipendenza esterna.</p>
+  <pre><code><span class="cm"># Vocabolario costruito dal corpus</span>
+chars = <span class="nb">sorted</span>(<span class="nb">set</span>(open(<span class="st">'corpus.txt'</span>).read()))  <span class="cm"># 102 caratteri unici</span>
+stoi  = {c: i <span class="kw">for</span> i, c <span class="kw">in</span> <span class="nb">enumerate</span>(chars)}
+itos  = {i: c <span class="kw">for</span> c, i <span class="kw">in</span> stoi.items()}
+
+encode(<span class="st">"gatto"</span>, stoi)    <span class="cm"># → [1, 0, 3, 3, 2]</span>
+decode([1,0,3,3,2], itos)  <span class="cm"># → "gatto"</span></code></pre>
+  <p>Risultato: val loss 1.7256 in 46 minuti su MPS. Morfologia italiana corretta (suffissi -zione, -mente), nessuna coerenza semantica. Obiettivo centrato: validare che ogni componente funzionasse prima di scalare.</p>
+
+  <h3>Fase 2 — BPE-SPM (Run #3, in corso)</h3>
+  <p>BPE (Byte Pair Encoding) via SentencePiece. Vocabolario da 16 000 token addestrato sul corpus concatenato Wikipedia IT + narrativa. Il tokenizer è salvato nel checkpoint ed è autocontenuto: nessuna dipendenza esterna a runtime.</p>
+  <pre><code><span class="cm"># Training del tokenizer (una volta sola)</span>
+python3 train.py --tokenizer bpe-spm \
+    --bpe-corpus data/corpus_bpe.txt --bpe-vocab 16000
+
+<span class="cm"># Uso successivo (riusa il modello SPM salvato)</span>
+python3 train.py --tokenizer bpe-spm --data data/wiki_it.txt</code></pre>
+  <p>Il BPE unisce iterativamente le coppie di token più frequenti. Sul corpus Wikipedia IT impara token come <code>chiesa</code>, <code>comune</code>, <code>provincia</code>, <code>arcivescovo</code> come unità atomiche — rilevanti per il registro enciclopedico. Loss iniziale attesa: log(16 000) ≈ 9.68.</p>
 </section>
 
 <!-- ─────────────────────────────────────── DATASET -->
@@ -636,7 +649,11 @@ finestra i=0, seq_len=6:
 <!-- ─────────────────────────────────────── CURVA -->
 <section id="curva">
   <h2>Cosa Aspettarsi Durante il Training</h2>
-  <p>La <strong>loss</strong> è la cross-entropy: $-\log(p_{\text{corretta}})$. Con pesi casuali vale $\log(\text{vocab\_size})$ — per 90 caratteri unici, circa 4.5. Man mano che il modello impara, scende.</p>
+  <p>La <strong>loss</strong> è la cross-entropy: $-\log(p_{\text{corretta}})$. Con pesi casuali vale $\log(\text{vocab\_size})$. Il valore di partenza dipende dal tokenizer: ~4.5 con char-level (102 caratteri), ~9.68 con BPE-SPM a 16 000 token. Man mano che il modello impara, scende.</p>
+
+  <div class="notice">
+    <strong>La tabella sotto è specifica per il Run #1 (char-level, completato).</strong> Con BPE-SPM (Run #3) la loss parte da ~9.68 e la scala dei valori è diversa. Le fasi qualitative (frequenza → morfologia → sintassi → coerenza) rimangono analoghe, ma i numeri assoluti non sono comparabili.
+  </div>
 
   <div class="table-wrap">
   <table>
@@ -652,7 +669,7 @@ finestra i=0, seq_len=6:
   </div>
 
   <div class="notice">
-    <strong>Nota importante:</strong> un char-level model da 4.8M parametri non raggiungerà la coerenza semantica a lungo raggio — quella richiede miliardi di parametri e BPE. L'obiettivo di Fase 1 è vedere il modello imparare la <em>struttura superficiale</em> dell'italiano: ortografia, morfologia, ritmo della prosa.
+    <strong>Nota:</strong> un char-level model da 4.8M parametri non raggiungerà la coerenza semantica a lungo raggio — quella richiede miliardi di parametri e BPE. L'obiettivo del Run #1 era vedere il modello imparare la <em>struttura superficiale</em> dell'italiano: ortografia, morfologia, ritmo della prosa. Raggiunto con val loss 1.7256 in 46 minuti.
   </div>
 
   <h3>Quando preoccuparsi</h3>
@@ -741,16 +758,16 @@ open(<span class="st">'data/corpus.txt'</span>, <span class="st">'w'</span>).wri
   <table>
     <tr><th>Fase</th><th>Obiettivo</th><th>Stack</th><th>Compute</th></tr>
     <tr>
-      <td><strong>1 — From scratch</strong><br><em style="color:var(--accent);font-size:0.82em">in corso</em></td>
-      <td>Modello char-level funzionante su italiano. Comprensione completa di ogni componente</td>
+      <td><strong>1 — From scratch</strong><br><em style="color:#2BBFBF;font-size:0.82em">completata ✓</em></td>
+      <td>Modello char-level funzionante su italiano. Comprensione completa di ogni componente. Val loss 1.7256 in 46 min</td>
       <td>attention.py → transformer.py → model.py → train.py</td>
       <td>M2 locale (8 GB)</td>
     </tr>
     <tr>
-      <td><strong>2 — BPE tokenizer</strong></td>
-      <td>Sostituire char-level con BPE su corpus di dominio. <code>vocab_size</code> sale a ~8.000. Stessa architettura, più efficiente</td>
-      <td>tiktoken o SentencePiece + corpus domain-focused</td>
-      <td>M2 locale</td>
+      <td><strong>2 — BPE-SPM + Wikipedia IT</strong><br><em style="color:var(--accent);font-size:0.82em">in corso (Run #3)</em></td>
+      <td>Tokenizer BPE-SPM 16 000 vocab su Wikipedia IT (47.8 M token). Preset medium: d_model 512, 8 layer, 45.9 M parametri. Step ~13 300 / 30 000, ETA ~3–4 ott 2026</td>
+      <td>SentencePiece + corpus_bpe.txt (wiki + narrativa)</td>
+      <td>M2 locale (8 GB · MPS)</td>
     </tr>
     <tr>
       <td><strong>3 — Fine-tuning</strong></td>
