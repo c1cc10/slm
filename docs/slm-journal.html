@@ -238,8 +238,8 @@ tr.hl td { background: var(--surface2); }
   <p class="subtitle">Ogni voce ha una testa narrativa accessibile a tutti, seguita dal dettaglio tecnico per chi vuole scendere più in profondità.</p>
   <div class="meta-row">
     <span><span class="k">aggiornato </span><span class="v">2026-09-24</span></span>
-    <span><span class="k">run corrente </span><span class="v">step ~13 300 / 30 000</span></span>
-    <span><span class="k">val loss </span><span class="v">5.38</span></span>
+    <span><span class="k">run corrente </span><span class="v">step ~13 500 / 30 000</span></span>
+    <span><span class="k">val loss </span><span class="v">5.31</span></span>
     <span><span class="k">hardware </span><span class="v">Mac M2 8 GB · MPS</span></span>
   </div>
 
@@ -328,7 +328,7 @@ tr.hl td { background: var(--surface2); }
         <p>Training BPE-SPM su Wikipedia IT, architettura sinusoidale, preset medium:</p>
         <div class="cmd">python3 train.py --tokenizer bpe-spm --data data/wiki_it.txt \
   --preset medium --steps 30000 --batch 16 --seq-len 256</div>
-        <p>Stato al 2026-09-23: step ~12 850 / 30 000, ~149 h elapsed, val loss 5.38. Dettaglio nella sezione Analisi sotto.</p>
+        <p>Stato al 2026-09-25: step ~13 500 / 30 000, ~203 h elapsed, val loss 5.3125 (nuovo best — plateau rotto). Dettaglio nella sezione Analisi sotto.</p>
       </div>
     </div>
 
@@ -382,19 +382,19 @@ tr.hl td { background: var(--surface2); }
       <text x="569" y="36" font-size="9" fill="var(--chart-text)">random</text>
       <!-- Area fill -->
       <path clip-path="url(#plotClip)"
-        d="M65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178 283,188 Z"
+        d="M65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178 283,188 286,188 291,191 Z"
         fill="url(#areaGrad)"/>
       <!-- Loss curve -->
       <polyline clip-path="url(#plotClip)"
-        points="65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178 283,188"
+        points="65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178 283,188 286,188 291,191"
         fill="none" stroke="var(--chart-line)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
       <!-- Milestone markers -->
       <circle cx="199" cy="168" r="3.5" fill="var(--chart-line)"/>
       <circle cx="232" cy="175" r="3.5" fill="var(--warn-text)"/>
       <circle cx="249" cy="177" r="3.5" fill="var(--chart-line)"/>
-      <!-- Current position: step ~13300 x=287 -->
-      <line x1="287" y1="18" x2="287" y2="214" stroke="var(--chart-now)" stroke-width="1.5" stroke-dasharray="4,3"/>
-      <text x="289" y="28" font-size="9" fill="var(--chart-now)" font-weight="500">siamo qui</text>
+      <!-- Current position: step ~13500 x=291 -->
+      <line x1="291" y1="18" x2="291" y2="214" stroke="var(--chart-now)" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="293" y="28" font-size="9" fill="var(--chart-now)" font-weight="500">siamo qui</text>
       <!-- Milestone labels -->
       <text x="181" y="161" font-size="8.5" fill="var(--chart-text)">step 8k</text>
       <text x="234" y="172" font-size="8.5" fill="var(--warn-text)">10k⚠</text>
@@ -420,7 +420,7 @@ tr.hl td { background: var(--surface2); }
       <line x1="320" y1="35" x2="340" y2="35" stroke="var(--chart-line)" stroke-width="2"/>
       <text x="343" y="38" font-size="9.5" fill="var(--chart-text)">val loss (checkpoint)</text>
       <line x1="320" y1="49" x2="340" y2="49" stroke="var(--chart-now)" stroke-width="1.5" stroke-dasharray="4,3"/>
-      <text x="343" y="52" font-size="9.5" fill="var(--chart-text)">step corrente (~13 300)</text>
+      <text x="343" y="52" font-size="9.5" fill="var(--chart-text)">step corrente (~13 500)</text>
       <line x1="320" y1="63" x2="340" y2="63" stroke="var(--chart-ref)" stroke-width="1" stroke-dasharray="4,5"/>
       <text x="343" y="66" font-size="9.5" fill="var(--chart-text)">baseline random (loss 9.68)</text>
     </svg>
@@ -452,14 +452,15 @@ tr.hl td { background: var(--surface2); }
         <tr><td class="num">11 000</td><td class="num">5.4844</td><td class="num">241</td><td class="num">−0.06</td><td class="note-cell">primo "comune italiano" corretto</td></tr>
         <tr><td class="num">11 500</td><td class="num">5.4584</td><td class="num">234</td><td class="num">−0.03</td><td class="note-cell">train=5.2245 · gap train/val = 0.23</td></tr>
         <tr><td class="num">12 500</td><td class="num">5.3787</td><td class="num">216</td><td class="num good">−0.08</td><td class="note-cell">strutture architettoniche con anno e stile</td></tr>
-        <tr class="hl"><td class="num">13 000</td><td class="num">5.3842</td><td class="num">218</td><td class="num" style="color:var(--warn-text)">+0.006</td><td class="note-cell">plateau; train 5.1683, gap 0.216; testo "Cosenza in Piemonte" (struttura ok, geografia confusa)</td></tr>
+        <tr><td class="num">13 000</td><td class="num">5.3842</td><td class="num">218</td><td class="num" style="color:var(--warn-text)">+0.006</td><td class="note-cell">plateau; train 5.1683, gap 0.216; testo "Cosenza in Piemonte" (struttura ok, geografia confusa)</td></tr>
+        <tr class="hl"><td class="num">13 500</td><td class="num">5.3125</td><td class="num">203</td><td class="num good">−0.072</td><td class="note-cell">nuovo best — plateau rotto (6 checkpoint a ~5.38); train 5.0688, gap 0.244; testo sportivo strutturato ("campionato europeo", "inaugurata")</td></tr>
         <tr><td class="num" colspan="3" style="color:var(--text-sec);font-size:0.78rem">Proiezione step 30 000</td><td class="num" style="color:var(--text-sec)">~4.6–4.8</td><td class="note-cell">perplexity ~100–120 (sinusoidale)</td></tr>
       </tbody>
     </table>
   </div>
 
   <div class="note">
-    <b>Train–val gap stabile.</b> A step 11 500: train loss 5.2245, val loss 5.4584, gap 0.234. Il gap si mantiene costante da step 8 000: segnale che non c'è overfitting. La loss di training inferiore è fisiologica — il modello ha visto quei batch; la val è testo che non ha mai letto.
+    <b>Train–val gap stabile.</b> A step 11 500: gap 0.234. A step 13 500: train 5.0688, val 5.3125, gap 0.244. Il gap si mantiene costante da step 8 000: segnale che non c'è overfitting. La loss di training inferiore è fisiologica — il modello ha visto quei batch; la val è testo che non ha mai letto.
   </div>
 
   <!-- MILESTONES -->
@@ -568,6 +569,15 @@ di una quale l'''''Italia dei uninterno di Santa</div>
       <div class="ms-body">della provincia di Cosenza in Piemonte, nel quale furono abolite con i comuni di Como in Italia per le Olimpiadi di Se</div>
     </div>
 
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 13 500</span>
+        <span class="ms-label">plateau rotto — vocabolario sportivo e da eventi ★★★★</span>
+        <span class="ms-qual"><span class="badge badge-done">nuovo best val 5.31</span></span>
+      </div>
+      <div class="ms-body">Nel settembre del'Italia si tiene l'Azione della squadra. L'Amilia italiana è stata inaugurata nel campionato europeo</div>
+    </div>
+
   </div>
 
   <h3>Come leggere la curva di apprendimento</h3>
@@ -576,7 +586,8 @@ di una quale l'''''Italia dei uninterno di Santa</div>
     <li><strong>Step 0–2 000 (loss da 9.8 a 6.8):</strong> il modello impara quali parole sono più frequenti. L'output sono le parole comuni dell'italiano. La discesa è rapida perché questa "informazione" è la più semplice. Osservazione: morfologia corretta (suffissi -zione, -mente) comparsa già a step 500, ma nessuna struttura frasale.</li>
     <li><strong>Step 2 000–8 000 (loss da 6.8 a 5.7):</strong> emerge la struttura della frase. Compaiono articolo, nome, verbo nell'ordine giusto. Il fenomeno degli apostrofi si risolve intorno a step 3 000: il modello capisce che gli apostrofi multipli compaiono in un contesto specifico (la formattazione di Wikipedia), prima ancora di capire la grammatica vera. Osservazione: prime frasi concettualmente coerenti a step 4 000.</li>
     <li><strong>Step 8 000–12 500 (loss da 5.7 a 5.38):</strong> coerenza di dominio. Il modello produce il registro enciclopedico, la toponomastica italiana, la struttura "comune di X in regione Y". Ogni decimale di loss costa più capacità di prima — siamo nella fase lenta. Anomalia puntuale a step 10 000: entità HTML da articoli di chimica non filtrate.</li>
-    <li><strong>Step 12 500–13 000+ (loss ~5.38, plateau):</strong> struttura senza fatto. Il modello costruisce frasi geografiche e amministrative corrette nella forma ("della provincia di X in Y, nel quale…"), ma le associazioni fattuali sono sbagliate: Cosenza finisce in Piemonte, Como nelle Olimpiadi. Questo è il confine tra ciò che il modello ha imparato e ciò che non ha ancora appreso: il <em>template</em> della lingua è acquisito, il contenuto che quel template dovrebbe veicolare no. A questa profondità del training, il modello riconosce le strutture ricorrenti dell'enciclopedia italiana senza sapere quali fatti ci vadano dentro. È il limite atteso: un modello addestrato senza supervisione su un corpus impara la forma prima del contenuto.</li>
+    <li><strong>Step 12 500–13 000 (loss ~5.38, plateau):</strong> struttura senza fatto. Il modello costruisce frasi geografiche e amministrative corrette nella forma ("della provincia di X in Y, nel quale…"), ma le associazioni fattuali sono sbagliate: Cosenza finisce in Piemonte, Como nelle Olimpiadi. Il <em>template</em> della lingua è acquisito, il contenuto che quel template dovrebbe veicolare no.</li>
+    <li><strong>Step 13 000–13 500+ (loss da 5.38 a 5.31 — plateau rotto):</strong> primo segnale di approfondimento semantico. Il checkpoint a step 13 500 è il nuovo best (−0.072 dal plateau). Il testo cambia registro: "Nel settembre del'Italia si tiene l'Azione della squadra. L'Amilia italiana è stata inaugurata nel campionato europeo". La struttura rimane enciclopedica ma il vocabolario si sposta su eventi sportivi. Il modello sta attraversando sezioni del corpus Wikipedia dedicate a sport e competizioni — e li apprende come dominio distinto. I fatti restano inventati, ma il pattern struttura-senza-contenuto si sta evolvendo: i topònimi inventati ("Amilia") hanno morfologia italiana plausibile.</li>
   </ul>
 
   <h3>Note sulle anomalie del corpus</h3>
@@ -589,11 +600,11 @@ di una quale l'''''Italia dei uninterno di Santa</div>
 
   <h3>Timing e proiezione</h3>
   <ul>
-    <li>Step 0–13 000: ~172.8 ore elapsed (10 368 min, da log di training)</li>
-    <li>Rate effettivo: ~47.8 s/step (il Mac non gira in continuo)</li>
-    <li>Step rimanenti da 13 300: 16 700 × ~47.8 s ≈ 799 000 s ≈ <strong>~222 ore (~9.2 giorni)</strong></li>
-    <li>ETA completamento <a href="#run3">Run #3</a>: <strong>~3–4 ottobre 2026</strong></li>
-    <li>ETA fine <a href="#run4">Run #4</a> (RoPE): <strong>~13 ottobre 2026</strong></li>
+    <li>Step 0–13 500: ~203.2 ore elapsed (12 191 min, da log di training)</li>
+    <li>Rate effettivo: ~54.2 s/step aggregato (wall-clock, include pause)</li>
+    <li>Step rimanenti da 13 500: 16 500 × ~54.2 s ≈ 894 000 s ≈ <strong>~248 ore (~10.3 giorni)</strong></li>
+    <li>ETA completamento <a href="#run3">Run #3</a>: <strong>~5–6 ottobre 2026</strong></li>
+    <li>ETA fine <a href="#run4">Run #4</a> (RoPE): <strong>~15–16 ottobre 2026</strong></li>
   </ul>
 
   <!-- DECISIONE ROPE -->
