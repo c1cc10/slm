@@ -23,6 +23,10 @@ env/
 # macOS
 .DS_Store
 
+# Vast.ai
+.vastai-apikey
+.vastai-instance
+
 # PyTorch
 *.pt
 !checkpoints/tokenizer.model

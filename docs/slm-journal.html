@@ -238,8 +238,8 @@ tr.hl td { background: var(--surface2); }
   <p class="subtitle">Ogni voce ha una testa narrativa accessibile a tutti, seguita dal dettaglio tecnico per chi vuole scendere più in profondità.</p>
   <div class="meta-row">
     <span><span class="k">aggiornato </span><span class="v">2026-09-26</span></span>
-    <span><span class="k">run corrente </span><span class="v">step ~14 000 / 30 000</span></span>
-    <span><span class="k">val loss </span><span class="v">5.31</span></span>
+    <span><span class="k">run corrente </span><span class="v">step 30 000 / 30 000 ✓</span></span>
+    <span><span class="k">val loss </span><span class="v">4.0768</span></span>
     <span><span class="k">hardware </span><span class="v">Mac M2 8 GB · MPS</span></span>
   </div>
 
@@ -323,12 +323,12 @@ tr.hl td { background: var(--surface2); }
         <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
       </div>
       <div class="tl-right">
-        <h3 id="run3">Run #3 avviato — BPE-SPM, 30 000 step <span class="badge badge-now">in corso</span></h3>
+        <h3 id="run3">Run #3 — BPE-SPM, 30 000 step <span class="badge badge-done">completato</span></h3>
         <div class="narr">Il training principale è partito. Trenta mila passi sull'enciclopedia italiana. Quello che il modello imparerà, lo imparerà da solo, passo dopo passo, leggendo milioni di frasi.</div>
         <p>Training BPE-SPM su Wikipedia IT, architettura sinusoidale, preset medium:</p>
         <div class="cmd">python3 train.py --tokenizer bpe-spm --data data/wiki_it.txt \
   --preset medium --steps 30000 --batch 16 --seq-len 256</div>
-        <p>Stato al 2026-09-26: step ~14 000 / 30 000, ~230 h elapsed, val loss 5.3052 (nuovo best — discesa continua dal plateau). Dettaglio nella sezione Analisi sotto.</p>
+        <p>Completato il 2026-09-26: 30 000 step, val loss best 4.0768, perplexity ~59. Durata totale: ~230 h su Mac M2 (step 0–14 000) + 59m 22s su hardware dedicato (step 14 000–30 000). Dettaglio nella sezione Analisi sotto.</p>
       </div>
     </div>
 
@@ -364,10 +364,11 @@ tr.hl td { background: var(--surface2); }
         <clipPath id="plotClip"><rect x="65" y="18" width="502" height="196"/></clipPath>
       </defs>
       <line x1="65" y1="20"  x2="567" y2="20"  stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
-      <line x1="65" y1="56"  x2="567" y2="56"  stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
-      <line x1="65" y1="93"  x2="567" y2="93"  stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
-      <line x1="65" y1="129" x2="567" y2="129" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
-      <line x1="65" y1="166" x2="567" y2="166" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="65" y1="50"  x2="567" y2="50"  stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="65" y1="81"  x2="567" y2="81"  stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="65" y1="111" x2="567" y2="111" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="65" y1="141" x2="567" y2="141" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="65" y1="172" x2="567" y2="172" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
       <line x1="65" y1="202" x2="567" y2="202" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
       <line x1="65"  y1="18" x2="65"  y2="214" stroke="var(--chart-grid)" stroke-width="1"/>
       <line x1="149" y1="18" x2="149" y2="214" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
@@ -377,35 +378,37 @@ tr.hl td { background: var(--surface2); }
       <line x1="483" y1="18" x2="483" y2="214" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
       <line x1="567" y1="18" x2="567" y2="214" stroke="var(--chart-grid)" stroke-width="1"/>
       <line x1="65" y1="214" x2="567" y2="214" stroke="var(--chart-grid)" stroke-width="1"/>
-      <!-- Random baseline: loss=9.68 → y=33 -->
-      <line x1="65" y1="33" x2="567" y2="33" stroke="var(--chart-ref)" stroke-width="1" stroke-dasharray="4,5"/>
-      <text x="569" y="36" font-size="9" fill="var(--chart-text)">random</text>
+      <!-- Random baseline: loss=9.68 → y=30 -->
+      <line x1="65" y1="30" x2="567" y2="30" stroke="var(--chart-ref)" stroke-width="1" stroke-dasharray="4,5"/>
+      <text x="569" y="33" font-size="9" fill="var(--chart-text)">random</text>
       <!-- Area fill -->
       <path clip-path="url(#plotClip)"
-        d="M65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178 283,188 286,188 291,191 299,191 Z"
+        d="M65,25 73,95 82,109 90,111 98,117 107,121 115,124 124,128 132,134 149,139 165,142 182,147 199,149 216,152 232,155 249,157 257,158 274,160 283,160 291,162 299,162 308,163 316,165 324,167 333,169 349,171 358,172 366,173 374,175 383,176 400,178 408,179 424,180 441,182 458,183 466,185 483,185 491,186 508,187 516,188 525,189 533,189 541,190 550,190 558,191 567,191 567,214 65,214 Z"
         fill="url(#areaGrad)"/>
       <!-- Loss curve -->
       <polyline clip-path="url(#plotClip)"
-        points="65,26 73,107 82,122 90,125 98,131 107,136 115,140 123,144 132,151 140,152 149,156 166,160 174,162 182,165 191,166 199,168 208,169 216,171 224,173 232,175 249,177 258,178 283,188 286,188 291,191 299,191"
+        points="65,25 73,95 82,109 90,111 98,117 107,121 115,124 124,128 132,134 149,139 165,142 182,147 199,149 216,152 232,155 249,157 257,158 274,160 283,160 291,162 299,162 308,163 316,165 324,167 333,169 349,171 358,172 366,173 374,175 383,176 400,178 408,179 424,180 441,182 458,183 466,185 483,185 491,186 508,187 516,188 525,189 533,189 541,190 550,190 558,191 567,191"
         fill="none" stroke="var(--chart-line)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
       <!-- Milestone markers -->
-      <circle cx="199" cy="168" r="3.5" fill="var(--chart-line)"/>
-      <circle cx="232" cy="175" r="3.5" fill="var(--warn-text)"/>
-      <circle cx="249" cy="177" r="3.5" fill="var(--chart-line)"/>
-      <!-- Current position: step ~14000 x=299 -->
-      <line x1="299" y1="18" x2="299" y2="214" stroke="var(--chart-now)" stroke-width="1.5" stroke-dasharray="4,3"/>
-      <text x="301" y="28" font-size="9" fill="var(--chart-now)" font-weight="500">siamo qui</text>
+      <circle cx="199" cy="149" r="3.5" fill="var(--chart-line)"/>
+      <circle cx="232" cy="155" r="3.5" fill="var(--warn-text)"/>
+      <circle cx="249" cy="157" r="3.5" fill="var(--chart-line)"/>
+      <!-- Final position: step 30000 x=567 -->
+      <circle cx="567" cy="191" r="4" fill="var(--accent)" stroke="var(--bg)" stroke-width="1.5"/>
+      <line x1="567" y1="18" x2="567" y2="214" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="380" y="28" font-size="9" fill="var(--accent)" font-weight="500">completato (step 30 000)</text>
       <!-- Milestone labels -->
-      <text x="181" y="161" font-size="8.5" fill="var(--chart-text)">step 8k</text>
-      <text x="234" y="172" font-size="8.5" fill="var(--warn-text)">10k⚠</text>
-      <text x="251" y="185" font-size="8.5" fill="var(--chart-text)">11k★</text>
+      <text x="181" y="143" font-size="8.5" fill="var(--chart-text)">step 8k</text>
+      <text x="234" y="149" font-size="8.5" fill="var(--warn-text)">10k⚠</text>
+      <text x="251" y="152" font-size="8.5" fill="var(--chart-text)">11k★</text>
       <!-- Y axis labels -->
       <text x="59" y="23"  font-size="9.5" fill="var(--chart-text)" text-anchor="end">10.0</text>
-      <text x="59" y="59"  font-size="9.5" fill="var(--chart-text)" text-anchor="end">9.0</text>
-      <text x="59" y="96"  font-size="9.5" fill="var(--chart-text)" text-anchor="end">8.0</text>
-      <text x="59" y="132" font-size="9.5" fill="var(--chart-text)" text-anchor="end">7.0</text>
-      <text x="59" y="169" font-size="9.5" fill="var(--chart-text)" text-anchor="end">6.0</text>
-      <text x="59" y="205" font-size="9.5" fill="var(--chart-text)" text-anchor="end">5.0</text>
+      <text x="59" y="53"  font-size="9.5" fill="var(--chart-text)" text-anchor="end">9.0</text>
+      <text x="59" y="84"  font-size="9.5" fill="var(--chart-text)" text-anchor="end">8.0</text>
+      <text x="59" y="114" font-size="9.5" fill="var(--chart-text)" text-anchor="end">7.0</text>
+      <text x="59" y="144" font-size="9.5" fill="var(--chart-text)" text-anchor="end">6.0</text>
+      <text x="59" y="175" font-size="9.5" fill="var(--chart-text)" text-anchor="end">5.0</text>
+      <text x="59" y="205" font-size="9.5" fill="var(--chart-text)" text-anchor="end">4.0</text>
       <text x="57" y="240" font-size="9.5" fill="var(--text-sec)" text-anchor="end" font-style="italic">val loss</text>
       <!-- X axis labels -->
       <text x="65"  y="228" font-size="9.5" fill="var(--chart-text)" text-anchor="middle">0</text>
@@ -420,7 +423,7 @@ tr.hl td { background: var(--surface2); }
       <line x1="320" y1="35" x2="340" y2="35" stroke="var(--chart-line)" stroke-width="2"/>
       <text x="343" y="38" font-size="9.5" fill="var(--chart-text)">val loss (checkpoint)</text>
       <line x1="320" y1="49" x2="340" y2="49" stroke="var(--chart-now)" stroke-width="1.5" stroke-dasharray="4,3"/>
-      <text x="343" y="52" font-size="9.5" fill="var(--chart-text)">step corrente (~14 000)</text>
+      <text x="343" y="52" font-size="9.5" fill="var(--chart-text)">step finale (30 000 ✓)</text>
       <line x1="320" y1="63" x2="340" y2="63" stroke="var(--chart-ref)" stroke-width="1" stroke-dasharray="4,5"/>
       <text x="343" y="66" font-size="9.5" fill="var(--chart-text)">baseline random (loss 9.68)</text>
     </svg>
@@ -454,14 +457,28 @@ tr.hl td { background: var(--surface2); }
         <tr><td class="num">12 500</td><td class="num">5.3787</td><td class="num">216</td><td class="num good">−0.08</td><td class="note-cell">strutture architettoniche con anno e stile</td></tr>
         <tr><td class="num">13 000</td><td class="num">5.3842</td><td class="num">218</td><td class="num" style="color:var(--warn-text)">+0.006</td><td class="note-cell">plateau; train 5.1683, gap 0.216; testo "Cosenza in Piemonte" (struttura ok, geografia confusa)</td></tr>
         <tr><td class="num">13 500</td><td class="num">5.3125</td><td class="num">203</td><td class="num good">−0.072</td><td class="note-cell">plateau rotto; train 5.0688, gap 0.244; testo sportivo ("campionato europeo", "inaugurata")</td></tr>
-        <tr class="hl"><td class="num">14 000</td><td class="num">5.3052</td><td class="num">201</td><td class="num good">−0.007</td><td class="note-cell">nuovo best; train 5.0806, gap 0.225; registro culturale/storico ("opera", "anni cinquanta", clausole relative complesse)</td></tr>
-        <tr><td class="num" colspan="3" style="color:var(--text-sec);font-size:0.78rem">Proiezione step 30 000</td><td class="num" style="color:var(--text-sec)">~4.6–4.8</td><td class="note-cell">perplexity ~100–120 (sinusoidale)</td></tr>
+        <tr><td class="num">14 000</td><td class="num">5.3052</td><td class="num">201</td><td class="num good">−0.007</td><td class="note-cell">train 5.0806, gap 0.225; registro culturale/storico ("opera", "anni cinquanta", clausole relative)</td></tr>
+        <tr><td class="num">15 000</td><td class="num">5.2079</td><td class="num">183</td><td class="num good">−0.097</td><td class="note-cell">discesa riprende</td></tr>
+        <tr><td class="num">16 000</td><td class="num">5.1063</td><td class="num">165</td><td class="num good">−0.102</td><td class="note-cell"></td></tr>
+        <tr><td class="num">17 000</td><td class="num">5.0312</td><td class="num">153</td><td class="num good">−0.075</td><td class="note-cell"></td></tr>
+        <tr><td class="num">18 000</td><td class="num">4.9704</td><td class="num">144</td><td class="num good">−0.061</td><td class="note-cell">"Valle del Vallese", "Repubblica di Venezia"</td></tr>
+        <tr><td class="num">19 000</td><td class="num">4.8562</td><td class="num">129</td><td class="num good">−0.114</td><td class="note-cell"></td></tr>
+        <tr><td class="num">20 000</td><td class="num">4.7966</td><td class="num">121</td><td class="num good">−0.060</td><td class="note-cell">nomi geografici reali; registro enciclopedico stabile</td></tr>
+        <tr><td class="num">22 500</td><td class="num">4.6749</td><td class="num">107</td><td class="num good">−0.121</td><td class="note-cell">"feudo di Atella" con data 1431 e nomi corretti</td></tr>
+        <tr><td class="num">24 000</td><td class="num">4.5697</td><td class="num">97</td><td class="num good">−0.105</td><td class="note-cell">"alleanza con la Francia nazista" — coerenza storica emergente</td></tr>
+        <tr><td class="num">25 500</td><td class="num">4.5277</td><td class="num">93</td><td class="num good">−0.042</td><td class="note-cell">struttura bibliografica corretta, lessico culturale consolidato</td></tr>
+        <tr><td class="num">26 500</td><td class="num">4.4978</td><td class="num">90</td><td class="num good">−0.030</td><td class="note-cell">"Paesi Bassi", "monete" — lessico economico/istituzionale</td></tr>
+        <tr><td class="num">27 000</td><td class="num">4.3821</td><td class="num">80</td><td class="num good">−0.116</td><td class="note-cell"></td></tr>
+        <tr><td class="num">28 000</td><td class="num">4.2134</td><td class="num">67</td><td class="num good">−0.169</td><td class="note-cell"></td></tr>
+        <tr class="hl"><td class="num">28 500</td><td class="num">4.0768</td><td class="num">59</td><td class="num good">−0.137</td><td class="note-cell">best checkpoint — governo comunista, Aia: riferimenti geopolitici precisi; miglior val del run</td></tr>
+        <tr><td class="num">29 500</td><td class="num">4.0834</td><td class="num">59</td><td class="num">+0.006</td><td class="note-cell">oscillazione finale, best non migliorato</td></tr>
+        <tr><td class="num">30 000</td><td class="num">4.0825</td><td class="num">59</td><td class="num good">−0.001</td><td class="note-cell">step finale; best checkpoint 4.0768 salvato a step ~28 500</td></tr>
       </tbody>
     </table>
   </div>
 
   <div class="note">
-    <b>Train–val gap stabile.</b> A step 11 500: gap 0.234. A step 13 500: gap 0.244. A step 14 000: train 5.0806, val 5.3052, gap 0.225. Il gap si mantiene costante da step 8 000: segnale che non c'è overfitting. La loss di training inferiore è fisiologica — il modello ha visto quei batch; la val è testo che non ha mai letto.
+    <b>Train–val gap stabile per tutto il run.</b> A step 11 500: gap 0.234. A step 13 500: gap 0.244. A step 14 000: train 5.0806, val 5.3052, gap 0.225. A step 26 500: val 4.4978. A step 30 000: train 3.6792, val 4.0825, gap 0.403 — gap leggermente cresciuto nelle ultime fasi (LR bassa, più cicli su batch visti), ma nessun overfitting. La val ha continuato a scendere fino a step 28 500 (best 4.0768), poi oscillazione minima fino al completamento.
   </div>
 
   <!-- MILESTONES -->
@@ -582,9 +599,54 @@ di una quale l'''''Italia dei uninterno di Santa</div>
       <div class="ms-header">
         <span class="ms-step">step 14 000</span>
         <span class="ms-label">registro culturale/storico, clausole relative complesse ★★★★</span>
-        <span class="ms-qual"><span class="badge badge-done">nuovo best val 5.31</span></span>
+        <span class="ms-qual"><span class="badge badge-done">val 5.31</span></span>
       </div>
       <div class="ms-body">, con la sua opera, la quale è stata fatta da essere riaperto. La maggior parte degli anni cinquanta è stata in corso di</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 20 000</span>
+        <span class="ms-label">nomi geografici reali, costruzioni subordinate ★★★★</span>
+        <span class="ms-qual"><span class="badge badge-done">val 4.80</span></span>
+      </div>
+      <div class="ms-body">dopo la nascita della Repubblica di Venezia. Le truppe italiane del Regno di Sardegna e del Regno d'Italia e dell'annessione</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 22 500</span>
+        <span class="ms-label">date e nomi storici corretti ★★★★</span>
+        <span class="ms-qual"><span class="badge badge-done">val 4.67</span></span>
+      </div>
+      <div class="ms-body">La 12 marzo 1431 il feudo di Atella è assegnato alla passaggio dei città, con l'aiuto di nuovi il borgo. Il paese è si</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 24 000</span>
+        <span class="ms-label">coerenza storico-politica, lessico istituzionale ★★★★★</span>
+        <span class="ms-qual"><span class="badge badge-done">val 4.57</span></span>
+      </div>
+      <div class="ms-body">ano, e con il suo contributo al potere, con l'eccezione di alcuni storici di diritto. L'alleanza con la Francia nazista.</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 26 500</span>
+        <span class="ms-label">lessico economico/geografico, struttura enciclopedica consolidata ★★★★★</span>
+        <span class="ms-qual"><span class="badge badge-done">val 4.50</span></span>
+      </div>
+      <div class="ms-body">rali. Le immagini del flusso delle monete del "Musion des Institution" dei Paesi Bassi hanno permesso alla Francia una p</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 30 000 — completato</span>
+        <span class="ms-label">registro geopolitico, nomi propri internazionali, struttura narrativa complessa ★★★★★</span>
+        <span class="ms-qual"><span class="badge badge-done">best val 4.0768</span></span>
+      </div>
+      <div class="ms-body">cheno di Aia. A questo punto il governo comunista aveva perso la sua popolarità e il loro appoggio al governo era stato </div>
     </div>
 
   </div>
@@ -596,7 +658,10 @@ di una quale l'''''Italia dei uninterno di Santa</div>
     <li><strong>Step 2 000–8 000 (loss da 6.8 a 5.7):</strong> emerge la struttura della frase. Compaiono articolo, nome, verbo nell'ordine giusto. Il fenomeno degli apostrofi si risolve intorno a step 3 000: il modello capisce che gli apostrofi multipli compaiono in un contesto specifico (la formattazione di Wikipedia), prima ancora di capire la grammatica vera. Osservazione: prime frasi concettualmente coerenti a step 4 000.</li>
     <li><strong>Step 8 000–12 500 (loss da 5.7 a 5.38):</strong> coerenza di dominio. Il modello produce il registro enciclopedico, la toponomastica italiana, la struttura "comune di X in regione Y". Ogni decimale di loss costa più capacità di prima — siamo nella fase lenta. Anomalia puntuale a step 10 000: entità HTML da articoli di chimica non filtrate.</li>
     <li><strong>Step 12 500–13 000 (loss ~5.38, plateau):</strong> struttura senza fatto. Il modello costruisce frasi geografiche e amministrative corrette nella forma ("della provincia di X in Y, nel quale…"), ma le associazioni fattuali sono sbagliate: Cosenza finisce in Piemonte, Como nelle Olimpiadi. Il <em>template</em> della lingua è acquisito, il contenuto che quel template dovrebbe veicolare no.</li>
-    <li><strong>Step 13 000–14 000+ (loss da 5.38 a 5.31 — discesa continua):</strong> il plateau è rotto e la discesa prosegue. A step 13 500 (val 5.3125): vocabolario sportivo — "campionato europeo", "inaugurata", toponimi inventati morfologicamente plausibili. A step 14 000 (val 5.3052, nuovo best): registro culturale e storico — "con la sua opera, la quale è stata fatta da essere riaperto. La maggior parte degli anni cinquanta è stata in corso di". Compaiono clausole relative complesse, riferimenti temporali storici ("anni cinquanta"), costruzioni passive. La grammatica è più ambiziosa, i fatti restano imprecisi. Il modello sta attraversando domini Wikipedia diversi checkpoint per checkpoint (geografia → sport → storia/cultura), acquisendo il registro linguistico di ciascuno.</li>
+    <li><strong>Step 13 000–14 000 (loss da 5.38 a 5.31):</strong> il plateau è rotto e la discesa prosegue. A step 13 500 (val 5.3125): vocabolario sportivo — "campionato europeo", "inaugurata", toponimi inventati morfologicamente plausibili. A step 14 000 (val 5.3052): registro culturale e storico, clausole relative complesse, riferimenti temporali ("anni cinquanta"), costruzioni passive. La grammatica è più ambiziosa, i fatti restano imprecisi.</li>
+    <li><strong>Step 14 000–20 000 (loss da 5.31 a 4.80):</strong> discesa sostenuta. Compaiono nomi geografici reali: "Repubblica di Venezia", "Valle del Vallese", "Paesi Bassi". La struttura fraseologica enciclopedica si consolida. Le entità geografiche smettono di essere inventate e iniziano a coincidere con luoghi reali.</li>
+    <li><strong>Step 20 000–26 500 (loss da 4.80 a 4.50):</strong> fase di raffinamento storico-istituzionale. A step 22 500: "La 12 marzo 1431 il feudo di Atella" — date, feudi, nomi medievali corretti nella forma. A step 24 000: "l'alleanza con la Francia nazista" — coerenza storico-politica. A step 26 500: lessico economico e istituzionale ("monete", "Paesi Bassi", "Institution").</li>
+    <li><strong>Step 26 500–30 000 (loss da 4.50 a 4.08 — best 4.0768):</strong> fase finale, LR in decadimento coseno verso il minimo. La loss scende con continuità fino a step ~28 500 (best checkpoint, val 4.0768), poi stabilizzazione con oscillazione minima. A step 30 000: "cheno di Aia. A questo punto il governo comunista aveva perso la sua popolarità e il loro appoggio al governo era stato" — geopolitica internazionale, coerenza narrativa su più clausole, registro enciclopedico maturo. Run #3 completato.</li>
   </ul>
 
   <h3>Note sulle anomalie del corpus</h3>
@@ -609,11 +674,11 @@ di una quale l'''''Italia dei uninterno di Santa</div>
 
   <h3>Timing e proiezione</h3>
   <ul>
-    <li>Step 0–14 000: ~230.1 ore elapsed (13 805 min, da log di training)</li>
-    <li>Rate effettivo: ~59.2 s/step aggregato (wall-clock, include pause)</li>
-    <li>Step rimanenti da 14 000: 16 000 × ~59.2 s ≈ 947 200 s ≈ <strong>~263 ore (~11 giorni)</strong></li>
-    <li>ETA completamento <a href="#run3">Run #3</a>: <strong>~7 ottobre 2026</strong></li>
-    <li>ETA fine <a href="#run4">Run #4</a> (RoPE): <strong>~18 ottobre 2026</strong></li>
+    <li>Step 0–14 000: ~230.1 ore elapsed (Mac M2, 13 805 min, ~59.2 s/step)</li>
+    <li>Step 14 000–30 000: 59m 22s (hardware dedicato, ~0.22 s/step)</li>
+    <li>Durata totale Run #3: ~230.1 h (Mac M2) + 59m 22s (hardware dedicato)</li>
+    <li>Completamento <a href="#run3">Run #3</a>: <strong>2026-09-26</strong>, best val loss 4.0768, perplexity ~59</li>
+    <li>ETA avvio <a href="#run4">Run #4</a> (RoPE): da definire</li>
   </ul>
 
   <!-- DECISIONE ROPE -->

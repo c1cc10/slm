@@ -764,38 +764,151 @@ open(<span class="st">'data/corpus.txt'</span>, <span class="st">'w'</span>).wri
   </table>
   </div>
 
-  <pre><code><span class="cm"># ── Step 2: trasferimento Mac → EC2 ─────────────────────────</span>
-rsync -avz --progress \
+  <pre><code><span class="cm"># ── 0. Verifica locale — checkpoint integro prima di trasferire ─────────</span>
+python3 train.py --generate "Il modello"
+<span class="cm"># Output atteso: Tokenizer: bpe-spm  Step: 14000  val_loss: 5.3052</span>
+<span class="cm"># Se fallisce, NON trasferire — checkpoint corrotto</span>
+
+<span class="cm"># ── 1. Crea directory remote ─────────────────────────────────────────────</span>
+ssh ubuntu@&lt;EC2-IP&gt; "mkdir -p ~/slm/{data,checkpoints}"
+
+<span class="cm"># ── 2a. Codice sorgente (4 file) ─────────────────────────────────────────</span>
+rsync -avz --checksum --progress \
     train.py model.py attention.py transformer.py \
-    checkpoints/best.pt \
-    data/corpus_bpe.txt \
     ubuntu@&lt;EC2-IP&gt;:~/slm/
 
-<span class="cm"># Opzionale: trasferisci anche la cache token (evita re-encoding)</span>
-rsync -avz data/corpus_bpe.txt.bpe-spm.v16000.tokens.pt \
-    ubuntu@&lt;EC2-IP&gt;:~/slm/data/
+<span class="cm"># ── 2b. Checkpoint — il testimone (--checksum garantisce integrità) ──────</span>
+rsync -avz --checksum --progress \
+    checkpoints/best.pt \
+    ubuntu@&lt;EC2-IP&gt;:~/slm/checkpoints/
 
-<span class="cm"># ── Step 3: dipendenze su EC2 ───────────────────────────────</span>
+<span class="cm"># ── 2c. Corpus + cache token (la cache risparmia ~5 min di encoding) ─────</span>
+rsync -avz --progress data/corpus_bpe.txt ubuntu@&lt;EC2-IP&gt;:~/slm/data/
+rsync -avz --progress \
+    "data/corpus_bpe.txt.bpe-spm.v16000.tokens.pt" \
+    ubuntu@&lt;EC2-IP&gt;:~/slm/data/ 2&gt;/dev/null \
+    || echo "  Cache non trovata — train.py la rigenera automaticamente"
+
+<span class="cm"># ── 3. Setup dipendenze su EC2 ───────────────────────────────────────────</span>
+ssh ubuntu@&lt;EC2-IP&gt;
 pip3 install torch sentencepiece
 
-<span class="cm"># ── Step 4: avvio in tmux ────────────────────────────────────</span>
-tmux new -s slm
-cd ~/slm
-python3 train.py --tokenizer bpe-spm --data data/corpus_bpe.txt \
+<span class="cm"># Verifica GPU</span>
+python3 -c "import torch; print('CUDA:', torch.cuda.is_available(), \
+    '|', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'nessuna')"
+
+<span class="cm"># Verifica checkpoint remote (ripete test del punto 0)</span>
+cd ~/slm &amp;&amp; python3 train.py --generate "Il modello"
+
+<span class="cm"># ── 4. Avvio training in tmux ────────────────────────────────────────────</span>
+tmux new-session -s slm
+python3 train.py \
+    --tokenizer bpe-spm --data data/corpus_bpe.txt \
     --preset medium --steps 30000 --resume
 
-<span class="cm"># Ctrl+B poi D per staccarsi senza killare il processo</span>
-<span class="cm"># tmux attach -t slm  per riconnettersi in seguito</span>
+<span class="cm"># Ctrl+B poi D  — stacca (processo continua in background)</span>
 
-<span class="cm"># ── Step 6: rimpatrio checkpoint EC2 → Mac ──────────────────</span>
-rsync -avz ubuntu@&lt;EC2-IP&gt;:~/slm/checkpoints/best.pt checkpoints/
+<span class="cm"># Comandi tmux di riferimento:</span>
+<span class="cm">#   tmux ls                   — sessioni attive</span>
+<span class="cm">#   tmux attach -t slm        — riconnettersi</span>
+<span class="cm">#   tmux kill-session -t slm  — fermare training</span>
 
-<span class="cm"># ── Step 7: ripresa su Mac ───────────────────────────────────</span>
-python3 train.py --tokenizer bpe-spm --data data/corpus_bpe.txt \
+<span class="cm"># Monitor GPU in tempo reale (in un secondo terminale SSH)</span>
+watch -n 5 nvidia-smi
+
+<span class="cm"># ── 5. Killa processo locale — EC2 ha il testimone ───────────────────────</span>
+kill -KILL $(pgrep -f "python3 train.py")
+<span class="cm"># Alternativa: fg poi Ctrl+C se il terminale è ancora aperto</span>
+
+<span class="cm"># ── 6. Rimpatrio checkpoint → Mac ────────────────────────────────────────</span>
+rsync -avz --checksum --progress \
+    ubuntu@&lt;EC2-IP&gt;:~/slm/checkpoints/best.pt \
+    checkpoints/
+
+<span class="cm"># ── 7. Ripresa su Mac ────────────────────────────────────────────────────</span>
+python3 train.py \
+    --tokenizer bpe-spm --data data/corpus_bpe.txt \
     --preset medium --steps 30000 --resume</code></pre>
 
   <div class="warn">
     <strong>Il corpus non è nel checkpoint.</strong> <code>best.pt</code> include il tokenizer SPM, i pesi e lo stato dell'ottimizzatore — ma non i token pre-codificati. Il file <code>.tokens.pt</code> (cache di encoding) accelera l'avvio: se disponibile, trasferiscilo insieme al corpus. Se non c'è, train.py lo rigenera automaticamente.
+  </div>
+
+  <h3>Alternativa: Vast.ai (GPU spot market)</h3>
+  <p>Per istanze EC2 senza GPU, Vast.ai offre GPU in affitto a ore. RTX 4090 a ~$0.40–0.60/ora: i 16 000 step rimanenti finiscono in ~20 ore (~$10–12 totali).</p>
+
+  <div class="notice">
+    <strong>L'immagine Docker non è un filtro di ricerca.</strong> Si sceglie durante la configurazione del noleggio, non nella pagina di ricerca. La ricerca filtra per specifiche hardware (GPU, CUDA, Ubuntu, prezzo).
+  </div>
+
+  <h4>1 — Cerca l'istanza</h4>
+  <p>Vai su <strong>Search</strong> e imposta:</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Filtro</th><th>Valore consigliato</th></tr>
+    <tr><td>GPU Model</td><td>RTX 4090 (o RTX 3090 se vuoi spendere meno)</td></tr>
+    <tr><td>Instance Type</td><td><strong>On-Demand</strong> — non "Interruptible" (può essere reclamata a metà training)</td></tr>
+    <tr><td>CUDA Version</td><td>12.x</td></tr>
+    <tr><td>Ubuntu</td><td>22.04 o 20.04</td></tr>
+    <tr><td>Disk Space</td><td>≥ 30 GB</td></tr>
+  </table>
+  </div>
+
+  <h4>2 — Configura il noleggio</h4>
+  <p>Clicca <strong>Rent</strong> sull'istanza scelta. Si apre un pannello di configurazione:</p>
+  <ul>
+    <li><strong>Edit Image / Docker Image</strong>: cerca <code>pytorch</code> e scegli un'immagine ufficiale, es. <code>pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime</code>. In alternativa usa <code>vastai/pytorch</code> se disponibile come template.</li>
+    <li><strong>Disk</strong>: 30 GB</li>
+    <li><strong>SSH Key</strong>: incolla la tua chiave pubblica (<code>cat ~/.ssh/id_ed25519.pub</code>) oppure usa quella già salvata nell'account Vast.ai</li>
+  </ul>
+  <p>Clicca <strong>Rent</strong>. Aspetta che lo stato diventi <strong>Running</strong> (1–3 minuti).</p>
+
+  <h4>3 — Connessione e trasferimento</h4>
+  <p>Vai su <strong>Instances</strong>, clicca <strong>Connect</strong> sull'istanza — ricevi un comando SSH del tipo:</p>
+  <pre><code>ssh -p 12345 root@ssh4.vast.ai</code></pre>
+  <p>La porta (es. <code>12345</code>) è diversa per ogni istanza. Tutti i comandi successivi usano <code>-p &lt;PORTA&gt;</code>.</p>
+  <pre><code><span class="cm"># Trasferimento file — nota -e "ssh -p PORTA" per rsync su Vast.ai</span>
+rsync -avz -e <span class="st">"ssh -p &lt;PORTA&gt;"</span> \
+    train.py model.py attention.py transformer.py \
+    root@&lt;HOST&gt;:~/slm/
+
+rsync -avz -e <span class="st">"ssh -p &lt;PORTA&gt;"</span> \
+    checkpoints/best.pt \
+    root@&lt;HOST&gt;:~/slm/checkpoints/
+
+rsync -avz --progress -e <span class="st">"ssh -p &lt;PORTA&gt;"</span> \
+    data/corpus_bpe.txt \
+    root@&lt;HOST&gt;:~/slm/data/
+
+<span class="cm"># Cache token (opzionale)</span>
+rsync -avz -e <span class="st">"ssh -p &lt;PORTA&gt;"</span> \
+    <span class="st">"data/corpus_bpe.txt.bpe-spm.v16000.tokens.pt"</span> \
+    root@&lt;HOST&gt;:~/slm/data/ 2&gt;/dev/null || echo <span class="st">"cache assente — verrà rigenera"</span></code></pre>
+
+  <h4>4 — Setup e avvio</h4>
+  <pre><code>ssh -p &lt;PORTA&gt; root@&lt;HOST&gt;
+
+<span class="cm"># sentencepiece (torch già nell'immagine)</span>
+pip install sentencepiece
+
+<span class="cm"># Verifica GPU e checkpoint</span>
+python3 -c <span class="st">"import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"</span>
+cd ~/slm &amp;&amp; python3 train.py --generate <span class="st">"Il modello"</span>
+
+<span class="cm"># Avvio in tmux</span>
+tmux new-session -s slm
+python3 train.py \
+    --tokenizer bpe-spm --data data/corpus_bpe.txt \
+    --preset medium --steps 30000 --resume
+<span class="cm"># Ctrl+B poi D per staccarsi</span></code></pre>
+
+  <h4>5 — Rimpatrio e chiusura</h4>
+  <pre><code><span class="cm"># Sul Mac — rimpatria il checkpoint</span>
+rsync -avz -e <span class="st">"ssh -p &lt;PORTA&gt;"</span> \
+    root@&lt;HOST&gt;:~/slm/checkpoints/best.pt \
+    checkpoints/</code></pre>
+  <div class="warn">
+    <strong>Dopo il rimpatrio: distruggi l'istanza</strong> (Instances → Destroy), non solo fermala. Vast.ai addebita anche lo storage dell'istanza ferma. Verifica sempre lo stato nella dashboard prima di chiudere la sessione.
   </div>
 
   <h3>Processi paralleli e divergenza del checkpoint</h3>

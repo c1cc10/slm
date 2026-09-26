@@ -102,7 +102,7 @@ h1 {
   border-radius: 2px; overflow: hidden; margin-top: 3px;
 }
 .progress-fill {
-  height: 100%; background: var(--accent); border-radius: 2px; width: 46.7%;
+  height: 100%; background: var(--accent); border-radius: 2px; width: 100%;
 }
 
 /* ── Footer links ── */
@@ -154,11 +154,11 @@ h1 {
   </div>
 
   <div class="status">
-    <div class="status-live"><div class="status-dot"></div>Run #3 in corso</div>
-    <span><span class="s-label">step </span><span class="s-val">~14 000 / 30 000</span></span>
-    <span><span class="s-label">ETA </span><span class="s-val">~7 ott 2026</span></span>
+    <div class="status-live" style="color:var(--accent)"><div class="status-dot" style="background:var(--accent);animation:none"></div>Run #3 completato</div>
+    <span><span class="s-label">step </span><span class="s-val">30 000 / 30 000 ✓</span></span>
+    <span><span class="s-label">best val loss </span><span class="s-val">4.0768</span></span>
     <div class="progress-row">
-      <div class="progress-track"><div class="progress-fill"></div></div>
+      <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
     </div>
   </div>
 
