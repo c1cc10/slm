@@ -352,9 +352,9 @@ pre code { background: none; color: inherit; padding: 0; border-radius: 0; }
   <div class="meta">
     <span class="pill">Python · PyTorch</span>
     <span class="pill">Decoder-only Transformer</span>
-    <span class="pill">Char-level · Fase 1</span>
-    <span class="pill">~4.8M parametri</span>
-    <span class="pill">Apple MPS / CUDA</span>
+    <span class="pill">BPE-SPM 16k · Run #3</span>
+    <span class="pill">45.9M parametri</span>
+    <span class="pill">Apple MPS / CUDA auto</span>
   </div>
 </header>
 
@@ -384,6 +384,7 @@ pre code { background: none; color: inherit; padding: 0; border-radius: 0; }
       <div class="toc-label">Utilizzo</div>
       <a href="#corpus">Corpus</a>
       <a href="#comandi">Comandi</a>
+      <a href="#hardware">Hardware &amp; Deploy</a>
       <a href="#file">File del progetto</a>
     </div>
     <div class="toc-section">
@@ -733,6 +734,112 @@ open(<span class="st">'data/corpus.txt'</span>, <span class="st">'w'</span>).wri
   </div>
 </section>
 
+<!-- ─────────────────────────────────────── HARDWARE & DEPLOY -->
+<section id="hardware">
+  <h2>Hardware &amp; Deploy</h2>
+  <p>Il training è progettato per girare su qualsiasi hardware. Il checkpoint è <strong>autocontenuto e portabile</strong>: include pesi del modello, stato dell'ottimizzatore (tutti i momenti di Adam) e il tokenizer SPM — tutto il necessario per riprendere il training su un device diverso senza ricominciare da zero.</p>
+
+  <h3>Device detection automatica</h3>
+  <p><code>--device auto</code> (default) seleziona automaticamente il migliore disponibile, con questa priorità:</p>
+  <pre><code><span class="cm"># train.py — selezione device (train(), riga ~452)</span>
+<span class="kw">if</span> cfg.device == <span class="st">'auto'</span>:
+    <span class="kw">if</span> torch.backends.mps.is_available():   device = <span class="st">'mps'</span>   <span class="cm"># Mac M1/M2/M3</span>
+    <span class="kw">elif</span> torch.cuda.is_available():         device = <span class="st">'cuda'</span>  <span class="cm"># GPU Nvidia</span>
+    <span class="kw">else</span>:                                   device = <span class="st">'cpu'</span>   <span class="cm"># fallback</span></code></pre>
+  <p>Su Mac M2 seleziona MPS. Su EC2 con GPU Nvidia (MPS non disponibile) seleziona CUDA automaticamente. Il <code>torch.load</code> al resume usa <code>map_location=device</code>: i tensori vengono trasferiti sul device corretto indipendentemente da dove sono stati salvati. Override: <code>--device cuda</code> o <code>--device mps</code>.</p>
+
+  <h3>Migrazione temporanea su hardware dedicato (EC2)</h3>
+  <p>Il checkpoint è il <em>testimone di passaggio</em>: un processo viene fermato, il file <code>best.pt</code> viene trasferito, un nuovo processo riprende da quello stato sull'hardware target. Non esiste un "processo che migra" — esistono due processi sequenziali, legati da un file.</p>
+
+  <div class="table-wrap">
+  <table>
+    <tr><th>#</th><th>Dove</th><th>Operazione</th></tr>
+    <tr><td>1</td><td>Mac</td><td>Sospendere o killare il processo locale (<code>Ctrl+Z</code> o <code>kill -STOP</code>)</td></tr>
+    <tr><td>2</td><td>Mac → EC2</td><td>Trasferire codice, checkpoint e corpus con <code>rsync</code></td></tr>
+    <tr><td>3</td><td>EC2</td><td>Installare dipendenze Python</td></tr>
+    <tr><td>4</td><td>EC2</td><td>Avviare training in <code>tmux</code> con <code>--resume</code></td></tr>
+    <tr><td>5</td><td>Mac</td><td>Killare definitivamente il processo sospeso locale</td></tr>
+    <tr><td>6</td><td>EC2 → Mac</td><td>A training completato (o a checkpoint desiderato): rimpatriare <code>best.pt</code></td></tr>
+    <tr><td>7</td><td>Mac</td><td>Riprendere localmente con <code>--resume</code></td></tr>
+  </table>
+  </div>
+
+  <pre><code><span class="cm"># ── Step 2: trasferimento Mac → EC2 ─────────────────────────</span>
+rsync -avz --progress \
+    train.py model.py attention.py transformer.py \
+    checkpoints/best.pt \
+    data/corpus_bpe.txt \
+    ubuntu@&lt;EC2-IP&gt;:~/slm/
+
+<span class="cm"># Opzionale: trasferisci anche la cache token (evita re-encoding)</span>
+rsync -avz data/corpus_bpe.txt.bpe-spm.v16000.tokens.pt \
+    ubuntu@&lt;EC2-IP&gt;:~/slm/data/
+
+<span class="cm"># ── Step 3: dipendenze su EC2 ───────────────────────────────</span>
+pip3 install torch sentencepiece
+
+<span class="cm"># ── Step 4: avvio in tmux ────────────────────────────────────</span>
+tmux new -s slm
+cd ~/slm
+python3 train.py --tokenizer bpe-spm --data data/corpus_bpe.txt \
+    --preset medium --steps 30000 --resume
+
+<span class="cm"># Ctrl+B poi D per staccarsi senza killare il processo</span>
+<span class="cm"># tmux attach -t slm  per riconnettersi in seguito</span>
+
+<span class="cm"># ── Step 6: rimpatrio checkpoint EC2 → Mac ──────────────────</span>
+rsync -avz ubuntu@&lt;EC2-IP&gt;:~/slm/checkpoints/best.pt checkpoints/
+
+<span class="cm"># ── Step 7: ripresa su Mac ───────────────────────────────────</span>
+python3 train.py --tokenizer bpe-spm --data data/corpus_bpe.txt \
+    --preset medium --steps 30000 --resume</code></pre>
+
+  <div class="warn">
+    <strong>Il corpus non è nel checkpoint.</strong> <code>best.pt</code> include il tokenizer SPM, i pesi e lo stato dell'ottimizzatore — ma non i token pre-codificati. Il file <code>.tokens.pt</code> (cache di encoding) accelera l'avvio: se disponibile, trasferiscilo insieme al corpus. Se non c'è, train.py lo rigenera automaticamente.
+  </div>
+
+  <h3>Processi paralleli e divergenza del checkpoint</h3>
+  <p>Eseguire due istanze di <code>train.py</code> contemporaneamente a partire dallo stesso checkpoint <strong>non è training distribuito</strong>. È training parallelo non coordinato: i due processi divergono dal primo step.</p>
+
+  <h4>Perché <code>fg</code> sul Mac non "salta" allo step dell'EC2</h4>
+  <p>Un processo sospeso con Ctrl+Z (stato <code>T — stopped</code>) ha il suo intero stato <strong>in memoria RAM</strong>: pesi del modello, tutti i momenti di Adam per ogni parametro, step counter, seed del generatore casuale. Il file <code>checkpoints/best.pt</code> è uno snapshot scritto su disco a step 14 000 — il processo lo ha prodotto e poi ha continuato. <code>fg</code> risveglia il processo dalla RAM; non legge il file.</p>
+
+  <div class="table-wrap">
+  <table>
+    <tr><th>Azione</th><th>Da dove riparte</th><th>Legge best.pt?</th></tr>
+    <tr><td><code>fg</code> (processo sospeso)</td><td>Stato in RAM — esattamente step 14 000 sul Mac</td><td>No — stato in memoria</td></tr>
+    <tr><td><code>python3 train.py --resume</code></td><td>Legge best.pt dal disco, parte da step 14 000</td><td>Sì — carica checkpoint</td></tr>
+  </table>
+  </div>
+
+  <h4>Meccanismo della divergenza stocastica</h4>
+  <p>Se avvii sia il processo Mac (<code>fg</code>) che un processo EC2 (<code>--resume</code>), entrambi partono con gli stessi pesi a step 14 000. Ma <code>get_batch()</code> usa <code>torch.randint</code> senza seed fisso:</p>
+
+  <pre><code><span class="cm"># TextDataset.get_batch() — campionamento casuale a ogni step</span>
+ix = torch.randint(n, (batch_size,))
+<span class="cm"># Mac:  [142, 8301, 27, ...]   — sequenza indipendente</span>
+<span class="cm"># EC2:  [9443, 102, 5500, ...]  — sequenza diversa</span></code></pre>
+
+  <p>Batch diversi → gradienti diversi → aggiornamenti diversi. I pesi divergono da step 14 001. Dopo 1 000 step i due modelli sono su traiettorie separate nello spazio dei parametri. Ognuno scrive il proprio <code>best.pt</code> in base alla propria val loss — sovrascrivendo il file dell'altro se condividono il filesystem, oppure producendo due checkpoint incomparabili su macchine separate.</p>
+
+  <div class="table-wrap">
+  <table>
+    <tr><th>Step</th><th>Processo A (Mac)</th><th>Processo B (EC2)</th></tr>
+    <tr><td>14 000</td><td colspan="2" style="text-align:center;font-style:italic">stessi pesi — da checkpoint</td></tr>
+    <tr><td>14 001</td><td>batch [142, 8301, ...]</td><td>batch [9443, 102, ...]</td></tr>
+    <tr><td>14 001</td><td>∇A ≠ ∇B</td><td>∇B ≠ ∇A</td></tr>
+    <tr><td>15 000</td><td>pesi_A (traiettoria Mac)</td><td>pesi_B ≠ pesi_A</td></tr>
+    <tr><td>30 000</td><td>modello_A</td><td>modello_B — due modelli distinti</td></tr>
+  </table>
+  </div>
+
+  <p>A 30 000 step avresti due modelli non confrontabili. Non esiste un'operazione "fondi i pesi" che preservi le proprietà di entrambi: la media dei pesi funziona solo in contesti specifici (ensemble o federated learning con garanzie formali di convergenza).</p>
+
+  <div class="notice">
+    <strong>La differenza con PyTorch DDP (training distribuito):</strong> in DDP ogni processo calcola i gradienti su un shard diverso del batch, poi li <em>aggrega con una all-reduce</em> prima di aggiornare i pesi. Tutti i processi aggiornano gli stessi pesi, in sincrono, a ogni step. <code>train.py</code> non ha questa infrastruttura di comunicazione — è progettato per training sequenziale, mono-processo. La portabilità del checkpoint è orizzontale nel tempo (sospendi → riprendi), non spaziale (più macchine simultanee).
+  </div>
+</section>
+
 <!-- ─────────────────────────────────────── FILE -->
 <section id="file">
   <h2>File del Progetto</h2>
@@ -765,7 +872,7 @@ open(<span class="st">'data/corpus.txt'</span>, <span class="st">'w'</span>).wri
     </tr>
     <tr>
       <td><strong>2 — BPE-SPM + Wikipedia IT</strong><br><em style="color:var(--accent);font-size:0.82em">in corso (Run #3)</em></td>
-      <td>Tokenizer BPE-SPM 16 000 vocab su Wikipedia IT (47.8 M token). Preset medium: d_model 512, 8 layer, 45.9 M parametri. Step ~13 300 / 30 000, ETA ~3–4 ott 2026</td>
+      <td>Tokenizer BPE-SPM 16 000 vocab su Wikipedia IT (47.8 M token). Preset medium: d_model 512, 12 layer, 45.9 M parametri. Step ~14 000 / 30 000, ETA ~7 ott 2026</td>
       <td>SentencePiece + corpus_bpe.txt (wiki + narrativa)</td>
       <td>M2 locale (8 GB · MPS)</td>
     </tr>
