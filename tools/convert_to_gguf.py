@@ -78,6 +78,16 @@ def main():
         scores.append(score)
         token_types.append(t)
 
+    # llama.cpp cerca un token '\n' via .at() senza try-catch nel path gptneox.
+    # Il corpus Wikipedia non aveva newline dopo il parsing → token assente.
+    # Aggiungiamo '\n' sintetico come ultimo token (ID=vocab_size).
+    # Le tabelle di embedding vengono estese con una riga zero.
+    nl_id = vocab_size
+    tokens.append("\n")
+    scores.append(0.0)
+    token_types.append(gguf.TokenType.NORMAL)
+    print(f"      token '\\n' aggiunto come ID {nl_id} (vocab esteso a {vocab_size + 1})")
+
     # ── 3. Scrive header GGUF + metadati + tensori ─────────────────────────
     print(f"\n[3/4] Scrittura GGUF: {args.output}")
     writer = gguf.GGUFWriter(args.output, "gptneox")
@@ -107,8 +117,10 @@ def main():
     def t(key: str) -> np.ndarray:
         return sd[key].float().numpy()
 
-    # Embedding di input
-    writer.add_tensor("token_embd.weight", t("token_embedding.weight"))
+    # Embedding di input — esteso con riga zero per il token '\n' sintetico
+    emb = t("token_embedding.weight")                            # [vocab_size, d_model]
+    emb_ext = np.vstack([emb, np.zeros((1, cfg.d_model), dtype=np.float32)])
+    writer.add_tensor("token_embd.weight", emb_ext)
 
     # Blocchi transformer
     skipped_buffers = 0
@@ -147,10 +159,12 @@ def main():
         writer.add_tensor(f"blk.{i}.ffn_norm.weight",    t(f"{p}.norm2.weight"))
         writer.add_tensor(f"blk.{i}.ffn_norm.bias",      t(f"{p}.norm2.bias"))
 
-    # Norma finale + testa LM
+    # Norma finale + testa LM — output.weight esteso con riga zero per '\n' sintetico
+    lm_head = t("lm_head.weight")                                # [vocab_size, d_model]
+    lm_ext  = np.vstack([lm_head, np.zeros((1, cfg.d_model), dtype=np.float32)])
     writer.add_tensor("output_norm.weight", t("norm_final.weight"))
     writer.add_tensor("output_norm.bias",   t("norm_final.bias"))
-    writer.add_tensor("output.weight",      t("lm_head.weight"))
+    writer.add_tensor("output.weight",      lm_ext)
 
     # Scrittura su disco
     writer.write_header_to_file()

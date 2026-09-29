@@ -528,10 +528,10 @@ def check_coverage(sp, test_text="Il Parlamento europeo è fondato nel"):
   </div>
   <div class="qrow">
     <div class="qname">Q8_0</div>
-    <div class="qsize">~55 MB</div>
+    <div class="qsize">58 MB</div>
     <div>
       <div class="qbar-track"><div class="qbar-fill" style="width:75%"></div></div>
-      <div class="qdesc">Int8 con scala fp32 per blocco. Qualità praticamente identica a fp32.</div>
+      <div class="qdesc">Int8 con scala fp32 per blocco. Qualità praticamente identica a fp32. <strong>Prodotto.</strong></div>
     </div>
   </div>
   <div class="qrow">
@@ -552,25 +552,53 @@ def check_coverage(sp, test_text="Il Parlamento europeo è fondato nel"):
   </div>
 </div>
 
+<div class="callout warn">
+  <strong>llama-quantize non supporta gptneox</strong>
+  llama.cpp v0.5.0 ha rimosso <code>gptneox</code> dalla whitelist di <code>llama-quantize</code>.
+  Questo blocca solo la <em>produzione</em> del file quantizzato, non il suo utilizzo a runtime:
+  llama.cpp carica Q8_0, Q4_K_M e qualsiasi formato quantizzato normalmente, perché le routine
+  di dequantizzazione sono architecture-agnostic.
+</div>
+
+<h3>Soluzione: quantizzatore Python Q8_0</h3>
+
 <p>
-  Il comando di quantizzazione (quando il problema di compatibilità sarà risolto):
+  <code>tools/quantize_q8.py</code> produce un GGUF Q8_0 equivalente a quello
+  che produrrebbe <code>llama-quantize</code> se gptneox fosse nella whitelist.
+  Carica direttamente il checkpoint, applica Q8_0 su tutti i tensori matrice
+  (embedding incluse), e scrive il file GGUF con i metadati corretti.
 </p>
 
 <pre>
-# Produce slm-run4-q4_k_m.gguf (~35 MB)
-llama-quantize slm-run4.gguf slm-run4-q4_k_m.gguf Q4_K_M
+# Produce slm-run4-q8_0.gguf (58 MB, da checkpoint 556 MB)
+python3 tools/quantize_q8.py \
+    --checkpoint checkpoints/run4_best.pt \
+    --tokenizer  checkpoints/tokenizer.model \
+    --output     slm-run4-q8_0.gguf
 
-# Alternativa più conservativa
-llama-quantize slm-run4.gguf slm-run4-q8_0.gguf Q8_0
-</pre>
+# Test inferenza sul file quantizzato
+llama-simple -m slm-run4-q8_0.gguf -n 60 "Il Parlamento europeo"
+# Output: 418 t/s su M2 Metal (vs ~250 t/s fp32)</pre>
 
-<div class="callout note">
-  <strong>llama-quantize e compatibilità architettura</strong>
-  llama.cpp v0.5.0 ha rimosso <code>gptneox</code> dalla whitelist di <code>llama-quantize</code>.
-  La quantizzazione richiede o una versione precedente di llama.cpp, o un quantizzatore
-  Python alternativo (scrivibile con numpy, applicando Q8_0: <code>scale = max(abs(row)) / 127</code>,
-  <code>int8 = round(row / scale)</code>).
+<p>
+  Il quantizzatore implementa Q8_0 in circa 20 righe di numpy:
+  ogni riga di un tensore matrice viene suddivisa in blocchi da 32 elementi,
+  ciascuno con una scala <code>float16</code> condivisa e 32 valori <code>int8</code>
+  (34 byte per blocco). La codifica è identica a quella di llama.cpp.
+</p>
+
+<div class="callout ok">
+  <strong>Risultato</strong>
+  slm-run4-q8_0.gguf: 58 MB, 418 t/s su M2 Metal (Apple Silicon GPU via Metal).
+  La velocità aumenta rispetto al fp32 perché la dequantizzazione Q8_0 su Metal
+  è più efficiente del trasferimento e dell'aritmetica fp32 a piena precisione.
 </div>
+
+<p>
+  Per Q4_K_M (~35 MB, qualità leggermente inferiore) sarà necessario
+  o aggiungere gptneox alla whitelist di una build sorgente di llama.cpp,
+  o estendere il quantizzatore Python ai formati K-quant (più complessi di Q8_0).
+</p>
 
 <!-- ─────────────────────────────────────────────── -->
 <h2>llama-server: API OpenAI-compatibile</h2>
@@ -708,7 +736,7 @@ chmod +x slm-run4.llamafile
     <div class="pipe-num">3</div>
     <div class="pipe-body">
       <div class="pipe-title">Quantizzazione</div>
-      <div class="pipe-desc"><code>llama-quantize slm-run4.gguf slm-run4-q4_k_m.gguf Q4_K_M</code> → ~35 MB<br>⚠ Richiede risoluzione del problema di compatibilità tokenizer</div>
+      <div class="pipe-desc"><code>python3 tools/quantize_q8.py</code> → slm-run4-q8_0.gguf 58 MB, 418 t/s M2<br>Q4_K_M richiede build sorgente llama.cpp o estensione del quantizzatore Python</div>
     </div>
   </div>
   <div class="pipe-step">
