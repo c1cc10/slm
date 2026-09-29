@@ -1,0 +1,679 @@
+<title>SLM — Fine-tuning e Valutazione</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg:        #F7F9FC;
+  --surface:   #FFFFFF;
+  --surface2:  #F0F5FA;
+  --text:      #1C2333;
+  --text-sec:  #5A6478;
+  --accent:    #0A6E6E;
+  --border:    #DDE3EE;
+  --code-bg:   #111827;
+  --code-fg:   #A8C4D8;
+  --safe-bg:   #ECFDF5; --safe-text:#065F46; --safe-br:#6EE7B7;
+  --warn-bg:   #FFFBEB; --warn-text:#92400E; --warn-br:#FDE68A;
+  --risk-bg:   #FEF2F2; --risk-text:#991B1B; --risk-br:#FECACA;
+  --info-bg:   #EFF6FF; --info-text:#1E40AF; --info-br:#BFDBFE;
+  --pill-bg:   #F0F5FA;
+  --hl:        rgba(10,110,110,.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+    --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+    --code-bg:#0D1117; --code-fg:#79B8FF;
+    --safe-bg:#0D2818; --safe-text:#6EE7B7; --safe-br:#1A4731;
+    --warn-bg:#2A1A0A; --warn-text:#FDE68A; --warn-br:#7A3A0A;
+    --risk-bg:#2D0A0A; --risk-text:#FCA5A5; --risk-br:#7F1D1D;
+    --info-bg:#0D1F3E; --info-text:#93C5FD; --info-br:#1E3A6E;
+    --pill-bg:#1C2128; --hl:rgba(43,191,191,.08);
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+  --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+  --code-bg:#0D1117; --code-fg:#79B8FF;
+  --safe-bg:#0D2818; --safe-text:#6EE7B7; --safe-br:#1A4731;
+  --warn-bg:#2A1A0A; --warn-text:#FDE68A; --warn-br:#7A3A0A;
+  --risk-bg:#2D0A0A; --risk-text:#FCA5A5; --risk-br:#7F1D1D;
+  --info-bg:#0D1F3E; --info-text:#93C5FD; --info-br:#1E3A6E;
+  --pill-bg:#1C2128; --hl:rgba(43,191,191,.08);
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px; line-height: 1.7; margin: 0;
+  padding: 0 20px 80px;
+}
+.page { max-width: 680px; margin: 0 auto; padding-top: 52px; }
+
+/* ── Header ── */
+.eyebrow {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent);
+  margin-bottom: 6px;
+}
+h1 { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 12px; text-wrap: balance; }
+.subtitle { color: var(--text-sec); font-size: 0.93rem; margin: 0 0 40px; line-height: 1.65; }
+
+/* ── Section titles ── */
+h2 {
+  font-size: 1.05rem; font-weight: 600; margin: 48px 0 16px;
+  padding-top: 40px; border-top: 1px solid var(--border);
+  letter-spacing: -0.01em;
+}
+h2:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+h3 { font-size: 0.93rem; font-weight: 600; margin: 28px 0 10px; color: var(--text); }
+
+/* ── Tables ── */
+.tw { overflow-x: auto; margin: 0 0 20px; }
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.85rem; font-variant-numeric: tabular-nums;
+}
+th {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: var(--surface2); color: var(--text-sec);
+  padding: 7px 10px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr.hl td { background: var(--hl); }
+td.mono { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; }
+td.num  { font-family: 'IBM Plex Mono', monospace; text-align: right; }
+td.center { text-align: center; }
+
+/* ── Badges / pills ── */
+.badge {
+  display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+  letter-spacing: 0.05em; padding: 2px 7px; border-radius: 3px; white-space: nowrap;
+}
+.safe  { background: var(--safe-bg);  color: var(--safe-text);  border: 1px solid var(--safe-br); }
+.warn  { background: var(--warn-bg);  color: var(--warn-text);  border: 1px solid var(--warn-br); }
+.risk  { background: var(--risk-bg);  color: var(--risk-text);  border: 1px solid var(--risk-br); }
+.info  { background: var(--info-bg);  color: var(--info-text);  border: 1px solid var(--info-br); }
+
+/* ── Callout boxes ── */
+.note {
+  border-left: 3px solid var(--accent); background: var(--surface2);
+  padding: 12px 16px; border-radius: 0 5px 5px 0;
+  font-size: 0.88rem; margin: 16px 0;
+}
+.note.warn  { border-color: var(--warn-text);  background: var(--warn-bg); }
+.note.risk  { border-color: var(--risk-text);  background: var(--risk-bg); }
+.note.safe  { border-color: var(--safe-text);  background: var(--safe-bg); }
+
+/* ── Code blocks ── */
+pre {
+  background: var(--code-bg); color: var(--code-fg);
+  border-radius: 6px; padding: 14px 18px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem;
+  line-height: 1.6; overflow-x: auto; margin: 12px 0 20px;
+}
+code {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.82em;
+  background: var(--surface2); padding: 1px 5px; border-radius: 3px;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+
+/* ── Math inline ── */
+.math {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.85em;
+  background: var(--surface2); padding: 2px 6px; border-radius: 3px;
+  white-space: nowrap;
+}
+
+/* ── Param cards ── */
+.param-list { display: flex; flex-direction: column; gap: 0; }
+.param {
+  border: 1px solid var(--border); border-radius: 6px;
+  overflow: hidden; margin-bottom: 10px;
+}
+.param-header {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 10px 14px; background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.param-name { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; font-weight: 500; color: var(--accent); }
+.param-val  { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--text-sec); }
+.param-body { padding: 10px 14px; font-size: 0.88rem; line-height: 1.65; }
+.param-body p { margin: 0 0 7px; }
+.param-body p:last-child { margin-bottom: 0; }
+.param-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-top: 8px; font-size: 0.82rem;
+}
+.param-tag {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem;
+  padding: 2px 8px; border-radius: 3px;
+  background: var(--pill-bg); color: var(--text-sec);
+}
+
+/* ── Corpus bars ── */
+.corpus-bar-wrap { margin: 14px 0 20px; }
+.corpus-item { margin-bottom: 12px; }
+.corpus-label {
+  display: flex; justify-content: space-between;
+  font-size: 0.82rem; margin-bottom: 4px;
+}
+.corpus-label .name { font-weight: 500; }
+.corpus-label .tokens { font-family: 'IBM Plex Mono', monospace; color: var(--text-sec); }
+.corpus-track {
+  height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;
+}
+.corpus-fill { height: 100%; border-radius: 3px; background: var(--accent); }
+.corpus-fill.target { background: var(--warn-text); opacity: 0.5; }
+
+/* ── Test battery ── */
+.battery { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; }
+.batt-item {
+  display: grid; grid-template-columns: 100px 1fr auto;
+  gap: 10px; align-items: start;
+  padding: 10px 12px; border: 1px solid var(--border);
+  border-radius: 5px; font-size: 0.85rem;
+}
+.batt-cat { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--accent); font-weight: 500; }
+.batt-prompt { font-style: italic; color: var(--text-sec); font-size: 0.82rem; }
+
+/* ── Comparison matrix ── */
+.matrix table { font-size: 0.82rem; }
+.matrix th { font-size: 0.68rem; }
+.ok  { color: var(--safe-text);  font-weight: 500; }
+.no  { color: var(--risk-text); }
+.par { color: var(--warn-text); }
+
+/* ── Timeline ── */
+.timeline { border-left: 2px solid var(--border); padding-left: 20px; margin: 16px 0; }
+.tl-item { position: relative; margin-bottom: 18px; font-size: 0.88rem; }
+.tl-item::before {
+  content: ''; position: absolute; left: -25px; top: 5px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg);
+}
+.tl-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--text-sec); margin-bottom: 2px; }
+.tl-title { font-weight: 600; margin-bottom: 3px; }
+.tl-desc { color: var(--text-sec); line-height: 1.5; }
+
+/* ── Footer ── */
+.foot { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 48px; font-size: 0.78rem; color: var(--text-sec); }
+.foot a { color: var(--text-sec); }
+
+@media (max-width: 520px) {
+  .batt-item { grid-template-columns: 1fr; }
+  h1 { font-size: 1.4rem; }
+}
+</style>
+
+<div class="page">
+
+<p class="eyebrow">SLM · Studio e Proposta</p>
+<h1>Fine-tuning, corpus e valutazione</h1>
+<p class="subtitle">Fondamenti tecnici dei parametri di fine-tuning, analisi del corpus letterario, framework di valutazione per confrontare Run #3, Run #4 (RoPE) e il modello specializzato.</p>
+
+<!-- ═══════════════════════════════════════════════
+     1. PARAMETRI DI FINE-TUNING
+══════════════════════════════════════════════════ -->
+<h2>1 · Parametri di fine-tuning</h2>
+
+<p>Il fine-tuning (continued pre-training) parte da un modello già addestrato. L'obiettivo non è re-imparare la lingua italiana, ma spostare la distribuzione di probabilità verso un registro specifico — in questo caso, prosa narrativa non accademica. Ogni parametro controlla un aspetto di questo spostamento.</p>
+
+<div class="note">
+  <strong>Contesto di riferimento per il calcolo:</strong> Run #3 — 47.8 M token Wikipedia IT, max_lr = 3×10⁻⁴, batch 16, seq 256, 30 000 step. Corpus fine-tuning attuale: 925 K token (780 K letterario + 145 K techno-fiction).
+</div>
+
+<div class="param-list">
+
+  <div class="param">
+    <div class="param-header">
+      <span class="param-name">max_lr</span>
+      <span class="param-val">5×10⁻⁵ – 1×10⁻⁴ &nbsp;·&nbsp; pretraining: 3×10⁻⁴</span>
+      <span class="badge warn">ridurre a 17–33%</span>
+    </div>
+    <div class="param-body">
+      <p>Regola il ritmo con cui i gradienti del corpus letterario sovrascrivono la rappresentazione interna già formata. Un valore troppo alto cancella la conoscenza enciclopedica (catastrofic forgetting); troppo basso e il segnale del corpus non si propaga.</p>
+      <p>Derivazione teorica: <span class="math">LR_ft = √(n_ft / n_pre) × LR_pre</span><br>
+      = √(925 K / 47 800 K) × 3×10⁻⁴ = √0.0194 × 3×10⁻⁴ ≈ 0.139 × 3×10⁻⁴ ≈ <strong>4.2×10⁻⁵</strong><br>
+      Il range 5×10⁻⁵ – 1×10⁻⁴ copre questa stima con un margine conservativo.</p>
+      <p>Segnale di allarme: se la val loss su un probe set Wikipedia aumenta di più del 10% rispetto al baseline (attuale perplexity ~59), il LR è troppo alto.</p>
+      <div class="param-row">
+        <span class="param-tag">troppo alto → forgetting + overfitting</span>
+        <span class="param-tag">troppo basso → nessun spostamento di registro</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="param">
+    <div class="param-header">
+      <span class="param-name">batch_size</span>
+      <span class="param-val">8 &nbsp;·&nbsp; pretraining: 16</span>
+      <span class="badge info">dimezzare</span>
+    </div>
+    <div class="param-body">
+      <p>Con batch 8 e seq 256 ogni step vede <span class="math">8 × 256 = 2 048</span> token. Il corpus ha 925 K token: un'epoca = <span class="math">⌊925 000 / 2 048⌋ = 452 step</span>.</p>
+      <p>Ridurre il batch serve principalmente a ottenere <em>più aggiornamenti per token</em> (452 step/epoca vs 226 con batch 16), aumentando la granularità dell'adattamento. Il gradiente è più rumoroso, il che agisce come regolarizzatore implicito contro l'overfitting su un corpus piccolo.</p>
+      <div class="param-row">
+        <span class="param-tag">1 epoca = 452 step</span>
+        <span class="param-tag">2 epoche = 904 step</span>
+        <span class="param-tag">3 epoche = 1 356 step (limite)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="param">
+    <div class="param-header">
+      <span class="param-name">seq_len</span>
+      <span class="param-val">256 — vincolato dal checkpoint</span>
+      <span class="badge risk">non modificare</span>
+    </div>
+    <div class="param-body">
+      <p>Il checkpoint di Run #3 contiene <code>pos_encoding.pe</code> con shape <code>[1, 256, 512]</code>. Cambiare seq_len richiederebbe di reinizializzare il positional encoding, distruggendo l'allineamento tra le posizioni imparate durante il pretraining. Il modello userebbe pesi posizionali randomici per le posizioni esistenti o nuove.</p>
+      <p>Questa è una limitazione dell'approccio sinusoidale fisso. RoPE (Run #4) non ha questa restrizione: le rotazioni sono calcolate al volo in base alla posizione, quindi seq_len è modificabile senza ricaricare pesi.</p>
+      <div class="param-row">
+        <span class="param-tag">solo con RoPE (Run #4): seq_len modificabile</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="param">
+    <div class="param-header">
+      <span class="param-name">warmup_steps</span>
+      <span class="param-val">50 step &nbsp;·&nbsp; pretraining: 200</span>
+      <span class="badge safe">ridurre</span>
+    </div>
+    <div class="param-body">
+      <p>Il warmup serve a portare il LR da zero al massimo senza destabilizzare i momenti di AdamW nel momento iniziale. Nel pretraining, il modello parte da pesi casuali e l'ottimizzatore non ha storia: il warmup lungo (200 step) è necessario.</p>
+      <p>Nel fine-tuning, lo stato dell'ottimizzatore (m₁, m₂) viene caricato dal checkpoint. I momenti sono già orientati verso le direzioni del pretraining Wikipedia. Un warmup breve (50 step) è sufficiente per smorzare la transizione verso i nuovi gradienti letterari senza perdere questa "memoria" dell'ottimizzatore.</p>
+    </div>
+  </div>
+
+  <div class="param">
+    <div class="param-header">
+      <span class="param-name">max_steps</span>
+      <span class="param-val">700 – 1 200 step &nbsp;·&nbsp; ~1.5–2.7 epoche</span>
+      <span class="badge warn">monitorare</span>
+    </div>
+    <div class="param-body">
+      <p>Con 925 K token e batch 8: il range 700–1 200 corrisponde a 1.5–2.7 passaggi sul corpus. Oltre le 3 epoche (1 356 step) il rischio di overfitting aumenta significativamente su un corpus di questa dimensione.</p>
+      <p>Non è un numero fisso: la val loss è il segnale corretto. Salvare checkpoint ogni 100 step e fermarsi quando la val loss inizia a risalire e rimane sopra il minimo per due checkpoint consecutivi.</p>
+      <div class="param-row">
+        <span class="param-tag">checkpoint ogni 100 step</span>
+        <span class="param-tag">early stopping a +2 checkpoint dal best</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="param">
+    <div class="param-header">
+      <span class="param-name">val_split</span>
+      <span class="param-val">10% del corpus letterario + probe Wikipedia</span>
+      <span class="badge info">doppia misurazione</span>
+    </div>
+    <div class="param-body">
+      <p>Il val set letterario misura l'adattamento allo stile target. Ma questa metrica da sola è insufficiente: un modello che dimentica Wikipedia avrà val loss bassa sul letterario semplicemente perché ha "dimenticato" ogni alternativa.</p>
+      <p>È necessario un secondo val set: un probe di ~50 K token da Wikipedia IT (estratti dal corpus di pretraining, tenuti da parte). La val loss su questo probe deve rimanere entro il 5–8% del baseline (perplexity attuale ~59 → non oltre ~65).</p>
+      <div class="param-row">
+        <span class="param-tag">val letterario: segnale di adattamento</span>
+        <span class="param-tag">val Wikipedia: segnale di forgetting</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h3>Configurazione di lancio</h3>
+<pre>python3 train.py \
+  --resume \
+  --data data/corpus_ft.txt \
+  --tokenizer bpe-spm \
+  --preset medium \
+  --seq 256 \
+  --batch 8 \
+  --steps 1200 \
+  --lr 7e-5 \
+  --min-lr 7e-6 \
+  --warmup 50 \
+  --eval-interval 100 \
+  --device mps</pre>
+
+<div class="tw">
+<table>
+  <thead><tr>
+    <th>Parametro</th><th>Pretraining</th><th>Fine-tuning</th><th>Motivazione</th>
+  </tr></thead>
+  <tbody>
+    <tr><td class="mono">max_lr</td><td class="num">3×10⁻⁴</td><td class="num">7×10⁻⁵</td><td>scala sul ratio dei corpus</td></tr>
+    <tr><td class="mono">min_lr</td><td class="num">3×10⁻⁵</td><td class="num">7×10⁻⁶</td><td>mantiene il rapporto 10×</td></tr>
+    <tr><td class="mono">warmup</td><td class="num">200</td><td class="num">50</td><td>ottimizzatore già caldo</td></tr>
+    <tr><td class="mono">batch</td><td class="num">16</td><td class="num">8</td><td>più step/epoch, regolarizzazione</td></tr>
+    <tr><td class="mono">seq</td><td class="num">256</td><td class="num">256</td><td>vincolato dal checkpoint</td></tr>
+    <tr><td class="mono">steps</td><td class="num">30 000</td><td class="num">700–1 200</td><td>1.5–2.7 epoche sul corpus</td></tr>
+    <tr class="hl"><td class="mono">tempo M2</td><td class="num">~230 h</td><td class="num">~7–12 h</td><td>stima a ~35 s/step con batch 8</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     2. CORPUS
+══════════════════════════════════════════════════ -->
+<h2>2 · Analisi corpus e proposta di augmentation</h2>
+
+<h3>Stato attuale</h3>
+<p>Il corpus attuale copre un asse stilistico coerente: prosa italiana non accademica. I testi identificati per campionamento:</p>
+
+<div class="tw">
+<table>
+  <thead><tr><th>Testo/Autore</th><th>Registro</th><th>Stima token</th></tr></thead>
+  <tbody>
+    <tr><td>Amedeo Balbi (astrophysics)</td><td>divulgazione scientifica narrativa</td><td class="num">~150 K</td></tr>
+    <tr><td>Narrativa contemporanea italiana (prima persona)</td><td>emotivo, confessionale</td><td class="num">~200 K</td></tr>
+    <tr><td>Elena Ferrante — L'Amica Geniale</td><td>narrativa femminile, Napoli</td><td class="num">~200 K</td></tr>
+    <tr><td>Il Colpo Gobbo + hard-boiled noir</td><td>crime/heist, prima persona</td><td class="num">~130 K</td></tr>
+    <tr><td>Traduzione Vonnegut + noir americano</td><td>ironia dark, americano tradotto</td><td class="num">~100 K</td></tr>
+    <tr><td>corpus.txt — Cercando Natasha</td><td>techno-fiction, prima persona</td><td class="num">~145 K</td></tr>
+    <tr class="hl"><td><strong>Totale attuale</strong></td><td>—</td><td class="num"><strong>925 K</strong></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="corpus-bar-wrap">
+  <div class="corpus-item">
+    <div class="corpus-label"><span class="name">Corpus attuale</span><span class="tokens">925 K token</span></div>
+    <div class="corpus-track"><div class="corpus-fill" style="width:19%"></div></div>
+  </div>
+  <div class="corpus-item">
+    <div class="corpus-label"><span class="name">Target minimo (5% del pretraining)</span><span class="tokens">2.4 M token</span></div>
+    <div class="corpus-track"><div class="corpus-fill target" style="width:50%"></div></div>
+  </div>
+  <div class="corpus-item">
+    <div class="corpus-label"><span class="name">Target ottimale</span><span class="tokens">4.8 M token</span></div>
+    <div class="corpus-track"><div class="corpus-fill target" style="width:100%"></div></div>
+  </div>
+</div>
+
+<p>Regola empirica per CPT: il corpus di fine-tuning dovrebbe essere il <strong>5–10% del volume del pretraining</strong> per un adattamento stabile. Con 47.8 M token Wikipedia: target minimo 2.4 M, ottimale 4.8 M. Il gap attuale è di 1.5–3.9 M token.</p>
+
+<h3>Fonti di augmentation consigliate</h3>
+
+<div class="tw">
+<table>
+  <thead><tr><th>Fonte</th><th>Volume stim.</th><th>Registro</th><th>Coerenza stilistica</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Altri EPUB dallo stesso asse</strong><br><small>narrativa contemporanea IT, noir, divulgazione</small></td>
+      <td class="num">300 K–1 M</td><td>contemporaneo</td>
+      <td class="center"><span class="badge safe">alta</span></td>
+      <td>Tool esistente: <code>epub_to_text.py</code>. Massimo allineamento con il corpus attuale.</td>
+    </tr>
+    <tr>
+      <td><strong>Project Gutenberg IT</strong><br><small>Pirandello, Svevo, Deledda, Fogazzaro</small></td>
+      <td class="num">500 K–2 M</td><td>letterario classico</td>
+      <td class="center"><span class="badge warn">media</span></td>
+      <td>Italiano ottocentesco/novecentesco. Distanza linguistica dal contemporaneo. Utile per volume, rischio di spostare il registro verso l'arcaico.</td>
+    </tr>
+    <tr>
+      <td><strong>Testi personali</strong><br><small>manoscritti, blog, note lunghe</small></td>
+      <td class="num">10 K–200 K</td><td>voce individuale</td>
+      <td class="center"><span class="badge safe">massima</span></td>
+      <td>Segnale più forte per un writing assistant. Anche 50 K token di testi propri valgono più di 500 K di Gutenberg per questo obiettivo.</td>
+    </tr>
+    <tr>
+      <td><strong>Wikipedia IT slice (anti-forgetting)</strong><br><small>50 K token dal corpus di pretraining</small></td>
+      <td class="num">50 K</td><td>enciclopedico</td>
+      <td class="center"><span class="badge info">ancora</span></td>
+      <td>Non per ampliare il registro ma per ridurre il forgetting. Mischiare 10–15% di Wikipedia nel corpus di fine-tuning mantiene il modello ancorato alla conoscenza del mondo.</td>
+    </tr>
+    <tr>
+      <td><strong>Long-form journalism IT</strong><br><small>Internazionale, Limes, Il Post (articoli lunghi)</small></td>
+      <td class="num">300 K–1 M</td><td>saggistico-narrativo</td>
+      <td class="center"><span class="badge warn">media</span></td>
+      <td>Registro intermedio tra divulgazione Balbi e Wikipedia. Aggiunge densità informativa con stile narrativo accessibile. Richiede scraping.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Proposta corpus target</h3>
+
+<div class="note safe">
+  <strong>Corpus ft v1 (minimo, subito fattibile):</strong><br>
+  925 K esistenti + 3–5 EPUB dallo stesso asse stilistico (noir, narrativa contemporanea) ≈ <strong>1.5–2.5 M token</strong>. Copre il target minimo. Fine-tuning overnight su M2, risultato buono.<br><br>
+  <strong>Corpus ft v2 (ottimale):</strong><br>
+  v1 + testi personali (qualsiasi volume) + Wikipedia slice 50 K ≈ <strong>2–3 M token + voce propria</strong>. Questo è il target per un writing assistant genuinamente personalizzato.
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     3. CAPACITÀ ATTUALI E ASPETTATIVE
+══════════════════════════════════════════════════ -->
+<h2>3 · Cosa può fare Run #3 adesso</h2>
+
+<p>Run #3 è un modello di linguaggio autocompletivo, senza instruction fine-tuning né RLHF. Questa distinzione è fondamentale per calibrare le aspettative.</p>
+
+<div class="matrix">
+<div class="tw">
+<table>
+  <thead><tr><th>Capacità</th><th>Run #3 ora</th><th>Post fine-tuning</th><th>Mai (senza arch. change)</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Generazione testo italiano grammaticale</td>
+      <td class="ok">✓ alta qualità</td><td class="ok">✓ registro raffinato</td><td>—</td>
+    </tr>
+    <tr>
+      <td>Conoscenza enciclopedica (geografia, storia)</td>
+      <td class="ok">✓ presente ma imprecisa</td><td class="par">⚠ parziale perdita</td><td>—</td>
+    </tr>
+    <tr>
+      <td>Continuazione stilistica (stesso registro del prompt)</td>
+      <td class="par">⚠ tende all'enciclopedico</td><td class="ok">✓ narrativo</td><td>—</td>
+    </tr>
+    <tr>
+      <td>Risposta a domande fattuali accurate</td>
+      <td class="no">✗ allucinazioni</td><td class="no">✗</td><td>senza RAG</td>
+    </tr>
+    <tr>
+      <td>Seguire istruzioni ("scrivi una email su...")</td>
+      <td class="no">✗</td><td class="no">✗</td><td>richiede SFT + chat template</td>
+    </tr>
+    <tr>
+      <td>Coerenza narrativa oltre 256 token</td>
+      <td class="par">⚠ degrada</td><td class="par">⚠ stessa finestra</td><td>senza ctx esteso</td>
+    </tr>
+    <tr>
+      <td>Generazione oltre seq=256 (extrapolazione)</td>
+      <td class="no">✗ PE sinusoidale</td><td class="no">✗ (Run #3)</td><td class="ok">✓ Run #4 RoPE</td>
+    </tr>
+    <tr>
+      <td>Scoring perplexity su un testo dato</td>
+      <td class="ok">✓ direttamente</td><td class="ok">✓</td><td>—</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+<div class="note risk">
+  <strong>Aspettativa critica da gestire:</strong> il modello non "capisce" nel senso generale. Può generare testo stilisticamente coerente e plausibile, ma le associazioni fattuali sono probabilistiche — "governo comunista" non implica comprensione della storia. Questo è normale e atteso per un modello di 46 M parametri senza SFT.
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     4. FRAMEWORK DI VALUTAZIONE
+══════════════════════════════════════════════════ -->
+<h2>4 · Framework di valutazione</h2>
+
+<h3>Metriche quantitative (automatizzabili)</h3>
+
+<div class="tw">
+<table>
+  <thead><tr><th>Metrica</th><th>Formula</th><th>Cosa misura</th><th>Target</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Perplexity</strong></td>
+      <td class="mono">PP = e<sup>val_loss</sup></td>
+      <td>quanto il modello è "sorpreso" dal testo di test; più basso = migliore</td>
+      <td class="num">Run #3: 59 → fine-tuning: &lt;50 su literary val</td>
+    </tr>
+    <tr>
+      <td><strong>Forgetting ratio</strong></td>
+      <td class="mono">ΔPP/PP_base</td>
+      <td>incremento percentuale di perplexity sul probe Wikipedia dopo fine-tuning</td>
+      <td class="num">&lt;8% (safe) · &lt;15% (accettabile)</td>
+    </tr>
+    <tr>
+      <td><strong>Dist-N</strong></td>
+      <td class="mono">|unique n-grams| / |total n-grams|</td>
+      <td>diversità lessicale nelle generazioni; basso = testo ripetitivo</td>
+      <td class="num">Dist-4 &gt; 0.70</td>
+    </tr>
+    <tr>
+      <td><strong>Rep-3</strong></td>
+      <td class="mono">3-gram ripetuti / totale</td>
+      <td>tasso di ripetizione in una generazione; alto = loop o degenerazione</td>
+      <td class="num">&lt;0.05 (5%)</td>
+    </tr>
+    <tr>
+      <td><strong>Extrapolation loss</strong></td>
+      <td class="mono">val_loss a seq=512</td>
+      <td>solo per confronto Run #3 vs Run #4 — la PE sinusoidale degrada fuori distribuzione</td>
+      <td class="num">Run #4 &lt;&lt; Run #3 a seq 512</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Battery di test (prompts)</h3>
+<p>20 prompt fissi, 5 categorie, usati con tutti i modelli comparati. Temperatura 0.8, top-k 40, 128 token generati.</p>
+
+<div class="battery">
+  <div class="batt-item">
+    <span class="batt-cat">ENCICLOPEDICO</span>
+    <div>
+      <div>"La città di Napoli è"</div>
+      <div>"Nel 1943 il governo italiano"</div>
+      <div class="batt-prompt">testa conoscenza del mondo; Run #3 dovrebbe eccellere, il fine-tuned potrebbe degradare</div>
+    </div>
+    <span class="badge info">forgetting probe</span>
+  </div>
+  <div class="batt-item">
+    <span class="batt-cat">NARRATIVO</span>
+    <div>
+      <div>"Non mi ero mai reso conto che"</div>
+      <div>"Il sole tramontava lento sul"</div>
+      <div>"Mia madre era il tipo di persona"</div>
+      <div class="batt-prompt">testa adattamento stilistico; dopo fine-tuning dovrebbe avvicinarsi al registro letterario</div>
+    </div>
+    <span class="badge safe">stile target</span>
+  </div>
+  <div class="batt-item">
+    <span class="batt-cat">HARD-BOILED</span>
+    <div>
+      <div>"Entrò nell'ufficio e capii subito"</div>
+      <div>"L'avevo seguita per tre giorni"</div>
+      <div class="batt-prompt">testa il registro noir; diretto confronto pre/post fine-tuning su corpus con hard-boiled</div>
+    </div>
+    <span class="badge warn">benchmark differenziale</span>
+  </div>
+  <div class="batt-item">
+    <span class="batt-cat">SCIENTIFICO</span>
+    <div>
+      <div>"La luce si propaga a"</div>
+      <div>"Siamo soli nell'universo?"</div>
+      <div class="batt-prompt">testa la divulgazione scientifica; atteso miglioramento post fine-tuning (Balbi nel corpus)</div>
+    </div>
+    <span class="badge safe">stile target</span>
+  </div>
+  <div class="batt-item">
+    <span class="batt-cat">EXTRAPOLATION</span>
+    <div>
+      <div>stessi prompt a seq=512</div>
+      <div class="batt-prompt">solo Run #3 vs Run #4 (RoPE). La PE sinusoidale produce output degradato oltre il training seq. RoPE mantiene la qualità.</div>
+    </div>
+    <span class="badge risk">solo A/B RoPE</span>
+  </div>
+</div>
+
+<h3>Valutazione qualitativa (rubrica)</h3>
+<p>Per ogni prompt, votare 1–5 su quattro dimensioni. Valutazione cieca: shuffle dei modelli, nessuna etichetta visibile.</p>
+
+<div class="tw">
+<table>
+  <thead><tr><th>Dimensione</th><th>1 — scarso</th><th>3 — accettabile</th><th>5 — ottimo</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Correttezza grammaticale</strong></td>
+      <td>frasi spezzate, errori di accordo</td>
+      <td>grammatica corretta, alcune costruzioni goffe</td>
+      <td>nativo, fluente, costruzioni complesse corrette</td>
+    </tr>
+    <tr>
+      <td><strong>Coerenza di registro</strong></td>
+      <td>salta tra enciclopedico, narrativo, frammentato</td>
+      <td>registro prevalente ma con discontinuità</td>
+      <td>registro mantenuto per tutti i 128 token</td>
+    </tr>
+    <tr>
+      <td><strong>Coerenza tematica</strong></td>
+      <td>il soggetto cambia entro 20 token</td>
+      <td>il soggetto si mantiene ma devia</td>
+      <td>il filo narrativo/tematico è sostenuto</td>
+    </tr>
+    <tr>
+      <td><strong>Aderenza stilistica al corpus</strong></td>
+      <td>suona come Wikipedia</td>
+      <td>accenni al registro target ma ibrido</td>
+      <td>riconoscibile come prosa narrativa italiana</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     5. PROPOSTA OPERATIVA
+══════════════════════════════════════════════════ -->
+<h2>5 · Proposta operativa</h2>
+
+<div class="timeline">
+
+  <div class="tl-item">
+    <div class="tl-label">PASSO 1 · ~1h</div>
+    <div class="tl-title">Implementa RoPE e avvia Run #4 su Vast.ai</div>
+    <div class="tl-desc">~50 righe di diff in attention.py, transformer.py, model.py. Stima: 1h 5m + setup su Vast.ai ≈ 1h 20m totali, ~$0.60. Baseline RoPE necessario per il confronto.</div>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-label">PASSO 2 · ~30 min</div>
+    <div class="tl-title">Amplia il corpus letterario</div>
+    <div class="tl-desc">Estrai 3–5 EPUB dallo stesso asse stilistico (noir, narrativa contemporanea, divulgazione). Target: portare il corpus a ≥2 M token. Prepara wikipedia probe set: <code>head -c 50M data/corpus_bpe.txt > data/wiki_probe.txt</code></div>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-label">PASSO 3 · overnight M2</div>
+    <div class="tl-title">Fine-tuning letterario da Run #3</div>
+    <div class="tl-desc">1 200 step (2.7 epoche), batch 8, lr 7e-5. Stima: ~7–12 h su M2. Monitora val letterario + val Wikipedia probe. Early stop a +2 checkpoint dal best.</div>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-label">PASSO 4 · ~2h</div>
+    <div class="tl-title">Comparazione A/B sistematica</div>
+    <div class="tl-desc">Genera la battery (20 prompt × 4 modelli: Run#3, Run#4, FT-R3, FT-R4). Calcola PP, Dist-4, Rep-3 su tutti. Valutazione qualitativa cieca su un subset di 10 generazioni per modello.</div>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-label">PASSO 5 · facoltativo</div>
+    <div class="tl-title">GGUF export da Run #4</div>
+    <div class="tl-desc">Solo Run #4 (RoPE) è nativo-compatibile con llama.cpp. Run #3 richiederebbe un custom shim per la PE sinusoidale. Implementa <code>tools/slm_to_gguf.py</code> dopo la comparazione.</div>
+  </div>
+
+</div>
+
+<div class="note">
+  <strong>Domanda aperta prima del passo 2:</strong> i testi personali (manoscritti, note lunghe, testi scritti in prima persona) sono il singolo maggiore acceleratore di qualità per un writing assistant. Anche 30–50 K token di prosa propria in italiano valgono più di 1 M di Gutenberg. Se esiste del materiale, va aggiunto qui.
+</div>
+
+<div class="foot">
+  <p>SLM · Fine-tuning e Valutazione — <a href="slm-journal.html">← Diario</a> · <a href="slm-docs.html">Documentazione completa</a> · <a href="index.html">Home</a></p>
+</div>
+
+</div>

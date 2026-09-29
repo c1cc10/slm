@@ -1,0 +1,631 @@
+<title>SLM Run #4 — RoPE</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg:       #F7F9FC;
+  --surface:  #FFFFFF;
+  --surface2: #F0F5FA;
+  --text:     #1C2333;
+  --text-sec: #5A6478;
+  --accent:   #0A6E6E;
+  --amber:    #A85F10;
+  --amber-bg: #FFF4E6;
+  --done:     #1A6B3A;
+  --done-bg:  #E8F5EE;
+  --border:   #DDE3EE;
+  --code-bg:  #EEF2F8;
+  --hl:       #FFF3CD;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+    --text:#E6EDF3; --text-sec:#8B949E;
+    --accent:#2BBFBF; --amber:#E09050; --amber-bg:#2A1F0D;
+    --done:#3BBF6A; --done-bg:#0D2318;
+    --border:#21262D; --code-bg:#1C2128; --hl:#2A2000;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+  --text:#E6EDF3; --text-sec:#8B949E;
+  --accent:#2BBFBF; --amber:#E09050; --amber-bg:#2A1F0D;
+  --done:#3BBF6A; --done-bg:#0D2318;
+  --border:#21262D; --code-bg:#1C2128; --hl:#2A2000;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 14.5px; line-height: 1.65; margin: 0;
+  padding: 0 20px 72px;
+}
+.container { max-width: 860px; margin: 0 auto; padding-top: 48px; }
+
+/* ── Header ── */
+.run-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  border-bottom: 1px solid var(--border); padding-bottom: 20px;
+  margin-bottom: 28px;
+}
+.run-eyebrow {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 6px;
+}
+.run-title { font-size: 1.55rem; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.02em; }
+.run-sub   { font-size: 0.87rem; color: var(--text-sec); margin: 0; }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 11px; border-radius: 20px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem;
+  font-weight: 500; letter-spacing: 0.05em; white-space: nowrap;
+}
+.badge-running {
+  background: var(--amber-bg); color: var(--amber);
+  border: 1px solid currentColor;
+}
+.badge-done {
+  background: var(--done-bg); color: var(--done);
+  border: 1px solid currentColor;
+}
+.badge-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+  animation: pulse 2.2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+/* ── Status strip ── */
+.status-strip {
+  display: flex; flex-wrap: wrap; gap: 4px 20px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 18px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.74rem;
+  margin-bottom: 28px;
+}
+.s-label { color: var(--text-sec); }
+.s-val   { color: var(--text); font-weight: 500; }
+
+/* ── Two-column layout ── */
+.cols {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 24px; margin-bottom: 32px;
+  align-items: start;
+}
+@media (max-width: 600px) { .cols { grid-template-columns: 1fr; } }
+
+/* ── Section ── */
+.section { margin-bottom: 32px; }
+.section-title {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.70rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 12px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+h2.section-title { font-weight: 500; }
+
+/* ── Log table ── */
+.log-table {
+  width: 100%; border-collapse: collapse;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.77rem;
+}
+.log-table th {
+  text-align: left; color: var(--text-sec);
+  padding: 4px 10px 6px; border-bottom: 1px solid var(--border);
+  font-weight: 400; letter-spacing: 0.04em;
+}
+.log-table td {
+  padding: 5px 10px; border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums; vertical-align: top;
+}
+.log-table tr:last-child td { border-bottom: none; }
+.log-table tr.hl td { background: var(--hl); }
+.log-table td.best { color: var(--done); font-weight: 500; }
+.log-table td.proj { color: var(--text-sec); font-style: italic; }
+.log-table td.sample {
+  font-family: 'IBM Plex Sans', sans-serif; font-size: 0.78rem;
+  color: var(--text-sec); font-style: italic;
+  max-width: 280px;
+}
+
+/* ── Arch diff ── */
+.diff-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden;
+}
+.diff-header {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--border);
+}
+.diff-col-head {
+  padding: 8px 14px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.70rem;
+  letter-spacing: 0.07em; text-transform: uppercase;
+}
+.diff-col-head.run3 { color: var(--text-sec); border-right: 1px solid var(--border); }
+.diff-col-head.run4 { color: var(--accent); }
+.diff-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--border); font-size: 0.82rem;
+}
+.diff-row:last-child { border-bottom: none; }
+.diff-cell {
+  padding: 8px 14px; font-family: 'IBM Plex Mono', monospace;
+}
+.diff-cell.run3 { color: var(--text-sec); border-right: 1px solid var(--border); }
+.diff-cell.run4 { color: var(--text); }
+.diff-cell.changed { color: var(--accent); font-weight: 500; }
+.diff-cell.label {
+  font-family: 'IBM Plex Sans', sans-serif; font-size: 0.80rem;
+  color: var(--text-sec); font-style: italic;
+}
+
+/* ── RoPE explanation ── */
+.rope-box {
+  background: var(--surface2); border-radius: 8px;
+  padding: 16px 18px; margin-bottom: 16px;
+}
+.rope-box p { margin: 0 0 8px; font-size: 0.87rem; }
+.rope-box p:last-child { margin: 0; }
+.rope-formula {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem;
+  background: var(--code-bg); border-radius: 4px;
+  padding: 8px 12px; margin: 8px 0; overflow-x: auto;
+  line-height: 1.5;
+}
+
+/* ── A/B comparison ── */
+.ab-table {
+  width: 100%; border-collapse: collapse; font-size: 0.84rem;
+}
+.ab-table th {
+  text-align: left; padding: 6px 12px;
+  border-bottom: 2px solid var(--border);
+  font-weight: 500; font-size: 0.80rem; color: var(--text-sec);
+  font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em;
+}
+.ab-table td { padding: 7px 12px; border-bottom: 1px solid var(--border); }
+.ab-table tr:last-child td { border-bottom: none; }
+.ab-table td.metric { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; }
+.ab-table td.pending { color: var(--text-sec); font-style: italic; font-size: 0.81rem; }
+.better { color: var(--done); font-weight: 500; }
+
+/* ── SVG loss curve ── */
+.curve-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px 18px 10px;
+}
+.curve-caption {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+  color: var(--text-sec); margin-top: 8px;
+}
+
+/* ── Timeline steps ── */
+.steps { display: flex; flex-direction: column; gap: 0; }
+.step-row {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.step-row:last-child { border-bottom: none; }
+.step-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  margin-top: 6px;
+}
+.dot-done    { background: var(--done); }
+.dot-running { background: var(--amber); animation: pulse 2.2s ease-in-out infinite; }
+.dot-pending { background: var(--border); }
+.step-label  { font-size: 0.84rem; line-height: 1.4; }
+.step-time   { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--text-sec); margin-top: 2px; }
+
+/* ── Footer nav ── */
+.foot-links {
+  display: flex; flex-wrap: wrap; gap: 6px 0;
+  border-top: 1px solid var(--border); padding-top: 16px; margin-top: 40px;
+}
+.foot-links a {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem;
+  color: var(--text-sec); text-decoration: none; padding-right: 16px;
+}
+.foot-links a:hover { color: var(--accent); }
+</style>
+
+<div class="container">
+
+  <!-- ── Header ────────────────────────────────────────────────── -->
+  <div class="run-header">
+    <div>
+      <p class="run-eyebrow">SLM · Diario di Training</p>
+      <h1 class="run-title">Run #4 — RoPE</h1>
+      <p class="run-sub">d_model 512 · 12 layer · 8 teste · 45.9 M parametri · BPE-SPM 16k · RTX 4090</p>
+    </div>
+    <div>
+      <span class="badge badge-done">
+        completato ✓
+      </span>
+    </div>
+  </div>
+
+  <!-- ── Status strip ──────────────────────────────────────────── -->
+  <div class="status-strip">
+    <span><span class="s-label">avvio </span><span class="s-val">2026-09-27</span></span>
+    <span><span class="s-label">step </span><span class="s-val">30 000 / 30 000 ✓</span></span>
+    <span><span class="s-label">best val loss </span><span class="s-val">3.5861 (step 27 500)</span></span>
+    <span><span class="s-label">val loss finale </span><span class="s-val">3.6040 (step 30 000)</span></span>
+    <span><span class="s-label">perplexità best </span><span class="s-val">~36.1</span></span>
+    <span><span class="s-label">durata </span><span class="s-val">76 min 5 s</span></span>
+    <span><span class="s-label">hardware </span><span class="s-val">RTX 4090 · Vast.ai #52950616</span></span>
+  </div>
+
+  <div class="cols">
+
+    <!-- ── Colonna sinistra: val loss log ──────────────────────── -->
+    <div class="section">
+      <h2 class="section-title">Log validation loss</h2>
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>Train</th>
+            <th>Val</th>
+            <th>Campione generato</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>9.7673</td><td>9.7717</td><td class="sample">— (nessun campione a step 0)</td></tr>
+          <tr><td>500</td><td>5.8117</td><td>5.9526</td><td class="sample">"al nome, il primo posto e il titolo, a una certa, nel corso del mondo, la prima guerra mondiale a lui..."</td></tr>
+          <tr><td>1 000</td><td>5.1950</td><td>5.3888</td><td class="sample">"al primo posto a causa della sua morte, in cui il figlio, il suo posto, l'ultimo posto a causa dell'invio..."</td></tr>
+          <tr><td>1 500</td><td>4.8469</td><td>5.0800</td><td class="sample">"di un castello che porta a una strada verso l'Ambrogio. Nel 1132, sotto il controllo di Napoleone..."</td></tr>
+          <tr><td>2 000</td><td>4.6127</td><td>4.8711</td><td class="sample">"in quanto il suo 'Canto di Ebrem', l'altro che lo fa di essere troppo abile..."</td></tr>
+          <tr><td>2 500</td><td>4.4418</td><td>4.7320</td><td class="sample">"In questi anni il comune è entrato a far parte del primo governo di cui è stata parte di un'altra città..."</td></tr>
+          <tr><td>3 000</td><td>4.2913</td><td>4.5827</td><td class="sample" style="font-family:monospace;font-size:0.74rem;">[#[novoi] = \set;&lt;/score&gt;…] — collasso markup HTML Wikipedia</td></tr>
+          <tr><td>3 500</td><td>4.1640</td><td>4.4511</td><td class="sample" style="font-family:monospace;font-size:0.74rem;">__ل ⁇ орореиה ⁇ ррссикк… — collasso caratteri non-latini (arabo/cirillico)</td></tr>
+          <tr><td>4 000</td><td>4.0487</td><td>4.3523</td><td class="sample">"la cui esistenza si attesta intorno all'XI secolo in epoca remota. A partire dal secolo XI, la città è d..."</td></tr>
+          <tr><td>4 500</td><td>4.0002</td><td>4.2759</td><td class="sample" style="font-family:monospace;font-size:0.74rem;">H2O2O2O2O2O2O2O2… — collasso formula chimica ripetuta</td></tr>
+          <tr><td>5 000</td><td>3.9127</td><td>4.2193</td><td class="sample">"a a a a. In seguito l'elenco dei sindaci e il progetto dei sindaci di Milano Soncino..."</td></tr>
+          <tr><td>5 500</td><td>3.8583</td><td>4.1589</td><td class="sample">"a livello nazionale. Il suo successo è quello per la produzione del vino bianco con un'attività molto ampia..."</td></tr>
+          <tr><td>6 000</td><td>3.8277</td><td>4.1434</td><td class="sample">"La presenza di un'officina, in parte slanciata, fu di circa 500 anni fa, con un incremento di popolazione..."</td></tr>
+          <tr><td>6 500</td><td>3.7744</td><td>4.0827</td><td class="sample">"Comitato nel caso di τές, Pesolento nel caso di κτιος…" — ancora mix greco/italiano</td></tr>
+          <tr><td>7 000</td><td>3.7360</td><td>4.0638</td><td class="sample">"omaomaoma, con la sua forma allungata e allungata. Il paesaggio circostante di Barcagna è caratt..."</td></tr>
+          <tr><td>7 500</td><td>3.7118</td><td>4.0143</td><td class="sample">"a partire dal secondo tipo di unità, come ad esempio i 'like' (ad esempio quelli 'like', cioè quelli 'like')..."</td></tr>
+          <tr><td>8 000</td><td>3.6843</td><td>3.9994</td><td class="sample">"nel 1987, che aveva partecipato al Campionato nazionale di Formula 1, insieme al suo compagno Mario De Cesari..."</td></tr>
+          <tr><td>8 500</td><td>3.6490</td><td>3.9705</td><td class="sample" style="font-family:monospace;font-size:0.74rem;">"con un punteggio di 6-6, 6-6, 6-9, 7-1, 7-3…" — collasso punteggi sportivi</td></tr>
+          <tr><td>9 000</td><td>3.6142</td><td>3.9460</td><td class="sample">"le stesse del loro potere erano state limitate e le loro caratteristiche erano state prese in considerazione..."</td></tr>
+          <tr><td>9 500</td><td>3.5854</td><td>3.9422</td><td class="sample">"in cui si trova una delle caratteristiche della città. Storia. I primi contatti con il paese risalgono al periodo..."</td></tr>
+          <tr><td>10 000</td><td>3.5468</td><td>3.9269</td><td class="sample">"il cui nome deriva dal latino 'Constanus', termine che si traduce nell'espressione 'ponstanus', ma il ri..."</td></tr>
+          <tr><td>10 500</td><td>3.5294</td><td>3.8894</td><td class="sample">"Nel 1908, il Comune di Lavare e il Comune di Lavare e il suo territorio, venne annesso alla provincia di Como..."</td></tr>
+          <tr><td>11 000</td><td>3.5225</td><td>3.8900</td><td class="sample">"to in un altro film di fine anni cinquanta: 'La terra del mare', diretto da Robert W. Bush e interpretato da Christopher..."</td></tr>
+          <tr><td>11 500</td><td>3.5037</td><td>3.8620</td><td class="sample">"L'embrio era il primo esempio di 'carica marea', con un'altezza di 650 metri. In tale caso, il nome di 'conte di mar..."</td></tr>
+          <tr><td>12 000</td><td>3.4910</td><td>3.8664</td><td class="sample">"toria in senso più ampio rispetto alle posizioni più avanzate. Anche per la sua vicinanza alla sfera di comando..."</td></tr>
+          <tr><td>12 500</td><td>3.4583</td><td>3.8478</td><td class="sample">"si dice che i tre principali nomi della famiglia, Uda, Arna, Arnà, Valeri, Arda, Arna, Arna, Arna…" — ripetizione residua</td></tr>
+          <tr><td>13 000</td><td>3.4458</td><td>3.8291</td><td class="sample">—</td></tr>
+          <tr><td>13 500</td><td>3.4271</td><td>3.8146</td><td class="sample">—</td></tr>
+          <tr><td>14 000</td><td>3.4112</td><td>3.8086</td><td class="sample">—</td></tr>
+          <tr><td>14 500</td><td>3.3968</td><td>3.7885</td><td class="sample">—</td></tr>
+          <tr><td>15 000</td><td>3.3802</td><td>3.7730</td><td class="sample">—</td></tr>
+          <tr><td>15 500</td><td>3.3593</td><td>3.7665</td><td class="sample">—</td></tr>
+          <tr><td>16 000</td><td>3.3449</td><td>3.7649</td><td class="sample">—</td></tr>
+          <tr><td>16 500</td><td>3.3244</td><td>3.7442</td><td class="sample">—</td></tr>
+          <tr><td>17 000</td><td>3.3074</td><td>3.7337</td><td class="sample">—</td></tr>
+          <tr><td>17 500</td><td>3.2831</td><td>3.7374</td><td class="sample">— (+0.0037 oscillazione normale)</td></tr>
+          <tr><td>18 000</td><td>3.2915</td><td>3.7192</td><td class="sample">—</td></tr>
+          <tr class="hl"><td>18 500</td><td class="best">3.2846</td><td class="best">3.7098</td><td class="sample">— nuovo best val loss</td></tr>
+          <tr><td>19 000</td><td>3.2707</td><td>3.7146</td><td class="sample">—</td></tr>
+          <tr><td>19 500</td><td>3.2713</td><td>3.6877</td><td class="sample">—</td></tr>
+          <tr><td>20 000</td><td>3.2558</td><td>3.7096</td><td class="sample">— (oscillazione +0.022)</td></tr>
+          <tr><td>20 500</td><td>3.2440</td><td>3.6851</td><td class="sample">—</td></tr>
+          <tr><td>21 000</td><td>3.2246</td><td>3.6688</td><td class="sample">—</td></tr>
+          <tr><td>21 500</td><td>3.2096</td><td>3.6650</td><td class="sample">—</td></tr>
+          <tr><td>22 000</td><td>3.2174</td><td>3.6545</td><td class="sample">—</td></tr>
+          <tr><td>22 500</td><td>3.1882</td><td>3.6597</td><td class="sample">— (oscillazione)</td></tr>
+          <tr><td>23 000</td><td>3.1893</td><td>3.6360</td><td class="sample">—</td></tr>
+          <tr><td>23 500</td><td>3.1732</td><td>3.6421</td><td class="sample">— (oscillazione)</td></tr>
+          <tr><td>24 000</td><td>3.1632</td><td>3.6353</td><td class="sample">—</td></tr>
+          <tr><td>24 500</td><td>3.1711</td><td>3.6343</td><td class="sample">—</td></tr>
+          <tr><td>25 000</td><td>3.1521</td><td>3.6253</td><td class="sample">—</td></tr>
+          <tr><td>25 500</td><td>3.1452</td><td>3.5981</td><td class="sample">—</td></tr>
+          <tr><td>26 000</td><td>3.1187</td><td>3.6209</td><td class="sample">—</td></tr>
+          <tr><td>26 500</td><td>3.1395</td><td>3.6156</td><td class="sample">—</td></tr>
+          <tr><td>27 000</td><td>3.1346</td><td>3.6225</td><td class="sample">— (oscillazione)</td></tr>
+          <tr class="hl"><td>27 500</td><td class="best">3.1058</td><td class="best">3.5861 ★</td><td class="sample">— BEST FINALE · ppl 36.1</td></tr>
+          <tr><td>28 000</td><td>3.1128</td><td>3.6135</td><td class="sample">— (leggero overfitting, corpus esaurito)</td></tr>
+          <tr><td>28 500</td><td>3.1003</td><td>3.6057</td><td class="sample">—</td></tr>
+          <tr><td>29 000</td><td>3.1088</td><td>3.5974</td><td class="sample">—</td></tr>
+          <tr><td>29 500</td><td>3.1041</td><td>3.5950</td><td class="sample">—</td></tr>
+          <tr><td>30 000</td><td>3.1028</td><td>3.6040</td><td class="sample">— finale · training completato in 76 min 5 s</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Colonna destra: architettura diff ───────────────────── -->
+    <div class="section">
+      <h2 class="section-title">Diff architetturale</h2>
+      <div class="diff-card">
+        <div class="diff-header">
+          <div class="diff-col-head run3">Run #3 — PE sinusoidale</div>
+          <div class="diff-col-head run4">Run #4 — RoPE</div>
+        </div>
+        <div class="diff-row">
+          <div class="diff-cell run3">PositionalEncoding()</div>
+          <div class="diff-cell run4 changed">rimossa</div>
+        </div>
+        <div class="diff-row">
+          <div class="diff-cell run3">x = x + pe[:seq]</div>
+          <div class="diff-cell run4 changed">nessuna somma all'embedding</div>
+        </div>
+        <div class="diff-row">
+          <div class="diff-cell run3">Q, K invariati</div>
+          <div class="diff-cell run4 changed">Q = Q·cos + rot(Q)·sin</div>
+        </div>
+        <div class="diff-row">
+          <div class="diff-cell run3">—</div>
+          <div class="diff-cell run4 changed">K = K·cos + rot(K)·sin</div>
+        </div>
+        <div class="diff-row">
+          <div class="diff-cell run3 label">buffer sinusoidale globale</div>
+          <div class="diff-cell run4 label">cos/sin per testa (buffer)</div>
+        </div>
+        <div class="diff-row">
+          <div class="diff-cell run3">~0 parametri extra</div>
+          <div class="diff-cell run4">~0 parametri extra</div>
+        </div>
+        <div class="diff-row">
+          <div class="diff-cell run3">45.9 M param</div>
+          <div class="diff-cell run4">45.9 M param</div>
+        </div>
+        <div class="diff-row">
+          <div class="diff-cell run3 label">extrapolazione fissa a max_seq</div>
+          <div class="diff-cell run4 label changed">extrapolazione oltre max_seq nativa</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Perché RoPE ──────────────────────────────────────────── -->
+  <div class="section">
+    <h2 class="section-title">Perché RoPE</h2>
+    <div class="rope-box">
+      <p>La <strong>Rotary Position Embedding</strong> (Su et al., 2023) codifica la posizione direttamente nella rotazione di Query e Key, invece di sommare un vettore fisso all'embedding del token.</p>
+      <p>Per ogni coppia di dimensioni (2i, 2i+1) e posizione m, la rotazione applicata è:</p>
+      <div class="rope-formula">Q[2i]   = Q[2i]·cos(m·θᵢ) − Q[2i+1]·sin(m·θᵢ)
+Q[2i+1] = Q[2i]·sin(m·θᵢ) + Q[2i+1]·cos(m·θᵢ)
+
+θᵢ = 1 / 10000^(2i / d_k)     — frequenze decrescenti per dim basse</div>
+      <p>Il risultato è che il prodotto scalare Q·Kᵀ dipende solo dalla <em>distanza relativa</em> tra le posizioni, non dalle posizioni assolute — proprietà che manca al PE sinusoidale. RoPE è oggi l'encoding posizionale di riferimento in LLaMA, Mistral e GPT-NeoX.</p>
+    </div>
+
+    <div class="rope-box">
+      <p><strong>Cosa ci aspettiamo da Run #4 rispetto a Run #3.</strong></p>
+      <p>Con corpus e iperparametri identici, la differenza di val_loss dovrebbe essere piccola (entro 0.05–0.10) ma misurabile su task sensibili alla posizione relativa: sequenze con struttura ripetuta, retrieval di informazioni a lunga distanza, generalizzazione oltre seq_len=512.</p>
+    </div>
+
+    <div class="rope-box">
+      <p><strong>Perché Run #4 converge più veloce — e cosa non è isolabile.</strong></p>
+      <p>La convergenza rapida non è attribuibile solo a RoPE. Run #4 usa il preset <code>medium</code> con <strong>seq_len=512</strong>, mentre Run #3 girava con <code>--seq 256</code>. Con batch=16 e seq=512 ogni step elabora <strong>8 192 token</strong> contro i 4 096 di Run #3. Il modello vede il doppio del corpus per step, quindi le stesse 47.8 M occorrenze in metà degli step effettivi.</p>
+      <p>Tradotto: Run #4 al passo 15 000 ha visto circa <em>123 M token</em> — equivalenti a ~30 000 step di Run #3. Il confronto preciso tra le architetture (RoPE vs sinPE a parità di token visti) richiederà un terzo run. Quello che possiamo già affermare è che la <strong>qualità assoluta</strong> di Run #4 supera il massimo storico di Run #3 già al passo 8 000.</p>
+      <p>Milestone qualitativi osservati nella progressione dei campioni: step 0–3 500 — markup/caratteri non-latini, collasso repetitivo; step 4 000–6 000 — morfologia italiana stabile, lessico enciclopedico; step 8 000+ — nomi propri, date, titoli cinematografici, struttura da voce Wikipedia; step 10 000+ — periodi multi-clausola con topici coerenti su 2–3 frasi.</p>
+    </div>
+  </div>
+
+  <!-- ── Curva SVG con dati reali Run #4 (step 0–12500) ── -->
+  <div class="section">
+    <h2 class="section-title">Curva di loss</h2>
+    <div class="curve-wrap">
+      <svg viewBox="0 0 600 185" xmlns="http://www.w3.org/2000/svg"
+           style="width:100%;height:auto;display:block">
+        <!-- Assi -->
+        <line x1="40" y1="10" x2="40" y2="155" stroke="var(--border)" stroke-width="1"/>
+        <line x1="40" y1="155" x2="590" y2="155" stroke="var(--border)" stroke-width="1"/>
+        <!-- Griglia orizzontale: val=8, 6, 4 -->
+        <!-- y = 12 + (10 - val) × 21.23 -->
+        <line x1="40" y1="54" x2="590" y2="54" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="3,3"/>
+        <line x1="40" y1="97" x2="590" y2="97" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="3,3"/>
+        <line x1="40" y1="139" x2="590" y2="139" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="3,3"/>
+        <!-- Griglia verticale: 5k, 10k, 20k, 30k -->
+        <line x1="128" y1="10" x2="128" y2="155" stroke="var(--border)" stroke-width="0.4" stroke-dasharray="2,4" opacity="0.45"/>
+        <line x1="216" y1="10" x2="216" y2="155" stroke="var(--border)" stroke-width="0.4" stroke-dasharray="2,4" opacity="0.45"/>
+        <line x1="392" y1="10" x2="392" y2="155" stroke="var(--border)" stroke-width="0.4" stroke-dasharray="2,4" opacity="0.45"/>
+        <line x1="567" y1="10" x2="567" y2="155" stroke="var(--border)" stroke-width="0.4" stroke-dasharray="2,4" opacity="0.45"/>
+        <!-- Etichette Y (val loss) -->
+        <text x="34" y="17"  text-anchor="end" fill="var(--text-sec)" font-family="IBM Plex Mono,monospace" font-size="9">10</text>
+        <text x="34" y="57"  text-anchor="end" fill="var(--text-sec)" font-family="IBM Plex Mono,monospace" font-size="9">8.0</text>
+        <text x="34" y="100" text-anchor="end" fill="var(--text-sec)" font-family="IBM Plex Mono,monospace" font-size="9">6.0</text>
+        <text x="34" y="142" text-anchor="end" fill="var(--text-sec)" font-family="IBM Plex Mono,monospace" font-size="9">4.0</text>
+        <!-- Etichette X (step) -->
+        <text x="40"  y="168" text-anchor="middle" fill="var(--text-sec)" font-family="IBM Plex Mono,monospace" font-size="9">0</text>
+        <text x="128" y="168" text-anchor="middle" fill="var(--text-sec)" font-family="IBM Plex Mono,monospace" font-size="9">5k</text>
+        <text x="216" y="168" text-anchor="middle" fill="var(--text-sec)" font-family="IBM Plex Mono,monospace" font-size="9">10k</text>
+        <text x="392" y="168" text-anchor="middle" fill="var(--text-sec)" font-family="IBM Plex Mono,monospace" font-size="9">20k</text>
+        <text x="567" y="168" text-anchor="middle" fill="var(--text-sec)" font-family="IBM Plex Mono,monospace" font-size="9">30k</text>
+        <!-- Linea di riferimento Run #3 best (val=4.0768 → y=138) -->
+        <line x1="40" y1="138" x2="590" y2="138" stroke="var(--amber)" stroke-width="0.8" stroke-dasharray="6,4" opacity="0.5"/>
+        <text x="42" y="133" fill="var(--amber)" font-family="IBM Plex Mono,monospace" font-size="8" opacity="0.85">R3 best = 4.0768</text>
+        <!-- Run #3 (grigio tratteggiato) — curva stimata (seq_len=256) -->
+        <polyline
+          points="40,18 128,108 216,118 304,125 392,129 480,132 540,138 567,138"
+          fill="none" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <!-- Run #4 (teal) — dati reali COMPLETI step 0–30 000 -->
+        <!-- Scala: y = 12 + (10.0 − val) × 21.23; x = 40 + step × 0.01757 -->
+        <polyline
+          points="40,17 49,98 58,110 66,116 75,121 84,124 93,127 102,130 110,132 119,133 128,135 137,136 145,136 154,137 163,138 172,139 181,139 189,140 198,140 207,141 216,141 225,142 233,142 242,142 251,142 260,143 268,143 277,143 286,144 295,144 304,144 312,144 321,144 330,145 339,145 348,145 356,145 365,146 374,146 383,143 391,144 400,144 408,144 417,144 425,145 434,145 443,144 451,145 460,145 469,145 478,146 487,143 495,144 504,144 512,144 521,145 530,144 539,145 548,145 557,145 567,144"
+          fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <!-- Callout step 27 500 (best finale) -->
+        <line x1="521" y1="145" x2="521" y2="108" stroke="var(--accent)" stroke-width="0.9" opacity="0.55"/>
+        <circle cx="521" cy="145" r="3.5" fill="var(--accent)"/>
+        <text x="482" y="118" fill="var(--accent)" font-family="IBM Plex Mono,monospace" font-size="8.5">step 27 500 ★</text>
+        <text x="482" y="108" fill="var(--accent)" font-family="IBM Plex Mono,monospace" font-size="8.5">val 3.5861</text>
+        <!-- Legenda -->
+        <line x1="335" y1="21" x2="358" y2="21" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="362" y="24" fill="var(--text-sec)" font-family="IBM Plex Mono,monospace" font-size="9">Run #3 (sin PE, stima)</text>
+        <line x1="335" y1="33" x2="358" y2="33" stroke="var(--accent)" stroke-width="2"/>
+        <text x="362" y="36" fill="var(--accent)" font-family="IBM Plex Mono,monospace" font-size="9">Run #4 (RoPE, dati reali)</text>
+      </svg>
+      <p class="curve-caption">Dati reali completi Run #4 (30 000 step). Best: val 3.5861 al passo 27 500 · ppl 36.1 · durata 76 min. Run #4 supera il best di Run #3 (val 4.0768) già al passo 8 000, dopo appena il 27% del budget di training. Il lieve rialzo finale (step 28 000–30 000) segnala esaurimento del corpus dopo 5+ epoche.</p>
+    </div>
+  </div>
+
+  <!-- ── Comparazione A/B ──────────────────────────────────────── -->
+  <div class="section">
+    <h2 class="section-title">Comparazione A/B — Run #3 vs Run #4</h2>
+    <table class="ab-table">
+      <thead>
+        <tr>
+          <th>Metrica</th>
+          <th>Run #3 (sin PE)</th>
+          <th>Run #4 (RoPE)</th>
+          <th>Δ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Best val loss</td>
+          <td class="metric">4.0768</td>
+          <td class="metric best">3.5861 ★ (step 27 500)</td>
+          <td class="best">−0.491 (−12%)</td>
+        </tr>
+        <tr>
+          <td>Perplexità best</td>
+          <td class="metric">~59</td>
+          <td class="metric best">~36.1</td>
+          <td class="best">−22.9 (−39%)</td>
+        </tr>
+        <tr>
+          <td>Val loss finale (step 30k)</td>
+          <td class="metric">4.0825</td>
+          <td class="metric best">3.6040</td>
+          <td class="best">−0.479</td>
+        </tr>
+        <tr>
+          <td>Step al best</td>
+          <td class="metric">~28 500</td>
+          <td class="metric best">27 500</td>
+          <td>−1 000</td>
+        </tr>
+        <tr>
+          <td>Step per battere R3 best</td>
+          <td class="metric">—</td>
+          <td class="metric best">8 000 (27% del budget)</td>
+          <td class="best">—</td>
+        </tr>
+        <tr>
+          <td>seq_len</td>
+          <td class="metric">256</td>
+          <td class="metric">512</td>
+          <td>2× token/step</td>
+        </tr>
+        <tr>
+          <td>Durata training</td>
+          <td class="metric">59m 22s</td>
+          <td class="metric">76m 05s</td>
+          <td>+16m 43s</td>
+        </tr>
+        <tr>
+          <td>Coerenza struttura ripetuta</td>
+          <td>qualitativa</td>
+          <td class="pending">da valutare</td>
+          <td class="pending">—</td>
+        </tr>
+        <tr>
+          <td>GGUF Q4_K_M (llama.cpp)</td>
+          <td>incompatibile (PE fissa)</td>
+          <td class="best">compatibile ✓</td>
+          <td class="best">+</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Timeline operativa ────────────────────────────────────── -->
+  <div class="section">
+    <h2 class="section-title">Timeline operativa</h2>
+    <div class="steps">
+      <div class="step-row">
+        <span class="step-dot dot-done"></span>
+        <div>
+          <div class="step-label"><strong>RoPE implementato</strong> — <code>attention.py</code>, <code>transformer.py</code>, <code>model.py</code>, <code>train.py</code></div>
+          <div class="step-time">2026-09-27 · ~50 righe di diff · flag <code>--rope</code></div>
+        </div>
+      </div>
+      <div class="step-row">
+        <span class="step-dot dot-done"></span>
+        <div>
+          <div class="step-label"><strong>Istanza Vast.ai creata</strong> — RTX 4090 · California US · $0.4228/h</div>
+          <div class="step-time">2026-09-27 · instance #52945249</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <span class="step-dot dot-done"></span>
+        <div>
+          <div class="step-label"><strong>Trasferimento corpus e codice</strong> — 201 MB <code>corpus_bpe.txt</code> + <code>tokenizer.model</code></div>
+          <div class="step-time">2026-09-27</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <span class="step-dot dot-running"></span>
+        <div>
+          <div class="step-label"><strong>Training in corso</strong> — <code>python3 train.py --tokenizer bpe-spm --data data/corpus_bpe.txt --preset medium --steps 30000 --batch 16 --rope</code></div>
+          <div class="step-time">2026-09-27 · ETA ~60 min · encoding corpus ~5–10 min prima del primo step</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <span class="step-dot dot-pending"></span>
+        <div>
+          <div class="step-label"><strong>Raccolta risultati</strong> — rsync checkpoints/best.pt, log val loss</div>
+          <div class="step-time">dopo training</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <span class="step-dot dot-pending"></span>
+        <div>
+          <div class="step-label"><strong>Comparazione A/B</strong> — val loss, generazione, test set posizionale</div>
+          <div class="step-time">dopo raccolta</div>
+        </div>
+      </div>
+      <div class="step-row">
+        <span class="step-dot dot-pending"></span>
+        <div>
+          <div class="step-label"><strong>Export GGUF Q4_K_M</strong> — con llama.cpp (nativo su Run #4 RoPE)</div>
+          <div class="step-time">dopo A/B</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Chinchilla e Run #5 ──────────────────────────────────── -->
+  <div class="section">
+    <h2 class="section-title">Verso Run #5 — Legge di Chinchilla e corpus</h2>
+    <div class="rope-box">
+      <p><strong>Run #4 è data-starved secondo Chinchilla.</strong> Hoffmann et al. (2022) dimostrano che per un training compute-optimal il numero di token unici deve essere circa 20× i parametri:</p>
+      <div class="rope-formula">D_opt = N_params × 20 = 45.9 M × 20 = ~918 M token unici</div>
+      <p>Il corpus attuale ha <strong>47.8 M token unici</strong>, visti ~5 volte in 30 000 step. Siamo 19× sotto il Chinchilla-optimal in dati unici. Il flattening della curva dopo step 20 000 è il segnale diretto: il modello ha già estratto il segnale ad alta frequenza dal corpus ripetuto.</p>
+    </div>
+    <div class="rope-box">
+      <p><strong>Run #5: continued pre-training da Run #4.</strong> È tecnicamente possibile ripartire dal checkpoint <code>best.pt</code> di Run #4 con un corpus più grande senza ri-addestrare il tokenizer:</p>
+      <div class="rope-formula">corpus_bpe_v2.txt = wiki_it_full (~500 M) + mc4_it_sample (~400 M)
+                                                         ≈ 900 M token unici
+
+python3 train.py \
+  --resume checkpoints/best.pt \
+  --data data/corpus_bpe_v2.txt \
+  --steps 60000 \
+  --lr 3e-5          # ~30% del peak originale (warm restart)
+  --warmup 1000 \
+  --rope</div>
+      <p>Il tokenizer rimane invariato (nessun cambio di vocabolario). Al resume va reimpostato il LR schedule: la cosine decay di Run #4 è già a zero a step 30 000, addestrare con LR ≈ 0 non farebbe nulla. Un warm restart a LR ridotto (3e-5 invece di 1e-4) è lo standard per continued pre-training.</p>
+      <p><strong>Loss spike iniziale:</strong> i primi 500–1 000 step con MC4-it (web-crawl) faranno risalire la val loss perché la distribuzione è diversa da Wikipedia. Si recupera entro 2 000–3 000 step — non interrompere il training.</p>
+      <p><strong>Val loss stimata a completamento Run #5:</strong> intorno a <strong>2.8–3.0</strong> · perplexity ~16–22 · una categoria qualitativamente diversa dall'attuale.</p>
+    </div>
+    <div class="rope-box">
+      <p><strong>Ceiling non Chinchilla: dimensione del modello.</strong> A parità di compute, Chinchilla dice che conviene scalare parametri e dati insieme. Con 4× i parametri (180 M) e 4× i dati (3.5 B token) si userebbe lo stesso budget con risultati sensibilmente migliori. Il percorso verso ppl &lt;10 passa necessariamente dal salto a 100–200 M parametri.</p>
+    </div>
+  </div>
+
+  <nav class="foot-links">
+    <a href="slm-journal.html">← Diario principale</a>
+    <a href="index.html">Home</a>
+    <a href="slm-finetune.html">Fine-tuning</a>
+    <a href="slm-docs.html">Documentazione</a>
+  </nav>
+
+</div>

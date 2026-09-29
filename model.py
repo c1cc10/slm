@@ -33,6 +33,7 @@ class GPTConfig:
     d_ff:        int   = 1024   # dimensione FFN interna (tipicamente 4 × d_model)
     max_seq_len: int   = 256    # lunghezza massima della sequenza di input
     dropout:     float = 0.1    # dropout per regolarizzazione
+    use_rope:    bool  = False  # True = Rotary Position Embedding (RoPE) invece di PE sinusoidale
 
 
 class GPT(nn.Module):
@@ -44,11 +45,14 @@ class GPT(nn.Module):
         # Lookup table: token ID (intero) → vettore d_model
         self.token_embedding = nn.Embedding(config.vocab_size, config.d_model)
 
-        self.pos_encoding = PositionalEncoding(
-            d_model=config.d_model,
-            max_seq_len=config.max_seq_len,
-            dropout=config.dropout
-        )
+        # Con RoPE la posizione è codificata direttamente in Q e K dentro l'attention:
+        # la PositionalEncoding sinusoidale non serve e non viene istanziata.
+        if not config.use_rope:
+            self.pos_encoding = PositionalEncoding(
+                d_model=config.d_model,
+                max_seq_len=config.max_seq_len,
+                dropout=config.dropout
+            )
 
         # N blocchi Transformer impilati
         self.blocks = nn.ModuleList([
@@ -56,7 +60,9 @@ class GPT(nn.Module):
                 d_model=config.d_model,
                 num_heads=config.num_heads,
                 d_ff=config.d_ff,
-                dropout=config.dropout
+                dropout=config.dropout,
+                use_rope=config.use_rope,
+                max_seq_len=config.max_seq_len,
             )
             for _ in range(config.num_layers)
         ])
@@ -97,8 +103,9 @@ class GPT(nn.Module):
         # Token IDs → vettori densi
         x = self.token_embedding(idx)    # (batch, seq_len, d_model)
 
-        # Aggiunge informazione posizionale
-        x = self.pos_encoding(x)         # (batch, seq_len, d_model)
+        # Con RoPE l'informazione posizionale è gestita dentro l'attention su Q e K.
+        if not self.config.use_rope:
+            x = self.pos_encoding(x)     # (batch, seq_len, d_model)
 
         # Passa attraverso ogni blocco Transformer
         for block in self.blocks:

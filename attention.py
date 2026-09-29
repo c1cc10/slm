@@ -14,6 +14,12 @@ import torch.nn as nn
 import math
 
 
+def _rotate_half(x):
+    """Ruota la seconda metà del vettore: [..., x1, x2] → [..., -x2, x1]."""
+    half = x.shape[-1] // 2
+    return torch.cat([-x[..., half:], x[..., :half]], dim=-1)
+
+
 def scaled_dot_product_attention(Q, K, V, mask=None):
     """
     Cuore dell'attention mechanism.
@@ -73,11 +79,13 @@ class MultiHeadAttention(nn.Module):
     I risultati vengono poi ricombinati.
     """
 
-    def __init__(self, d_model, num_heads):
+    def __init__(self, d_model, num_heads, use_rope=False, max_seq_len=512):
         """
         Args:
-            d_model:    dimensione del vettore di rappresentazione di ogni token
-            num_heads:  numero di teste parallele (deve dividere d_model)
+            d_model:     dimensione del vettore di rappresentazione di ogni token
+            num_heads:   numero di teste parallele (deve dividere d_model)
+            use_rope:    se True, applica Rotary Position Embedding a Q e K
+            max_seq_len: lunghezza massima per il pre-calcolo delle frequenze RoPE
         """
         super().__init__()
         assert d_model % num_heads == 0, "d_model deve essere divisibile per num_heads"
@@ -85,6 +93,7 @@ class MultiHeadAttention(nn.Module):
         self.d_k = d_model // num_heads
         self.num_heads = num_heads
         self.d_model = d_model
+        self.use_rope = use_rope
 
         # Proiezioni lineari: trasformano l'input in Q, K, V per ogni testa
         self.W_q = nn.Linear(d_model, d_model, bias=False)
@@ -93,6 +102,16 @@ class MultiHeadAttention(nn.Module):
 
         # Proiezione finale: ricombina l'output di tutte le teste
         self.W_o = nn.Linear(d_model, d_model, bias=False)
+
+        if use_rope:
+            # Pre-calcola cos/sin per ogni posizione e dimensione (una volta sola).
+            # θᵢ = 1 / 10000^(2i/d_k) — frequenze decrescenti per coppie di dim.
+            theta = 1.0 / (10000.0 ** (torch.arange(0, self.d_k, 2).float() / self.d_k))
+            pos   = torch.arange(max_seq_len).float()
+            freqs = torch.outer(pos, theta)              # (max_seq_len, d_k/2)
+            freqs = torch.cat([freqs, freqs], dim=-1)    # (max_seq_len, d_k)
+            self.register_buffer('rope_cos', torch.cos(freqs))
+            self.register_buffer('rope_sin', torch.sin(freqs))
 
     def _split_heads(self, x, batch_size):
         """
@@ -116,11 +135,20 @@ class MultiHeadAttention(nn.Module):
         ogni token si interroga su tutti gli altri token della stessa sequenza.
         """
         batch_size = Q.size(0)
+        seq_len    = Q.size(1)
 
         # Proietta e dividi in teste
         Q = self._split_heads(self.W_q(Q), batch_size)
         K = self._split_heads(self.W_k(K), batch_size)
         V = self._split_heads(self.W_v(V), batch_size)
+
+        if self.use_rope:
+            # Applica rotary embedding a Q e K (non a V).
+            # cos/sin: (1, 1, seq_len, d_k) per broadcast su (batch, heads, seq, d_k)
+            cos = self.rope_cos[:seq_len].unsqueeze(0).unsqueeze(0)
+            sin = self.rope_sin[:seq_len].unsqueeze(0).unsqueeze(0)
+            Q = Q * cos + _rotate_half(Q) * sin
+            K = K * cos + _rotate_half(K) * sin
 
         # Attention su ogni testa in parallelo
         x, weights = scaled_dot_product_attention(Q, K, V, mask)

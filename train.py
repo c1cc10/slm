@@ -83,6 +83,9 @@ class TrainConfig:
     # Cache token pre-codificati su disco (evita re-encoding ad ogni avvio)
     no_cache:      bool  = False
 
+    # Positional encoding: False = sinusoidale (default), True = RoPE
+    use_rope:      bool  = False
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TOKENIZER — interfaccia comune, tre implementazioni
@@ -518,6 +521,7 @@ def train(cfg: TrainConfig):
         d_ff        = cfg.d_ff,
         max_seq_len = cfg.seq_len,
         dropout     = 0.1,
+        use_rope    = cfg.use_rope,
     )
     print(f"\n  Caricamento modello su {device}...", end='', flush=True)
     t_mps = time.time()
@@ -706,6 +710,8 @@ if __name__ == '__main__':
                         help='scarica corpus di prova (I Promessi Sposi)')
     parser.add_argument('--generate',    type=str, default=None,
                         help='genera testo dal checkpoint best.pt')
+    parser.add_argument('--checkpoint',  type=str, default='checkpoints/best.pt',
+                        help='path checkpoint per --generate (default: checkpoints/best.pt)')
     parser.add_argument('--data',        type=str, default='data/corpus.txt')
     parser.add_argument('--steps',       type=int, default=5000)
     parser.add_argument('--batch',       type=int, default=32)
@@ -736,6 +742,8 @@ if __name__ == '__main__':
                         help='dimensione FFN interna (override preset)')
     parser.add_argument('--seq-len',     type=int, default=None,
                         help='lunghezza sequenza in token (override preset)')
+    parser.add_argument('--rope',        action='store_true',
+                        help='usa Rotary Position Embedding invece di PE sinusoidale')
     args = parser.parse_args()
 
     # ── Preset architettura ────────────────────────────────────────────────────
@@ -755,7 +763,7 @@ if __name__ == '__main__':
         sys.exit(0)
 
     if args.generate is not None:
-        generate_from_checkpoint('checkpoints/best.pt', prompt=args.generate)
+        generate_from_checkpoint(args.checkpoint, prompt=args.generate)
         sys.exit(0)
 
     cfg = TrainConfig(
@@ -774,5 +782,6 @@ if __name__ == '__main__':
         num_layers   = arch['num_layers'],
         num_heads    = arch['num_heads'],
         d_ff         = arch['d_ff'],
+        use_rope     = args.rope,
     )
     train(cfg)

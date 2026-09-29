@@ -104,9 +104,9 @@ class TransformerBlock(nn.Module):
     garantisce da sola che il token i non veda i token j > i.
     """
 
-    def __init__(self, d_model, num_heads, d_ff=None, dropout=0.1):
+    def __init__(self, d_model, num_heads, d_ff=None, dropout=0.1, use_rope=False, max_seq_len=512):
         super().__init__()
-        self.attention = MultiHeadAttention(d_model, num_heads)
+        self.attention = MultiHeadAttention(d_model, num_heads, use_rope=use_rope, max_seq_len=max_seq_len)
         self.ff        = FeedForward(d_model, d_ff)
         self.norm1     = nn.LayerNorm(d_model)
         self.norm2     = nn.LayerNorm(d_model)

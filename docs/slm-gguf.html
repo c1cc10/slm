@@ -1,0 +1,804 @@
+<title>SLM — GGUF e Deploy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg:        #F7F9FC;
+  --surface:   #FFFFFF;
+  --surface2:  #F0F5FA;
+  --text:      #1C2333;
+  --text-sec:  #5A6478;
+  --accent:    #0A6E6E;
+  --border:    #DDE3EE;
+  --code-bg:   #111827;
+  --code-fg:   #A8C4D8;
+  --note-bg:   #EFF6FF; --note-text:#1E40AF; --note-br:#BFDBFE;
+  --warn-bg:   #FFFBEB; --warn-text:#92400E; --warn-br:#FDE68A;
+  --ok-bg:     #ECFDF5; --ok-text:#065F46;   --ok-br:#6EE7B7;
+  --risk-bg:   #FEF2F2; --risk-text:#991B1B; --risk-br:#FECACA;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+    --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+    --code-bg:#0D1117; --code-fg:#79B8FF;
+    --note-bg:#0D1F3E; --note-text:#93C5FD; --note-br:#1E3A6E;
+    --warn-bg:#2A1A0A; --warn-text:#FDE68A; --warn-br:#7A3A0A;
+    --ok-bg:#0D2818; --ok-text:#6EE7B7; --ok-br:#1A4731;
+    --risk-bg:#2D0A0A; --risk-text:#FCA5A5; --risk-br:#7F1D1D;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+  --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+  --code-bg:#0D1117; --code-fg:#79B8FF;
+  --note-bg:#0D1F3E; --note-text:#93C5FD; --note-br:#1E3A6E;
+  --warn-bg:#2A1A0A; --warn-text:#FDE68A; --warn-br:#7A3A0A;
+  --ok-bg:#0D2818; --ok-text:#6EE7B7; --ok-br:#1A4731;
+  --risk-bg:#2D0A0A; --risk-text:#FCA5A5; --risk-br:#7F1D1D;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px; line-height: 1.7; margin: 0;
+  padding: 0 20px 80px;
+}
+.page { max-width: 680px; margin: 0 auto; padding-top: 52px; }
+
+.eyebrow {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent);
+  margin-bottom: 6px;
+}
+h1 { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 12px; text-wrap: balance; }
+.subtitle { color: var(--text-sec); font-size: 0.93rem; margin: 0 0 40px; line-height: 1.65; }
+
+h2 {
+  font-size: 1.05rem; font-weight: 600; margin: 52px 0 16px;
+  padding-top: 40px; border-top: 1px solid var(--border);
+  letter-spacing: -0.01em;
+}
+h2:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+h3 { font-size: 0.93rem; font-weight: 600; margin: 28px 0 10px; }
+
+/* ── Tables ── */
+.tw { overflow-x: auto; margin: 0 0 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+th {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: var(--surface2); color: var(--text-sec);
+  padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--border);
+}
+td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+td code, th code { font-family: 'IBM Plex Mono', monospace; font-size: 0.8em; }
+
+/* ── Code blocks ── */
+pre {
+  background: var(--code-bg); color: var(--code-fg);
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem;
+  border-radius: 7px; padding: 18px 20px; overflow-x: auto;
+  line-height: 1.6; margin: 0 0 20px;
+}
+code {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.85em;
+  background: var(--surface2); padding: 1px 5px; border-radius: 3px;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+
+/* ── Callout boxes ── */
+.callout {
+  border-left: 3px solid; border-radius: 0 6px 6px 0;
+  padding: 12px 16px; margin: 20px 0; font-size: 0.88rem; line-height: 1.6;
+}
+.callout.note { background:var(--note-bg); color:var(--note-text); border-color:var(--note-br); }
+.callout.warn { background:var(--warn-bg); color:var(--warn-text); border-color:var(--warn-br); }
+.callout.ok   { background:var(--ok-bg);   color:var(--ok-text);   border-color:var(--ok-br); }
+.callout.risk { background:var(--risk-bg); color:var(--risk-text); border-color:var(--risk-br); }
+.callout strong { font-weight: 600; display: block; margin-bottom: 4px; }
+
+/* ── Pipeline steps ── */
+.pipeline {
+  display: flex; flex-direction: column; gap: 0; margin: 24px 0;
+  border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+}
+.pipe-step {
+  display: grid; grid-template-columns: 36px 1fr;
+  align-items: stretch; border-bottom: 1px solid var(--border);
+}
+.pipe-step:last-child { border-bottom: none; }
+.pipe-num {
+  background: var(--surface2); color: var(--accent);
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; font-weight: 500;
+  display: flex; align-items: center; justify-content: center;
+  border-right: 1px solid var(--border); padding: 14px 0;
+}
+.pipe-body { padding: 12px 16px; }
+.pipe-title { font-weight: 600; font-size: 0.88rem; margin-bottom: 3px; }
+.pipe-desc { font-size: 0.83rem; color: var(--text-sec); line-height: 1.55; }
+
+/* ── Tokenizer diagram ── */
+.tok-diagram { margin: 24px 0; }
+.tok-stage {
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 14px 18px; background: var(--surface); margin-bottom: 8px;
+}
+.tok-stage-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 8px;
+}
+.tok-io {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  font-size: 0.85rem;
+}
+.tok-in  { color: var(--text-sec); font-style: italic; }
+.tok-arr { color: var(--accent); font-size: 1.1rem; margin: 0 4px; }
+.tok-tokens { display: flex; flex-wrap: wrap; gap: 5px; }
+.tok-tok {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 7px; color: var(--text);
+}
+.tok-tok.mismatch {
+  background: var(--risk-bg); border-color: var(--risk-br);
+  color: var(--risk-text);
+}
+.tok-arrow-down {
+  text-align: center; font-size: 1.1rem; color: var(--text-sec);
+  line-height: 1; margin: 2px 0 2px 18px;
+}
+
+/* ── Weight mapping ── */
+.wmap {
+  border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  font-size: 0.83rem; margin: 0 0 20px;
+}
+.wmap-row {
+  display: grid; grid-template-columns: 1fr 28px 1fr;
+  align-items: center; padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.wmap-row:last-child { border-bottom: none; }
+.wmap-row:nth-child(even) { background: var(--surface2); }
+.wmap-src { font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; color: var(--text-sec); }
+.wmap-arr { text-align: center; color: var(--accent); font-size: 0.9rem; }
+.wmap-dst { font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; color: var(--text); }
+.wmap-note { font-size: 0.75rem; color: var(--text-sec); margin-top: 2px; }
+.wmap-skip { background: var(--surface2); color: var(--text-sec); font-style: italic; }
+
+/* ── Endpoint cards ── */
+.endpoints { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+.ep {
+  border: 1px solid var(--border); border-radius: 7px;
+  display: grid; grid-template-columns: 60px 1fr;
+  overflow: hidden;
+}
+.ep-method {
+  background: var(--surface2); display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; font-weight: 500;
+  color: var(--accent); border-right: 1px solid var(--border);
+}
+.ep-body { padding: 10px 14px; }
+.ep-path { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; color: var(--text); }
+.ep-desc { font-size: 0.82rem; color: var(--text-sec); margin-top: 3px; }
+
+/* ── Quant table ── */
+.qtable { display: flex; flex-direction: column; gap: 6px; margin: 20px 0; }
+.qrow {
+  display: grid; grid-template-columns: 100px 60px 1fr;
+  align-items: center; gap: 12px;
+  font-size: 0.84rem; padding: 8px 12px;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--surface);
+}
+.qname { font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--accent); }
+.qsize { font-variant-numeric: tabular-nums; color: var(--text-sec); font-size: 0.8rem; }
+.qbar-track {
+  height: 5px; background: var(--border); border-radius: 3px;
+  overflow: hidden; grid-column: span 1;
+}
+.qbar-fill { height: 100%; background: var(--accent); border-radius: 3px; }
+.qdesc { color: var(--text-sec); font-size: 0.8rem; }
+
+/* ── Nav ── */
+.back { font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; color: var(--text-sec); text-decoration: none; display: inline-block; margin-bottom: 28px; }
+.back:hover { color: var(--accent); }
+.foot { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--text-sec); margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.foot a { color: var(--text-sec); text-decoration: none; }
+.foot a:hover { color: var(--accent); }
+
+p { margin: 0 0 16px; }
+ul, ol { margin: 0 0 16px; padding-left: 22px; }
+li { margin-bottom: 5px; }
+</style>
+
+<div class="page">
+
+<a class="back" href="index.html">← indice</a>
+
+<p class="eyebrow">SLM · Deployment</p>
+<h1>GGUF e Deploy con llama.cpp</h1>
+<p class="subtitle">
+  Come un checkpoint PyTorch da 530 MB diventa un file standard che qualsiasi runtime compatibile
+  può caricare — e cosa significa deployare un modello addestrato da zero fuori da Python.
+</p>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2>Cos'è GGUF</h2>
+
+<p>
+  GGUF (<em>GGML Universal File</em>) è il formato binario introdotto da llama.cpp nel 2023
+  per sostituire il precedente formato proprietario GGML.
+  È diventato lo standard de facto per distribuire LLM quantizzati perché risolve tre problemi
+  che i formati precedenti (PyTorch <code>.pt</code>, SafeTensors, HuggingFace <code>bin</code>) non affrontano:
+</p>
+
+<ul>
+  <li><strong>Self-contained</strong> — tokenizer, metadati architetturali e pesi in un file solo</li>
+  <li><strong>Quantizzazione nativa</strong> — supporta Q4_K_M, Q8_0 e altre 15+ varianti integrate</li>
+  <li><strong>Memory-mapped</strong> — caricamento istantaneo senza deserializzazione, il kernel mappa il file in RAM</li>
+</ul>
+
+<p>
+  Un checkpoint PyTorch non è portabile: richiede Python, PyTorch, le stesse classi del modello
+  definite nello stesso modulo. Un file GGUF è leggibile da qualsiasi runtime che supporti lo standard —
+  llama.cpp, llama-server, llamafile, Ollama, LM Studio, Jan.
+</p>
+
+<div class="callout note">
+  <strong>Versione usata in questo progetto</strong>
+  llama.cpp build b11146 (versione 0.5.0), installato via Homebrew su macOS M2.
+  La versione influenza la compatibilità — vedere la sezione "Note di compatibilità" a fine pagina.
+</div>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2>Architettura nel GGUF: perché GPT-NeoX</h2>
+
+<p>
+  GGUF non è un formato agnostico: ogni file dichiara un'architettura
+  (<code>general.architecture</code>) e llama.cpp esegue il forward pass
+  usando il codice specifico per quell'architettura.
+  Scegliere quella sbagliata significa output privi di senso anche se i pesi sono corretti.
+</p>
+
+<p>
+  Il nostro modello ha tre proprietà architetturali che vincolano la scelta:
+</p>
+
+<div class="tw">
+<table>
+  <tr><th>Proprietà</th><th>Nostro modello</th><th>Architettura GGUF</th></tr>
+  <tr><td>Positional embedding</td><td>RoPE (Rotary)</td><td><code>gptneox</code>, <code>llama</code>, <code>falcon</code></td></tr>
+  <tr><td>Activation</td><td>GELU</td><td><code>gptneox</code> (LLaMA usa SiLU)</td></tr>
+  <tr><td>Residual connection</td><td>sequenziale (pre-norm → attn → add, poi pre-norm → ffn → add)</td><td><code>gptneox</code> con <code>use_parallel_residual=false</code></td></tr>
+</table>
+</div>
+
+<p>
+  L'unica architettura che soddisfa tutte e tre è <code>gptneox</code> con
+  <code>use_parallel_residual = false</code>.
+  Questa flag distingue il comportamento sequenziale del nostro modello da quello parallelo
+  di Pythia, che calcola attenzione e FFN contemporaneamente sulla stessa norma.
+</p>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2>Mapping dei pesi</h2>
+
+<p>
+  I pesi nel checkpoint PyTorch hanno nomi derivati dall'implementazione Python.
+  GGUF usa una convenzione diversa, derivata dall'ecosistema llama.cpp.
+  Il converter <code>tools/convert_to_gguf.py</code> applica il mapping seguente:
+</p>
+
+<div class="wmap">
+  <div class="wmap-row">
+    <div class="wmap-src">token_embedding.weight</div>
+    <div class="wmap-arr">→</div>
+    <div class="wmap-dst">token_embd.weight</div>
+  </div>
+  <div class="wmap-row">
+    <div>
+      <div class="wmap-src">blocks.i.attention.W_q/k/v.weight</div>
+      <div class="wmap-note">tre tensori separati [512,512]</div>
+    </div>
+    <div class="wmap-arr">→</div>
+    <div>
+      <div class="wmap-dst">blk.i.attn_qkv.weight</div>
+      <div class="wmap-note">fusi in [1536,512] con np.concatenate</div>
+    </div>
+  </div>
+  <div class="wmap-row">
+    <div class="wmap-src">— (assente: il modello non ha attn bias)</div>
+    <div class="wmap-arr">→</div>
+    <div>
+      <div class="wmap-dst">blk.i.attn_qkv.bias + attn_output.bias</div>
+      <div class="wmap-note">richiesti da llama.cpp → tensor zero [1536], [512]</div>
+    </div>
+  </div>
+  <div class="wmap-row">
+    <div class="wmap-src">blocks.i.attention.W_o.weight</div>
+    <div class="wmap-arr">→</div>
+    <div class="wmap-dst">blk.i.attn_output.weight</div>
+  </div>
+  <div class="wmap-row">
+    <div class="wmap-src">blocks.i.norm1.weight / .bias</div>
+    <div class="wmap-arr">→</div>
+    <div class="wmap-dst">blk.i.attn_norm.weight / .bias</div>
+  </div>
+  <div class="wmap-row">
+    <div class="wmap-src">blocks.i.ff.net.0.weight / .bias</div>
+    <div class="wmap-arr">→</div>
+    <div class="wmap-dst">blk.i.ffn_up.weight / .bias</div>
+  </div>
+  <div class="wmap-row">
+    <div class="wmap-src">blocks.i.ff.net.2.weight / .bias</div>
+    <div class="wmap-arr">→</div>
+    <div class="wmap-dst">blk.i.ffn_down.weight / .bias</div>
+  </div>
+  <div class="wmap-row">
+    <div class="wmap-src">blocks.i.norm2.weight / .bias</div>
+    <div class="wmap-arr">→</div>
+    <div class="wmap-dst">blk.i.ffn_norm.weight / .bias</div>
+  </div>
+  <div class="wmap-row">
+    <div class="wmap-src">norm_final.weight / .bias</div>
+    <div class="wmap-arr">→</div>
+    <div class="wmap-dst">output_norm.weight / .bias</div>
+  </div>
+  <div class="wmap-row">
+    <div class="wmap-src">lm_head.weight</div>
+    <div class="wmap-arr">→</div>
+    <div class="wmap-dst">output.weight</div>
+  </div>
+  <div class="wmap-row wmap-skip">
+    <div class="wmap-src">blocks.i.attention.rope_cos / rope_sin</div>
+    <div class="wmap-arr">✕</div>
+    <div class="wmap-dst">SALTATI — llama.cpp ricalcola RoPE internamente</div>
+  </div>
+</div>
+
+<div class="callout note">
+  <strong>QKV fusion</strong>
+  llama.cpp si aspetta i pesi Q, K, V fusi in un singolo tensore per blocco di attenzione.
+  Questo non altera i valori — è solo una concatenazione lungo la dimensione 0.
+  La decomposizione avviene internamente durante il forward pass.
+</div>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2>Il tokenizer e il problema di tokenizer.ggml.pre</h2>
+
+<p>
+  Questa è la parte più sottile della conversione — e quella che ha causato
+  l'errore <code>unordered_map::at: key not found</code> durante il test di inferenza.
+</p>
+
+<h3>La pipeline in due stadi</h3>
+
+<p>
+  La tokenizzazione in llama.cpp non è un'operazione singola.
+  Prima che qualsiasi ricerca nel vocabolario avvenga, il testo grezzo passa
+  per una fase di <em>pre-tokenizzazione</em>:
+</p>
+
+<div class="tok-diagram">
+  <div class="tok-stage">
+    <div class="tok-stage-label">Stadio 1 — Pre-tokenizzazione</div>
+    <div class="tok-io">
+      <span class="tok-in">"Il Parlamento europeo"</span>
+      <span class="tok-arr">→</span>
+      <div class="tok-tokens">
+        <span class="tok-tok">▁Il</span>
+        <span class="tok-tok">▁Parla</span>
+        <span class="tok-tok">mento</span>
+        <span class="tok-tok">▁europeo</span>
+      </div>
+    </div>
+    <p style="margin:10px 0 0;font-size:0.8rem;color:var(--text-sec)">
+      Il carattere <code>▁</code> (U+2581) è il marcatore di spazio di SentencePiece.
+      Non è uno spazio ASCII — è un carattere Unicode distinto che fa parte del token.
+    </p>
+  </div>
+  <div class="tok-arrow-down">↓</div>
+  <div class="tok-stage">
+    <div class="tok-stage-label">Stadio 2 — Lookup nel vocabolario</div>
+    <div class="tok-io">
+      <div class="tok-tokens">
+        <span class="tok-tok">▁Il</span>
+        <span class="tok-tok">▁Parla</span>
+        <span class="tok-tok">mento</span>
+        <span class="tok-tok">▁europeo</span>
+      </div>
+      <span class="tok-arr">→</span>
+      <div class="tok-tokens">
+        <span class="tok-tok">4821</span>
+        <span class="tok-tok">7203</span>
+        <span class="tok-tok">1944</span>
+        <span class="tok-tok">9118</span>
+      </div>
+    </div>
+    <p style="margin:10px 0 0;font-size:0.8rem;color:var(--text-sec)">
+      Ogni chunk viene cercato nella mappa <code>token_to_id</code>. Se un chunk
+      non esiste nella mappa, il codice C++ lancia <code>std::out_of_range</code>.
+    </p>
+  </div>
+</div>
+
+<p>
+  Il campo <code>tokenizer.ggml.pre</code> nel GGUF dichiara quale strategia usare
+  allo stadio 1. Senza questa dichiarazione, llama.cpp v0.5.0 usa un default
+  che potrebbe non corrispondere al comportamento del tokenizer usato durante il training.
+</p>
+
+<h3>Cosa è successo</h3>
+
+<p>
+  Il nostro tokenizer è SentencePiece in modalità BPE, addestrato su Wikipedia italiana.
+  LLaMA 1/2 usa lo stesso tipo di tokenizer e funziona correttamente con llama.cpp —
+  ma dichiara esplicitamente il suo pre-tokenizer e ha un vocabolario più grande (32k)
+  con <em>byte fallback</em> attivo: per ogni byte non rappresentato, esistono token
+  speciali del tipo <code>&lt;0x41&gt;</code> che garantiscono la tokenizzabilità di qualsiasi stringa.
+</p>
+
+<p>
+  Il nostro vocabolario da 16k potrebbe non avere copertura completa per tutti i caratteri,
+  oppure le opzioni di normalizzazione SPM usate durante il training (NFD, NFKC, lowercase)
+  potrebbero differire da quelle che llama.cpp applica con il pre-tokenizer di default.
+  Il risultato: alcuni chunk prodotti dallo stadio 1 non sono nella <code>token_to_id</code> map → crash.
+</p>
+
+<div class="callout ok">
+  <strong>Tokenizer funzionante — diagnosi corretta</strong>
+  Il tokenizer è corretto. <code>llama-tokenize</code> conferma: "Il Parlamento europeo"
+  → <code>[181: ▁Il, 6362: ▁Parlamento, 4332: ▁europeo]</code>.
+  Il problema non era nel tokenizer ma nella chat interface di <code>llama-cli</code>,
+  che cerca il newline token <code>\n</code> via <code>unordered_map::at()</code> senza try-catch.
+  Il nostro vocabolario non ha un token <code>\n</code> esplicito → crash.
+</div>
+
+<h3>Diagnosi dettagliata</h3>
+
+<p>
+  All'avvio, llama.cpp tenta di registrare il token del newline per usarlo
+  nella formattazione della chat. Il codice GPT-NeoX in <code>llama-vocab.cpp</code>
+  chiama <code>token_to_id.at("\n")</code>. La riga relativa a LLaMA/SPM è protetta
+  da try-catch e produce solo un warning; il percorso di codice per gptneox potrebbe
+  non avere la stessa protezione — da qui il crash non gestito in <code>llama-cli</code>.
+</p>
+
+<h3>La soluzione: llama-simple</h3>
+
+<p>
+  <code>llama-simple</code> fa text completion pura senza chat interface, senza template
+  e senza il lookup del newline token. <strong>Funziona correttamente.</strong>
+</p>
+
+<pre>
+# Text completion con llama-simple (installato con llama.cpp)
+llama-simple \
+  -m slm-run4.gguf \
+  -n 120 \
+  --temp 0.85 \
+  --top-k 40 \
+  --top-p 0.9 \
+  --repeat-penalty 1.3 \
+  "Il Parlamento europeo"
+</pre>
+
+<p>Output su M2 (fp32, Metal): <strong>~200–310 token/s</strong>. Caricamento modello ~670 ms.</p>
+
+<div class="callout note">
+  <strong>La correzione permanente per llama-cli</strong>
+  Aggiungere un token <code>\n</code> (newline) al vocabolario durante la conversione,
+  oppure popolare il campo <code>tokenizer.ggml.linefeed_id</code> nel GGUF.
+  Questo permetterà a <code>llama-cli</code> e <code>llama-server</code> di funzionare
+  senza il workaround di <code>llama-simple</code>.
+</div>
+
+<h3>Sanity check del vocabolario</h3>
+
+<pre>
+# Verifica copertura — da eseguire prima di ogni conversione
+def check_coverage(sp, test_text="Il Parlamento europeo è fondato nel"):
+    pieces = sp.encode_as_pieces(test_text)
+    vocab_set = {sp.id_to_piece(i) for i in range(sp.vocab_size())}
+    missing = [p for p in pieces if p not in vocab_set]
+    if missing:
+        print(f"ATTENZIONE: {len(missing)} pezzi non nel vocabolario: {missing}")
+    return len(missing) == 0
+</pre>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2>Quantizzazione</h2>
+
+<p>
+  Il file GGUF prodotto dal converter è fp32 (217 MB).
+  La quantizzazione riduce la precisione numerica dei pesi per guadagnare in velocità e dimensione.
+</p>
+
+<div class="qtable">
+  <div class="qrow">
+    <div class="qname">fp32</div>
+    <div class="qsize">217 MB</div>
+    <div>
+      <div class="qbar-track"><div class="qbar-fill" style="width:100%"></div></div>
+      <div class="qdesc">Precisione piena, nessuna perdita. Base di partenza.</div>
+    </div>
+  </div>
+  <div class="qrow">
+    <div class="qname">Q8_0</div>
+    <div class="qsize">~55 MB</div>
+    <div>
+      <div class="qbar-track"><div class="qbar-fill" style="width:75%"></div></div>
+      <div class="qdesc">Int8 con scala fp32 per blocco. Qualità praticamente identica a fp32.</div>
+    </div>
+  </div>
+  <div class="qrow">
+    <div class="qname">Q4_K_M</div>
+    <div class="qsize">~35 MB</div>
+    <div>
+      <div class="qbar-track"><div class="qbar-fill" style="width:50%"></div></div>
+      <div class="qdesc">4 bit per peso, scala K-quant mixed. Ottimo rapporto qualità/dimensione.</div>
+    </div>
+  </div>
+  <div class="qrow">
+    <div class="qname">Q2_K</div>
+    <div class="qsize">~18 MB</div>
+    <div>
+      <div class="qbar-track"><div class="qbar-fill" style="width:28%"></div></div>
+      <div class="qdesc">2 bit per peso. Perdita misurabile su modelli piccoli — non consigliato sotto 1B.</div>
+    </div>
+  </div>
+</div>
+
+<p>
+  Il comando di quantizzazione (quando il problema di compatibilità sarà risolto):
+</p>
+
+<pre>
+# Produce slm-run4-q4_k_m.gguf (~35 MB)
+llama-quantize slm-run4.gguf slm-run4-q4_k_m.gguf Q4_K_M
+
+# Alternativa più conservativa
+llama-quantize slm-run4.gguf slm-run4-q8_0.gguf Q8_0
+</pre>
+
+<div class="callout note">
+  <strong>llama-quantize e compatibilità architettura</strong>
+  llama.cpp v0.5.0 ha rimosso <code>gptneox</code> dalla whitelist di <code>llama-quantize</code>.
+  La quantizzazione richiede o una versione precedente di llama.cpp, o un quantizzatore
+  Python alternativo (scrivibile con numpy, applicando Q8_0: <code>scale = max(abs(row)) / 127</code>,
+  <code>int8 = round(row / scale)</code>).
+</div>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2>llama-server: API OpenAI-compatibile</h2>
+
+<p>
+  <code>llama-server</code> è incluso nella stessa installazione di llama.cpp e espone
+  un endpoint HTTP compatibile con l'API OpenAI. Questo significa che qualsiasi client
+  che usa OpenAI SDK può puntare al server locale senza modifiche.
+</p>
+
+<pre>
+# Avvio del server (fp32, porta default 8080)
+llama-server \
+  --model slm-run4.gguf \
+  --ctx-size 512 \
+  --host 0.0.0.0 \
+  --port 8080
+
+# Con quantizzato (quando disponibile)
+llama-server \
+  --model slm-run4-q4_k_m.gguf \
+  --ctx-size 512 \
+  --n-gpu-layers 33     # offload su Metal (M2)
+</pre>
+
+<h3>Endpoint esposti</h3>
+
+<div class="endpoints">
+  <div class="ep">
+    <div class="ep-method">POST</div>
+    <div class="ep-body">
+      <div class="ep-path">/v1/completions</div>
+      <div class="ep-desc">Completamento testo — compatibile OpenAI legacy. Input: prompt, max_tokens, temperature, top_p.</div>
+    </div>
+  </div>
+  <div class="ep">
+    <div class="ep-method">POST</div>
+    <div class="ep-body">
+      <div class="ep-path">/v1/chat/completions</div>
+      <div class="ep-desc">Chat in formato messages[]. Richiede chat template nel GGUF — non adatto senza SFT.</div>
+    </div>
+  </div>
+  <div class="ep">
+    <div class="ep-method">GET</div>
+    <div class="ep-body">
+      <div class="ep-path">/v1/models</div>
+      <div class="ep-desc">Elenca il modello caricato con metadati (context length, architettura).</div>
+    </div>
+  </div>
+  <div class="ep">
+    <div class="ep-method">POST</div>
+    <div class="ep-body">
+      <div class="ep-path">/tokenize</div>
+      <div class="ep-desc">Tokenizza una stringa e restituisce gli ID — utile per debug del tokenizer.</div>
+    </div>
+  </div>
+</div>
+
+<h3>Uso da Python con OpenAI SDK</h3>
+
+<pre>
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:8080/v1",
+    api_key="non-rilevante"  # llama-server non autentica in locale
+)
+
+response = client.completions.create(
+    model="slm-run4",
+    prompt="Il Parlamento europeo",
+    max_tokens=80,
+    temperature=0.8,
+    top_p=0.9
+)
+print(response.choices[0].text)
+</pre>
+
+<div class="callout note">
+  <strong>Perché usare /completions e non /chat/completions</strong>
+  Il nostro modello è un <em>base model</em> — un completatore di testo,
+  non un assistente istruzionale. Il formato chat (system/user/assistant)
+  richiede SFT su dati di conversazione. Fino a Run #5 (SFT), l'endpoint
+  corretto è <code>/v1/completions</code> con un prompt grezzo.
+</div>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2>llamafile: eseguibile autocontenuto</h2>
+
+<p>
+  <a href="https://github.com/Mozilla-Ocho/llamafile" target="_blank">llamafile</a>
+  (Mozilla) è un singolo file eseguibile che contiene sia il modello GGUF
+  che un runtime llama.cpp compilato per macOS/Linux/Windows.
+  Non richiede installazione: si scarica, si rende eseguibile, si avvia.
+</p>
+
+<pre>
+# Creazione llamafile da GGUF (richiede zipalign dalla toolchain llamafile)
+cp /usr/local/bin/llamafile slm-run4.llamafile
+zipalign -j0 slm-run4.llamafile slm-run4-q4_k_m.gguf
+chmod +x slm-run4.llamafile
+
+# Avvio — apre automaticamente un browser con interfaccia web
+./slm-run4.llamafile
+
+# In modalità server headless
+./slm-run4.llamafile --server --nobrowser --port 8080
+</pre>
+
+<p>
+  Il file risultante (<code>slm-run4.llamafile</code>) è distribuibile — chiunque
+  può eseguirlo su qualsiasi macchina senza Python, PyTorch o llama.cpp installati.
+  Per un modello da 35 MB (Q4_K_M), il llamafile pesa circa 38 MB.
+</p>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2>Pipeline completa</h2>
+
+<div class="pipeline">
+  <div class="pipe-step">
+    <div class="pipe-num">1</div>
+    <div class="pipe-body">
+      <div class="pipe-title">Training PyTorch</div>
+      <div class="pipe-desc"><code>train.py</code> → <code>checkpoints/run4_best.pt</code> (530 MB, fp32)</div>
+    </div>
+  </div>
+  <div class="pipe-step">
+    <div class="pipe-num">2</div>
+    <div class="pipe-body">
+      <div class="pipe-title">Conversione GGUF</div>
+      <div class="pipe-desc"><code>tools/convert_to_gguf.py</code> → <code>slm-run4.gguf</code> (217 MB, fp32)<br>Mapping pesi, fusione QKV, scrittura tokenizer</div>
+    </div>
+  </div>
+  <div class="pipe-step">
+    <div class="pipe-num">3</div>
+    <div class="pipe-body">
+      <div class="pipe-title">Quantizzazione</div>
+      <div class="pipe-desc"><code>llama-quantize slm-run4.gguf slm-run4-q4_k_m.gguf Q4_K_M</code> → ~35 MB<br>⚠ Richiede risoluzione del problema di compatibilità tokenizer</div>
+    </div>
+  </div>
+  <div class="pipe-step">
+    <div class="pipe-num">4a</div>
+    <div class="pipe-body">
+      <div class="pipe-title">Inferenza diretta</div>
+      <div class="pipe-desc">
+        <code>llama-simple -m slm-run4.gguf -n 100 --temp 0.85 --repeat-penalty 1.3 "prompt"</code><br>
+        ~200 t/s su M2 fp32. <code>llama-cli</code> richiede fix aggiuntivo (newline token).
+      </div>
+    </div>
+  </div>
+  <div class="pipe-step">
+    <div class="pipe-num">4b</div>
+    <div class="pipe-body">
+      <div class="pipe-title">Server OpenAI-compatibile</div>
+      <div class="pipe-desc"><code>llama-server --model slm-run4-q4_k_m.gguf --port 8080</code><br>Endpoint <code>/v1/completions</code> raggiungibile da qualsiasi client OpenAI SDK</div>
+    </div>
+  </div>
+  <div class="pipe-step">
+    <div class="pipe-num">4c</div>
+    <div class="pipe-body">
+      <div class="pipe-title">Distribuzione llamafile</div>
+      <div class="pipe-desc">Bundle GGUF + runtime in un eseguibile autocontenuto distribuibile senza dipendenze</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2>Note di compatibilità (llama.cpp v0.5.0)</h2>
+
+<div class="callout risk">
+  <strong>GPT-NeoX rimosso da llama-quantize</strong>
+  Build b11146 non supporta la quantizzazione dell'architettura <code>gptneox</code>.
+  La versione fp32 (217 MB) è scrivibile e caricabile, ma <code>llama-quantize</code>
+  restituisce "unknown model architecture".
+  Opzioni: downgrade a una build pre-b3000 via Homebrew, oppure implementare un
+  quantizzatore Q8_0 in Python (circa 20 righe con numpy).
+</div>
+
+<div class="callout warn">
+  <strong>llama-cli crash — newline token non nel vocabolario</strong>
+  La chat interface di <code>llama-cli</code> cerca <code>\n</code> via
+  <code>unordered_map::at("\n")</code> senza try-catch nel percorso gptneox.
+  Il nostro vocabolario BPE non ha un token newline esplicito → crash.
+  <strong>Workaround: usare <code>llama-simple</code></strong> per text completion pura.
+  Fix permanente: aggiungere il token <code>\n</code> al vocabolario o
+  settare <code>tokenizer.ggml.linefeed_id</code> nel GGUF.
+</div>
+
+<div class="callout ok">
+  <strong>Struttura GGUF verificata</strong>
+  Il file è valido: architettura <code>gptneox</code> riconosciuta, 17 KV pair corretti,
+  147 tensori letti senza errori, <code>use_parallel_residual = false</code> presente,
+  RoPE dimension count = 64 corretto.
+</div>
+
+<!-- ─────────────────────────────────────────────── -->
+<h2>Verso Run #5: GGUF e il task specifico</h2>
+
+<p>
+  Il deploy via GGUF è la porta di uscita da Python verso il mondo reale.
+  Ma l'utilità di un modello deployato dipende interamente da cosa sa fare.
+</p>
+
+<p>
+  Un base model come Run #4 esposto via <code>/v1/completions</code>
+  è un completatore di testo — utile per scrittura assistita, generazione
+  di bozze, completamento di pattern. Non è un assistente.
+</p>
+
+<p>
+  Il passaggio che trasforma il modello in qualcosa di utilizzabile in un contesto
+  applicativo è il <strong>Supervised Fine-Tuning (SFT)</strong> su un task specifico.
+  Con SFT, il modello impara a seguire istruzioni nella forma
+  <code>[contesto] → [azione richiesta] → [output strutturato]</code>,
+  che è esattamente il pattern necessario per RAG, tool use e pipeline agentiche.
+</p>
+
+<p>
+  La scelta del task per Run #5 determina il valore del progetto — vedi
+  <a href="slm-finetune.html">Fine-tuning e Valutazione</a>.
+</p>
+
+<nav class="foot">
+  <a href="index.html">Indice</a>
+  <a href="slm-journal-run4.html">Run #4 — RoPE</a>
+  <a href="slm-finetune.html">Fine-tuning</a>
+  <a href="slm-docs.html">Architettura</a>
+  <a href="slm-roadmap.html">Roadmap</a>
+</nav>
+
+</div>

@@ -249,6 +249,7 @@ tr.hl td { background: var(--surface2); }
     <a href="slm-docs.html">Documentazione</a>
     <a href="slm-intro.html">Come funziona una LLM</a>
     <a href="slm-roadmap.html">Roadmap</a>
+    <a href="slm-journal-run4.html">Run #4 →</a>
   </nav>
 
   <!-- ARCHITETTURA CORRENTE -->
@@ -778,5 +779,91 @@ di una quale l'''''Italia dei uninterno di Santa</div>
     <li>Fine-tuning su corpus narrativo personale via LoRA adapter</li>
   </ul>
   <p>Dettaglio completo: <a href="slm-roadmap.html">Roadmap di sviluppo</a> · <a href="slm-docs.html">Documentazione</a></p>
+
+  <!-- COSA SONO 46M PARAMETRI -->
+  <h2>46 milioni di parametri — cosa sono e cosa producono</h2>
+
+  <div class="narr">46 milioni di numeri floating point. Non più, non meno. Questi numeri codificano, in forma compressa, i pattern statistici di 47.8 milioni di token di testo italiano. Quello che il modello ha imparato è una sola funzione: P(token successivo | ultimi 256 token) — una distribuzione di probabilità su 16 000 pezzi di parola, condizionata sul contesto recente.</div>
+
+  <h3>Cosa emerge dall'ottimizzazione</h3>
+  <p>Il log di training mostra la sequenza precisa delle acquisizioni — ognuna emerge quando la distribuzione statistica del corpus è sufficiente per apprenderla:</p>
+  <ul>
+    <li><strong>Step 0–2 000 (morfologia):</strong> il modello non viene istruito sulla grammatica italiana. Impara che dopo "la" viene un sostantivo femminile perché quella sequenza è statisticamente dominante. La grammatica è compressa nella frequenza del corpus.</li>
+    <li><strong>Step 2 000–8 000 (sintassi):</strong> emerge la struttura della frase. Le frasi grammaticalmente corrette sono molto più frequenti di quelle scorrette nel testo Wikipedia: la correttezza emerge come massimizzazione della verosimiglianza, non come regola esplicita.</li>
+    <li><strong>Step 8 000–14 000 (registro enciclopedico):</strong> "X è una Y situata nella regione Z" è un template così frequente in Wikipedia che il modello lo interiorizza come struttura probabilistica dominante. Il registro emerge prima dei fatti.</li>
+    <li><strong>Step 14 000–30 000 (fatti imprecisi):</strong> il modello "sa" che Roma è in Italia perché ha visto quella co-occorrenza migliaia di volte. Ma non ha un knowledge graph — ha una distribuzione di probabilità. "Cosenza in Piemonte" a step 13 000 non era un errore casuale: il modello aveva imparato il template geografico prima delle associazioni corrette.</li>
+  </ul>
+
+  <h3>La perplexity come posizione sul continuum</h3>
+  <div class="table-wrap">
+  <table class="loss-table">
+    <thead><tr><th>Modello</th><th>Perplexity</th><th>Nota</th></tr></thead>
+    <tbody>
+      <tr><td>Distribuzione uniforme su 16 K vocab</td><td class="num">16 000</td><td>entropia massima</td></tr>
+      <tr><td>Run #3 — step 0</td><td class="num">~9 700</td><td>dopo inizializzazione pesata</td></tr>
+      <tr><td>Run #3 — step 8 000</td><td class="num">~297</td><td>registro acquisito</td></tr>
+      <tr class="hl"><td>Run #3 — step 30 000 (attuale)</td><td class="num">59</td><td>val loss 4.0768</td></tr>
+      <tr><td>GPT-2 Small (117 M, inglese)</td><td class="num">~29</td><td>riferimento storico</td></tr>
+      <tr><td>Umano (stima)</td><td class="num">~15–20</td><td>benchmark superiore</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>PP = 59 significa che il modello assegna mediamente probabilità 1/59 ≈ 1.7% al token corretto. Un native speaker implicito ne assegnerebbe ~5%. Il modello è circa 3× più "sorpreso" dal testo corretto rispetto a un umano. Questo gap si chiude solo con più parametri e più dati — non con più training sullo stesso corpus.</p>
+
+  <h3>Il valore educativo — il microscopio</h3>
+  <div class="note">
+    <b>Il modello da 46 M non è "stupido in attesa di diventare intelligente".</b> È uno strumento di osservazione. Con GPT-4 non è possibile tracciare dove finisce la statistica e dove inizia la comprensione — se inizia. Con Run #3 è possibile vedere esattamente quando è emerso il registro enciclopedico (step 8 000), quando si è rotto il template geografico (step 13 000), quando ha acquisito coerenza storico-istituzionale (step 22 000–26 000). Questi sono gli stessi fenomeni che si osservano nei modelli grandi — solo che lì sono sepolti sotto 100–1 000 miliardi di parametri e non si possono leggere.
+  </div>
+
+  <!-- SCALING E COMPRESSIONE -->
+  <h2>Scaling e compressione — le opzioni</h2>
+
+  <h3>Ridurre i parametri vs ridurre la precisione</h3>
+  <p>Sono due operazioni fondamentalmente diverse con effetti molto diversi sulla qualità:</p>
+  <ul>
+    <li><strong>Ridurre i parametri</strong> (architettura più piccola): meno layer, d_model più piccolo. Il risultato è un modello con meno capacità di memorizzazione e coerenza. Utile solo per deployment con vincoli estremi (embedded, mobile) o come esperimento di distillazione.</li>
+    <li><strong>Ridurre la precisione</strong> (quantizzazione): stessi 46 M parametri, meno bit per parametro. Da float32 (4 byte) a int4 (0.5 byte). Questo è ciò che fa GGUF. Qualità quasi invariata fino a Q4, con compressione 8×.</li>
+  </ul>
+  <div class="table-wrap">
+  <table class="loss-table">
+    <thead><tr><th>Formato</th><th>Peso</th><th>PP stimato</th><th>Nota</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td>float32 (attuale)</td><td class="num">553 MB</td><td class="num">59</td><td>baseline</td></tr>
+      <tr><td>float16</td><td class="num">277 MB</td><td class="num">≈59.1</td><td>quasi identico</td></tr>
+      <tr><td>int8 / Q8_0</td><td class="num">139 MB</td><td class="num">≈59.5</td><td>trascurabile</td></tr>
+      <tr><td>Q4_K_M (target GGUF)</td><td class="num">~35 MB</td><td class="num">≈61–63</td><td>deployment ottimale</td></tr>
+      <tr><td>Q2_K</td><td class="num">~18 MB</td><td class="num">≈70–80</td><td>degrado sensibile</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Il percorso verso più "intelligenza"</h3>
+  <p>Il modello è Chinchilla-undertrained: regola empirica DeepMind 2022 prevede N × 20 token di training per un modello ottimale. Con 46 M parametri il target sarebbe 918 M token; il corpus attuale è 47.8 M — circa 19× sotto l'ottimale. Il primo passo per migliorare la qualità è <em>più dati</em>, non più parametri.</p>
+  <div class="table-wrap">
+  <table class="loss-table">
+    <thead><tr><th>Opzione</th><th>Params</th><th>Corpus target</th><th>Costo Vast.ai</th><th>PP atteso</th></tr></thead>
+    <tbody>
+      <tr><td>Più dati, stessa arch (Run #4+)</td><td class="num">46 M</td><td>500 M–1 B token IT</td><td class="num">~$5–10</td><td class="num">~3.3–3.6</td></tr>
+      <tr><td>Scale a 175 M, corpus serio</td><td class="num">175 M</td><td>2–3 B token IT</td><td class="num">~$15–25</td><td class="num">~35–45</td></tr>
+      <tr><td>Distillazione (5–10 M student)</td><td class="num">5–10 M</td><td>same corpus + teacher</td><td class="num">~$1</td><td class="num">~90–120</td></tr>
+      <tr><td>LoRA su LLaMA 3.1 8B</td><td class="num">8 B</td><td>corpus letterario attuale</td><td class="num">~$3–5</td><td class="num">molto basso</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>La distillazione è l'esperimento più interessante nel perimetro del progetto: addestrare un modello da 5–10 M con Run #3 come teacher dimostra empiricamente quanta conoscenza si trasferisce e cosa si perde — gli stessi principi usati da Microsoft per addestrare Phi-3 da GPT-4.</p>
+
+  <h3>Un modello esistente può essere espanso a più parametri?</h3>
+  <p>No, non direttamente. I pesi di un transformer sono matrici con dimensioni fissate dall'architettura. <code>d_model 512</code> significa che ogni matrice di attenzione ha shape <code>[512, 512]</code>. Passare a <code>d_model 768</code> richiede shape <code>[768, 768]</code> — incompatibili: non si può allargare una matrice senza decidere cosa mettere nei nuovi valori.</p>
+  <p>Esiste una tecnica chiamata <strong>Net2Net</strong> (Google Brain, 2015): si duplicano i neuroni esistenti con uno scaling che preserva la funzione del modello, poi si fa fine-tuning. Il modello allargato inizia identico al piccolo e poi diverge. Funziona in teoria, ma è rara in pratica sui LLM: il guadagno rispetto a un training da zero è marginale, perché il modello grande trascorre molto tempo a "disimparare" l'inizializzazione vincolata.</p>
+  <p><strong>Quello che si trasferisce davvero da un run al successivo:</strong></p>
+  <ul>
+    <li><strong>Il tokenizer SPM-16k</strong> — completamente riutilizzabile in qualsiasi architettura. È conoscenza compressa sull'italiano: la segmentazione ottimale del corpus è già calcolata e salvata nel checkpoint.</li>
+    <li><strong>Il corpus e la pipeline di preprocessing</strong> — nessun lavoro da rifare.</li>
+    <li><strong>Le scelte di iperparametri</strong> — LR, warmup, schedule: il run precedente valida già cosa funziona su questo corpus.</li>
+    <li><strong>I pesi come teacher (distillazione)</strong> — se si scala a 175 M e si usa Run #3 come teacher, i pesi tornano utili nel senso opposto: il piccolo insegna al grande, non lo diventa.</li>
+  </ul>
+  <p>La pratica standard quando si scala: training da zero sulla stessa base dati con architettura più grande, stesso tokenizer. Run #3 non è sprecato — è il proof-of-concept che valida corpus, tokenizer e pipeline prima di investire nel training serio.</p>
+
+  <p>Dettaglio completo parametri, corpus e framework di valutazione: <a href="slm-finetune.html">Fine-tuning e Valutazione →</a></p>
 
 </div>
