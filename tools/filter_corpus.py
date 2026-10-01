@@ -312,12 +312,16 @@ def filter_corpus(args):
                 f_out.write('\n\n')
                 counts['out'] += 1
 
-                if counts['out'] % 5000 == 0:
+                if counts['in'] % 100_000 == 0:
                     elapsed = int(time.time() - t_start)
                     kept_pct = counts['out'] / max(counts['in'], 1) * 100
-                    print(f"\r  {counts['in']:>8,} → {counts['out']:>8,} kept"
-                          f"  ({kept_pct:.1f}%)  {elapsed}s   ",
-                          end='', flush=True)
+                    drop_h   = counts['heuristic'] / max(counts['in'], 1) * 100
+                    drop_d   = counts['dedup']     / max(counts['in'], 1) * 100
+                    drop_p   = counts['ppl']       / max(counts['in'], 1) * 100
+                    speed    = counts['in'] / max(elapsed, 1) / 1000
+                    print(f"  {counts['in']:>9,} in  {counts['out']:>9,} kept ({kept_pct:.1f}%)"
+                          f"  -heur {drop_h:.1f}%  -dedup {drop_d:.1f}%  -ppl {drop_p:.1f}%"
+                          f"  {speed:.1f}k doc/s  {elapsed//60}m{elapsed%60:02d}s")
             else:
                 doc.append(line)
 

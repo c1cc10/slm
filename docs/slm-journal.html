@@ -1533,18 +1533,36 @@ python3 tools/filter_corpus.py data/liberliber_it.txt \
 </table>
 </div>
 
-<div class="narr"><strong>Esclusi:</strong> <code>mii-community/liberliber-cleaned</code> (italiano arcaico XIII–XIX sec.), <code>gsarti/clean_mc4_it</code> (loading script deprecato), ManyBooks (mirror Gutenberg), Open Library (solo metadati).</div>
+<div class="narr"><strong>Esclusi:</strong> <code>mii-community/liberliber-cleaned</code> (italiano arcaico XIII–XIX sec.), <code>PleIAs/Italian-PD</code> (stesso problema, focus pre-1884), <code>gsarti/clean_mc4_it</code> (loading script deprecato), ManyBooks (mirror Gutenberg), Open Library (solo metadati). <code>PleIAs/common_corpus</code>: streaming lentissimo per l'italiano (1-2% del totale, nessuno shard per lingua). <code>uonlp/CulturaX</code>: gated ma accessibile con autenticazione HF.</div>
 
-<div class="cmd"># Estrazione Common Corpus — solo italiano, public domain
+<h3>Fonte scelta: CulturaX IT (2026-10-01)</h3>
+<div class="narr"><strong>CulturaX</strong> (<code>uonlp/CulturaX</code>, config <code>it</code>) è la combinazione pulita e deduplicata di mC4 + OSCAR italiano. Italiano moderno del web: giornalismo, blog, forum, articoli. Config <code>it</code> = 100% italiano, nessun filtro lingua necessario. Richiede autenticazione HuggingFace (account gratuito + accettazione termini). Campi: <code>text</code>, <code>timestamp</code>, <code>url</code>, <code>source</code>.</div>
+
+<div class="narr">Tool di autenticazione: <code>tools/hf_auth.py</code> — gestisce login, whoami, logout e test accesso dataset gated. Il token viene salvato in <code>~/.cache/huggingface/token</code>.</div>
+
+<div class="cmd"># Autenticazione HF (token Read da huggingface.co/settings/tokens)
+python3 tools/hf_auth.py login hf_ILTUOTOKEN
+python3 tools/hf_auth.py whoami
+
+# Estrazione CulturaX IT — 8 GB corpus web italiano moderno
 python3 tools/fetch_hf_corpus.py \
-    --dataset PleIAs/common_corpus \
-    --text-field text --lang-field language --lang it \
-    --max-gb 5 --out data/common_corpus_it_raw.txt
+    --dataset uonlp/CulturaX --config it \
+    --text-field text \
+    --max-gb 8 --out data/culturax_it_raw.txt
+# → 2 627 111 doc, 8 GB, 12m 14s (2026-10-01)
 
-# Filtraggio qualità
-python3 tools/filter_corpus.py data/common_corpus_it_raw.txt \
-    --checkpoint checkpoints/best.pt \
-    --dedup --ppl-cut 0.80 \
-    --out data/common_corpus_it_clean.txt</div>
+# Filtraggio qualità: solo euristico + dedup — NO PPL scorer
+python3 tools/filter_corpus.py data/culturax_it_raw.txt \
+    --dedup \
+    --out data/culturax_it_clean.txt</div>
+
+<h3>Decisione: PPL scorer escluso dal filtraggio CulturaX (2026-10-01)</h3>
+<div class="narr">Durante la prima esecuzione del filtro con <code>--checkpoint checkpoints/best.pt --ppl-cut 0.80</code> è emersa una contraddizione metodologica: usare Run #4 come quality scorer per selezionare il corpus che dovrebbe correggerne i bias.</div>
+
+<div class="narr">Run #4 è addestrato esclusivamente su Wikipedia IT — registro enciclopedico formale. La sua distribuzione interna assegna PPL alta a qualsiasi testo lontano da quel registro: italiano colloquiale, giornalistico informale, dialogo, thread di forum. Applicare il PPL cut su CulturaX con questo scorer avrebbe selezionato preferenzialmente testi enciclopedici-formali, <strong>rafforzando lo skew sintattico esistente</strong> invece di correggerlo. La frase "ciao, sono Francesco" ottiene PPL 2 690 sul modello Run #4 — non perché sia testo di bassa qualità, ma perché il modello non ha mai visto questo registro.</div>
+
+<div class="narr"><strong>Il principio generale:</strong> il PPL scorer è affidabile come quality filter solo quando scorer e corpus target hanno distribuzione simile. Wikipedia → Wikipedia: funziona. Wikipedia → web colloquiale: introduce bias sistematico verso i propri pesi. Per il corpus di espansione, il filtro corretto è euristico (struttura, lunghezza, rapporto simboli) + deduplicazione — nessun filtro PPL.</div>
+
+<div class="narr">Il PPL scorer rimane valido per: filtrare corpus enciclopedici successivi, valutare la qualità del modello post-training, e come quality scorer <em>dopo</em> Run #5 (quando la distribuzione del modello sarà più ampia e rappresentativa dell'italiano moderno).</div>
 
 
