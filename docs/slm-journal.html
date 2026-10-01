@@ -1368,4 +1368,183 @@ python3 tools/eval_ppl.py "Carlo Magno ha fondato il Sacro Romano Impero"
 #   PPL 150–400: ALTA     — probabilmente non-italiano o degradato
 #   PPL  400+  : MOLTO ALTA — lingua straniera, spam, OCR difettoso</div>
 
+</div><!-- fine sezione PPL empirico -->
+
+<!-- ══════════════════════════════════════════════════════════
+     CORPUS RUN #5 — RICERCA FONTI E PIPELINE STREAMING
+     ══════════════════════════════════════════════════════════ -->
+<h2 id="corpus-run5">Corpus Run #5 — ricerca fonti Chinchilla-optimal (2026-10-01)</h2>
+
+<div class="narr">Run #4 ha raggiunto val loss 3.5861 (PPL ~36.1) con 47.8 M token — il 5.3% del target Chinchilla-optimal per 45.9 M parametri (20 × 45.9 M = <strong>918 M token</strong>). Il passo successivo è un continued pre-training su corpus molto più ampio, mantenendo la stessa architettura. Prima di avviare il training: <code>cp checkpoints/best.pt checkpoints/run4_best.pt</code>.</div>
+
+<h3>Strategia di acquisizione</h3>
+<div class="narr">Mai scaricare dump completi: i dataset più grandi superano i 4 TB. La strategia è sempre streaming HuggingFace → filtro qualità on-the-fly → scrittura solo dei documenti che passano. Target finale: ~4 GB di testo estratto ≈ 918 M token.</div>
+
+<h3>Valutazione delle fonti</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Dataset</th><th>Token IT est.</th><th>Priorità</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>PleIAs/common_corpus</code></td>
+      <td class="num">24 B (PD)</td>
+      <td class="good">★★★★★</td>
+      <td>Public domain, pre-filtrato, streaming HF. <strong>Fonte primaria.</strong></td>
+    </tr>
+    <tr>
+      <td><code>mii-community/liberliber-cleaned</code></td>
+      <td class="num">~50–80 M</td>
+      <td class="good">★★★★</td>
+      <td>881 MB, letterario IT, già curato da MII Community. Dataset di test pipeline.</td>
+    </tr>
+    <tr>
+      <td><code>gsarti/clean_mc4_it</code></td>
+      <td class="num">41 B parole</td>
+      <td class="warn">★★★ ✗</td>
+      <td>Web IT pulito — ma usa loading script Python deprecato, non caricabile con <code>datasets</code> ≥ 2.x.</td>
+    </tr>
+    <tr>
+      <td><code>Helsinki-NLP/opus_books</code> IT</td>
+      <td class="num">~19.5 M</td>
+      <td class="good">★★★</td>
+      <td>Letterario aggiuntivo, piccolo.</td>
+    </tr>
+    <tr>
+      <td>CC-100 IT (<code>fetch_cc100.py</code>)</td>
+      <td class="num">~500 M</td>
+      <td class="good">★★★</td>
+      <td>Web generico, fallback se Common Corpus non basta.</td>
+    </tr>
+    <tr>
+      <td>ManyBooks</td>
+      <td>—</td>
+      <td class="bad">✗</td>
+      <td>Mirror di Project Gutenberg, nessun valore aggiuntivo.</td>
+    </tr>
+    <tr>
+      <td>Open Library</td>
+      <td>—</td>
+      <td class="bad">✗</td>
+      <td>Solo metadati/catalogo — nessun testo. Utile solo per verificare se un libro fisico è su Internet Archive.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="narr"><strong>MII Community</strong>: gruppo di ricerca AI italiano (autori di Nesso 0.4B e Zefiro 7B) che mantiene <code>mii-community/liberliber-cleaned</code> — 4510 documenti con correzione umana. Già disponibile su HuggingFace, pronto per streaming diretto.</div>
+
+<h3>Mix target 918 M token</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Categoria</th><th>Token</th><th>%</th><th>Fonte</th></tr></thead>
+  <tbody>
+    <tr><td>Enciclopedico</td><td class="num">~230 M</td><td class="num">25%</td><td>Wikipedia IT dump (già estratto)</td></tr>
+    <tr><td>Web generale</td><td class="num">~460 M</td><td class="num">50%</td><td>Common Corpus IT</td></tr>
+    <tr><td>Letterario PD</td><td class="num">~92 M</td><td class="num">10%</td><td>liberliber + opus_books</td></tr>
+    <tr><td>Tecnico</td><td class="num">~92 M</td><td class="num">10%</td><td>PDF/DOCX personali via convert_to_text.py</td></tr>
+    <tr><td>Narrativo contemporaneo</td><td class="num">~44 M</td><td class="num">5%</td><td>corpus EPUB personale</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Tool implementato: fetch_hf_corpus.py</h3>
+<div class="narr">Streaming generico per qualsiasi dataset HuggingFace. Supporta selezione configurazione, filtro lingua, campo testo annidato (<code>translation.it</code>), limite GB e limite documenti. Non richiede download completo del dump.</div>
+
+<div class="cmd"># liberliber — dataset di test pipeline (piccolo, alta qualità)
+python3 tools/fetch_hf_corpus.py \
+    --dataset mii-community/liberliber-cleaned \
+    --text-field text \
+    --out data/liberliber_it.txt
+
+# Common Corpus — fonte primaria Run #5 (solo italiano, public domain)
+python3 tools/fetch_hf_corpus.py \
+    --dataset PleIAs/common_corpus \
+    --text-field text --lang-field language --lang it \
+    --max-gb 5 --out data/common_corpus_it_raw.txt
+
+# opus_books italiano
+python3 tools/fetch_hf_corpus.py \
+    --dataset Helsinki-NLP/opus_books --config it \
+    --text-field translation.it \
+    --out data/opus_books_it.txt
+
+# dry-run senza scrivere file
+python3 tools/fetch_hf_corpus.py \
+    --dataset mii-community/liberliber-cleaned \
+    --text-field text --max-docs 500 --dry-run
+
+# Filtraggio qualità post-estrazione
+python3 tools/filter_corpus.py data/liberliber_it.txt \
+    --checkpoint checkpoints/run4_best.pt \
+    --dedup --ppl-cut 0.80 --out data/liberliber_it_clean.txt</div>
+
+<div class="note">
+  <b>gsarti/clean_mc4_it — incompatibile:</b> il dataset usa un loading script Python (<code>clean_mc4_it.py</code>) non più supportato da <code>datasets</code> ≥ 2.x. L'autore non ha ancora migrato a formato Parquet. Escluso dal corpus Run #5.<br>
+  <b>Tools corpus:</b> <code>fetch_hf_corpus.py</code> (generico HF), <code>fetch_cc100.py</code> (CC-100), <code>export_db_corpus.py</code> (PostgreSQL/MongoDB), <code>filter_corpus.py</code> (filtraggio qualità 4 stadi).
+</div>
+
+<h3>Test pipeline end-to-end su liberliber (2026-10-01)</h3>
+<div class="narr">Prima esecuzione completa della pipeline <code>fetch → filter</code> sul dataset <code>mii-community/liberliber-cleaned</code>. Obiettivo: verificare che tutti i componenti funzionino prima di attaccare <code>PleIAs/common_corpus</code> (la fonte principale da 24B token).</div>
+
+<h4>Fase 1 — estrazione</h4>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Dataset</td><td><code>mii-community/liberliber-cleaned</code></td></tr>
+    <tr><td>Documenti scritti</td><td class="num">4 289</td></tr>
+    <tr><td>Documenti saltati (vuoti / &lt; 50 char)</td><td class="num">221</td></tr>
+    <tr><td>Testo estratto</td><td class="num">1.33 GB</td></tr>
+    <tr><td>Durata</td><td class="num">2m 38s</td></tr>
+    <tr><td>File output</td><td><code>data/liberliber_it.txt</code> (1 363 MB)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="narr">Il dataset ha 4 510 documenti totali — 4 289 + 221 = 4 510. Il 95.1% dei documenti ha superato il filtro minimo di 50 caratteri.</div>
+
+<h4>Fase 2 — filtraggio qualità</h4>
+<div class="narr">Filtro a 2 stadi attivi: <strong>euristico</strong> (lunghezza, rapporto simboli, duplicati interni) + <strong>dedup MD5 paragrafo</strong> + <strong>PPL scorer</strong> con <code>checkpoints/best.pt</code> (Run #4, PPL ~36). Soglia <code>--ppl-cut 0.80</code> = scarta il 20% dei documenti con PPL più alta. Nessun filtro lingua (liberliber è già 100% italiano curato).</div>
+
+<div class="cmd">python3 tools/filter_corpus.py data/liberliber_it.txt \
+    --checkpoint checkpoints/best.pt \
+    --dedup --ppl-cut 0.80 \
+    --out data/liberliber_it_clean.txt</div>
+
+<div class="note">
+  <b>Checkpoint backup prima del test:</b> <code>cp checkpoints/best.pt checkpoints/run4_best.pt</code> (530 MB, eseguito il 2026-10-01). I file <code>.gguf</code> nella root non vengono mai toccati dal training.
+</div>
+
+<h4>Decisione: liberliber escluso dal corpus Run #5</h4>
+<div class="narr">Ispezione manuale delle prime 300 righe di <code>data/liberliber_it.txt</code>: il testo è <strong>fortemente arcaico</strong> — italiano del XIII–XIX secolo (Dante, Manzoni, Leopardi, costruzioni come "eravi", "imperocché", "avvegnadio"). Per un modello base su italiano contemporaneo questo è rumore, non segnale: il modello assorbirebbe forme medievali come italiano normale, degradando la qualità su testo moderno.</div>
+
+<div class="narr">La quota letteraria (originariamente 10% = ~92M token) viene redistribuita su <code>PleIAs/common_corpus</code>, che include già testi storici di qualità senza scendere all'italiano arcaico. Il corpus EPUB personale (narrativa contemporanea, prima persona) copre la componente letteraria moderna.</div>
+
+<h3>Mix target aggiornato — 918 M token</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Categoria</th><th>Token</th><th>%</th><th>Fonte</th></tr></thead>
+  <tbody>
+    <tr><td>Enciclopedico</td><td class="num">~230 M</td><td class="num">25%</td><td>Wikipedia IT dump (già estratto)</td></tr>
+    <tr><td>Web generale / PD</td><td class="num">~550 M</td><td class="num">60%</td><td>Common Corpus IT (PleIAs) — fonte primaria</td></tr>
+    <tr><td>Tecnico</td><td class="num">~92 M</td><td class="num">10%</td><td>PDF/DOCX personali via <code>convert_to_text.py</code></td></tr>
+    <tr><td>Narrativo contemporaneo</td><td class="num">~46 M</td><td class="num">5%</td><td>Corpus EPUB personale (prima persona, IT moderno)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="narr"><strong>Esclusi:</strong> <code>mii-community/liberliber-cleaned</code> (italiano arcaico XIII–XIX sec.), <code>gsarti/clean_mc4_it</code> (loading script deprecato), ManyBooks (mirror Gutenberg), Open Library (solo metadati).</div>
+
+<div class="cmd"># Estrazione Common Corpus — solo italiano, public domain
+python3 tools/fetch_hf_corpus.py \
+    --dataset PleIAs/common_corpus \
+    --text-field text --lang-field language --lang it \
+    --max-gb 5 --out data/common_corpus_it_raw.txt
+
+# Filtraggio qualità
+python3 tools/filter_corpus.py data/common_corpus_it_raw.txt \
+    --checkpoint checkpoints/best.pt \
+    --dedup --ppl-cut 0.80 \
+    --out data/common_corpus_it_clean.txt</div>
+
 

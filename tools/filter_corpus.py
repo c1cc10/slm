@@ -171,6 +171,15 @@ def load_ppl_scorer(checkpoint_path: str):
             return _S()
         raise ValueError(f"Tokenizer sconosciuto: {t}")
 
+    # TrainConfig è serializzato nel checkpoint come __main__.TrainConfig
+    # Pickle cerca in sys.modules['__main__'], quindi lo iniettiamo lì
+    import importlib, __main__
+    try:
+        train_mod = importlib.import_module('train')
+        __main__.TrainConfig = train_mod.TrainConfig
+    except Exception:
+        pass
+
     device = 'cpu'
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
 

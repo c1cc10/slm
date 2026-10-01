@@ -562,31 +562,31 @@ Q[2i+1] = Q[2i]·sin(m·θᵢ) + Q[2i+1]·cos(m·θᵢ)
         </div>
       </div>
       <div class="step-row">
-        <span class="step-dot dot-running"></span>
+        <span class="step-dot dot-done"></span>
         <div>
-          <div class="step-label"><strong>Training in corso</strong> — <code>python3 train.py --tokenizer bpe-spm --data data/corpus_bpe.txt --preset medium --steps 30000 --batch 16 --rope</code></div>
-          <div class="step-time">2026-09-27 · ETA ~60 min · encoding corpus ~5–10 min prima del primo step</div>
+          <div class="step-label"><strong>Training completato</strong> — <code>python3 train.py --tokenizer bpe-spm --data data/corpus_bpe.txt --preset medium --steps 30000 --batch 16 --rope</code></div>
+          <div class="step-time">2026-09-27 · 76 min 5 s · best val 3.5861 a step 27 500</div>
         </div>
       </div>
       <div class="step-row">
-        <span class="step-dot dot-pending"></span>
+        <span class="step-dot dot-done"></span>
         <div>
-          <div class="step-label"><strong>Raccolta risultati</strong> — rsync checkpoints/best.pt, log val loss</div>
-          <div class="step-time">dopo training</div>
+          <div class="step-label"><strong>Raccolta risultati</strong> — checkpoint scaricato, log val loss documentato</div>
+          <div class="step-time">2026-09-27</div>
         </div>
       </div>
       <div class="step-row">
-        <span class="step-dot dot-pending"></span>
+        <span class="step-dot dot-done"></span>
         <div>
-          <div class="step-label"><strong>Comparazione A/B</strong> — val loss, generazione, test set posizionale</div>
-          <div class="step-time">dopo raccolta</div>
+          <div class="step-label"><strong>Comparazione A/B</strong> — Run #3 vs Run #4: val loss −12%, ppl −39%, supera R3 a step 8 000</div>
+          <div class="step-time">2026-09-27 · dettaglio nella tabella sopra</div>
         </div>
       </div>
       <div class="step-row">
-        <span class="step-dot dot-pending"></span>
+        <span class="step-dot dot-done"></span>
         <div>
-          <div class="step-label"><strong>Export GGUF Q4_K_M</strong> — con llama.cpp (nativo su Run #4 RoPE)</div>
-          <div class="step-time">dopo A/B</div>
+          <div class="step-label"><strong>Export GGUF</strong> — <code>slm-run4.gguf</code> (fp16) + <code>slm-run4-q8_0.gguf</code> (Q8_0)</div>
+          <div class="step-time">2026-10-01 · modello in uso</div>
         </div>
       </div>
     </div>
