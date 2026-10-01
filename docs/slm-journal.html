@@ -237,7 +237,7 @@ tr.hl td { background: var(--surface2); }
   <h1>Quello che è successo, e perché</h1>
   <p class="subtitle">Ogni voce ha una testa narrativa accessibile a tutti, seguita dal dettaglio tecnico per chi vuole scendere più in profondità.</p>
   <div class="meta-row">
-    <span><span class="k">aggiornato </span><span class="v">2026-09-26</span></span>
+    <span><span class="k">aggiornato </span><span class="v">2026-09-30</span></span>
     <span><span class="k">run corrente </span><span class="v">step 30 000 / 30 000 ✓</span></span>
     <span><span class="k">val loss </span><span class="v">4.0768</span></span>
     <span><span class="k">hardware </span><span class="v">Mac M2 8 GB · MPS</span></span>
@@ -343,6 +343,34 @@ tr.hl td { background: var(--surface2); }
         <h3 id="run4">Decisione: completare Run #3, poi Run #4 con sistema di posizionamento diverso <span class="badge badge-info">tecnica</span></h3>
         <div class="narr">Il formato in cui voglio distribuire il modello usa internamente un sistema diverso per tenere traccia dell'ordine delle parole. Adeguarsi non costa nulla: nessun apprendimento precedente viene perso. I due training finiranno entrambi, e si confronteranno i risultati.</div>
         <p>Analisi di compatibilità con llamafile/llama.cpp (target GGUF) porta a pianificare Run #4 con RoPE (Rotary Position Embedding). Run #3 prosegue fino a completamento (30 000 step): i due modelli finali saranno comparati con test mirati. RoPE non è più veloce, il costo per step è ~3-5% superiore, la convergenza in step è identica. La motivazione è architetturale, non computazionale. Dettaglio nella sezione Decisione.</p>
+      </div>
+    </div>
+
+
+    <!-- ENTRY 6 -->
+    <div class="tl-entry">
+      <div class="tl-left">
+        <div class="tl-date">2026-09-30</div>
+        <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      </div>
+      <div class="tl-right">
+        <h3 id="strategy-sft">Analisi Chinchilla — timing del SFT e dipendenza dal paradigma <span class="badge badge-info">strategica</span></h3>
+        <div class="narr">La domanda non è "SFT sì o no" — è "su quale base?". Con 47.8 M token al 5.3% del compute-optimal, il modello è Chinchilla-undertrained ma già usabile per NLG formulaico. La soglia di utilità cambia radicalmente in funzione del paradigma del task.</div>
+        <p><strong>Gap Chinchilla:</strong> 45 M parametri × 20 = <strong>900 M token</strong> compute-optimal. Corpus attuale: 47.8 M — 19× sotto l'ottimale. Il SFT formatta il comportamento ma non inietta conoscenza: se il base model non ha internalizzato un concetto in pre-training, il SFT non può darglielo.</p>
+        <p>Per NLG formulaico (condominio, moto) il base model supera già la soglia: la struttura dell'italiano è acquisita, il SFT può direzionare l'output su template riconoscibili. Per task NLU e agentic servono 300–500 M token prima del SFT per rappresentazioni sufficientemente robuste. Identificata anche la strategia DAPT (Domain-Adaptive Pre-Training): 5–10 M token di dominio specifico prima del SFT, 10× più efficiente dei token generici per target formulaici. Dettaglio nelle sezioni "Strategia SFT" e "Architettura multi-track".</p>
+      </div>
+    </div>
+
+    <!-- ENTRY 7 -->
+    <div class="tl-entry">
+      <div class="tl-left">
+        <div class="tl-date">2026-09-30</div>
+        <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      </div>
+      <div class="tl-right">
+        <h3 id="multitrack-decision">Decisione — architettura multi-track, Run #3 come Core inamovibile <span class="badge badge-now">in progettazione</span></h3>
+        <div class="narr">Invece di un percorso lineare, la sperimentazione diventa ramificata: il checkpoint Run #3 viene congelato come punto di riferimento fisso e da lì partono branch paralleli con quantità di pre-training e target SFT diversi. Le misurazioni decidono cosa conviene investire prima.</div>
+        <p>Run #3 <code>best.pt</code> diventa il Core — rinominato e mai sovrascritto. Tre branch principali: Branch A (SFT diretto ora, per NLG formulaico), Branch B (DAPT di dominio → SFT, 2–4 settimane), Branch C (extended pre-training +200 M token → nuovo base per Run #6 SFT). Ogni branch ha checkpoint e log separati, valutati su test set standard condivisi. Dettaglio nella sezione "Architettura multi-track".</p>
       </div>
     </div>
 
@@ -866,4 +894,478 @@ di una quale l'''''Italia dei uninterno di Santa</div>
 
   <p>Dettaglio completo parametri, corpus e framework di valutazione: <a href="slm-finetune.html">Fine-tuning e Valutazione →</a></p>
 
+
+  <!-- ══════════════════════════════════════════════════════════
+       STRATEGIA SFT — TIMING E TIER
+       ══════════════════════════════════════════════════════════ -->
+  <h2 id="sft-timing">Strategia SFT — timing e tier per paradigma</h2>
+
+  <div class="narr">SFT formatta il comportamento, non inietta conoscenza. La qualità SFT è bounded dalla qualità del base model: Qualità SFT ≤ f(base model, dataset SFT). Migliorare il base model prima ha rendimenti su tutto il SFT costruito sopra.</div>
+
+  <h3>Il gap Chinchilla e cosa significa</h3>
+  <p>La regola Hoffmann 2022 (DeepMind) definisce il compute-optimal come N × 20 token. Per 45 M parametri: <strong>900 M token</strong>. Corpus attuale: 47.8 M — il 5.3% dell'ottimale. Il modello ha ancora ampia capacità inutilizzata: la val loss 4.08 (perplexity ~59) ha un ceiling teorico intorno a 10–12 per un LM italiano competente.</p>
+  <p>Questo <em>non</em> significa che il modello sia inutile — significa che con più dati migliorerebbe. La domanda operativa è: quanto deve migliorare il base model prima che un dato SFT ne benefici significativamente?</p>
+
+  <h3>Tre tier di sensibilità al base model</h3>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Tier</th><th>Task</th><th>Soglia token</th><th>Base attuale</th><th>Vai ora?</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1 — NLG formulaico</strong></td>
+        <td>Condominio, Moto, Domotica</td>
+        <td class="num">~100–150 M</td>
+        <td class="good">SOPRA la soglia</td>
+        <td class="good">Sì</td>
+      </tr>
+      <tr>
+        <td><strong>2 — NLG creativo</strong></td>
+        <td>Scrittura, stile personale</td>
+        <td class="num">~200–300 M</td>
+        <td class="note-cell">borderline</td>
+        <td class="note-cell">Possibile, rischio di output piatto</td>
+      </tr>
+      <tr>
+        <td><strong>3 — NLU strutturato</strong></td>
+        <td>Conti, SQL, Log, Classificazione</td>
+        <td class="num">~300–500 M</td>
+        <td style="color:#D97706;font-weight:500">SOTTO la soglia</td>
+        <td style="color:#D97706">No, scarsa generalizzazione</td>
+      </tr>
+      <tr>
+        <td><strong>4 — Agentic</strong></td>
+        <td>Assistente personale, tool-use</td>
+        <td class="num">500 M – 1 B</td>
+        <td style="color:#DC2626;font-weight:500">MOLTO SOTTO</td>
+        <td style="color:#DC2626">No, o cambia modello base</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>La logica del Tier 1: per NLG formulaico il task è imitare un template. Il modello non deve "capire" la legge condominiale — deve imparare che dopo "Si convoca l'assemblea" vengono i convocati e poi l'ordine del giorno. Questo pattern è apprendibile con 200–300 esempi SFT anche con un base model di qualità moderata, perché la struttura dell'italiano è già acquisita.</p>
+
+  <h3>DAPT — shortcut per task di dominio</h3>
+  <p>Domain-Adaptive Pre-Training: continued pre-training su testo non supervisionato di dominio specifico <em>prima</em> del SFT, invece di aspettare 900 M token generici.</p>
+  <div class="cmd">CORE (47.8 M tok Wikipedia IT)
+  → DAPT: +5–10 M tok testi condominiali (L.220/2012, verbali, fac-simile)
+  → SFT: 200–300 esempi strutturati
+  → modello specializzato condominio</div>
+  <p>Efficienza: 5 M token di testo burocratico-legale italiano valgono 10× più di 50 M token aggiuntivi di Wikipedia IT per un task condominiale, perché la distribuzione target è quella. È il meccanismo alla base di BioBERT (PubMed pre-training → fine-tuning medico) e di molti modelli verticali industriali.</p>
+  <p>Il corpus DAPT per condominio è liberamente accessibile: testo della L.220/2012, artt. 1117–1139 c.c., fac-simile di convocazioni e verbali disponibili su siti di associazioni di categoria. Target: 3–5 M token, realisticamente raccoglibili in un pomeriggio.</p>
+
+  <h3>Lo sweet spot sintetizzato</h3>
+  <p style="font-family:'IBM Plex Mono',monospace;font-size:0.82rem;line-height:2;color:var(--text-sec)">
+  0 ────── 50 M ──── 150 M ──────── 300 M ────────── 900 M<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;^&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;^&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;^&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;^<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ora&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tier 1 ok&nbsp;&nbsp;&nbsp;&nbsp;Tier 3 ok&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Chinchilla<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(formulaico)&nbsp;(NLU)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;optimal
+  </p>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       ARCHITETTURA MULTI-TRACK
+       ══════════════════════════════════════════════════════════ -->
+  <h2 id="multi-track">Architettura multi-track — branching da Run #3</h2>
+
+  <div class="narr">Run #3 best.pt diventa il Core: un checkpoint frozen che non viene mai sovrascritto. Ogni esperimento successivo parte da lì e produce il suo checkpoint in un path separato. La comparazione è possibile perché tutti i branch condividono lo stesso punto di partenza.</div>
+
+  <h3>Struttura dei branch</h3>
+  <div class="cmd">CORE → checkpoints/run3_best.pt  [LOCKED, mai sovrascritto]
+│
+├── Branch A — SFT diretto (ora, Tier 1)
+│   ├── A1: SFT-condominio    → checkpoints/run5a_sft_cond.pt
+│   ├── A2: SFT-moto          → checkpoints/run5b_sft_moto.pt
+│   └── A3: SFT-scrittura     → checkpoints/run5c_sft_scrit.pt
+│
+├── Branch B — DAPT → SFT (2–4 settimane)
+│   ├── B1: DAPT-legale       → checkpoints/run5d_dapt_legale.pt
+│   │   └── SFT-cond          → checkpoints/run5e_sft_cond_dapt.pt
+│   └── B2: DAPT-moto         → checkpoints/run5f_dapt_moto.pt
+│       └── SFT-moto          → checkpoints/run5g_sft_moto_dapt.pt
+│
+└── Branch C — Extended pre-training (background)
+    └── +200 M token IT       → checkpoints/run6_pt200m.pt
+        └── SFT (tutti i Tier) → checkpoints/run6a_*, run6b_*, ...</div>
+
+  <h3>Logica di confronto</h3>
+  <div class="decision">
+    <div class="decision-label">Esperimenti chiave</div>
+    <div class="decision-title">Tre confronti che rispondono a domande precise</div>
+    <div class="decision-grid">
+      <div class="decision-side">
+        <h4>A1 vs B1 — DAPT vale la pena?</h4>
+        <ul>
+          <li>Stessa SFT dataset (condominio)</li>
+          <li>Differenza: B1 ha 5–10 M token DAPT legale</li>
+          <li>Metrica: PPL test set, qualità output su prompt standard</li>
+          <li>Atteso: B1 migliore su output burocratico, A1 sufficiente per template base</li>
+        </ul>
+      </div>
+      <div class="decision-side">
+        <h4>A1 vs C/SFT-cond — più pre-training aiuta?</h4>
+        <ul>
+          <li>Stessa SFT dataset (condominio)</li>
+          <li>Differenza: C ha base da 200 M token</li>
+          <li>Metrica: generalizzazione a prompt non visti</li>
+          <li>Atteso: C migliore su task NLU, A1 equivalente per NLG puro</li>
+        </ul>
+      </div>
+      <div class="decision-side">
+        <h4>A3 (scrittura) — funziona a questo livello?</h4>
+        <ul>
+          <li>Borderline (Tier 2): base potrebbe essere insufficiente</li>
+          <li>SFT su corpus personale narrativo</li>
+          <li>Misura empirica del floor qualitativo per stile personale</li>
+          <li>Se deludente → rifare su base C</li>
+        </ul>
+      </div>
+      <div class="decision-side">
+        <h4>Cross-domain: SFT fa dimenticare l'italiano?</h4>
+        <ul>
+          <li>Prompt generico in italiano somministrato a A1 e A2</li>
+          <li>Misura il grado di catastrophic forgetting</li>
+          <li>Con 200–300 esempi SFT atteso: forgetting trascurabile</li>
+          <li>Con dataset più grande: potrebbe servire regularizzazione</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>Framework di valutazione</h3>
+  <p>Per rendere i branch comparabili serve un evaluation framework uniforme:</p>
+  <ul>
+    <li><strong>Test set per ogni SFT domain:</strong> 20% holdout del dataset SFT, non visto in training</li>
+    <li><strong>Metrica primaria:</strong> perplexity sul test set di dominio (<code>--eval-only</code>)</li>
+    <li><strong>Metrica secondaria:</strong> BLEU/chrF per task con output quasi-template (condominio)</li>
+    <li><strong>Ispezione qualitativa:</strong> 5–10 prompt standard per domain, output comparati manualmente</li>
+    <li><strong>Cross-domain check:</strong> prompt italiano generico su ogni branch per rilevare forgetting</li>
+  </ul>
+  <div class="cmd">python3 tools/eval_branch.py \
+  --model checkpoints/run5a_sft_cond.pt \
+  --test  data/sft_condominio_test.jsonl \
+  --cross data/wiki_it_val.txt \
+  --out   logs/run5a/eval.json</div>
+
+  <h3>Script da sviluppare</h3>
+  <ul>
+    <li><code>train_sft.py</code> — fine-tuning supervisionato su JSONL (prompt/completion), separato da <code>train.py</code></li>
+    <li><code>tools/eval_branch.py</code> — PPL + BLEU + output qualitativo su più checkpoint</li>
+    <li><code>tools/dapt.py</code> — continued pre-training da checkpoint con corpus di dominio (può essere <code>train.py --resume</code> con corpus DAPT)</li>
+  </ul>
+  <div class="note">
+    <b>train_sft.py vs train.py --resume.</b> Il continued pre-training (Branch C) può usare <code>train.py --resume --data data/corpus_extended.txt</code>. Il DAPT (Branch B) idem. Solo il SFT richiede un nuovo script perché il formato dei dati cambia radicalmente: invece di testo continuo sliding-window si usano coppie prompt/completion con loss mascherata sul prompt.
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       CORPUS — FONTI
+       ══════════════════════════════════════════════════════════ -->
+  <h2 id="corpus-fonti">Corpus esteso — strategia Chinchilla-optimal</h2>
+
+  <div class="narr"><strong>Obiettivo aggiornato (2026-10-01):</strong> 918 M token totali (Chinchilla-optimal: 20 × 45.9 M parametri). Stato attuale Run #3: 47.8 M token — 5.3% dell'ottimale. Gap da colmare: ~870 M token. Le sole fonti letterarie PD (maestrosalvo.it + Gutenberg) coprono ~80–90 M token lordi — per arrivare a scala Chinchilla è necessario un corpus web italiano di grandi dimensioni più una pipeline di filtraggio qualità.</div>
+
+  <h3>Fonti da maestrosalvo.it — analisi piattaforme (già effettuata)</h3>
+  <div class="narr" style="font-size:0.875rem;margin-bottom:0.5rem">La pagina non è un archivio diretto ma elenca 10 piattaforme esterne. Quattro sono utilizzabili per training.</div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Piattaforma</th><th>Contenuto</th><th>Regime</th><th>Token lordi</th><th>Utilità per SLM</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Gutenberg Italia</strong></td>
+        <td>~1 000+ opere: Dante, Manzoni, Verga, Pirandello, D'Annunzio, De Amicis…</td>
+        <td class="good">PD</td>
+        <td class="num">~30 M</td>
+        <td>Alta — registro letterario formale</td>
+      </tr>
+      <tr>
+        <td><strong>Letteratura Italiana</strong></td>
+        <td>Classici, testi critici, saggistica letteraria</td>
+        <td class="good">PD</td>
+        <td class="num">~20 M</td>
+        <td>Alta — varietà registro; ottima per SFT scrittura</td>
+      </tr>
+      <tr>
+        <td><strong>FeedBooks IT</strong></td>
+        <td>PD multilingue, sezione italiana</td>
+        <td class="good">PD</td>
+        <td class="num">~10 M</td>
+        <td>Media — parziale sovrapposizione con Gutenberg</td>
+      </tr>
+      <tr>
+        <td><strong>Manuali.it</strong></td>
+        <td>Manuali tecnici, guide pratiche, how-to in italiano</td>
+        <td class="note-cell">verificare per testo</td>
+        <td class="num">~20–30 M</td>
+        <td>Alta — tecnico-pratico, diversifica da enciclopedico</td>
+      </tr>
+      <tr>
+        <td>BookRepublic / InMondadori / Amazon</td>
+        <td>Narrativa contemporanea commerciale</td>
+        <td style="color:#DC2626">copyright</td>
+        <td>—</td>
+        <td>Non utilizzabile per training</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <p><strong>Caveat registro:</strong> la maggior parte del PD è pre-1928 (Dante, Manzoni, Verga). Italiano ricco ma sintatticamante lontano dal contemporaneo. Peso raccomandato nel mix finale: ≤ 10–15%. Oltre quella soglia il modello sviluppa un italiano "letterario" che richiede correzione in SFT.</p>
+
+  <h3>Corpus web italiano — fonti a larga scala</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Dataset</th><th>Dimensione grezza</th><th>Token netti stimati</th><th>Accesso</th><th>Qualità</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>CulturaX IT</strong></td>
+        <td>~105 GB</td>
+        <td class="num">~550–600 M</td>
+        <td class="note-cell">HF account + accettazione termini</td>
+        <td>Alta — mC4 + OSCAR già filtrati e deduplicati</td>
+      </tr>
+      <tr>
+        <td><strong>CC-100 IT</strong></td>
+        <td>~72 GB gz</td>
+        <td class="num">~350–450 M</td>
+        <td class="good">pubblico, streaming HuggingFace</td>
+        <td>Media — Common Crawl 2018, filtro lingua base</td>
+      </tr>
+      <tr>
+        <td><strong>OSCAR-2301 IT</strong></td>
+        <td>~50 GB</td>
+        <td class="num">~300–350 M</td>
+        <td class="note-cell">HF account + termini</td>
+        <td>Media-alta — dedup + qualità verificati</td>
+      </tr>
+      <tr>
+        <td><strong>mC4 IT</strong></td>
+        <td>~30 GB</td>
+        <td class="num">~150–200 M</td>
+        <td class="good">pubblico, streaming HuggingFace</td>
+        <td>Media — filtro C4 adattato al multilingue</td>
+      </tr>
+      <tr>
+        <td>Wikipedia IT (dump completo)</td>
+        <td>~3 GB bz2</td>
+        <td class="num">~235 M totali</td>
+        <td class="good">pubblico, dump Wikimedia</td>
+        <td>Alta — enciclopedico, verificato editorialmente</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <p><strong>Raccomandazione:</strong> <strong>CulturaX IT</strong> come prima scelta (già deduplicato, qualità più alta). Se accesso non disponibile: <strong>CC-100 IT via streaming</strong> (nessun account) con pipeline di filtraggio propria. CulturaX + Wikipedia + Gutenberg + Manuali porta a ~880 M token — 96% di Chinchilla-optimal.</p>
+
+  <h3>Qualità &gt; Quantità — la regola Qwen e la convergenza del settore</h3>
+
+  <div class="narr">La regola emersa dai modelli 2024–2025 è unanime: un corpus di 50 M token curati supera regolarmente un corpus di 500 M non filtrati. Phi-3 (Microsoft, 2024) è addestrato su 3.3 T token sintetici ad alta qualità generati da GPT-4 — un modello da 3.8 B parametri che supera modelli 5× più grandi su molti benchmark. Qwen2.5-Coder e Qwen2.5-Math usano upsapling aggressivo dei dati di dominio (3–5×) e quality scoring basato su perplexity. La variabile dominante non è il numero di token: è la loro densità informativa.</div>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Stadio</th><th>Tecnica</th><th>Rimozione tipica</th><th>Tool nel progetto</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Euristico</strong></td>
+        <td>&lt; 50 parole, &gt; 30% char non-alfa, linee duplicate interne, densità simboli anomala</td>
+        <td class="num">15–25%</td>
+        <td><code>tools/filter_corpus.py</code></td>
+      </tr>
+      <tr>
+        <td><strong>2. Lingua</strong></td>
+        <td>fastText langdetect — scarta se P(italiano) &lt; 0.85</td>
+        <td class="num">5–15%</td>
+        <td><code>--lang it</code></td>
+      </tr>
+      <tr>
+        <td><strong>3. Deduplicazione</strong></td>
+        <td>Exact dedup su frasi; MinHash per near-duplicate a livello documento</td>
+        <td class="num">20–40%</td>
+        <td><code>--dedup</code></td>
+      </tr>
+      <tr>
+        <td><strong>4. Quality score PPL</strong></td>
+        <td>Perplexity con Run #3 come scorer: alta PPL = testo rumoroso/non italiano. Scarta top 20%.</td>
+        <td class="num">15–20%</td>
+        <td><code>--checkpoint checkpoints/best.pt --ppl-cut 0.80</code></td>
+      </tr>
+      <tr>
+        <td><strong>5. Domain upsampling</strong></td>
+        <td>Wikipedia + Gutenberg ripetuti 2× nel mix. Web generale 1×. Upsapling qualità senza overhead di rete.</td>
+        <td>—</td>
+        <td>Concatenazione corpus finale</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Il filtro PPL al stadio 4 usa il modello Run #3 come <em>quality scorer</em>: testo ad alta perplexity rispetto al baseline Wikipedia è probabilmente rumoroso, frammentato o non italiano. La pipeline migliora ad ogni run — i modelli successivi possono essere usati come scorer più precisi per i corpus dei run futuri.</p>
+
+  <h3>Composizione target — corpus Chinchilla-optimal (~918 M token)</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Categoria</th><th>Fonte principale</th><th>Token target</th><th>%</th><th>Probe benchmarking</th></tr></thead>
+    <tbody>
+      <tr><td>Enciclopedico</td><td>Wikipedia IT (dump completo)</td><td class="num">~230 M</td><td class="num">25%</td><td><code>probes/wiki_it.txt</code></td></tr>
+      <tr><td>Web generale</td><td>CulturaX IT / CC-100 IT filtrati</td><td class="num">~460 M</td><td class="num">50%</td><td><code>probes/web_gen.txt</code></td></tr>
+      <tr><td>Letterario PD</td><td>Gutenberg IT + Letteratura IT + FeedBooks</td><td class="num">~92 M</td><td class="num">10%</td><td><code>probes/letter_pd.txt</code></td></tr>
+      <tr><td>Tecnico</td><td>Manuali.it + PDF/DOCX tecnici</td><td class="num">~92 M</td><td class="num">10%</td><td><code>probes/tecnico_it.txt</code></td></tr>
+      <tr><td>Narrativo contemporaneo</td><td>Corpus personale esistente</td><td class="num">~44 M</td><td class="num">5%</td><td><code>probes/narrativo_it.txt</code></td></tr>
+      <tr class="hl"><td><strong>Totale</strong></td><td></td><td class="num"><strong>~918 M</strong></td><td class="num"><strong>100%</strong></td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Il 50% web generale garantisce diversità linguistica e riduce l'overfitting su un singolo registro. Senza filtraggio qualità questo blocco degrada il modello — la pipeline di filtraggio non è opzionale.</p>
+
+  <h3>Benchmarking per categoria — probe files</h3>
+  <p>Cinque file probe (500–1 000 token ciascuno, verificati manualmente). La PPL su ciascuno è misurata ogni N step durante il training: curve separate per categoria permettono di identificare quando il modello "apprende" ciascun registro e se un tipo di testo causa forgetting su un altro.</p>
+  <div class="cmd">probes/
+  wiki_it.txt       # 500 token Wikipedia IT — enciclopedico contemporaneo
+  web_gen.txt       # 500 token web pulito — informale, variato
+  letter_pd.txt     # 500 token Manzoni / Calvino — letterario PD
+  tecnico_it.txt    # 500 token manuale tecnico italiano
+  narrativo_it.txt  # 500 token corpus personale — narrativo contemporaneo
+
+# Training con probe multipli (--probe-dir carica tutti i .txt)
+python3 train.py --tokenizer bpe-spm --resume \
+    --data data/corpus_run4.txt \
+    --probe-dir probes/ --probe-interval 500</div>
+
+  <h3>Acquisizione corpus — comandi pratici</h3>
+  <div class="cmd"># Dipendenze
+pip install pdfminer.six python-docx python-pptx odfpy
+pip install datasets   # HuggingFace streaming
+pip install fasttext   # filtro lingua
+
+# Wikipedia IT — dump completo (senza limite; attuale è 200 MB, dump ~3 GB bz2)
+curl -L "https://dumps.wikimedia.org/itwiki/latest/itwiki-latest-pages-articles.xml.bz2" \
+     -o data/itwiki_full.xml.bz2
+python3 tools/wiki_to_corpus.py data/itwiki_full.xml.bz2 \
+        --max-mb 3000 --out data/wiki_it_full.txt
+
+# Fonti letterarie PD — converter universale (epub, pdf, docx, html, pptx)
+python3 tools/convert_to_text.py --dir ~/Libri/Gutenberg --out data/gutenberg_it.txt
+python3 tools/convert_to_text.py --dir ~/Documenti/Tecnici \
+        --ext pdf,docx,html --out data/tecnico_it.txt
+
+# CC-100 IT — streaming HuggingFace (nessun account)
+python3 tools/fetch_cc100.py --lang it --max-gb 10 --out data/cc100_it_raw.txt
+
+# Filtraggio qualità — usa Run #3 come scorer
+python3 tools/filter_corpus.py data/cc100_it_raw.txt \
+        --checkpoint checkpoints/best.pt \
+        --lang it --min-words 50 --ppl-cut 0.80 --dedup \
+        --out data/cc100_it_clean.txt
+
+# Corpus finale con upsampling qualità (Wikipedia 2×, resto 1×)
+cat data/wiki_it_full.txt > data/corpus_run4.txt
+cat data/wiki_it_full.txt >> data/corpus_run4.txt   # 2× wiki
+cat data/gutenberg_it.txt >> data/corpus_run4.txt
+cat data/tecnico_it.txt   >> data/corpus_run4.txt
+cat data/cc100_it_clean.txt >> data/corpus_run4.txt
+cat data/corpus_bpe.txt   >> data/corpus_run4.txt   # corpus personale</div>
+
+  <div class="note">
+    <b>Tools già implementati:</b> <code>tools/convert_to_text.py</code> (converter universale PDF/DOCX/PPTX/HTML/EPUB), <code>tools/fetch_cc100.py</code> (streaming HuggingFace CC-100), <code>tools/filter_corpus.py</code> (filtraggio qualità con PPL scorer), <code>tools/eval_ppl.py</code> (valutazione interattiva PPL su testo libero).<br>
+    <b>Da implementare:</b> flag <code>--probe-dir</code> in <code>train.py</code> per benchmarking multi-categoria durante il training.
+  </div>
+
 </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PPL — ESPERIMENTO EMPIRICO
+       ══════════════════════════════════════════════════════════ -->
+  <h2 id="ppl-empirico">Perplexity come quality scorer — esperimento empirico (2026-10-01)</h2>
+
+  <div class="narr">Dopo aver implementato <code>tools/eval_ppl.py</code>, abbiamo eseguito un set di test su Run #3 per capire <em>cosa rileva davvero</em> il modello quando misura la perplexity. Il risultato è più sfumato — e più utile — di quanto ci aspettassimo.</div>
+
+  <h3>Set di test — risultati completi</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>#</th><th>Testo</th><th>PPL</th><th>Livello</th><th>Diagnosi</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>"ciao sono francesco"</td>
+        <td class="num">2 690</td>
+        <td class="warn">MOLTO ALTA</td>
+        <td>Italiano corretto — ma conversazionale. Il modello non ha mai visto questo registro.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>"hi O'sdg"</td>
+        <td class="num">2 240</td>
+        <td class="warn">MOLTO ALTA</td>
+        <td>Non-italiano. Sorprendentemente simile al test 1 — entrambi fuori distribuzione per motivi diversi.</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>"la provincia di Milano è ricca di smog"</td>
+        <td class="num">78.3</td>
+        <td class="good">MEDIA</td>
+        <td>Italiano factual, registro informativo. Entità note (Milano). Nessun errore — PPL bassa.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>"Carlo Magno ha <strong>fondando</strong> il Sacro Romano Impero"</td>
+        <td class="num">79.0</td>
+        <td class="good">MEDIA</td>
+        <td>Errore grammaticale (<em>ha fondando</em>). PPL quasi identica al test corretto. <strong>Invisibile al modello.</strong></td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>"Carlo Magno ha fondato il <strong>Saro</strong> Romano Impero"</td>
+        <td class="num">615.2</td>
+        <td class="warn">MOLTO ALTA</td>
+        <td>Typo in entità nominata (<em>Saro</em> vs <em>Sacro</em>). <strong>Rilevato con forza.</strong> Il token "Saro" è rarissimo in Wikipedia IT.</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>"Carlo Magno ha fondato il Sacro Romano Impero"</td>
+        <td class="num">38.7</td>
+        <td class="good">BASSA ✓</td>
+        <td>Testo corretto, entità nominata nota. PPL baseline di riferimento.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Il quadro che emerge</h3>
+  <div class="narr">Il confronto test 4 / 5 / 6 è il risultato più importante. L'errore grammaticale <em>ha fondando</em> (test 4) produce PPL 79 — praticamente identica al testo corretto su stesso argomento (test 3: 78.3). Il typo <em>Saro Romano Impero</em> (test 5) produce PPL 615, un aumento di 16× rispetto alla baseline (test 6: 38.7).</div>
+
+  <div class="narr">La PPL non misura la correttezza grammaticale: misura la <strong>distanza dalla distribuzione di training</strong>. "Ha fondando" è inatteso ma non impossibile — il modello ha visto gerundi e participi in costruzioni varie, la sorpresa è contenuta. "Saro Romano Impero" rompe una sequenza che il modello conosce con certezza quasi assoluta: "Sacro Romano Impero" compare come unità coesa in migliaia di articoli Wikipedia — togliere una lettera è catastrofico per la PPL.</div>
+
+  <h3>Capacità di Run #3 come quality scorer</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Tipo di errore / mismatch</th><th>Rilevabile?</th><th>Perché</th></tr></thead>
+    <tbody>
+      <tr><td>Lingua straniera</td><td class="good">Sì — forte</td><td>Fuori distribuzione totale</td></tr>
+      <tr><td>Italiano informale / conversazionale</td><td class="good">Sì — forte</td><td>Registro mai visto in Wikipedia</td></tr>
+      <tr><td>Typo in entità nominate note (Sacro → Saro)</td><td class="good">Sì — forte</td><td>Token raro/OOV, rompe sequenza coesa</td></tr>
+      <tr><td>OCR difettoso su nomi propri</td><td class="good">Sì — probabile</td><td>Stesso meccanismo del typo</td></tr>
+      <tr><td>Errori morfosintattici comuni (ha fondando)</td><td class="warn">Segnale debole</td><td>Pattern simili presenti nel corpus</td></tr>
+      <tr><td>Errori semantici con entità corrette</td><td class="bad">No</td><td>Modello non ha world knowledge causale</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="narr">Per il filtraggio del corpus web questo profilo è utile: testi con OCR difettoso, nomi di luogo corrotti, entità frammentate emergono come alta PPL. Il modello Run #3 è di fatto un rilevatore di <em>coerenza fattuale locale</em> più che un correttore grammaticale. La pipeline migliora ad ogni run — Run #4, addestrato su corpus più ampio e vario, produrrà un quality scorer più sensibile anche agli errori morfosintattici.</div>
+
+  <h3>Nota metodologica — il paradosso del testo ripetitivo</h3>
+  <div class="narr">Un'avvertenza da tenere presente nel filtraggio: testo altamente ripetitivo (spam, boilerplate, liste di parole chiave) ottiene PPL <em>bassa</em> — è iper-prevedibile, quindi il modello non si sorprende. Il filtro PPL deve essere preceduto da un filtro euristico (rapporto linee duplicate, densità caratteri non-alfa) per escludere questi falsi negativi. La pipeline in <code>filter_corpus.py</code> gestisce questo: lo stadio 1 (euristico) precede lo stadio 4 (PPL scorer).</div>
+
+  <div class="cmd"># Valutazione interattiva PPL con Run #3
+python3 tools/eval_ppl.py
+# → REPL: inserisci testo, invio per valutare
+
+# Singolo testo da CLI
+python3 tools/eval_ppl.py "Carlo Magno ha fondato il Sacro Romano Impero"
+
+# Scale di riferimento (addestrato su Wikipedia IT)
+#   PPL  < 60  : BASSA    — registro enciclopedico, come Wikipedia
+#   PPL 60–150 : MEDIA    — italiano buono, registro diverso
+#   PPL 150–400: ALTA     — probabilmente non-italiano o degradato
+#   PPL  400+  : MOLTO ALTA — lingua straniera, spam, OCR difettoso</div>
+
+

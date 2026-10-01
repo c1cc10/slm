@@ -1,0 +1,627 @@
+<title>SLM — Panorama delle Specializzazioni</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --bg:       #F5F5F5;
+  --surface:  #FFFFFF;
+  --surface2: #EBEBEB;
+  --text:     #141414;
+  --text-sec: #555555;
+  --accent:   #141414;
+  --accent-l: #333333;
+  --border:   #DCDCDC;
+  --mono:     'IBM Plex Mono', monospace;
+
+  --risk-bg:  #FEF2F2; --risk-br: #FCA5A5; --risk-tx: #991B1B;
+  --ok-bg:    #F0FDF4; --ok-br:   #86EFAC; --ok-tx:   #15803D;
+  --info-bg:  #EFF6FF; --info-br: #93C5FD; --info-tx: #1D4ED8;
+  --warn-bg:  #FFFBEB; --warn-br: #FDE68A; --warn-tx: #92400E;
+  --dim-bg:   #F9F5FF; --dim-br:  #C4B5FD; --dim-tx:  #4C1D95;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#111111; --surface:#1A1A1A; --surface2:#222222;
+    --text:#EEEEEE; --text-sec:#909090; --accent:#EEEEEE; --accent-l:#CCCCCC;
+    --border:#2E2E2E;
+    --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+    --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+    --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+    --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+    --dim-bg:#1E183A;  --dim-br:#4C3A8A;  --dim-tx:#C4B5FD;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#111111; --surface:#1A1A1A; --surface2:#222222;
+  --text:#EEEEEE; --text-sec:#909090; --accent:#EEEEEE; --accent-l:#CCCCCC;
+  --border:#2E2E2E;
+  --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+  --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+  --dim-bg:#1E183A;  --dim-br:#4C3A8A;  --dim-tx:#C4B5FD;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px; line-height: 1.72;
+  background: var(--bg); color: var(--text);
+  padding: 0 20px 80px;
+}
+.page { max-width: 860px; margin: 0 auto; padding-top: 52px; }
+
+.eyebrow {
+  font-family: var(--mono); font-size: 0.68rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-sec); margin-bottom: 8px;
+}
+h1 {
+  font-size: 1.8rem; font-weight: 600; letter-spacing: -0.025em;
+  color: var(--text); margin: 0 0 10px; text-wrap: balance;
+}
+.subtitle {
+  color: var(--text-sec); font-size: 0.92rem; line-height: 1.6; margin: 0 0 8px;
+}
+.meta {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--text-sec);
+  margin-bottom: 44px; padding-bottom: 20px;
+  border-bottom: 2px solid var(--accent);
+}
+h2 {
+  font-size: 1.02rem; font-weight: 600; color: var(--text);
+  margin: 52px 0 16px; padding-top: 36px; border-top: 1px solid var(--border);
+  letter-spacing: -0.01em;
+}
+h3 {
+  font-size: 0.9rem; font-weight: 600; color: var(--text-sec);
+  margin: 32px 0 10px; text-transform: uppercase; letter-spacing: 0.06em;
+  font-family: var(--mono); font-size: 0.72rem;
+}
+p { margin: 0 0 14px; }
+p:last-child { margin-bottom: 0; }
+
+.callout {
+  padding: 14px 16px; border-radius: 6px; border-left: 3px solid;
+  font-size: 0.88rem; line-height: 1.6; margin: 18px 0;
+}
+.callout strong { display: block; margin-bottom: 4px; font-size: 0.82rem;
+  letter-spacing: 0.04em; text-transform: uppercase; }
+.callout.ok    { background: var(--ok-bg);   border-color: var(--ok-br);   color: var(--ok-tx); }
+.callout.info  { background: var(--info-bg); border-color: var(--info-br); color: var(--info-tx); }
+.callout.warn  { background: var(--warn-bg); border-color: var(--warn-br); color: var(--warn-tx); }
+.callout.dim   { background: var(--dim-bg);  border-color: var(--dim-br);  color: var(--dim-tx); }
+
+/* ── MASTER TABLE ─────────────────────────────────────────── */
+.master-table {
+  width: 100%; border-collapse: collapse; font-size: 0.83rem;
+  margin: 20px 0; overflow-x: auto; display: block;
+}
+.master-table th {
+  text-align: left; font-family: var(--mono);
+  font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-sec); padding: 8px 10px;
+  border-bottom: 2px solid var(--border); white-space: nowrap;
+  background: var(--surface2);
+}
+.master-table td {
+  padding: 9px 10px; border-bottom: 1px solid var(--border);
+  vertical-align: top; line-height: 1.45;
+}
+.master-table tr:last-child td { border-bottom: none; }
+.master-table tbody tr:hover { background: var(--surface2); }
+
+.case-name { font-weight: 600; color: var(--text); }
+.case-tag {
+  display: inline-block; font-family: var(--mono); font-size: 0.68rem;
+  padding: 1px 6px; border-radius: 3px; margin-top: 3px;
+  background: var(--surface2); color: var(--text-sec);
+  border: 1px solid var(--border);
+}
+
+.pill {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  font-family: var(--mono); font-size: 0.7rem; font-weight: 500;
+  white-space: nowrap;
+}
+.pill-h  { background: #DCFCE7; color: #15803D; }
+.pill-m  { background: #FEF9C3; color: #854D0E; }
+.pill-l  { background: #FEE2E2; color: #991B1B; }
+.pill-v  { background: #EDE9FE; color: #4C1D95; }
+
+/* Dark mode pills */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pill-h  { background: #0D2818; color: #6EE7B7; }
+  :root:not([data-theme="light"]) .pill-m  { background: #2A1A0A; color: #FDE68A; }
+  :root:not([data-theme="light"]) .pill-l  { background: #2D0A0A; color: #FCA5A5; }
+  :root:not([data-theme="light"]) .pill-v  { background: #1E183A; color: #C4B5FD; }
+}
+:root[data-theme="dark"] .pill-h  { background: #0D2818; color: #6EE7B7; }
+:root[data-theme="dark"] .pill-m  { background: #2A1A0A; color: #FDE68A; }
+:root[data-theme="dark"] .pill-l  { background: #2D0A0A; color: #FCA5A5; }
+:root[data-theme="dark"] .pill-v  { background: #1E183A; color: #C4B5FD; }
+
+.section-row td {
+  background: var(--surface2); font-family: var(--mono);
+  font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-sec); padding: 6px 10px;
+  border-top: 2px solid var(--border);
+}
+
+/* Mini cards for new proposals */
+.proposals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px; margin: 16px 0;
+}
+.prop-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px;
+  font-size: 0.85rem; line-height: 1.55;
+}
+.prop-card .prop-title {
+  font-weight: 600; font-size: 0.88rem;
+  margin-bottom: 4px; color: var(--text);
+}
+.prop-card .prop-paradigm {
+  font-family: var(--mono); font-size: 0.7rem; color: var(--text-sec);
+  margin-bottom: 6px;
+}
+.prop-card .prop-why { color: var(--text-sec); font-size: 0.83rem; }
+
+/* Doc links */
+.doc-list { list-style: none; padding: 0; margin: 12px 0; }
+.doc-list li {
+  padding: 8px 12px; border: 1px solid var(--border);
+  border-radius: 6px; margin-bottom: 6px;
+  background: var(--surface); font-size: 0.88rem;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px;
+}
+.doc-list li .doc-name { font-weight: 500; }
+.doc-list li .doc-file { font-family: var(--mono); font-size: 0.75rem; color: var(--text-sec); }
+
+code {
+  font-family: var(--mono); font-size: 0.85em;
+  background: var(--surface2); padding: 1px 5px;
+  border-radius: 3px;
+}
+</style>
+
+<div class="page">
+
+<div class="eyebrow">SLM · Documento di decisione · Run #5</div>
+<h1>Panorama delle Specializzazioni</h1>
+<p class="subtitle">Riepilogo di tutti i case study analizzati, analisi rapida dei casi pendenti, e proposte aggiuntive. Documento decisionale per la scelta del target di SFT.</p>
+<div class="meta">Documento di progetto · v0.1 · 2026-09-29 · 9 casi utente + 11 proposte</div>
+
+<!-- ── MASTER TABLE ────────────────────────────────────────── -->
+<h2>Tabella master: tutti i case study</h2>
+
+<p>I livelli di fattibilità si riferiscono al task <em>core</em> del caso d'uso, non alla versione più ambiziosa possibile. Contesto 512 token, modello 45M Q8_0.</p>
+
+<table class="master-table">
+  <thead>
+    <tr>
+      <th>Case study</th>
+      <th>Paradigma LM</th>
+      <th>Fattibilità 45M</th>
+      <th>Vincolo critico</th>
+      <th>Infrastruttura aggiuntiva</th>
+      <th>Valore differenziante</th>
+      <th>Analisi</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <tr class="section-row"><td colspan="7">Proposti dall'utente — documenti completi</td></tr>
+
+    <tr>
+      <td>
+        <div class="case-name">Assistente moto</div>
+        <span class="case-tag">NLG</span>
+      </td>
+      <td>Dati strutturati → testo</td>
+      <td><span class="pill pill-h">ALTA</span></td>
+      <td>Safety fisica</td>
+      <td>GPS, meteo API</td>
+      <td>Localismo, voce in italiano</td>
+      <td><span class="case-tag">slm-feasibility-moto.html</span></td>
+    </tr>
+    <tr>
+      <td>
+        <div class="case-name">Assistente assicurativo</div>
+        <span class="case-tag">NLU</span>
+      </td>
+      <td>Testo → struttura JSON</td>
+      <td><span class="pill pill-m">MEDIA</span></td>
+      <td>GDPR business, compliance IVASS</td>
+      <td>On-premise, audit log</td>
+      <td>On-premise obbligatorio → nessuna alternativa cloud</td>
+      <td><span class="case-tag">slm-feasibility-assicurativo.html</span></td>
+    </tr>
+    <tr>
+      <td>
+        <div class="case-name">Assistente scrittura</div>
+        <span class="case-tag">NLG + NLU</span>
+      </td>
+      <td>Generazione + critica locale</td>
+      <td><span class="pill pill-m">MEDIA</span></td>
+      <td>Contesto (512 tok &lt; testo lungo)</td>
+      <td>Nessuna</td>
+      <td>Corpus personale → stile inimitabile da GPT-4</td>
+      <td><span class="case-tag">slm-feasibility-scrittura.html</span></td>
+    </tr>
+    <tr>
+      <td>
+        <div class="case-name">Assistente personale</div>
+        <span class="case-tag">Agentico</span>
+      </td>
+      <td>Intent extraction + tool use</td>
+      <td><span class="pill pill-m">MEDIA</span></td>
+      <td>Privacy familiare, dati sanitari Art.9</td>
+      <td>Calendar API, SQLite, scheduler, push</td>
+      <td>Dati medici famigliari → on-device obbligatorio</td>
+      <td><span class="case-tag">slm-feasibility-assistant.html</span></td>
+    </tr>
+    <tr>
+      <td>
+        <div class="case-name">Assistente al codice</div>
+        <span class="case-tag">NLG</span>
+      </td>
+      <td>Completamento + boilerplate</td>
+      <td><span class="pill pill-h">MOLTO ALTA</span></td>
+      <td>Tokenizer subottimale per codice</td>
+      <td>LSP server (semplice)</td>
+      <td>Corpus esaustivo → batte Copilot su linguaggi di nicchia</td>
+      <td><span class="case-tag">slm-feasibility-codice.html</span></td>
+    </tr>
+
+    <tr class="section-row"><td colspan="7">Proposti dall'utente — analisi rapida</td></tr>
+
+    <tr>
+      <td>
+        <div class="case-name">Agente domotica</div>
+        <span class="case-tag">NLU → tool</span>
+      </td>
+      <td>Comandi NL → MQTT/API</td>
+      <td><span class="pill pill-h">MOLTO ALTA</span></td>
+      <td>Nessuno grave — privacy low (stati dispositivi)</td>
+      <td>Home Assistant API o MQTT broker</td>
+      <td>Italiano + nomi dispositivi personalizzati</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>
+        <div class="case-name">Gestione audio/video</div>
+        <span class="case-tag">NLU + NLG</span>
+      </td>
+      <td>NL → query su metadati; metadati → testo</td>
+      <td><span class="pill pill-m">MEDIA</span></td>
+      <td>Upstream: estrazione metadati (Whisper, EXIF, vision)</td>
+      <td>Whisper ASR, EXIF tools, SQLite media DB</td>
+      <td>Ricerca in italiano su archivi personali</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>
+        <div class="case-name">Amministratore condominio</div>
+        <span class="case-tag">NLG</span>
+      </td>
+      <td>Template + dati → documenti formali</td>
+      <td><span class="pill pill-h">ALTA</span></td>
+      <td>GDPR (dati condòmini), privacy indirizzi</td>
+      <td>Nessuna (generazione locale)</td>
+      <td>Linguaggio burocratico IT altamente formulaico → 45M eccelle</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>
+        <div class="case-name">Gestione conti domestici</div>
+        <span class="case-tag">NLG</span>
+      </td>
+      <td>Dati finanziari → narrative + alert</td>
+      <td><span class="pill pill-h">ALTA</span></td>
+      <td>Privacy finanziaria — on-device obbligatorio</td>
+      <td>Python analytics (pandas), import CSV bancari</td>
+      <td>Analisi + narrazione in italiano su dati privati</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>
+        <div class="case-name">Analisi DB + log applicativi</div>
+        <span class="case-tag">NLU + NLG</span>
+      </td>
+      <td>NL → SQL/query; risultati/pattern → narrativa</td>
+      <td><span class="pill pill-h">ALTA</span></td>
+      <td>Schema-specific; rischio hallucination su analisi aperta</td>
+      <td>DB engine o log aggregator (non LM) per analytics</td>
+      <td>Text-to-SQL su schema proprietario — nessuna alternativa cloud sicura</td>
+      <td>—</td>
+    </tr>
+
+  </tbody>
+</table>
+
+<!-- ── NOTE SUI 4 CASI RAPIDI ────────────────────────────────── -->
+<h2>Analisi rapida dei quattro casi pendenti</h2>
+
+<h3>Agente domotica</h3>
+<p>
+  Il task NL più semplice dell'intero set. Lo spazio dei comandi è enumerabile:
+  accendi/spegni/alza/abbassa + nome dispositivo + valore. Un 45M è tecnicamente
+  sovradimensionato per i comandi semplici. Il valore aggiunto è l'italiano
+  e i nomi dei dispositivi personalizzati per la casa (il modello impara
+  "la lampada del corridoio" e "la stufa dello studio"). Il SFT richiede
+  50-150 esempi per coprire il dominio. L'integrazione con Home Assistant
+  è documentata e il layer Python è banale.
+</p>
+<p>
+  Unica complessità: le condizioni implicite ("quando arrivo" → trigger su geofencing,
+  "prima di andare a dormire" → trigger orario). Queste richiedono un orchestrator
+  che risolva le condizioni; il LM estrae l'intent condizionale in JSON.
+</p>
+
+<h3>Gestione audio/video + retrieval NL</h3>
+<p>
+  Due sotto-problemi distinti. <strong>(1) Retrieval:</strong> il LM mappa una query NL
+  su criteri di ricerca strutturati — identico al caso assistente personale,
+  alta fattibilità. <strong>(2) Organizzazione:</strong> il LM genera nomi di cartelle,
+  tag, e descrizioni brevi da metadati — identico al caso domotica, NLG puro.
+</p>
+<p>
+  Il vincolo non è il LM: è il <em>cold start</em>. I file esistenti non hanno
+  metadati strutturati. Serve una pipeline upstream: Whisper per il parlato
+  (trascrizione), EXIF per le foto, un modello vision leggero per i video.
+  Il LM gestisce solo l'interfaccia NL; il valore dipende dalla qualità dei metadati.
+</p>
+
+<h3>Amministratore condominio</h3>
+<p>
+  Caso di interesse tecnico elevato. L'italiano burocratico è altamente
+  <em>formulaico</em>: le lettere di convocazione, i verbali di assemblea,
+  le diffide seguono template rigidi con poche variabili (date, nomi, importi).
+  Un 45M addestrato su un corpus di documenti condominiali impara queste strutture
+  con pochissimi esempi. Il modello non deve "ragionare": deve riempire template
+  con il registro corretto.
+</p>
+<p>
+  Dataset: 200-400 esempi (input: dati grezzi + tipo documento →
+  output: documento formale). Corpus pubblico disponibile su normativa condominiale
+  italiana (legge 220/2012, codice civile, regolamenti tipo). GDPR rilevante
+  per nomi/indirizzi dei condòmini ma gestibile.
+</p>
+
+<h3>Gestione conti domestici</h3>
+<p>
+  Architettura pulita: Python + pandas fa l'analisi; il LM genera la narrazione.
+  Il modello riceve come input un riassunto strutturato (JSON con aggregati di spesa,
+  variazioni percentuali, anomalie rilevate) e produce testo italiano accessibile.
+  Identico al pattern moto (dati strutturati → testo), ma su dati finanziari.
+  L'unico elemento non NLG è la generazione di suggerimenti strategici:
+  "potresti risparmiare X riducendo Y" — richiede un piccolo SFT su esempi
+  di consigli finanziari personali. Privacy finanziaria = on-device obbligatorio.
+</p>
+
+<h3>Analisi DB + log applicativi</h3>
+<p>
+  Il pattern è lo stesso dei conti domestici e del moto: Python fa l'analisi,
+  il LM fa l'interfaccia. La distinzione critica: <em>pattern recognition</em>
+  su log è anomaly detection (ML/statistico, non LM); <em>classificazione</em>
+  di messaggi di errore è NLU (LM). Un messaggio come
+  <code>NullPointerException in UserService at line 142</code> → categoria
+  "null reference" è un task di classificazione su testo breve: altissima
+  fattibilità per 45M.
+</p>
+<p>
+  Il caso più interessante è il <strong>text-to-SQL su schema proprietario</strong>.
+  Un 45M addestrato sul solo schema del proprio database
+  (tabelle, colonne, relazioni — un testo di poche centinaia di righe)
+  impara a tradurre domande in italiano in query SQL corrette per quello schema.
+  Questo è uno dei task NLU con il miglior rapporto fattibilità/utilità pratica
+  dell'intero set: elimina il bisogno di esporre i dati a un'API cloud
+  per avere una query interface in linguaggio naturale.
+</p>
+<p>
+  Rischio: le domande aperte tipo "perché sta succedendo questo errore?"
+  sono pericolose — il LM potrebbe allucinare cause plausibili ma errate.
+  Il sistema deve restituire dati, non diagnosi; le diagnosi restano umane.
+</p>
+
+<!-- ── PROPOSTE ────────────────────────────────────────────── -->
+<h2>Proposte aggiuntive</h2>
+
+<p>
+  Undici proposte ordinate per forza del caso tecnico con 45M.
+  Le prime quattro sono casi dove il modello piccolo ha il vantaggio strutturale
+  più netto. Le ultime tre sono casi da approfondire prima di procedere.
+</p>
+
+<div class="proposals-grid">
+
+  <div class="prop-card">
+    <div class="prop-title">Generatore sottotitoli IT</div>
+    <div class="prop-paradigm">NLG · testo → .srt</div>
+    <div class="prop-why">
+      Transcript ASR (Whisper) → sottotitoli formattati con timing, punteggiatura corretta,
+      normalizzazione del parlato. Il LM non trascrive: formatta.
+      Corpus: file .srt italiani da YouTube/OpenSubtitles.
+    </div>
+  </div>
+
+  <div class="prop-card">
+    <div class="prop-title">Italiano piano da burocrazia</div>
+    <div class="prop-paradigm">NLG · semplificazione</div>
+    <div class="prop-why">
+      Testo burocratico/legale italiano → riformulazione accessibile.
+      Corpus di training naturalmente abbondante (comunicazioni PA, leggi).
+      Task di riscrittura → alta fattibilità per corpus specifico.
+    </div>
+  </div>
+
+  <div class="prop-card">
+    <div class="prop-title">Generatore commento sportivo</div>
+    <div class="prop-paradigm">NLG · dati → testo</div>
+    <div class="prop-why">
+      Dati evento (goal, minuto, giocatore, punteggio) → testo commentary IT.
+      Stesso paradigma del caso moto. Corpus: radiocronache, articoli sportivi.
+      Stile altamente formulaico → 45M eccelle.
+    </div>
+  </div>
+
+  <div class="prop-card">
+    <div class="prop-title">Verbale riunione → azioni</div>
+    <div class="prop-paradigm">NLU · testo → struttura</div>
+    <div class="prop-why">
+      Trascrizione riunione (da Whisper) → lista action items strutturata
+      con responsabile, scadenza, priorità.
+      Testi brevi di 300-500 token. Corpus sintetico costruibile.
+    </div>
+  </div>
+
+  <div class="prop-card">
+    <div class="prop-title">Assistente ricette</div>
+    <div class="prop-paradigm">NLG + NLU</div>
+    <div class="prop-why">
+      Ingredienti disponibili → suggerimento ricetta IT + istruzioni passo-passo.
+      Scala ingredienti per numero di persone. Corpus ricette italiane abbondante.
+      Dominio narrow → 45M eccelle sulla specificità regionale.
+    </div>
+  </div>
+
+  <div class="prop-card">
+    <div class="prop-title">NER testo medico IT</div>
+    <div class="prop-paradigm">NLU · classificazione token</div>
+    <div class="prop-why">
+      Estrarre farmaci, dosaggi, diagnosi da referti o prescrizioni.
+      Task di token classification. Training richiede annotazioni.
+      Corpus: testi medici IT pubblici (FCC, ISSalute).
+    </div>
+  </div>
+
+  <div class="prop-card">
+    <div class="prop-title">Traduttore dialettale → italiano standard</div>
+    <div class="prop-paradigm">NLG · normalizzazione</div>
+    <div class="prop-why">
+      Testo in dialetto o italiano molto informale → registro standard.
+      Corpus: testi bilingue IT dialetto/standard.
+      Caso d'uso per accessibilità e archivistica.
+    </div>
+  </div>
+
+  <div class="prop-card">
+    <div class="prop-title">Generatore alt-text IT</div>
+    <div class="prop-paradigm">NLG · multimodale</div>
+    <div class="prop-why">
+      YOLO v3 rileva oggetti → LM genera descrizione italiana per accessibilità.
+      Integrazione naturale con la roadmap multimodale del progetto.
+      Corpus: COCO con didascalie tradotte in italiano.
+    </div>
+  </div>
+
+  <div class="prop-card">
+    <div class="prop-title">Assistente customer support</div>
+    <div class="prop-paradigm">NLU + NLG</div>
+    <div class="prop-why">
+      Classifica ticket in ingresso → smistamento reparto + risposta template.
+      Corpus: storico ticket aziendali (anonimizzati). Valore immediato
+      se l'azienda ha un sistema di supporto attivo.
+    </div>
+  </div>
+
+  <div class="prop-card" style="border-left: 3px solid var(--warn-br);">
+    <div class="prop-title">Pianificatore orto/giardino</div>
+    <div class="prop-paradigm">NLG · dominio verticale</div>
+    <div class="prop-why">
+      Calendario semina/raccolta per zona climatica IT + consigli di cura.
+      Corpus narrow = vantaggio 45M. Nicchia interessante per utenza non tech.
+      Difficoltà: corpus training non abbondante online.
+    </div>
+  </div>
+
+  <div class="prop-card" style="border-left: 3px solid var(--warn-br);">
+    <div class="prop-title">Checker grammatica / stile formale</div>
+    <div class="prop-paradigm">NLU + NLG · editing</div>
+    <div class="prop-why">
+      Individua errori grammaticali e stilistici in testi IT formali.
+      Suggerisce correzioni con spiegazione. Già coperto da tool esistenti
+      (LanguageTool) ma interessante per regole personalizzate di stile.
+    </div>
+  </div>
+
+</div>
+
+<!-- ── DECISIONE RUN 5 ────────────────────────────────────────── -->
+<h2>Candidati per Run #5 e priorità</h2>
+
+<div class="callout ok">
+  <strong>Candidati forti — da avviare subito</strong>
+  <strong>Moto + stile personale</strong> (già concordati): paradigmi distinti (NLG strutturato + continuazione stile),
+  dataset indipendenti, nessuna interferenza. Il run produce due modelli o un modello
+  con prompt di sistema per distinguere i registri.<br><br>
+  <strong>Amministratore condominio</strong>: linguaggio formulaico IT, dataset costruibile rapidamente
+  (200 esempi), zero infrastruttura esterna, GDPR gestibile. Ottimo terzo track da aggiungere al Run #5.
+  Il SFT su tre task distinti su un 45M è fattibile senza interferenze se i dataset
+  sono separati e il prompt di sistema è chiaro.
+</div>
+
+<div class="callout info">
+  <strong>Secondo slot — Run #6</strong>
+  <strong>Code assistant</strong> su linguaggio specializzato: richiede decisione su quale linguaggio
+  e possibilmente tokenizer re-training. Più impegno tecnico preliminare.
+  <strong>Conti domestici</strong>: architettura pulita, basso rischio, ma richiede costruire
+  la pipeline analytics Python prima del SFT.<br>
+  <strong>Agente domotica</strong>: potrebbe essere un mini-SFT (50-150 esempi) da aggiungere al Run #6
+  come quarto task: basso costo, alta utilità immediata per uso personale.
+</div>
+
+<div class="callout warn">
+  <strong>Terzo slot — richiede decisioni preliminari</strong>
+  <strong>Assistente personale</strong>: modello pronto subito, ma l'utilità dipende dall'infrastruttura
+  (2-4 settimane di sviluppo Python separato).
+  <strong>Audio/video</strong>: blocco upstream — senza pipeline di estrazione metadati,
+  il modello non ha dati su cui operare.
+  <strong>Assicurativo</strong>: richiede dataset più grande e human-in-the-loop architetturalmente.
+</div>
+
+<div class="callout dim">
+  <strong>Proposte da esplorare</strong>
+  Generatore sottotitoli IT e Italiano piano da burocrazia sono i due casi con
+  il corpus più abbondante e il task più pulito tra le proposte aggiuntive.
+  Entrambi sono fattibili in un mini-run parallelo al Run #5.
+  Alt-text + YOLO è la connessione naturale con la roadmap multimodale.
+</div>
+
+<!-- ── DOCUMENTI ──────────────────────────────────────────────── -->
+<h2>Documenti di analisi disponibili</h2>
+
+<ul class="doc-list">
+  <li>
+    <span class="doc-name">Assistente Moto</span>
+    <span class="doc-file">docs/slm-feasibility-moto.html</span>
+  </li>
+  <li>
+    <span class="doc-name">Assistente Assicurativo</span>
+    <span class="doc-file">docs/slm-feasibility-assicurativo.html</span>
+  </li>
+  <li>
+    <span class="doc-name">Assistente alla Scrittura</span>
+    <span class="doc-file">docs/slm-feasibility-scrittura.html</span>
+  </li>
+  <li>
+    <span class="doc-name">Assistente Personale</span>
+    <span class="doc-file">docs/slm-feasibility-assistant.html</span>
+  </li>
+  <li>
+    <span class="doc-name">Assistente al Codice</span>
+    <span class="doc-file">docs/slm-feasibility-codice.html</span>
+  </li>
+  <li>
+    <span class="doc-name">Panorama e decisione Run #5</span>
+    <span class="doc-file">docs/slm-feasibility-panorama.html</span>
+  </li>
+</ul>
+
+</div>

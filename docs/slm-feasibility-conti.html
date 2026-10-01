@@ -1,0 +1,257 @@
+<title>SLM — Gestione Conti Domestici</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F7F3EE;--surface:#FFFFFF;--surface2:#EDE6DA;
+  --text:#1A1208;--text-sec:#6A5230;--accent:#3A1400;--accent-l:#8A4A14;
+  --border:#D8C4A0;--mono:'IBM Plex Mono',monospace;
+  --risk-bg:#FEF2F2;--risk-br:#FCA5A5;--risk-tx:#991B1B;
+  --ok-bg:#F0FDF4;--ok-br:#86EFAC;--ok-tx:#15803D;
+  --info-bg:#EFF6FF;--info-br:#93C5FD;--info-tx:#1D4ED8;
+  --warn-bg:#FFFBEB;--warn-br:#FDE68A;--warn-tx:#92400E;
+  --cop-bg:#FFF7ED;--cop-br:#C87A1A;--cop-tx:#7C2D12;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#100800;--surface:#1A1000;--surface2:#241800;
+  --text:#EEDDCC;--text-sec:#A08048;--accent:#D07A28;--accent-l:#E8A060;
+  --border:#3A2800;
+  --risk-bg:#2D0A0A;--risk-br:#7F1D1D;--risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;--ok-br:#1A4731;--ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E;--info-br:#1E3A6E;--info-tx:#93C5FD;
+  --warn-bg:#2A1A0A;--warn-br:#7A3A0A;--warn-tx:#FDE68A;
+  --cop-bg:#2A1200;--cop-br:#8A4A14;--cop-tx:#FED7AA;
+}}
+:root[data-theme="dark"]{
+  --bg:#100800;--surface:#1A1000;--surface2:#241800;
+  --text:#EEDDCC;--text-sec:#A08048;--accent:#D07A28;--accent-l:#E8A060;
+  --border:#3A2800;
+  --risk-bg:#2D0A0A;--risk-br:#7F1D1D;--risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;--ok-br:#1A4731;--ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E;--info-br:#1E3A6E;--info-tx:#93C5FD;
+  --warn-bg:#2A1A0A;--warn-br:#7A3A0A;--warn-tx:#FDE68A;
+  --cop-bg:#2A1200;--cop-br:#8A4A14;--cop-tx:#FED7AA;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.72;background:var(--bg);color:var(--text);padding:0 20px 80px}
+.page{max-width:720px;margin:0 auto;padding-top:52px}
+.eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-l);margin-bottom:8px}
+h1{font-size:1.7rem;font-weight:600;letter-spacing:-.02em;color:var(--text);margin:0 0 10px;text-wrap:balance}
+.subtitle{color:var(--text-sec);font-size:.92rem;line-height:1.6;margin:0 0 8px}
+.meta{font-family:var(--mono);font-size:.72rem;color:var(--text-sec);margin-bottom:44px;padding-bottom:20px;border-bottom:2px solid var(--accent)}
+h2{font-size:1rem;font-weight:600;color:var(--accent-l);margin:52px 0 14px;padding-top:36px;border-top:1px solid var(--border);display:flex;align-items:baseline;gap:10px}
+.sec-num{font-family:var(--mono);font-size:.7rem;color:var(--text-sec);letter-spacing:.05em}
+h3{font-size:.92rem;font-weight:600;color:var(--text);margin:28px 0 10px}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+.callout{padding:14px 16px;border-radius:6px;border-left:3px solid;font-size:.88rem;line-height:1.6;margin:18px 0}
+.callout strong{display:block;margin-bottom:4px;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase}
+.callout.risk{background:var(--risk-bg);border-color:var(--risk-br);color:var(--risk-tx)}
+.callout.ok{background:var(--ok-bg);border-color:var(--ok-br);color:var(--ok-tx)}
+.callout.info{background:var(--info-bg);border-color:var(--info-br);color:var(--info-tx)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn-br);color:var(--warn-tx)}
+.callout.cop{background:var(--cop-bg);border-color:var(--cop-br);color:var(--cop-tx)}
+.arch{margin:20px 0;display:flex;flex-direction:column;gap:0}
+.arch-row{display:grid;grid-template-columns:150px 1fr;gap:0}
+.arch-layer{padding:12px 16px;font-size:.84rem;line-height:1.5;border:1px solid var(--border)}
+.arch-label{background:var(--surface2);font-family:var(--mono);font-size:.72rem;color:var(--text-sec);font-weight:500;display:flex;align-items:center;border-right:none;letter-spacing:.04em}
+.arch-content{background:var(--surface);color:var(--text);border-left:3px solid var(--accent)}
+.arch-row+.arch-row .arch-layer{border-top:none}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin:16px 0}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:.85rem}
+.feat-name{font-weight:600;font-size:.88rem;margin-bottom:4px;color:var(--text)}
+.feat-desc{color:var(--text-sec);font-size:.82rem;line-height:1.45;margin-bottom:8px}
+.verdict{font-size:.78rem;padding:2px 8px;border-radius:4px;display:inline-block;font-family:var(--mono)}
+.v-ok{background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-br)}
+.v-w{background:var(--warn-bg);color:var(--warn-tx);border:1px solid var(--warn-br)}
+.v-no{background:var(--risk-bg);color:var(--risk-tx);border:1px solid var(--risk-br)}
+pre{background:#100800;color:#E8A060;font-family:var(--mono);font-size:.79rem;padding:16px 18px;border-radius:8px;overflow-x:auto;line-height:1.55;margin:12px 0}
+code{font-family:var(--mono);font-size:.85em;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--accent-l)}
+.data-table{width:100%;border-collapse:collapse;font-size:.88rem;margin:16px 0;overflow-x:auto;display:block}
+.data-table th{text-align:left;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-sec);padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.data-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.data-table tr:last-child td{border-bottom:none}
+.good{color:#15803D;font-weight:500}.warn-c{color:#92400E;font-weight:500}.bad{color:#991B1B;font-weight:500}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:.72rem;font-weight:500}
+.badge.go{background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-br)}
+.badge.dep{background:var(--warn-bg);color:var(--warn-tx);border:1px solid var(--warn-br)}
+</style>
+<div class="page">
+<div class="eyebrow">SLM · Analisi di specializzazione · Case Study #9</div>
+<h1>Gestione Conti Domestici</h1>
+<p class="subtitle">Valutazione di fattibilità per analisi delle spese bancarie, categorizzazione transazioni, generazione di report narrativi, forecast di cash flow e identificazione di anomalie di spesa.</p>
+<div class="meta">Documento di progetto · v0.1 · 2026-09-29</div>
+
+<h2><span class="sec-num">01</span> Separazione netta: Python analizza, LM racconta</h2>
+<p>La gestione dei conti domestici è un caso con una divisione architettuale molto chiara. L'analisi finanziaria vera — aggregazioni, trend, forecast, anomalie — è matematica che Python esegue in modo deterministico. Il LM non fa analisi: genera la narrativa che rende quell'analisi comprensibile a un utente non tecnico.</p>
+
+<div class="callout cop">
+  <strong>Regola fondamentale</strong>
+  Il LM non calcola mai. Riceve i risultati dei calcoli in JSON strutturato
+  e li trasforma in italiano. Se il JSON dice "spesa ristoranti: +23% mese su mese",
+  il LM genera "hai speso il 23% in più al ristorante rispetto al mese scorso".
+  Non interpreta, non corregge, non arrotonda: traduce dati in prosa.
+  La fonte di verità è sempre il dato numerico, non la frase generata.
+</div>
+
+<h2><span class="sec-num">02</span> Architettura del sistema</h2>
+<div class="arch">
+  <div class="arch-row">
+    <div class="arch-layer arch-label">Input</div>
+    <div class="arch-layer arch-content">CSV/OFX/PDF da home banking · estratto conto mensile</div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-layer arch-label">Import layer</div>
+    <div class="arch-layer arch-content">Parser CSV banca (pandas) · normalizzazione colonne · deduplicazione</div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-layer arch-label">SLM 45M — Task 1</div>
+    <div class="arch-layer arch-content">Categorizzazione: descrizione transazione → categoria (NLU)<br><span style="font-size:.8rem;color:var(--text-sec)">"Trattoria Da Mario Via Torino" → "ristoranti"</span></div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-layer arch-label">Analytics (Python)</div>
+    <div class="arch-layer arch-content">Aggregazioni mensili · trend · anomalie (z-score) · forecast (rolling mean) · budget vs actual · tutto deterministico</div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-layer arch-label">SLM 45M — Task 2</div>
+    <div class="arch-layer arch-content">Generazione report narrativo + suggerimenti da JSON analytics (NLG)<br><span style="font-size:.8rem;color:var(--text-sec)">"Questo mese hai speso 1.240€, il 18% meno del mese scorso..."</span></div>
+  </div>
+</div>
+
+<h2><span class="sec-num">03</span> I due ruoli del LM</h2>
+<h3>Ruolo 1: categorizzatore di transazioni (NLU)</h3>
+<p>Le descrizioni delle transazioni bancarie sono testo breve e spesso criptico: "PAGO BANCOMAT CARREFOUR 14/09", "BONIFICO ENEL ENERGIA SP", "POS FARMACIA COMUNALE". Il LM mappa queste descrizioni su categorie di spesa.</p>
+<p>Alta fattibilità: le descrizioni sono brevi (5–20 token), il numero di categorie è fisso, e la distribuzione è prevedibile (i commercianti dello stesso tipo hanno pattern lessicali simili). Il modello addestrato sui propri estratti conto impara le insegne commerciali specifiche del territorio.</p>
+
+<h3>Ruolo 2: narratore del report (NLG)</h3>
+<p>Riceve da Python un JSON con tutti gli aggregati e genera un report mensile leggibile, con i punti salienti evidenziati, le anomalie segnalate e i suggerimenti formulati come frasi naturali.</p>
+<pre>
+// JSON analytics → report narrativo
+
+{
+  "mese": "settembre 2026",
+  "totale_uscite": 2847.30,
+  "delta_vs_mese_prec": -0.12,
+  "categorie": [
+    {"nome": "alimentari", "importo": 420, "delta": +0.05, "budget": 400},
+    {"nome": "ristoranti", "importo": 340, "delta": +0.23, "budget": 250},
+    {"nome": "utenze", "importo": 187, "delta": -0.08, "budget": 200},
+    {"nome": "abbonamenti", "importo": 94, "delta": 0, "budget": 90}
+  ],
+  "anomalie": [
+    {"descrizione": "Spesa singola inusuale", "importo": 428, "commerciante": "MediaWorld", "data": "14/09"}
+  ],
+  "forecast_ottobre": 2900,
+  "saldo_attuale": 1240
+}
+
+// Output atteso
+"Settembre 2026: hai speso 2.847€, il 12% meno di agosto. Buona notizia
+sulle utenze (187€, sotto budget) e sulle uscite complessive.
+
+Attenzione ai ristoranti: 340€ contro i 250€ preventivati, il 23% sopra budget.
+Se vuoi rientrare in ottobre, bastano 3-4 cene in meno.
+
+Spesa anomala: il 14 settembre MediaWorld ha inciso per 428€ — se è un acquisto
+straordinario, nessun problema, ma è bene tenerlo presente per il forecast.
+
+Stima ottobre: ~2.900€ sulla base delle abitudini recenti.
+Saldo attuale: 1.240€."</pre>
+
+<h2><span class="sec-num">04</span> Analisi del conto corrente: caso pratico</h2>
+<p>Il caso concreto citato — analisi dei dati del conto corrente — si traduce direttamente in questa architettura:</p>
+<ol style="color:var(--text-sec);font-size:.92rem;line-height:1.8">
+  <li><strong>Export CSV dal home banking</strong> (Intesa/UniCredit/N26 lo offrono tutti): file con data, descrizione, importo, saldo</li>
+  <li><strong>Parser Python</strong>: normalizza il formato specifico della banca (ogni banca ha colonne diverse)</li>
+  <li><strong>LM categorizza</strong> ogni transazione dalla descrizione → categoria di spesa</li>
+  <li><strong>Python aggrega</strong>: totali per categoria, trend mese/mese, anomalie, forecast</li>
+  <li><strong>LM genera report mensile</strong> dal JSON aggregato, in italiano naturale</li>
+  <li><strong>LM risponde a domande</strong>: "quanto ho speso in farmacia quest'anno?" → Python calcola, LM risponde</li>
+</ol>
+<div class="callout info">
+  <strong>Nota tecnica: formato CSV banche italiane</strong>
+  Ogni banca italiana ha il proprio formato CSV (Intesa, UniCredit, Fineco, N26, Hype
+  hanno tutti header diversi). Il parser Python deve essere calibrato per il formato
+  specifico. Questo è lavoro di ingegneria, non di ML — ma va fatto prima del SFT.
+  Alternativa: Open Banking API (PSD2) se la banca la supporta.
+</div>
+
+<h2><span class="sec-num">05</span> Privacy e sicurezza</h2>
+<div class="callout risk">
+  <strong>Massima sensibilità finanziaria — on-device obbligatorio</strong>
+  I dati bancari rivelano: pattern di consumo, reddito netto, abbonamenti attivi,
+  medici frequentati (dalle farmacie), situazione debitoria, frequentazione di locali.
+  Nessun dato deve uscire dal dispositivo. Nessuna API cloud, nessun modello remoto.
+  Il database delle transazioni va cifrato a riposo (SQLCipher o simile).
+</div>
+
+<h2><span class="sec-num">06</span> Dataset SFT</h2>
+<p>Il dataset può essere costruito completamente con dati sintetici — non serve usare le proprie transazioni reali.</p>
+<pre>
+// Track A: categorizzazione (300-400 esempi)
+{
+  "input": "PAGO BANCOMAT CONAD SUPERMERCATI 18/09",
+  "output": "alimentari"
+}
+{
+  "input": "BONIFICO AFFITTO OTTOBRE ROSSI MARIO",
+  "output": "affitto"
+}
+{
+  "input": "NETFLIX.COM 12,99EUR",
+  "output": "abbonamenti"
+}
+{
+  "input": "FARMACIA CENTRALE SRL",
+  "output": "salute"
+}
+
+// Track B: report da analytics (100-150 esempi)
+// Input: JSON aggregato con variabili sintetiche
+// Output: report narrativo in italiano naturale
+// Esempi costruiti variando i valori numerici e le anomalie</pre>
+
+<h2><span class="sec-num">07</span> Funzionalità estese</h2>
+<div class="feat-grid">
+  <div class="feat-card">
+    <div class="feat-name">Report mensile automatico</div>
+    <div class="feat-desc">Generato il primo del mese da Python + LM. Testo naturale sulle spese del mese precedente.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Q&A su spese</div>
+    <div class="feat-desc">"Quanto ho speso in vacanze quest'anno?" → Python calcola, LM risponde.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Alert anomalie</div>
+    <div class="feat-desc">Transazione > 2σ rispetto alla categoria → notifica in italiano generata dal LM.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Suggerimenti risparmio</div>
+    <div class="feat-desc">Da categorie sopra budget → frase suggerimento. Linguaggio diretto, non generico.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Forecast cash flow</div>
+    <div class="feat-desc">Rolling mean su 3 mesi → stima mese successivo. Python calcola, LM esprime la stima con incertezza.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Consigli di investimento</div>
+    <div class="feat-desc">Fuori scope: richiede conoscenza finanziaria specializzata e comporterebbe responsabilità legale.</div>
+    <span class="verdict v-no">ESCLUSO</span>
+  </div>
+</div>
+
+<h2><span class="sec-num">08</span> Raccomandazione</h2>
+<p>Il caso conti domestici è architetturalmente pulito, ha un dataset costruibile senza dati reali sensibili, e produce un output di valore immediato per chiunque voglia avere una lettura chiara delle proprie finanze in italiano. Il rischio principale non è tecnico ma comportamentale: il report deve essere onesto e diretto (non rassicurante), e i suggerimenti non devono essere vaghissimi come quelli delle app bancarie mainstream.</p>
+<div class="callout ok">
+  <strong>Priorità: alta · Timeline: Run #6</strong>
+  Il prerequisito è il parser CSV per il formato della propria banca (1–2 giorni).
+  Il SFT su dati sintetici è rapido (200–350 esempi, 2–3 giorni di costruzione).
+  Il caso è naturalmente abbinato al caso analisi DB/log:
+  stesso paradigma (Python analytics + LM narratore), stesso tipo di dataset.
+  I due possono condividere il Track B del dataset SFT.
+</div>
+</div>

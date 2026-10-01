@@ -1,0 +1,221 @@
+<title>SLM — Amministratore di Condominio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F4F5F6;--surface:#FFFFFF;--surface2:#EAECEE;
+  --text:#14181C;--text-sec:#4A5560;--accent:#1E2A30;--accent-l:#3A5060;
+  --border:#C8D0D8;--mono:'IBM Plex Mono',monospace;
+  --risk-bg:#FEF2F2;--risk-br:#FCA5A5;--risk-tx:#991B1B;
+  --ok-bg:#F0FDF4;--ok-br:#86EFAC;--ok-tx:#15803D;
+  --info-bg:#EFF6FF;--info-br:#93C5FD;--info-tx:#1D4ED8;
+  --warn-bg:#FFFBEB;--warn-br:#FDE68A;--warn-tx:#92400E;
+  --sla-bg:#F0F4F8;--sla-br:#6A8AA0;--sla-tx:#1E3A4A;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0A0E12;--surface:#121820;--surface2:#1A2228;
+  --text:#D8E4EC;--text-sec:#7A98A8;--accent:#6A98B0;--accent-l:#90C0D8;
+  --border:#283848;
+  --risk-bg:#2D0A0A;--risk-br:#7F1D1D;--risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;--ok-br:#1A4731;--ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E;--info-br:#1E3A6E;--info-tx:#93C5FD;
+  --warn-bg:#2A1A0A;--warn-br:#7A3A0A;--warn-tx:#FDE68A;
+  --sla-bg:#0A1820;--sla-br:#2A4860;--sla-tx:#90C0D8;
+}}
+:root[data-theme="dark"]{
+  --bg:#0A0E12;--surface:#121820;--surface2:#1A2228;
+  --text:#D8E4EC;--text-sec:#7A98A8;--accent:#6A98B0;--accent-l:#90C0D8;
+  --border:#283848;
+  --risk-bg:#2D0A0A;--risk-br:#7F1D1D;--risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;--ok-br:#1A4731;--ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E;--info-br:#1E3A6E;--info-tx:#93C5FD;
+  --warn-bg:#2A1A0A;--warn-br:#7A3A0A;--warn-tx:#FDE68A;
+  --sla-bg:#0A1820;--sla-br:#2A4860;--sla-tx:#90C0D8;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.72;background:var(--bg);color:var(--text);padding:0 20px 80px}
+.page{max-width:720px;margin:0 auto;padding-top:52px}
+.eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-l);margin-bottom:8px}
+h1{font-size:1.7rem;font-weight:600;letter-spacing:-.02em;color:var(--text);margin:0 0 10px;text-wrap:balance}
+.subtitle{color:var(--text-sec);font-size:.92rem;line-height:1.6;margin:0 0 8px}
+.meta{font-family:var(--mono);font-size:.72rem;color:var(--text-sec);margin-bottom:44px;padding-bottom:20px;border-bottom:2px solid var(--accent)}
+h2{font-size:1rem;font-weight:600;color:var(--accent-l);margin:52px 0 14px;padding-top:36px;border-top:1px solid var(--border);display:flex;align-items:baseline;gap:10px}
+.sec-num{font-family:var(--mono);font-size:.7rem;color:var(--text-sec);letter-spacing:.05em}
+h3{font-size:.92rem;font-weight:600;color:var(--text);margin:28px 0 10px}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+.callout{padding:14px 16px;border-radius:6px;border-left:3px solid;font-size:.88rem;line-height:1.6;margin:18px 0}
+.callout strong{display:block;margin-bottom:4px;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase}
+.callout.risk{background:var(--risk-bg);border-color:var(--risk-br);color:var(--risk-tx)}
+.callout.ok{background:var(--ok-bg);border-color:var(--ok-br);color:var(--ok-tx)}
+.callout.info{background:var(--info-bg);border-color:var(--info-br);color:var(--info-tx)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn-br);color:var(--warn-tx)}
+.callout.sla{background:var(--sla-bg);border-color:var(--sla-br);color:var(--sla-tx)}
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:16px 0}
+.doc-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:.85rem}
+.doc-name{font-weight:600;font-size:.88rem;margin-bottom:4px;color:var(--text)}
+.doc-law{font-family:var(--mono);font-size:.72rem;color:var(--text-sec);margin-bottom:6px}
+.doc-desc{color:var(--text-sec);font-size:.82rem;line-height:1.45;margin-bottom:8px}
+.verdict{font-size:.78rem;padding:2px 8px;border-radius:4px;display:inline-block;font-family:var(--mono)}
+.v-ok{background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-br)}
+.v-w{background:var(--warn-bg);color:var(--warn-tx);border:1px solid var(--warn-br)}
+pre{background:#0A0E12;color:#90C0D8;font-family:var(--mono);font-size:.79rem;padding:16px 18px;border-radius:8px;overflow-x:auto;line-height:1.55;margin:12px 0}
+code{font-family:var(--mono);font-size:.85em;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--accent-l)}
+.data-table{width:100%;border-collapse:collapse;font-size:.88rem;margin:16px 0;overflow-x:auto;display:block}
+.data-table th{text-align:left;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-sec);padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.data-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.data-table tr:last-child td{border-bottom:none}
+.good{color:#15803D;font-weight:500}.warn-c{color:#92400E;font-weight:500}.bad{color:#991B1B;font-weight:500}
+blockquote{border-left:3px solid var(--accent-l);margin:18px 0;padding:12px 18px;background:var(--surface);border-radius:0 6px 6px 0;font-style:italic;color:var(--text-sec);font-size:.92rem}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:.72rem;font-weight:500}
+.badge.go{background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-br)}
+</style>
+<div class="page">
+<div class="eyebrow">SLM · Analisi di specializzazione · Case Study #8</div>
+<h1>Amministratore di Condominio</h1>
+<p class="subtitle">Valutazione di fattibilità per generazione di documentazione condominiale formale: convocazioni, verbali, diffide, comunicazioni ordinarie e rendiconti in italiano burocratico.</p>
+<div class="meta">Documento di progetto · v0.1 · 2026-09-29</div>
+
+<h2><span class="sec-num">01</span> Il vantaggio del linguaggio formulaico</h2>
+<p>L'italiano burocratico è il linguaggio più prevedibile che esiste: ogni documento segue strutture fisse stabilite dalla legge o dalla prassi notarile. Una convocazione d'assemblea ha una sequenza obbligatoria — data, luogo, ordine del giorno, avviso di seconda convocazione. Un verbale segue lo stesso schema ogni volta. Una diffida per morosità ha formule consolidate da decenni.</p>
+<p>Questa prevedibilità è esattamente la proprietà che rende un modello piccolo particolarmente adatto: la distribuzione next-token è altamente concentrata su un vocabolario ristretto di formule legali standard.</p>
+
+<blockquote>
+  "Con la presente si convoca l'assemblea dei condòmini del condominio sito in [VIA], per il giorno [DATA] alle ore [ORA] presso [LUOGO], per discutere il seguente ordine del giorno: [ODG]."<br>
+  Questa frase, con le sue variabili, è il 90% di una convocazione. Il modello non inventa — riempie con il registro corretto.
+</blockquote>
+
+<h2><span class="sec-num">02</span> Tipologie di documento</h2>
+<div class="doc-grid">
+  <div class="doc-card">
+    <div class="doc-name">Convocazione assemblea</div>
+    <div class="doc-law">L. 220/2012 art. 66</div>
+    <div class="doc-desc">Prima e seconda convocazione, ordine del giorno, quorum. Template rigidissimo, variabili limitate.</div>
+    <span class="verdict v-ok">TRIVIALE</span>
+  </div>
+  <div class="doc-card">
+    <div class="doc-name">Verbale di assemblea</div>
+    <div class="doc-law">Art. 1136 c.c.</div>
+    <div class="doc-desc">Presenti/assenti, delibere, votazioni, millesimi. Trasforma input strutturato in documento formale.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="doc-card">
+    <div class="doc-name">Diffida per morosità</div>
+    <div class="doc-law">Art. 63 disp. att. c.c.</div>
+    <div class="doc-desc">Formula legale standard + dati morosità. Tono formale-legale, struttura invariante.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="doc-card">
+    <div class="doc-name">Comunicazione lavori</div>
+    <div class="doc-law">Circolari ordinarie</div>
+    <div class="doc-desc">Avviso lavori, interruzione servizi, cantieri. Registro formale ma meno vincolato dalla legge.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="doc-card">
+    <div class="doc-name">Rendiconto consuntivo</div>
+    <div class="doc-law">Art. 1130-bis c.c.</div>
+    <div class="doc-desc">Testo descrittivo attorno a tabelle numeriche. LM genera le note esplicative; i numeri vengono dall'input.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="doc-card">
+    <div class="doc-name">Regolamento condominiale</div>
+    <div class="doc-law">Art. 1138 c.c.</div>
+    <div class="doc-desc">Documento lungo, struttura complessa, clausole personalizzabili. Richiede più contesto del SLM base.</div>
+    <span class="verdict v-w">MEDIA</span>
+  </div>
+</div>
+
+<h2><span class="sec-num">03</span> Architettura: NLG puro</h2>
+<p>Il caso condominio è NLG nel senso più puro: input strutturato → documento formale italiano. Non c'è bisogno di componenti agentici, di API esterne, di database complessi. L'unico requisito è che il modello conosca il registro burocratico-legale italiano e i template dei documenti condominiali.</p>
+<pre>
+// Input per convocazione assemblea
+{
+  "tipo": "convocazione_assemblea",
+  "condominio": "Via Garibaldi 14, Milano",
+  "data_prima": "2026-10-15",
+  "ora_prima": "19:30",
+  "data_seconda": "2026-10-22",
+  "ora_seconda": "19:30",
+  "luogo": "sala condominiale piano terra",
+  "ordine_del_giorno": [
+    "Approvazione rendiconto 2025",
+    "Preventivo intervento copertura",
+    "Varie ed eventuali"
+  ]
+}
+
+// Output atteso
+"Spett.le Condomino,
+
+con la presente si convoca l'assemblea condominiale dello stabile sito in
+Via Garibaldi 14, Milano, per il giorno 15 ottobre 2026 alle ore 19:30
+presso la sala condominiale al piano terra.
+
+In caso di mancato raggiungimento del quorum previsto dalla legge, l'assemblea
+in seconda convocazione si terrà il 22 ottobre 2026 alle ore 19:30, nel medesimo
+luogo.
+
+Ordine del giorno:
+1. Approvazione rendiconto consuntivo anno 2025
+2. Esame preventivo e delibera per intervento su copertura condominiale
+3. Varie ed eventuali
+
+..."</pre>
+
+<h2><span class="sec-num">04</span> Vincoli e considerazioni GDPR</h2>
+<p>I documenti condominiali contengono dati personali dei condòmini: nome, cognome, indirizzo, quota millesimale, talvolta informazioni sulla situazione debitoria. Non sono dati sanitari (Art. 9 GDPR) ma sono dati personali ordinari (Art. 6) che richiedono base giuridica.</p>
+<table class="data-table">
+  <thead><tr><th>Dato</th><th>Classificazione GDPR</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>Nomi condòmini</td><td>Dato personale ordinario</td><td class="warn-c">Visibile nei verbali pubblici, già regolamentato</td></tr>
+    <tr><td>Quote millesimali</td><td>Dato personale + patrimoniale</td><td class="warn-c">Pubblico nel regolamento, ma non da divulgare liberamente</td></tr>
+    <tr><td>Dati morosità</td><td>Dato finanziario</td><td class="bad">Solo all'interessato e all'assemblea, non circolazione libera</td></tr>
+    <tr><td>Indirizzi fisici</td><td>Dato di localizzazione</td><td class="good">Quasi sempre già pubblici per gli immobili</td></tr>
+  </tbody>
+</table>
+<div class="callout sla">
+  <strong>On-device fortemente consigliato</strong>
+  Per un amministratore professionista che gestisce più condomini,
+  passare i dati dei condòmini a un'API cloud richiederebbe informativa
+  DPA specifica. Un SLM locale elimina il problema: i dati non escono
+  dal dispositivo dell'amministratore, che è già il titolare del trattamento.
+</div>
+
+<h2><span class="sec-num">05</span> Dataset SFT</h2>
+<p>Il corpus di training è accessibile pubblicamente: fac-simile di documenti condominiali (abbondanti online), testi della legge 220/2012 e del codice civile (artt. 1117-1139), esempi di verbali e delibere. Integrati con esempi sintetici costruiti variando sistematicamente le variabili.</p>
+<pre>
+// Struttura esempio SFT
+{
+  "sistema": "Sei un assistente per amministratori di condominio. Genera documenti formali in italiano burocratico secondo la normativa vigente.",
+  "input": {
+    "tipo": "diffida_morosita",
+    "condòmino": "Mario Rossi",
+    "importo": 847.50,
+    "periodo": "quote gennaio-marzo 2026",
+    "scadenza_pagamento": "2026-10-10"
+  },
+  "output": "Raccomandata A/R\n\nEgregio Signor Mario Rossi,\n\ncon la presente diffida formale, Le notifichiamo che risulta moroso nei confronti del Condominio di Via Garibaldi 14 per un importo complessivo di Euro 847,50 (ottocentoquarantasette/50) a titolo di quote condominiali relative al periodo gennaio–marzo 2026.\n\nLa invitiamo a provvedere al saldo dell'importo suindicato entro e non oltre il 10 ottobre 2026, decorso il quale ci vedremo costretti ad avviare le procedure di recupero coattivo previste dall'art. 63 delle disposizioni di attuazione del codice civile.\n\nDistinti saluti,\nL'Amministratore"
+}</pre>
+<p>Volume: 200–350 esempi coprono tutte le tipologie documentali. La variabilità è bassa (stessi template, variabili diverse) — il dataset si costruisce in 1–2 giorni generando varianti sistematiche dei template.</p>
+
+<h2><span class="sec-num">06</span> Mercato e valore pratico</h2>
+<p>In Italia esistono circa 1,2 milioni di condomini, gestiti da ~130.000 amministratori professionisti (dati ANACI). La redazione di documenti condominiali è un'attività ripetitiva e ad alto volume: un amministratore medio gestisce 20–50 condomini e produce centinaia di documenti all'anno. Ogni documento richiede 10–30 minuti di lavoro manuale per assemblare i dati e scrivere nel registro corretto.</p>
+<div class="callout ok">
+  <strong>Caso d'uso commercialmente valido</strong>
+  Un SLM specializzato sul dominio condominiale potrebbe ridurre il tempo di redazione
+  documentale dell'80%. Il mercato di riferimento è specifico (professionisti del settore),
+  il corpus di training è pubblicamente disponibile, il linguaggio è altamente formulaico.
+  Questo è anche uno dei casi dove il valore differenziante del modello italiano
+  è massimo: la normativa e i template sono specificamente italiani,
+  nessun modello inglese può competere.
+</div>
+
+<h2><span class="sec-num">07</span> Raccomandazione</h2>
+<p>Il condominio è il terzo candidato naturale per il Run #5 insieme a moto e stile personale. Dataset piccolo, nessuna infrastruttura esterna, linguaggio formulaico = condizioni ideali per un SFT efficace a 45M. Il corpus di leggi e fac-simile è pubblico e abbondante.</p>
+<div class="callout ok">
+  <strong>Priorità: alta · Costo: basso · Valore: concreto</strong>
+  200–350 esempi, SFT su base wikipedia italiana.
+  Il modello può essere usato immediatamente da chiunque amministri un condominio.
+  È uno dei pochi casi nel set dove esiste un mercato professionale identificabile
+  e una domanda reale non coperta dagli strumenti esistenti.
+</div>
+</div>

@@ -1,0 +1,244 @@
+<title>SLM — Agente Domotica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg:#F7F4EF; --surface:#FFFFFF; --surface2:#EDE9E0;
+  --text:#1A1408; --text-sec:#6A5A3A; --accent:#3A1E00; --accent-l:#7A4A0A;
+  --border:#D8C9AA; --mono:'IBM Plex Mono',monospace;
+  --risk-bg:#FEF2F2;--risk-br:#FCA5A5;--risk-tx:#991B1B;
+  --ok-bg:#F0FDF4;--ok-br:#86EFAC;--ok-tx:#15803D;
+  --info-bg:#EFF6FF;--info-br:#93C5FD;--info-tx:#1D4ED8;
+  --warn-bg:#FFFBEB;--warn-br:#FDE68A;--warn-tx:#92400E;
+  --hot-bg:#FFF7ED;--hot-br:#FCA44A;--hot-tx:#7C2D12;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#110C00;--surface:#1A1200;--surface2:#221A08;
+  --text:#EDE0C4;--text-sec:#A08848;--accent:#C87A2A;--accent-l:#E0A050;
+  --border:#3A2E10;
+  --risk-bg:#2D0A0A;--risk-br:#7F1D1D;--risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;--ok-br:#1A4731;--ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E;--info-br:#1E3A6E;--info-tx:#93C5FD;
+  --warn-bg:#2A1A0A;--warn-br:#7A3A0A;--warn-tx:#FDE68A;
+  --hot-bg:#2A1000;--hot-br:#92400E;--hot-tx:#FED7AA;
+}}
+:root[data-theme="dark"]{
+  --bg:#110C00;--surface:#1A1200;--surface2:#221A08;
+  --text:#EDE0C4;--text-sec:#A08848;--accent:#C87A2A;--accent-l:#E0A050;
+  --border:#3A2E10;
+  --risk-bg:#2D0A0A;--risk-br:#7F1D1D;--risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;--ok-br:#1A4731;--ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E;--info-br:#1E3A6E;--info-tx:#93C5FD;
+  --warn-bg:#2A1A0A;--warn-br:#7A3A0A;--warn-tx:#FDE68A;
+  --hot-bg:#2A1000;--hot-br:#92400E;--hot-tx:#FED7AA;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.72;background:var(--bg);color:var(--text);padding:0 20px 80px}
+.page{max-width:720px;margin:0 auto;padding-top:52px}
+.eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-l);margin-bottom:8px}
+h1{font-size:1.7rem;font-weight:600;letter-spacing:-.02em;color:var(--text);margin:0 0 10px;text-wrap:balance}
+.subtitle{color:var(--text-sec);font-size:.92rem;line-height:1.6;margin:0 0 8px}
+.meta{font-family:var(--mono);font-size:.72rem;color:var(--text-sec);margin-bottom:44px;padding-bottom:20px;border-bottom:2px solid var(--accent)}
+h2{font-size:1rem;font-weight:600;color:var(--accent-l);margin:52px 0 14px;padding-top:36px;border-top:1px solid var(--border);letter-spacing:-.01em;display:flex;align-items:baseline;gap:10px}
+.sec-num{font-family:var(--mono);font-size:.7rem;color:var(--text-sec);letter-spacing:.05em}
+h3{font-size:.92rem;font-weight:600;color:var(--text);margin:28px 0 10px}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+.callout{padding:14px 16px;border-radius:6px;border-left:3px solid;font-size:.88rem;line-height:1.6;margin:18px 0}
+.callout strong{display:block;margin-bottom:4px;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase}
+.callout.risk{background:var(--risk-bg);border-color:var(--risk-br);color:var(--risk-tx)}
+.callout.ok{background:var(--ok-bg);border-color:var(--ok-br);color:var(--ok-tx)}
+.callout.info{background:var(--info-bg);border-color:var(--info-br);color:var(--info-tx)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn-br);color:var(--warn-tx)}
+.callout.hot{background:var(--hot-bg);border-color:var(--hot-br);color:var(--hot-tx)}
+.arch{margin:20px 0;display:flex;flex-direction:column;gap:0}
+.arch-row{display:grid;grid-template-columns:150px 1fr;gap:0}
+.arch-layer{padding:12px 16px;font-size:.84rem;line-height:1.5;border:1px solid var(--border)}
+.arch-label{background:var(--surface2);font-family:var(--mono);font-size:.72rem;color:var(--text-sec);font-weight:500;display:flex;align-items:center;border-right:none;letter-spacing:.04em}
+.arch-content{background:var(--surface);color:var(--text);border-left:3px solid var(--accent)}
+.arch-row+.arch-row .arch-layer{border-top:none}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin:16px 0}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:.85rem}
+.feat-name{font-weight:600;font-size:.88rem;margin-bottom:4px;color:var(--text)}
+.feat-desc{color:var(--text-sec);font-size:.82rem;line-height:1.5;margin-bottom:8px}
+.verdict{font-size:.78rem;padding:2px 8px;border-radius:4px;display:inline-block;font-family:var(--mono)}
+.v-ok{background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-br)}
+.v-w{background:var(--warn-bg);color:var(--warn-tx);border:1px solid var(--warn-br)}
+.v-no{background:var(--risk-bg);color:var(--risk-tx);border:1px solid var(--risk-br)}
+.data-table{width:100%;border-collapse:collapse;font-size:.88rem;margin:16px 0;overflow-x:auto;display:block}
+.data-table th{text-align:left;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-sec);padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.data-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.data-table tr:last-child td{border-bottom:none}
+.good{color:#15803D;font-weight:500}.warn-c{color:#92400E;font-weight:500}.bad{color:#991B1B;font-weight:500}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:.72rem;font-weight:500}
+.badge.go{background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-br)}
+.badge.dep{background:var(--warn-bg);color:var(--warn-tx);border:1px solid var(--warn-br)}
+pre{background:#1A1200;color:#E0A050;font-family:var(--mono);font-size:.79rem;padding:16px 18px;border-radius:8px;overflow-x:auto;line-height:1.55;margin:12px 0}
+code{font-family:var(--mono);font-size:.85em;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--accent-l)}
+</style>
+<div class="page">
+<div class="eyebrow">SLM · Analisi di specializzazione · Case Study #6</div>
+<h1>Agente Domotica</h1>
+<p class="subtitle">Valutazione di fattibilità per il controllo vocale/testuale di dispositivi smart home in italiano, integrazione con Home Assistant e MQTT, gestione comandi condizionali e scene.</p>
+<div class="meta">Documento di progetto · v0.1 · 2026-09-29</div>
+
+<h2><span class="sec-num">01</span> Il task più semplice dell'intero set</h2>
+<p>Il controllo domotico è il caso con lo spazio dei comandi più ristretto tra tutti i case study analizzati. I verbi di azione sono sei: <em>accendi, spegni, alza, abbassa, imposta, dimmi</em>. Le categorie di dispositivi sono una decina. Il modello non deve ragionare: deve riconoscere un intent da una frase breve e produrre un JSON strutturato.</p>
+<p>A differenza degli assistenti virtuali commerciali (Alexa, Google Home, Siri) che gestiscono milioni di device generici in inglese, un SLM 45M addestrato su questa casa specifica conosce <code>la lampada del corridoio</code>, <code>la tapparella del bagno padronale</code>, <code>il termostato studio</code> — i nomi esatti dei dispositivi installati, non categorie generiche.</p>
+
+<div class="callout hot">
+  <strong>Vantaggio strutturale del modello piccolo</strong>
+  Il corpus di training è l'elenco dei propri dispositivi (decine, non milioni).
+  Un modello addestrato specificamente su questi nomi ha un vocabolario
+  che coincide quasi perfettamente con il dominio reale. Zero long tail,
+  zero ambiguità cross-domain. Alexa non saprà mai che "il salottino" è diverso
+  da "il salotto" nella tua casa.
+</div>
+
+<h2><span class="sec-num">02</span> Tipologie di comando</h2>
+<div class="feat-grid">
+  <div class="feat-card">
+    <div class="feat-name">Comandi semplici</div>
+    <div class="feat-desc">"Accendi le luci del salotto." Un dispositivo, un'azione, zero ambiguità.</div>
+    <span class="verdict v-ok">TRIVIALE</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Comandi multipli</div>
+    <div class="feat-desc">"Spegni tutto in camera da letto e abbassa la tapparella." Estrazione di lista di azioni.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Impostazione valori</div>
+    <div class="feat-desc">"Metti il termostato a 20 gradi." Estrazione entità numerica + unità.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Query di stato</div>
+    <div class="feat-desc">"A quanto è il riscaldamento in soggiorno?" Risposta generata da stato API.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Scene / macro</div>
+    <div class="feat-desc">"Metti la modalità cinema." → sequenza di azioni predefinita. LM mappa nome scena → ID.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Comandi condizionali</div>
+    <div class="feat-desc">"Accendi la luce quando arrivo." Trigger geofencing. LM estrae intent + condizione; orchestrator gestisce il trigger.</div>
+    <span class="verdict v-w">MEDIA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Programmazione oraria</div>
+    <div class="feat-desc">"Accendi il riscaldamento alle 6:30 domani." LM estrae orario + azione; orchestrator pianifica.</div>
+    <span class="verdict v-w">MEDIA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Comandi ambigui</div>
+    <div class="feat-desc">"Abbassa un po' le luci." Quanto è "un po'"? 70%? 50%? Richiede disambiguazione o default configurabile.</div>
+    <span class="verdict v-w">MEDIA</span>
+  </div>
+</div>
+
+<h2><span class="sec-num">03</span> Architettura</h2>
+<div class="arch">
+  <div class="arch-row">
+    <div class="arch-layer arch-label">Input</div>
+    <div class="arch-layer arch-content">Testo o voce (→ Whisper) · frase media 5–20 token</div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-layer arch-label">SLM 45M</div>
+    <div class="arch-layer arch-content">Intent + entity extraction → lista JSON di azioni<br><span style="font-size:.8rem;color:var(--text-sec)">[{"action":"turn_on","device":"luci_salotto"},{"action":"lower","device":"tapparella_corridoio"}]</span></div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-layer arch-label">Orchestrator</div>
+    <div class="arch-layer arch-content">Risolve device ID, valida azioni consentite, gestisce trigger condizionali · Python deterministico</div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-layer arch-label">Tool layer</div>
+    <div class="arch-layer arch-content">Home Assistant REST API · MQTT broker · webhook automation</div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-layer arch-label">Risposta</div>
+    <div class="arch-layer arch-content">SLM genera conferma NL dalla risposta API · "Fatto. Luci salotto accese."</div>
+  </div>
+</div>
+
+<h2><span class="sec-num">04</span> Vincoli e rischi</h2>
+<p>Questo è il caso con i vincoli più leggeri dell'intero set. Non ci sono dati personali sensibili (gli stati dei dispositivi non sono PII), non ci sono obblighi compliance, non ci sono safety-critical decisions. Il livello di rischio di un comando errato è basso: se il modello accende la luce sbagliata, l'utente la spegne.</p>
+<div class="callout warn">
+  <strong>Unico rischio reale: comandi irreversibili</strong>
+  Alcuni comandi hanno conseguenze non banali: aprire la serratura del portone,
+  disabilitare un allarme, accendere una stufa senza nessuno in casa.
+  Per questi, l'orchestrator deve richiedere conferma esplicita
+  indipendentemente da quanto sia sicuro il parsing del LM.
+</div>
+<div class="callout ok">
+  <strong>Privacy minimale</strong>
+  Gli stati dei dispositivi (luce accesa/spenta, temperatura) non sono dati
+  personali sensibili. L'unico dato da proteggere sono le automazioni
+  che rivelano pattern di presenza/assenza (sicurezza abitazione).
+  On-device consigliato ma non obbligatorio.
+</div>
+
+<h2><span class="sec-num">05</span> Dataset SFT</h2>
+<p>Il dataset è piccolo per definizione: lo spazio dei comandi è finito. Con 100–150 esempi annotati, il modello copre il 95% delle frasi reali.</p>
+<pre>
+// Comando semplice
+{
+  "input": "accendi la lampada del comodino",
+  "output": [{"action": "turn_on", "device": "lampada_comodino"}]
+}
+
+// Comando multiplo con valore
+{
+  "input": "metti il termostato a 21 e accendi le luci del corridoio",
+  "output": [
+    {"action": "set_value", "device": "termostato_salotto", "value": 21, "unit": "°C"},
+    {"action": "turn_on", "device": "luci_corridoio"}
+  ]
+}
+
+// Query di stato
+{
+  "input": "com'è la temperatura in sala?",
+  "output": {"action": "query_state", "device": "termostato_sala", "attribute": "temperature"}
+}
+
+// Condizionale
+{
+  "input": "quando esco di casa spegni tutto",
+  "output": {"action": "create_automation", "trigger": "geofence_exit", "actions": [{"action": "turn_off", "device": "all"}]}
+}
+
+// Risposta da stato API (NLG)
+{
+  "input": {"device": "termostato_sala", "temperature": 19.5, "target": 21.0, "mode": "heating"},
+  "output": "In sala ci sono 19,5 gradi. Il termostato sta salendo verso i 21 che hai impostato."
+}</pre>
+
+<h2><span class="sec-num">06</span> Integrazione con Home Assistant</h2>
+<p>Home Assistant espone un'API REST completa e un WebSocket per la gestione degli stati in tempo reale. Il layer Python è minimo: autenticazione con token, chiamata <code>POST /api/services/light/turn_on</code>, gestione risposta.</p>
+<p>Per MQTT diretto (senza Home Assistant), il pattern è ancora più semplice: il JSON estratto dal LM viene serializzato e pubblicato sul topic corretto. Molti dispositivi smart home espongono già un'interfaccia MQTT nativa (Zigbee2MQTT, Tasmota, Shelly).</p>
+
+<h2><span class="sec-num">07</span> Comparazione con i casi simili</h2>
+<table class="data-table">
+  <thead><tr><th>Criterio</th><th>Domotica</th><th>Assistente Personale</th><th>Moto</th></tr></thead>
+  <tbody>
+    <tr><td>Paradigma LM</td><td>NLU → tool</td><td>NLU → tool</td><td>NLG</td></tr>
+    <tr><td>Spazio comandi</td><td class="good">Finito e piccolo</td><td class="warn-c">Medio (date, nomi, eventi)</td><td class="good">Finito (template fissi)</td></tr>
+    <tr><td>Dataset necessario</td><td class="good">50–150 esempi</td><td class="warn-c">400–700 esempi</td><td class="warn-c">400–600 esempi</td></tr>
+    <tr><td>Infrastruttura</td><td class="warn-c">HA/MQTT (esistente)</td><td class="bad">Calendar + DB + push</td><td class="warn-c">GPS + meteo API</td></tr>
+    <tr><td>Privacy</td><td class="good">Bassa sensibilità</td><td class="bad">Dati sanitari Art. 9</td><td class="good">Bassa (dati tecnici)</td></tr>
+    <tr><td>Hallucination risk</td><td class="good">Basso (comandi verificabili)</td><td class="warn-c">Medio (date ambigue)</td><td class="good">Basso (template)</td></tr>
+  </tbody>
+</table>
+
+<h2><span class="sec-num">08</span> Raccomandazione</h2>
+<p>Il caso domotica è il più rapido da implementare dell'intero portfolio: dataset piccolo, nessun compliance, infrastruttura già esistente per chi usa Home Assistant. Il SFT può essere fatto come mini-run (50–100 step) in parallelo al Run #5 senza impatto sul training principale.</p>
+<div class="callout ok">
+  <strong>Priorità: alta · Costo: basso</strong>
+  100–150 esempi, mini-SFT su base moto o base wikipedia.
+  Deployment: processo Python con chiamate HA API, avviabile in meno di una settimana
+  se Home Assistant è già configurato. Il caso domotica è il candidato ideale
+  come <em>primo progetto end-to-end</em> completo: dall'input NL all'azione fisica.
+</div>
+</div>

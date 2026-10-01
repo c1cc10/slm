@@ -1,0 +1,676 @@
+<title>SLM — Assistente Personale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --bg:       #F3F2F7;
+  --surface:  #FFFFFF;
+  --surface2: #ECEAF2;
+  --text:     #1A1826;
+  --text-sec: #5E5B70;
+  --accent:   #2A1A4A;
+  --accent-l: #5B4A90;
+  --border:   #D5D3E0;
+  --mono:     'IBM Plex Mono', monospace;
+
+  --risk-bg:  #FEF2F2; --risk-br: #FCA5A5; --risk-tx: #991B1B;
+  --ok-bg:    #F0FDF4; --ok-br:   #86EFAC; --ok-tx:   #15803D;
+  --info-bg:  #EFF6FF; --info-br: #93C5FD; --info-tx: #1D4ED8;
+  --warn-bg:  #FFFBEB; --warn-br: #FDE68A; --warn-tx: #92400E;
+  --pur-bg:   #F5F3FF; --pur-br:  #A78BFA; --pur-tx:  #4C1D95;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0E0C14; --surface:#18152A; --surface2:#221E34;
+    --text:#E4E0F0; --text-sec:#8C88A4; --accent:#9580D0; --accent-l:#B8A8E8;
+    --border:#302A4A;
+    --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+    --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+    --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+    --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+    --pur-bg:#1E183A;  --pur-br:#4C3A8A;  --pur-tx:#C4B5FD;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0E0C14; --surface:#18152A; --surface2:#221E34;
+  --text:#E4E0F0; --text-sec:#8C88A4; --accent:#9580D0; --accent-l:#B8A8E8;
+  --border:#302A4A;
+  --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+  --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+  --pur-bg:#1E183A;  --pur-br:#4C3A8A;  --pur-tx:#C4B5FD;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px; line-height: 1.72;
+  background: var(--bg); color: var(--text);
+  padding: 0 20px 80px;
+}
+.page { max-width: 720px; margin: 0 auto; padding-top: 52px; }
+
+.eyebrow {
+  font-family: var(--mono); font-size: 0.68rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent-l); margin-bottom: 8px;
+}
+h1 {
+  font-size: 1.7rem; font-weight: 600; letter-spacing: -0.02em;
+  color: var(--text); margin: 0 0 10px; text-wrap: balance;
+}
+.subtitle {
+  color: var(--text-sec); font-size: 0.92rem; line-height: 1.6; margin: 0 0 8px;
+}
+.meta {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--text-sec);
+  margin-bottom: 44px; padding-bottom: 20px; border-bottom: 2px solid var(--accent);
+}
+h2 {
+  font-size: 1.0rem; font-weight: 600; color: var(--accent-l);
+  margin: 52px 0 14px; padding-top: 36px; border-top: 1px solid var(--border);
+  letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 10px;
+}
+.sec-num { font-family: var(--mono); font-size: 0.7rem; color: var(--text-sec); letter-spacing: 0.05em; }
+h3 { font-size: 0.92rem; font-weight: 600; color: var(--text); margin: 28px 0 10px; }
+p { margin: 0 0 14px; }
+p:last-child { margin-bottom: 0; }
+
+.callout {
+  padding: 14px 16px; border-radius: 6px; border-left: 3px solid;
+  font-size: 0.88rem; line-height: 1.6; margin: 18px 0;
+}
+.callout strong { display: block; margin-bottom: 4px; font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.callout.risk  { background: var(--risk-bg); border-color: var(--risk-br); color: var(--risk-tx); }
+.callout.ok    { background: var(--ok-bg);   border-color: var(--ok-br);   color: var(--ok-tx); }
+.callout.info  { background: var(--info-bg); border-color: var(--info-br); color: var(--info-tx); }
+.callout.warn  { background: var(--warn-bg); border-color: var(--warn-br); color: var(--warn-tx); }
+.callout.pur   { background: var(--pur-bg);  border-color: var(--pur-br);  color: var(--pur-tx); }
+
+/* Architecture diagram */
+.arch {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.arch-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 0;
+}
+.arch-layer {
+  padding: 12px 16px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  border: 1px solid var(--border);
+}
+.arch-label {
+  background: var(--surface2);
+  font-family: var(--mono); font-size: 0.72rem;
+  color: var(--text-sec); font-weight: 500;
+  display: flex; align-items: center;
+  border-right: none;
+  letter-spacing: 0.04em;
+}
+.arch-content {
+  background: var(--surface);
+  color: var(--text);
+  border-left: 3px solid var(--accent);
+}
+.arch-row + .arch-row .arch-layer {
+  border-top: none;
+}
+
+/* Feature grid */
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+.feat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 0.85rem;
+}
+.feat-card .feat-name {
+  font-weight: 600; font-size: 0.88rem;
+  margin-bottom: 4px; color: var(--text);
+}
+.feat-card .feat-desc {
+  color: var(--text-sec); font-size: 0.82rem;
+  line-height: 1.5; margin-bottom: 8px;
+}
+.feat-card .verdict {
+  font-size: 0.78rem; padding: 2px 8px; border-radius: 4px;
+  display: inline-block; font-family: var(--mono);
+}
+.v-ok  { background: var(--ok-bg);   color: var(--ok-tx);   border: 1px solid var(--ok-br); }
+.v-w   { background: var(--warn-bg); color: var(--warn-tx); border: 1px solid var(--warn-br); }
+.v-no  { background: var(--risk-bg); color: var(--risk-tx); border: 1px solid var(--risk-br); }
+.v-dep { background: var(--pur-bg);  color: var(--pur-tx);  border: 1px solid var(--pur-br); }
+
+/* Tables */
+.data-table {
+  width: 100%; border-collapse: collapse; font-size: 0.88rem;
+  margin: 16px 0; overflow-x: auto; display: block;
+}
+.data-table th {
+  text-align: left; font-family: var(--mono);
+  font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-sec); padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.data-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+.data-table tr:last-child td { border-bottom: none; }
+.good { color: #15803D; font-weight: 500; }
+.warn-c { color: #92400E; font-weight: 500; }
+.bad { color: #991B1B; font-weight: 500; }
+
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 500;
+}
+.badge.go  { background: var(--ok-bg);   color: var(--ok-tx);   border: 1px solid var(--ok-br); }
+.badge.no  { background: var(--risk-bg); color: var(--risk-tx); border: 1px solid var(--risk-br); }
+.badge.dep { background: var(--warn-bg); color: var(--warn-tx); border: 1px solid var(--warn-br); }
+.badge.pur { background: var(--pur-bg);  color: var(--pur-tx);  border: 1px solid var(--pur-br); }
+
+pre {
+  background: #111827; color: #A8C4D8;
+  font-family: var(--mono); font-size: 0.79rem;
+  padding: 16px 18px; border-radius: 8px;
+  overflow-x: auto; line-height: 1.55; margin: 12px 0;
+}
+code {
+  font-family: var(--mono); font-size: 0.85em;
+  background: var(--surface2); padding: 1px 5px;
+  border-radius: 3px; color: var(--accent-l);
+}
+
+.flow {
+  display: flex; gap: 0; margin: 20px 0; flex-wrap: wrap;
+}
+.flow-step {
+  flex: 1; min-width: 100px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.82rem; line-height: 1.5;
+}
+.flow-step + .flow-step { border-left: none; }
+.flow-step .step-label {
+  font-family: var(--mono); font-size: 0.68rem;
+  color: var(--text-sec); letter-spacing: 0.06em;
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.flow-step .step-actor {
+  font-weight: 600; color: var(--text); margin-bottom: 2px;
+}
+.flow-step.highlight { background: var(--pur-bg); border-color: var(--pur-br); }
+.flow-step.highlight .step-label { color: var(--pur-tx); }
+</style>
+
+<div class="page">
+
+<div class="eyebrow">SLM · Analisi di specializzazione · Case Study #4</div>
+<h1>Assistente Personale</h1>
+<p class="subtitle">Valutazione di fattibilità per gestione appuntamenti, email, calendario condiviso, lista della spesa, scadenze mediche e cura della casa.</p>
+<div class="meta">Documento di progetto · v0.1 · 2026-09-29</div>
+
+<!-- ── 1. DIFFERENZA FONDAMENTALE ───────────────────────────── -->
+<h2><span class="sec-num">01</span> La differenza rispetto agli altri tre casi</h2>
+
+<p>
+  I tre casi precedenti prevedono un LM che riceve input e produce output testuale.
+  Questo caso è fondamentalmente diverso: l'assistente personale deve
+  <strong>agire</strong> — chiamare API, leggere e scrivere stato persistente,
+  generare notifiche autonome in assenza di input utente.
+</p>
+
+<p>
+  Non è un task di NLG (come moto) né di NLU (come assicurativo):
+  è un task <strong>agentico</strong>. Il LM parse l'intent; un layer esterno
+  esegue l'azione. La qualità del sistema dipende quasi più dalla robustezza
+  del layer di orchestrazione che dalla qualità del LM.
+</p>
+
+<div class="arch">
+  <div class="arch-row">
+    <div class="arch-layer arch-label">Input</div>
+    <div class="arch-layer arch-content">
+      Messaggio utente in linguaggio naturale<br>
+      <span style="font-size:0.8rem;color:var(--text-sec);">"Ricordami di portare il cane dal veterinario martedì prossimo"</span>
+    </div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-layer arch-label">SLM 45M</div>
+    <div class="arch-layer arch-content" style="border-left-color: var(--accent-l);">
+      Intent classification + entity extraction → JSON strutturato<br>
+      <span style="font-size:0.8rem;color:var(--text-sec);">{ action: "create_reminder", entity: "veterinario", pet: "cane", date_expr: "martedì prossimo" }</span>
+    </div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-layer arch-label">Orchestrator</div>
+    <div class="arch-layer arch-content">
+      Risoluzione data (martedì prossimo → 2026-10-06), disambiguazione, conferma<br>
+      <span style="font-size:0.8rem;color:var(--text-sec);">Python deterministico — non LM</span>
+    </div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-layer arch-label">Tool layer</div>
+    <div class="arch-layer arch-content">
+      Calendar API · Email client · SQLite (liste) · Push notification service
+    </div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-layer arch-label">Risposta</div>
+    <div class="arch-layer arch-content">
+      SLM genera conferma in linguaggio naturale dalla risposta dell'API<br>
+      <span style="font-size:0.8rem;color:var(--text-sec);">"Promemoria aggiunto: veterinario con Fido martedì 6 ottobre"</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── 2. SPECTRUM DI FUNZIONALITÀ ───────────────────────────── -->
+<h2><span class="sec-num">02</span> Funzionalità e fattibilità</h2>
+
+<div class="feat-grid">
+  <div class="feat-card">
+    <div class="feat-name">Lista della spesa</div>
+    <div class="feat-desc">Aggiunta, rimozione, categorizzazione voci. Intent narrowissimo, contesto 512 token più che sufficiente.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Promemoria semplici</div>
+    <div class="feat-desc">Crea evento da frase NL. Sfida principale: risoluzione temporale ("lunedì mattina", "tra una settimana").</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Avvisi proattivi</div>
+    <div class="feat-desc">Scheduler esterno query database → SLM genera testo avviso. Il LM non genera in autonomia: viene triggerato.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Scadenze mediche</div>
+    <div class="feat-desc">Creazione e tracciamento. Ricorrenze (visita annuale), persone associate, priorità. Intent più ricco ma strutturato.</div>
+    <span class="verdict v-w">MEDIA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Calendario condiviso</div>
+    <div class="feat-desc">Creazione eventi OK. Conflict detection (due eventi sovrapposti, slot liberi) richiede ragionamento temporale complesso.</div>
+    <span class="verdict v-w">MEDIA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Triage email</div>
+    <div class="feat-desc">Classificazione urgenza/categoria fattibile. Risposta automatica richiede più contesto e rischio di errori ad alto impatto.</div>
+    <span class="verdict v-w">MEDIA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Conflict detection avanzata</div>
+    <div class="feat-desc">Trovare slot liberi in calendario condiviso rispettando preferenze implicite. Richiede ragionamento multi-step e stato complesso.</div>
+    <span class="verdict v-no">BASSA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Risposta email autonoma</div>
+    <div class="feat-desc">Inviare email senza conferma umana. Indipendente dalla dimensione del modello: non dovrebbe avvenire senza supervisione.</div>
+    <span class="verdict v-dep">POLICY</span>
+  </div>
+</div>
+
+<!-- ── 3. IL PROBLEMA DEL TEMPO ──────────────────────────────── -->
+<h2><span class="sec-num">03</span> Il ragionamento temporale</h2>
+
+<p>
+  Tutti i task di questo assistente hanno una componente temporale.
+  Questa è la sfida tecnica principale, non il linguaggio naturale in sé.
+</p>
+
+<p>
+  Le espressioni temporali in italiano formano uno spazio quasi illimitato:
+  "venerdì prossimo", "prima di Natale", "tra una settimana o due",
+  "il mercoledì di solito", "appena torno dalla palestra",
+  "quando i bambini sono a scuola". Queste richiedono:
+</p>
+
+<ol style="line-height:1.8;color:var(--text-sec);font-size:0.92rem;">
+  <li><strong>Una data di riferimento</strong> (oggi) — sempre fornita dall'orchestrator, non dal LM</li>
+  <li><strong>Risoluzione di espressioni relative</strong> — regole deterministiche, non LM</li>
+  <li><strong>Interpretazione di espressioni vaghe</strong> — questa è la parte che il LM deve gestire</li>
+  <li><strong>Disambiguazione interattiva</strong> — "mercoledì prossimo fa comodo?" — il LM genera la domanda</li>
+</ol>
+
+<div class="callout pur">
+  <strong>Distribuzione del lavoro</strong>
+  Il LM estrae l'espressione temporale raw: <code>"martedì prossimo"</code>, <code>"fine mese"</code>.
+  L'orchestrator risolve in timestamp ISO. Se l'espressione è ambigua, l'orchestrator
+  chiede al LM di generare una domanda di disambiguazione. Il LM non fa mai aritmetica
+  su date — non è affidabile. Python sì.
+</div>
+
+<!-- ── 4. PRIVACY ────────────────────────────────────────────── -->
+<h2><span class="sec-num">04</span> Il vincolo privacy: il più severo di tutti</h2>
+
+<p>
+  Questo è il caso d'uso con la maggiore densità di dati personali sensibili.
+  Più dei dati assicurativi (GDPR ma business), più di qualsiasi altro:
+</p>
+
+<table class="data-table">
+  <thead>
+    <tr><th>Categoria dato</th><th>Esempi</th><th>Classificazione GDPR</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Dati sanitari</td>
+      <td>visite mediche, farmaci, ricoveri, patologie familiari</td>
+      <td class="bad">Art. 9 — Categoria speciale</td>
+    </tr>
+    <tr>
+      <td>Dati di localizzazione</td>
+      <td>calendario = dove sei e quando</td>
+      <td class="warn-c">Sensibile per profilazione</td>
+    </tr>
+    <tr>
+      <td>Dati minori</td>
+      <td>scadenze scolastiche, attività dei figli</td>
+      <td class="bad">Art. 8 — Protezione rafforzata</td>
+    </tr>
+    <tr>
+      <td>Dati di routine</td>
+      <td>lista spesa → pattern di consumo, abitudini, preferenze</td>
+      <td class="warn-c">Profilazione comportamentale</td>
+    </tr>
+    <tr>
+      <td>Comunicazioni private</td>
+      <td>email — contenuto potenzialmente riservato</td>
+      <td class="warn-c">Riservatezza comunicazioni</td>
+    </tr>
+    <tr>
+      <td>Dati pet</td>
+      <td>veterinario, farmaci animale</td>
+      <td class="good">Non regolamentato</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout risk">
+  <strong>Conseguenza obbligata: tutto on-device</strong>
+  Nessun dato esce dal dispositivo. Nessuna API cloud, nessun modello remoto.
+  Il SLM gira in locale. Il database è locale e cifrato.
+  Questo non è una scelta di performance: è un requisito legale ed etico.
+</div>
+
+<p>
+  Su Raspberry Pi 5 (8GB) questo è realizzabile: il SLM 45M a Q8_0 occupa 58 MB.
+  Il database SQLite per appuntamenti e liste di una famiglia occupa pochi MB.
+  L'intero sistema può girare su hardware da 60 euro con consumi di 5 watt.
+</p>
+
+<!-- ── 5. STATO PERSISTENTE ───────────────────────────────────── -->
+<h2><span class="sec-num">05</span> La questione dello stato: il LM non ricorda</h2>
+
+<p>
+  Un LM, per definizione, non ha memoria tra sessioni. Ogni chiamata riceve
+  un context window fresco. L'assistente personale ha state critico per definizione:
+  la lista della spesa accumula voci, le scadenze persistono fino alla cancellazione,
+  il calendario è permanente.
+</p>
+
+<p>
+  La soluzione è netta: il LM non è il database. Il LM è l'interfaccia.
+</p>
+
+<pre>
+# Schema database locale (SQLite)
+CREATE TABLE reminders (
+    id          INTEGER PRIMARY KEY,
+    category    TEXT,           -- 'medico' | 'spesa' | 'casa' | 'cane' | 'altro'
+    subject     TEXT,
+    person      TEXT,           -- NULL per sé stessi
+    due_date    TEXT,           -- ISO 8601
+    recurrence  TEXT,           -- NULL | 'weekly' | 'monthly' | 'yearly'
+    done        INTEGER DEFAULT 0,
+    created_at  TEXT
+);
+
+CREATE TABLE shopping_list (
+    id       INTEGER PRIMARY KEY,
+    item     TEXT,
+    qty      TEXT,
+    category TEXT,
+    done     INTEGER DEFAULT 0
+);
+
+# Chiamata tipo: "cosa manca al frigorifero?"
+# Orchestrator query: SELECT item FROM shopping_list WHERE done=0
+# SLM genera risposta da lista: "Ti mancano: latte, uova, parmigiano"</pre>
+
+<!-- ── 6. MODALITÀ PROATTIVA ─────────────────────────────────── -->
+<h2><span class="sec-num">06</span> Modalità proattiva: avvisi senza input</h2>
+
+<p>
+  La funzionalità più utile non è rispondere a domande: è avvisare
+  <em>prima</em> che l'utente debba chiedere. "Visita dal dentista dopodomani"
+  senza che nessuno abbia fatto una query.
+</p>
+
+<div class="flow">
+  <div class="flow-step">
+    <div class="step-label">Trigger</div>
+    <div class="step-actor">Scheduler</div>
+    Cron job ogni mattina alle 7:00
+  </div>
+  <div class="flow-step">
+    <div class="step-label">Query</div>
+    <div class="step-actor">Orchestrator</div>
+    SELECT * FROM reminders WHERE due_date BETWEEN today AND today+2d AND done=0
+  </div>
+  <div class="flow-step highlight">
+    <div class="step-label">Generazione</div>
+    <div class="step-actor">SLM 45M</div>
+    Produce testo avviso naturale da record strutturato
+  </div>
+  <div class="flow-step">
+    <div class="step-label">Consegna</div>
+    <div class="step-actor">Notifier</div>
+    Push locale, SMS, Telegram bot
+  </div>
+</div>
+
+<p>
+  Il SLM in questa fase fa un task di NLG puro — esattamente come il caso moto.
+  Input: record strutturato. Output: testo italiano naturale per una notifica.
+  Questo è il task per cui 45M è ottimale.
+</p>
+
+<!-- ── 7. DATASET SFT ─────────────────────────────────────────── -->
+<h2><span class="sec-num">07</span> Dataset SFT: struttura</h2>
+
+<h3>Track A: intent extraction</h3>
+<pre>
+// Lista della spesa
+{
+  "input": "aggiungi pane e olio alla lista",
+  "output": { "action": "add_to_list", "list": "spesa",
+              "items": [{"name":"pane"},{"name":"olio"}] }
+}
+
+// Reminder medico con persona
+{
+  "input": "ricordami la visita cardiologica di mia madre il 15 novembre",
+  "output": { "action": "create_reminder", "category": "medico",
+              "subject": "visita cardiologica", "person": "madre",
+              "date_expr": "15 novembre" }
+}
+
+// Cura della casa
+{
+  "input": "devo cambiare il filtro della cappa, segnalo tra due mesi",
+  "output": { "action": "create_reminder", "category": "casa",
+              "subject": "cambio filtro cappa", "date_expr": "+2 mesi",
+              "recurrence": null }
+}
+
+// Veterinario
+{
+  "input": "Fido fa il vaccino annuale a marzo, mettilo nel calendario",
+  "output": { "action": "create_reminder", "category": "cane",
+              "subject": "vaccino Fido", "pet": "Fido",
+              "date_expr": "marzo", "recurrence": "yearly" }
+}</pre>
+
+<h3>Track B: generazione avvisi naturali</h3>
+<pre>
+// Da record strutturato → testo notifica
+{
+  "input": {
+    "category": "medico", "subject": "visita cardiologica",
+    "person": "madre", "due_date": "2026-11-15", "days_ahead": 2
+  },
+  "output": "Promemoria: dopodomani visita cardiologica per tua madre."
+}
+
+{
+  "input": {
+    "category": "cane", "subject": "vaccino Fido",
+    "pet": "Fido", "due_date": "2026-03-10", "days_ahead": 1
+  },
+  "output": "Domani Fido ha il vaccino annuale. Ricordati di chiamare il veterinario se non hai ancora l'appuntamento."
+}</pre>
+
+<p>
+  Volume: 400-700 esempi per Track A coprono l'ampiezza del dominio.
+  Track B è più semplice: 150-200 esempi per i pattern di notifica.
+</p>
+
+<!-- ── 8. COMPARAZIONE TUTTI I CASE STUDY ─────────────────────── -->
+<h2><span class="sec-num">08</span> Comparazione: tutti e quattro i case study</h2>
+
+<table class="data-table">
+  <thead>
+    <tr><th>Criterio</th><th>Moto</th><th>Assicurativo</th><th>Scrittura</th><th>Assistente Personale</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Paradigma LM</strong></td>
+      <td>NLG</td>
+      <td>NLU</td>
+      <td>NLG + NLU</td>
+      <td>Agentico (tool use)</td>
+    </tr>
+    <tr>
+      <td><strong>Vincolo principale</strong></td>
+      <td>Safety fisica</td>
+      <td>GDPR business</td>
+      <td>Lunghezza contesto</td>
+      <td>Privacy personale + stato persistente</td>
+    </tr>
+    <tr>
+      <td><strong>Ctx 512 token</strong></td>
+      <td class="good">Sufficiente</td>
+      <td class="warn-c">Borderline</td>
+      <td class="bad">Insufficiente per task core</td>
+      <td class="good">Sufficiente (input brevi)</td>
+    </tr>
+    <tr>
+      <td><strong>Stato persistente</strong></td>
+      <td class="good">Non serve</td>
+      <td class="good">Non serve</td>
+      <td class="good">Non serve</td>
+      <td class="bad">Indispensabile (database)</td>
+    </tr>
+    <tr>
+      <td><strong>Comportamento proattivo</strong></td>
+      <td class="good">Non serve</td>
+      <td class="good">Non serve</td>
+      <td class="good">Non serve</td>
+      <td class="bad">Core feature (scheduler + avvisi)</td>
+    </tr>
+    <tr>
+      <td><strong>Integrazione esterna</strong></td>
+      <td class="warn-c">API GPS/meteo</td>
+      <td class="warn-c">CRM interno</td>
+      <td class="good">Nessuna</td>
+      <td class="bad">Calendar + email + push + SQLite</td>
+    </tr>
+    <tr>
+      <td><strong>Hallucination risk</strong></td>
+      <td class="good">Basso</td>
+      <td class="warn-c">Medio</td>
+      <td class="bad">Alto</td>
+      <td class="warn-c">Medio (su date ambigue)</td>
+    </tr>
+    <tr>
+      <td><strong>Complessità architetturale</strong></td>
+      <td class="good">Bassa</td>
+      <td class="warn-c">Media</td>
+      <td class="good">Bassa</td>
+      <td class="bad">Alta (orchestrator + tools + scheduler)</td>
+    </tr>
+    <tr>
+      <td><strong>Fattibilità con 45M</strong></td>
+      <td class="good">Completa</td>
+      <td class="warn-c">Parziale</td>
+      <td class="warn-c">Solo task locali</td>
+      <td class="warn-c">Task NL OK; orchestrazione è la sfida</td>
+    </tr>
+    <tr>
+      <td><strong>Valore su Raspberry Pi</strong></td>
+      <td class="warn-c">Medio</td>
+      <td class="good">Alto</td>
+      <td class="warn-c">Medio</td>
+      <td class="good">Molto alto (sempre acceso, on-device)</td>
+    </tr>
+    <tr>
+      <td><strong>Priorità consigliata</strong></td>
+      <td><span class="badge go">Run #5</span></td>
+      <td><span class="badge dep">v2</span></td>
+      <td><span class="badge go">Track in Run #5</span></td>
+      <td><span class="badge pur">v2 + infra</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ── 9. DECISIONE ───────────────────────────────────────────── -->
+<h2><span class="sec-num">09</span> Decisione e raccomandazione</h2>
+
+<p>
+  Il caso assistente personale è il più complesso dal punto di vista
+  architetturale — non per il LM, ma per l'infrastruttura attorno al LM.
+  Il SLM 45M fa la parte più semplice del sistema (parse NL → JSON,
+  genera testo notifica); la parte difficile è il layer di orchestrazione,
+  la gestione del database, l'integrazione con calendar e notification,
+  il deployment sempre-acceso su RPi.
+</p>
+
+<div class="callout ok">
+  <strong>Cosa il SLM 45M fa bene in questo caso</strong>
+  Intent classification su frasi brevi (80-150 char). Entity extraction:
+  date, persone, oggetti. Generazione testo conferma e notifiche da template.
+  Il contesto di 512 token è abbondante — le frasi di input sono molto più corte.
+  Il modello non deve "capire" nulla di complesso: deve mappare pattern linguistici
+  su strutture JSON. Questo è il task per cui i modelli piccoli sono stati usati con successo.
+</div>
+
+<div class="callout warn">
+  <strong>Blocco attuale: infrastruttura, non modello</strong>
+  Il SFT del LM è la parte rapida (3-5 giorni). L'orchestrator Python con
+  gestione database + calendar API + scheduler + sistema di notifiche è un
+  progetto di 2-4 settimane separato. Prima di avviare il SFT, conviene decidere
+  se si vuole investire nell'infrastruttura o se il SFT è solo per capire il pattern.
+</div>
+
+<p>
+  Come stepping stone: il SFT intent-extraction per questo caso è
+  tecnicamente molto simile al SFT assicurativo (NL → JSON strutturato).
+  I due dataset si possono costruire in parallelo e il training su uno
+  beneficia l'altro. La differenza è solo il dominio dei JSON target.
+</p>
+
+</div>

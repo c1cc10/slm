@@ -1,0 +1,673 @@
+<title>SLM — Assistente Assicurativo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --bg:       #F4F5F7;
+  --surface:  #FFFFFF;
+  --surface2: #EBEDF0;
+  --text:     #1A1A24;
+  --text-sec: #5C5E6E;
+  --accent:   #1F2D5C;
+  --accent-l: #3A4F8C;
+  --border:   #D4D6E0;
+  --mono:     'IBM Plex Mono', monospace;
+
+  --risk-bg:  #FEF2F2; --risk-br: #FCA5A5; --risk-tx: #991B1B;
+  --ok-bg:    #F0FDF4; --ok-br:   #86EFAC; --ok-tx:   #15803D;
+  --info-bg:  #EFF6FF; --info-br: #93C5FD; --info-tx: #1D4ED8;
+  --warn-bg:  #FFFBEB; --warn-br: #FDE68A; --warn-tx: #92400E;
+  --gdpr-bg:  #F5F0FF; --gdpr-br: #C4B5FD; --gdpr-tx: #5B21B6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0F1018; --surface:#191C2C; --surface2:#21253A;
+    --text:#E0E2EC; --text-sec:#8C8FA8; --accent:#8BA3DB; --accent-l:#A8BFEA;
+    --border:#2A2E45;
+    --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+    --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+    --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+    --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+    --gdpr-bg:#1A0F35; --gdpr-br:#4C1D95; --gdpr-tx:#C4B5FD;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0F1018; --surface:#191C2C; --surface2:#21253A;
+  --text:#E0E2EC; --text-sec:#8C8FA8; --accent:#8BA3DB; --accent-l:#A8BFEA;
+  --border:#2A2E45;
+  --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+  --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+  --gdpr-bg:#1A0F35; --gdpr-br:#4C1D95; --gdpr-tx:#C4B5FD;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px; line-height: 1.7;
+  background: var(--bg); color: var(--text);
+  padding: 0 20px 80px;
+}
+.page { max-width: 720px; margin: 0 auto; padding-top: 52px; }
+
+.eyebrow {
+  font-family: var(--mono); font-size: 0.68rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 8px;
+}
+h1 {
+  font-size: 1.7rem; font-weight: 600; letter-spacing: -0.02em;
+  color: var(--text); margin: 0 0 10px; text-wrap: balance;
+}
+.subtitle {
+  color: var(--text-sec); font-size: 0.92rem; line-height: 1.6; margin: 0 0 8px;
+}
+.meta {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--text-sec);
+  margin-bottom: 44px; padding-bottom: 20px; border-bottom: 2px solid var(--accent);
+}
+h2 {
+  font-size: 1.0rem; font-weight: 600; color: var(--accent);
+  margin: 52px 0 14px; padding-top: 36px; border-top: 1px solid var(--border);
+  letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 10px;
+}
+.sec-num {
+  font-family: var(--mono); font-size: 0.7rem;
+  color: var(--text-sec); letter-spacing: 0.05em;
+}
+h3 { font-size: 0.92rem; font-weight: 600; color: var(--text); margin: 28px 0 10px; }
+p { margin: 0 0 14px; }
+p:last-child { margin-bottom: 0; }
+
+.callout {
+  padding: 14px 16px; border-radius: 6px; border-left: 3px solid;
+  font-size: 0.88rem; line-height: 1.6; margin: 18px 0;
+}
+.callout strong { display: block; margin-bottom: 4px; font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.callout.risk  { background: var(--risk-bg); border-color: var(--risk-br); color: var(--risk-tx); }
+.callout.ok    { background: var(--ok-bg);   border-color: var(--ok-br);   color: var(--ok-tx); }
+.callout.info  { background: var(--info-bg); border-color: var(--info-br); color: var(--info-tx); }
+.callout.warn  { background: var(--warn-bg); border-color: var(--warn-br); color: var(--warn-tx); }
+.callout.gdpr  { background: var(--gdpr-bg); border-color: var(--gdpr-br); color: var(--gdpr-tx); }
+
+/* Pipeline diagram */
+.pipeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 24px 0;
+}
+.pipe-step {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+.pipe-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 18px;
+  flex: 1;
+}
+.pipe-box .label {
+  font-family: var(--mono); font-size: 0.7rem;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--text-sec); margin-bottom: 4px;
+}
+.pipe-box .desc {
+  font-size: 0.88rem; color: var(--text); line-height: 1.5;
+}
+.pipe-box .tech {
+  font-family: var(--mono); font-size: 0.75rem;
+  color: var(--accent-l); margin-top: 6px;
+}
+.pipe-box.lm {
+  border-color: var(--ok-br);
+  background: var(--ok-bg);
+}
+.pipe-box.lm .label { color: var(--ok-tx); }
+.pipe-box.rule {
+  border-color: var(--warn-br);
+  background: var(--warn-bg);
+}
+.pipe-box.rule .label { color: var(--warn-tx); }
+.pipe-box.human {
+  border-color: var(--info-br);
+  background: var(--info-bg);
+}
+.pipe-box.human .label { color: var(--info-tx); }
+
+.pipe-arrow {
+  display: flex;
+  justify-content: center;
+  padding: 5px 0;
+  color: var(--text-sec);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.pipe-branch {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+.pipe-branch-label {
+  font-family: var(--mono); font-size: 0.68rem;
+  color: var(--text-sec); text-align: center;
+}
+
+/* Tables */
+.data-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.88rem; margin: 16px 0;
+  overflow-x: auto; display: block;
+}
+.data-table th {
+  text-align: left; font-family: var(--mono);
+  font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-sec); padding: 8px 12px;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.data-table td {
+  padding: 9px 12px; border-bottom: 1px solid var(--border);
+  vertical-align: top; line-height: 1.5;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.good { color: var(--ok-tx); font-weight: 500; }
+.warn-c { color: var(--warn-tx); font-weight: 500; }
+.bad  { color: var(--risk-tx); font-weight: 500; }
+.mono { font-family: var(--mono); font-size: 0.82rem; }
+
+/* Compare table */
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 20px 0;
+}
+.compare-col {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  font-size: 0.87rem;
+}
+.compare-col h4 {
+  font-size: 0.82rem; font-family: var(--mono);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin: 0 0 10px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--accent);
+}
+.compare-col ul {
+  margin: 0; padding-left: 16px;
+  color: var(--text-sec); line-height: 1.7;
+}
+
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 500;
+}
+.badge.go  { background: var(--ok-bg);   color: var(--ok-tx);   border: 1px solid var(--ok-br); }
+.badge.no  { background: var(--risk-bg); color: var(--risk-tx); border: 1px solid var(--risk-br); }
+.badge.dep { background: var(--warn-bg); color: var(--warn-tx); border: 1px solid var(--warn-br); }
+
+pre {
+  background: #111827; color: #A8C4D8;
+  font-family: var(--mono); font-size: 0.79rem;
+  padding: 16px 18px; border-radius: 8px;
+  overflow-x: auto; line-height: 1.55; margin: 12px 0;
+}
+code {
+  font-family: var(--mono); font-size: 0.85em;
+  background: var(--surface2); padding: 1px 5px;
+  border-radius: 3px; color: var(--accent-l);
+}
+</style>
+
+<div class="page">
+
+<div class="eyebrow">SLM · Analisi di specializzazione · Case Study #2</div>
+<h1>Assistente per Gestione Email e Preventivi Assicurativi</h1>
+<p class="subtitle">Valutazione di fattibilità per un sistema di classificazione, estrazione campi e integrazione con sistema terzo su corpus mail e documenti assicurativi.</p>
+<div class="meta">Documento di progetto · v0.1 · 2026-09-29</div>
+
+<!-- ── 1. CASO D'USO ─────────────────────────────────────────── -->
+<h2><span class="sec-num">01</span> Il caso d'uso</h2>
+
+<p>
+  Un broker o compagnia assicurativa riceve giornalmente decine o centinaia di email
+  con richieste eterogenee: preventivi auto/moto/casa, rinnovi, segnalazioni sinistri,
+  richieste di informazioni, reclami. L'operatore deve leggere, classificare, estrarre
+  i campi rilevanti e inserirli nel gestionale. Il sistema proposto automatizza
+  questa pipeline lasciando all'operatore solo i casi ambigui.
+</p>
+
+<div class="callout info">
+  <strong>Differenza fondamentale rispetto al caso motociclistico</strong>
+  Nel caso moto, l'LM formattava dati strutturati in linguaggio naturale.
+  Qui fa il percorso inverso: riceve linguaggio naturale (email libere)
+  e produce dati strutturati (JSON per il gestionale). È un compito
+  di comprensione, non di generazione.
+</div>
+
+<!-- ── 2. VINCOLI NORMATIVI ───────────────────────────────────── -->
+<h2><span class="sec-num">02</span> Vincoli normativi: GDPR e compliance assicurativa</h2>
+
+<p>
+  Questo caso d'uso introduce il vincolo più critico dell'intera analisi:
+  la gestione di dati personali sensibili in un contesto regolamentato.
+</p>
+
+<div class="callout gdpr">
+  <strong>GDPR — dati personali in training e inferenza</strong>
+  Le email assicurative contengono PII (nome, CF, targa, indirizzo, storico sinistri).
+  Usarle per il training richiede base giuridica (legittimo interesse o consenso esplicito),
+  anonimizzazione o pseudonimizzazione prima dell'ingestion nel dataset,
+  e un registro del trattamento. In produzione, i log di inferenza
+  non devono conservare il testo delle email oltre il necessario.
+</div>
+
+<p>
+  La conseguenza pratica è che il sistema deve girare <strong>on-premise</strong>
+  (nessuna email inviata a API cloud) e il modello deve essere addestrato
+  su dati sintetici o anonimizzati. Questo è in realtà un argomento forte
+  a favore di un piccolo modello locale rispetto a GPT-4 via API.
+</p>
+
+<div class="callout warn">
+  <strong>Compliance assicurativa (IVASS/CODASS)</strong>
+  In Italia, la normativa assicurativa (CAP, disposizioni IVASS) impone
+  requisiti specifici su tempi di risposta alle richieste e tracciabilità
+  delle operazioni. Ogni azione automatica del sistema deve essere
+  auditabile: chi ha inviato quale dato al gestionale, quando, con quale
+  confidenza.
+</div>
+
+<!-- ── 3. PIPELINE DI PROCESSING ─────────────────────────────── -->
+<h2><span class="sec-num">03</span> Pipeline di processing</h2>
+
+<div class="pipeline">
+
+  <div class="pipe-step">
+    <div class="pipe-box">
+      <div class="label">Input</div>
+      <div class="desc">Email in arrivo (testo + metadata: mittente, oggetto, data)</div>
+      <div class="tech">IMAP/Exchange → preprocessing → testo pulito</div>
+    </div>
+  </div>
+
+  <div class="pipe-arrow">↓</div>
+
+  <div class="pipe-step">
+    <div class="pipe-box lm">
+      <div class="label">Passo 1 — Classificazione (LM)</div>
+      <div class="desc">L'email è pertinente al dominio assicurativo? Se sì, quale categoria?</div>
+      <div class="tech">Output: { "pertinente": true, "categoria": "preventivo_auto", "confidenza": 0.94 }</div>
+    </div>
+  </div>
+
+  <div class="pipe-arrow">↓</div>
+
+  <div class="pipe-branch">
+    <div style="text-align:right;font-size:0.82rem;color:var(--text-sec);">confidenza &lt; soglia</div>
+    <div class="pipe-branch-label">↙ &nbsp; ↓ &nbsp; ↘</div>
+    <div style="text-align:left;font-size:0.82rem;color:var(--text-sec);">non pertinente</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:4px 0 8px;">
+    <div class="pipe-box human">
+      <div class="label">Coda revisione</div>
+      <div class="desc" style="font-size:0.82rem;">Operatore classifica manualmente</div>
+    </div>
+    <div class="pipe-box lm">
+      <div class="label">Passo 2 — Estrazione (LM)</div>
+      <div class="desc" style="font-size:0.82rem;">Estrai i campi rilevanti per la categoria classificata</div>
+    </div>
+    <div class="pipe-box rule">
+      <div class="label">Archivia / Ignora</div>
+      <div class="desc" style="font-size:0.82rem;">Email non assicurativa</div>
+    </div>
+  </div>
+
+  <div class="pipe-arrow">↓ (dal passo 2)</div>
+
+  <div class="pipe-step">
+    <div class="pipe-box rule">
+      <div class="label">Validazione campi (rule-based)</div>
+      <div class="desc">Controlla formato targa, CF, date, coerenza interna. Calcola confidenza aggregata.</div>
+      <div class="tech">Se confidenza &gt; soglia → automazione. Altrimenti → coda revisione.</div>
+    </div>
+  </div>
+
+  <div class="pipe-arrow">↓</div>
+
+  <div class="pipe-step">
+    <div class="pipe-box">
+      <div class="label">Tool call — Sistema terzo</div>
+      <div class="desc">Python chiama l'API del gestionale con il JSON validato. Log auditabile.</div>
+      <div class="tech">requests.post(gestionale_api, json=extracted_fields, headers=auth)</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="callout ok">
+  <strong>Nota architetturale: tool use senza agentic LM</strong>
+  Il "tool use" non richiede che l'LM chiami strumenti in modo autonomo.
+  L'LM estrae un JSON strutturato; Python legge quel JSON e chiama l'API.
+  Questo è più affidabile di un modello agentico: ogni passo è deterministico
+  e auditabile. L'LM fa solo la parte che sa fare: capire testo libero.
+</div>
+
+<!-- ── 4. I DUE RUOLI DELL'LM ─────────────────────────────────── -->
+<h2><span class="sec-num">04</span> I due ruoli dell'LM</h2>
+
+<p>
+  Classificazione ed estrazione sono compiti distinti. Possono usare lo stesso
+  modello con prompt diversi (approccio semplice) o due modelli specializzati
+  (approccio ottimale se la qualità lo richiede).
+</p>
+
+<h3>Classificazione</h3>
+<p>
+  Input: testo email grezzo. Output: categoria + confidenza.
+  È un task di classificazione multi-label: un'email può essere
+  sia una richiesta preventivo sia una segnalazione sinistro.
+</p>
+
+<pre>
+// Categorie principali (da definire con il dominio)
+{
+  "preventivo_auto":     true,
+  "preventivo_moto":     false,
+  "preventivo_casa":     false,
+  "rinnovo_polizza":     false,
+  "segnalazione_sinistro": false,
+  "richiesta_info":      false,
+  "reclamo":             false,
+  "spam_irrilevante":    false,
+  "confidenza":          0.91
+}</pre>
+
+<h3>Estrazione campi</h3>
+<p>
+  Input: testo email + categoria classificata.
+  Output: JSON con i campi rilevanti per quella categoria.
+  I campi non trovati nel testo devono essere <code>null</code>,
+  non inventati.
+</p>
+
+<pre>
+// Estrazione per preventivo_auto
+{
+  "richiedente_nome":        "Marco Rossi",
+  "richiedente_email":       "m.rossi@email.it",
+  "veicolo_marca":           "Volkswagen",
+  "veicolo_modello":         "Golf",
+  "veicolo_anno":            2019,
+  "veicolo_targa":           null,          // non presente in email
+  "km_annui_stimati":        15000,
+  "uso_veicolo":             "privato",
+  "residenza_provincia":     "Milano",
+  "copertura_richiesta":     "RC + furto",
+  "sinistri_ultimi_5_anni":  0,
+  "note_libere":             "cerca polizza con assistenza stradale"
+}</pre>
+
+<div class="callout risk">
+  <strong>Hallucination nei campi null</strong>
+  Il rischio principale dell'estrazione è che il modello "inventi" campi
+  non presenti nel testo per completare la struttura. Un campo <code>null</code>
+  è corretto e gestibile; un campo con valore falso è un errore che entra
+  nel gestionale. Il SFT deve includere molti esempi con campi null.
+  La validazione rule-based deve cross-verificare i valori estraibili
+  (formato targa AA000AA, CF 16 caratteri, date plausibili).
+</div>
+
+<!-- ── 5. VINCOLO CONTESTO ────────────────────────────────────── -->
+<h2><span class="sec-num">05</span> Il vincolo critico: lunghezza del contesto</h2>
+
+<p>
+  Il SLM Run #4 ha <code>max_seq_len = 512 token</code> ≈ 380–420 parole.
+  Questo è il principale vincolo tecnico per questo caso d'uso.
+</p>
+
+<table class="data-table">
+  <thead>
+    <tr><th>Documento</th><th>Lunghezza tipica (parole)</th><th>Token stimati</th><th>Compatibilità 512</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Email breve (richiesta info)</td>
+      <td>50–120</td>
+      <td class="mono">70–160</td>
+      <td class="good">✓ OK</td>
+    </tr>
+    <tr>
+      <td>Email media (preventivo)</td>
+      <td>120–300</td>
+      <td class="mono">160–400</td>
+      <td class="good">✓ OK</td>
+    </tr>
+    <tr>
+      <td>Email lunga (sinistro dettagliato)</td>
+      <td>300–600</td>
+      <td class="mono">400–800</td>
+      <td class="warn-c">⚠ Troncamento</td>
+    </tr>
+    <tr>
+      <td>Clausola contrattuale singola</td>
+      <td>200–500</td>
+      <td class="mono">270–670</td>
+      <td class="warn-c">⚠ Parziale</td>
+    </tr>
+    <tr>
+      <td>Contratto assicurativo completo</td>
+      <td>5.000–20.000</td>
+      <td class="mono">6.700–27.000</td>
+      <td class="bad">✗ Impossibile</td>
+    </tr>
+    <tr>
+      <td>Regolamento IVASS (circolare)</td>
+      <td>2.000–10.000</td>
+      <td class="mono">2.700–13.000</td>
+      <td class="bad">✗ Impossibile</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Il SLM 512 copre bene le email (il target primario).
+  Contratti e regolamenti richiedono chunking + RAG o un modello con contesto lungo.
+  Per il prototipo, il corpus di training può essere limitato alle email;
+  l'accesso a contratti/regolamenti può essere gestito da un retriever esterno
+  che passa solo il chunk rilevante.
+</p>
+
+<div class="callout warn">
+  <strong>Opzione Run #5: aumentare max_seq_len a 1024</strong>
+  RoPE (già in uso nel Run #4) supporta teoricamente l'estensione del contesto
+  senza re-training completo: i coefficienti di rotazione si ricalcolano per
+  le nuove posizioni. In pratica, un fine-tuning su sequenze più lunghe migliora
+  la qualità sull'estremità del contesto. Questo è una scelta da valutare
+  prima di iniziare il SFT.
+</div>
+
+<!-- ── 6. DATASET SFT ─────────────────────────────────────────── -->
+<h2><span class="sec-num">06</span> Dataset SFT: costruzione e volume</h2>
+
+<p>
+  Il dataset deve coprire entrambi i compiti (classificazione + estrazione)
+  con la distribuzione reale delle email del dominio. Deve essere costruito
+  su dati sintetici o anonimizzati per ragioni GDPR.
+</p>
+
+<h3>Costruzione con LLM teacher (synthetic data)</h3>
+<p>
+  Strategia raccomandata: usare GPT-4o o Claude come teacher per generare
+  email sintetiche realistiche con le relative annotazioni corrette.
+  Il teacher non vede email reali; genera variazioni plausibili da template
+  di dominio forniti dall'operatore assicurativo.
+</p>
+
+<pre>
+// Template per generazione sintetica
+{
+  "istruzione_teacher": "Genera un'email di richiesta preventivo auto plausibile
+    per un broker assicurativo italiano. Includi 3-5 dei seguenti campi (non tutti):
+    marca/modello veicolo, anno, uso, km annui, residenza, copertura desiderata.
+    Usa uno stile informale. Poi genera il JSON di estrazione corretto.",
+  "output_atteso": {
+    "email": "Salve, vorrei un preventivo per la mia Fiat Panda del 2021...",
+    "extraction": { "veicolo_marca": "Fiat", "veicolo_modello": "Panda", ... }
+  }
+}</pre>
+
+<table class="data-table" style="margin-top:16px;">
+  <thead>
+    <tr><th>Categoria</th><th>Esempi consigliati</th><th>Note</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Preventivo auto</td><td>200</td><td>Categoria principale, alta variabilità</td></tr>
+    <tr><td>Preventivo moto/casa/altro</td><td>100</td><td>30-40 per categoria</td></tr>
+    <tr><td>Rinnovo polizza</td><td>100</td><td>Spesso con numero polizza esistente</td></tr>
+    <tr><td>Segnalazione sinistro</td><td>150</td><td>Testi più lunghi, più campi null</td></tr>
+    <tr><td>Richiesta info / reclamo</td><td>100</td><td>Output spesso solo classificazione</td></tr>
+    <tr><td>Spam / non pertinente</td><td>100</td><td>Importante per precision sul filtro</td></tr>
+    <tr><td><strong>Totale</strong></td><td><strong>750</strong></td><td>Volume minimo, 1200 per robustezza</td></tr>
+  </tbody>
+</table>
+
+<!-- ── 7. CONFRONTO CON CASO MOTO ─────────────────────────────── -->
+<h2><span class="sec-num">07</span> Confronto con il caso motociclistico</h2>
+
+<div class="compare">
+  <div class="compare-col">
+    <h4>Assistente Moto</h4>
+    <ul>
+      <li>LM: <strong>voce</strong> del sistema</li>
+      <li>Input: JSON strutturato da sensori</li>
+      <li>Output: testo italiano naturale</li>
+      <li>Constraint critico: safety fisica</li>
+      <li>Deployment: embedded (RPi)</li>
+      <li>Privacy: dati di bordo, basso rischio</li>
+      <li>SFT: JSON → frase (facile)</li>
+      <li>Ctx 512: sufficiente per l'output</li>
+    </ul>
+  </div>
+  <div class="compare-col">
+    <h4>Assistente Assicurativo</h4>
+    <ul>
+      <li>LM: <strong>elaboratore</strong> del testo</li>
+      <li>Input: email in linguaggio libero</li>
+      <li>Output: JSON strutturato</li>
+      <li>Constraint critico: GDPR + compliance</li>
+      <li>Deployment: on-premise server</li>
+      <li>Privacy: PII, alto rischio</li>
+      <li>SFT: email → JSON (medio)</li>
+      <li>Ctx 512: limite per email lunghe</li>
+    </ul>
+  </div>
+</div>
+
+<p>
+  Sono due direzioni opposte dello stesso paradigma: il moto usa l'LM come NLG
+  (dati → linguaggio), l'assicurativo usa l'LM come NLU (linguaggio → dati).
+  NLU è tecnicamente più difficile — la comprensione richiede più parametri
+  e più esempi di training rispetto alla generazione su template.
+</p>
+
+<!-- ── 8. MATRICE DECISIONALE ─────────────────────────────────── -->
+<h2><span class="sec-num">08</span> Matrice di decisione</h2>
+
+<table class="data-table">
+  <thead>
+    <tr><th>Componente</th><th>Tecnologia</th><th>Decisione</th><th>Motivazione</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Classificazione email</strong></td>
+      <td>SLM 45M + SFT</td>
+      <td><span class="badge go">GO</span></td>
+      <td>Task strutturato, output breve, alta fattibilità a 45M</td>
+    </tr>
+    <tr>
+      <td><strong>Estrazione campi</strong></td>
+      <td>SLM 45M + SFT</td>
+      <td><span class="badge dep">DIPENDE</span></td>
+      <td>Funziona su email brevi/medie. Email &gt;400 token richiedono ctx esteso o chunking</td>
+    </tr>
+    <tr>
+      <td><strong>Validazione formato</strong></td>
+      <td>Rule-based Python</td>
+      <td><span class="badge go">GO</span></td>
+      <td>Targa, CF, date: regex deterministici, non compito per l'LM</td>
+    </tr>
+    <tr>
+      <td><strong>Tool call / API gestionale</strong></td>
+      <td>Python (non LM)</td>
+      <td><span class="badge go">GO</span></td>
+      <td>L'LM produce JSON; Python chiama l'API. Più affidabile di un LM agentico.</td>
+    </tr>
+    <tr>
+      <td><strong>Accesso contratti/regolamenti</strong></td>
+      <td>RAG + retriever</td>
+      <td><span class="badge dep">DIPENDE</span></td>
+      <td>Documenti troppo lunghi per ctx 512. Richiede chunking + embedding retrieval.</td>
+    </tr>
+    <tr>
+      <td><strong>Human-in-the-loop</strong></td>
+      <td>Coda operatore</td>
+      <td><span class="badge go">OBBLIGATORIO</span></td>
+      <td>Compliance IVASS + gestione casi ambigui. Non opzionale.</td>
+    </tr>
+    <tr>
+      <td><strong>Audit log</strong></td>
+      <td>Structured logging</td>
+      <td><span class="badge go">GO</span></td>
+      <td>Ogni estrazione e tool call deve essere tracciabile per compliance.</td>
+    </tr>
+    <tr>
+      <td><strong>Training data</strong></td>
+      <td>Sintetico (LLM teacher)</td>
+      <td><span class="badge go">GO</span></td>
+      <td>GDPR: non usare email reali per training senza anonimizzazione certificata</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ── 9. VALUTAZIONE COMPARATIVA ─────────────────────────────── -->
+<h2><span class="sec-num">09</span> Valutazione comparativa dei due case study</h2>
+
+<table class="data-table">
+  <thead>
+    <tr><th>Criterio</th><th>Assistente Moto</th><th>Assistente Assicurativo</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Fattibilità tecnica SLM 45M</strong></td><td class="good">Alta</td><td class="warn-c">Media</td></tr>
+    <tr><td><strong>Complessità architetturale</strong></td><td class="good">Media</td><td class="warn-c">Alta</td></tr>
+    <tr><td><strong>Rischio compliance</strong></td><td class="good">Basso</td><td class="bad">Alto (GDPR)</td></tr>
+    <tr><td><strong>Dataset costruibile in autonomia</strong></td><td class="good">Sì, ~500 esempi</td><td class="warn-c">Sì, ~750 sintetici</td></tr>
+    <tr><td><strong>Valore commerciale dimostrabile</strong></td><td class="warn-c">Medio (prototipo)</td><td class="good">Alto (ROI misurabile)</td></tr>
+    <tr><td><strong>Human-in-the-loop obbligatorio</strong></td><td class="good">No (alerts)</td><td class="bad">Sì (compliance)</td></tr>
+    <tr><td><strong>Limite contesto 512 token</strong></td><td class="good">Non impatta</td><td class="warn-c">Impatta su email lunghe</td></tr>
+    <tr><td><strong>Priorità consigliata</strong></td><td class="good">Run #5 target</td><td class="warn-c">v2 o modello > 45M</td></tr>
+  </tbody>
+</table>
+
+<div class="callout ok">
+  <strong>Raccomandazione finale</strong>
+  Il caso assicurativo ha valore commerciale maggiore ma complessità e rischio
+  compliance significativamente più alti. Il SLM 45M è borderline per l'estrazione
+  da testi liberi: funziona sulle email brevi, ha difficoltà con quelle lunghe.
+  La strategia ottimale è: SFT moto per Run #5 (architettura più semplice,
+  rischio più basso, validazione rapida), poi affrontare il caso assicurativo
+  con contesto esteso a 1024 token e pipeline RAG per i documenti lunghi.
+</div>
+
+</div>

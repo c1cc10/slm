@@ -1,0 +1,743 @@
+<title>SLM — Assistente Motociclistico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --bg:       #F5F4F0;
+  --surface:  #FFFFFF;
+  --surface2: #EDECEA;
+  --text:     #1A1A1A;
+  --text-sec: #5A5A5A;
+  --accent:   #1B2540;
+  --accent-l: #2E3F6B;
+  --border:   #D8D5CF;
+  --mono:     'IBM Plex Mono', monospace;
+
+  --risk-bg:  #FEF2F2; --risk-br: #FCA5A5; --risk-tx: #991B1B;
+  --ok-bg:    #F0FDF4; --ok-br:   #86EFAC; --ok-tx:   #15803D;
+  --info-bg:  #EFF6FF; --info-br: #93C5FD; --info-tx: #1D4ED8;
+  --warn-bg:  #FFFBEB; --warn-br: #FDE68A; --warn-tx: #92400E;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#111318; --surface:#1C2030; --surface2:#232840;
+    --text:#E2E0DA; --text-sec:#9A9890; --accent:#7B9CDB; --accent-l:#A0B8E8;
+    --border:#2E3348;
+    --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+    --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+    --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+    --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#111318; --surface:#1C2030; --surface2:#232840;
+  --text:#E2E0DA; --text-sec:#9A9890; --accent:#7B9CDB; --accent-l:#A0B8E8;
+  --border:#2E3348;
+  --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+  --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  background: var(--bg);
+  color: var(--text);
+  padding: 0 20px 80px;
+}
+.page { max-width: 720px; margin: 0 auto; padding-top: 52px; }
+
+/* Header */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+h1 {
+  font-size: 1.7rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0 0 10px;
+  text-wrap: balance;
+}
+.subtitle {
+  color: var(--text-sec);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+.meta {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-sec);
+  margin-bottom: 44px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--accent);
+}
+
+/* Section headings */
+h2 {
+  font-size: 1.0rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin: 52px 0 14px;
+  padding-top: 36px;
+  border-top: 1px solid var(--border);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.sec-num {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-sec);
+  letter-spacing: 0.05em;
+}
+h3 {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 28px 0 10px;
+}
+
+p { margin: 0 0 14px; }
+p:last-child { margin-bottom: 0; }
+
+/* Callouts */
+.callout {
+  padding: 14px 16px;
+  border-radius: 6px;
+  border-left: 3px solid;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin: 18px 0;
+}
+.callout strong { display: block; margin-bottom: 4px; font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.callout.risk  { background: var(--risk-bg); border-color: var(--risk-br); color: var(--risk-tx); }
+.callout.ok    { background: var(--ok-bg);   border-color: var(--ok-br);   color: var(--ok-tx);   }
+.callout.info  { background: var(--info-bg); border-color: var(--info-br); color: var(--info-tx); }
+.callout.warn  { background: var(--warn-bg); border-color: var(--warn-br); color: var(--warn-tx); }
+
+/* Summary card */
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 8px;
+}
+.summary-card h3 { margin-top: 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-sec); }
+.features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+.features li {
+  list-style: none;
+  padding-left: 14px;
+  position: relative;
+  color: var(--text-sec);
+}
+.features li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 0.75rem;
+  top: 3px;
+}
+
+/* Hardware table */
+.hw-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin: 16px 0;
+  overflow-x: auto;
+  display: block;
+}
+.hw-table th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-sec);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.hw-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  font-variant-numeric: tabular-nums;
+}
+.hw-table tr:last-child td { border-bottom: none; }
+.hw-table .good  { color: var(--ok-tx); font-weight: 500; }
+.hw-table .warn  { color: var(--warn-tx); font-weight: 500; }
+.hw-table .bad   { color: var(--risk-tx); font-weight: 500; }
+.hw-table .mono  { font-family: var(--mono); font-size: 0.82rem; }
+
+/* Architecture diagram */
+.arch-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px 20px;
+  margin: 20px 0;
+  overflow-x: auto;
+}
+
+svg.arch { display: block; margin: 0 auto; }
+
+/* Role table */
+.role-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+.role-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  font-size: 0.87rem;
+}
+.role-card .role-label {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.role-card.can .role-label  { color: var(--ok-tx); }
+.role-card.cant .role-label { color: var(--risk-tx); }
+.role-card ul {
+  margin: 0;
+  padding-left: 16px;
+  line-height: 1.6;
+  color: var(--text-sec);
+}
+.role-card li { margin-bottom: 4px; }
+
+/* Decision matrix */
+.dec-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.87rem;
+  margin: 16px 0;
+}
+.dec-table th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-sec);
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--border);
+}
+.dec-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.dec-table tr:last-child td { border-bottom: none; }
+.dec-table .component { font-weight: 600; font-size: 0.9rem; }
+.dec-table .badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+.badge.go  { background: var(--ok-bg);   color: var(--ok-tx);   border: 1px solid var(--ok-br); }
+.badge.no  { background: var(--risk-bg); color: var(--risk-tx); border: 1px solid var(--risk-br); }
+.badge.dep { background: var(--warn-bg); color: var(--warn-tx); border: 1px solid var(--warn-br); }
+
+pre {
+  background: #111827;
+  color: #A8C4D8;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  padding: 16px 18px;
+  border-radius: 8px;
+  overflow-x: auto;
+  line-height: 1.55;
+  margin: 12px 0;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--surface2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--accent-l);
+}
+</style>
+
+<div class="page">
+
+<div class="eyebrow">SLM · Analisi di specializzazione</div>
+<h1>Assistente Motociclistico su Raspberry Pi</h1>
+<p class="subtitle">Valutazione di fattibilità, architettura e ruolo del modello linguistico in un sistema embedded safety-aware.</p>
+<div class="meta">Documento di progetto · v0.1 · 2026-09-29</div>
+
+<!-- ── 1. CASO D'USO ─────────────────────────────────────────── -->
+<h2><span class="sec-num">01</span> Il caso d'uso</h2>
+
+<div class="summary-card">
+  <h3>Requisiti dichiarati</h3>
+  <ul class="features">
+    <li>Warning e suggerimenti di guida in tempo reale</li>
+    <li>Manutenzione ordinaria e straordinaria (log + reminder)</li>
+    <li>Accesso a dati di bordo (strumentazione)</li>
+    <li>Posizione GPS e attività circostanti (POI)</li>
+    <li>Assistenza nella scelta dell'assicurazione</li>
+    <li>Raccomandazione prodotti e gite motociclistiche</li>
+    <li>Conoscenza del modello e del motore specifico</li>
+    <li>Hardware: Raspberry Pi connessa alla moto</li>
+  </ul>
+</div>
+
+<p>
+  È un sistema embedded con componenti eterogenei: sensori fisici, connettività esterna
+  intermittente, un LM locale, e output multimodale (voce, display). Il modello linguistico
+  è uno dei componenti, non il sistema nel suo insieme.
+</p>
+
+<!-- ── 2. VINCOLO HARDWARE ──────────────────────────────────── -->
+<h2><span class="sec-num">02</span> Vincolo hardware: Raspberry Pi</h2>
+
+<p>
+  La scelta dell'hardware è il primo filtro tecnico. Raspberry Pi non ha GPU dedicata
+  (salvo acceleratori esterni come Hailo AI HAT), quindi l'inferenza è CPU-only.
+  llama.cpp supporta RPi nativamente via ARM NEON.
+</p>
+
+<table class="hw-table">
+  <thead>
+    <tr>
+      <th>Hardware</th>
+      <th>RAM max</th>
+      <th>45M Q8_0 (58 MB)</th>
+      <th>1.7B Q4 (~1 GB)</th>
+      <th>7B Q4 (~4 GB)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>M2 Mac</strong> (Metal)</td>
+      <td>8 GB</td>
+      <td class="good">418 t/s ✓</td>
+      <td class="good">~80 t/s ✓</td>
+      <td class="good">~30 t/s ✓</td>
+    </tr>
+    <tr>
+      <td><strong>RPi 5</strong> (ARM A76, 2.4 GHz)</td>
+      <td>8 GB</td>
+      <td class="good mono">~25–35 t/s ✓</td>
+      <td class="warn mono">~5–8 t/s ⚠</td>
+      <td class="bad mono">~1–2 t/s ✗</td>
+    </tr>
+    <tr>
+      <td><strong>RPi 4B</strong> (ARM A72, 1.5 GHz)</td>
+      <td>8 GB</td>
+      <td class="warn mono">~8–15 t/s ⚠</td>
+      <td class="bad mono">~2–3 t/s ✗</td>
+      <td class="bad mono">&lt;1 t/s ✗</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Le stime di velocità per RPi sono inferite da benchmark pubblici llama.cpp su ARM;
+  il modello SLM 45M non è stato misurato direttamente su RPi.
+  La soglia minima per un assistente vocale fluido è circa <strong>5–8 t/s</strong>
+  (la sintesi vocale italiana media è ~12 parole/s, ~2 token/s utili):
+  il SLM 45M Q8_0 supera questa soglia su entrambi i modelli di RPi.
+</p>
+
+<div class="callout ok">
+  <strong>Verdetto hardware</strong>
+  Il modello SLM 45M Q8_0 (58 MB) gira in tempo reale su RPi 5 e con latenza
+  accettabile su RPi 4. La RAM non è un vincolo. Modelli più grandi (1.7B+) diventano
+  lenti su RPi 4 e richiedono RPi 5 con 8 GB.
+</div>
+
+<!-- ── 3. DOMINIO SAFETY-CRITICAL ─────────────────────────────── -->
+<h2><span class="sec-num">03</span> Dominio safety-critical</h2>
+
+<p>
+  La motociclistica è un dominio con componenti a rischio diretto:
+  usura pastiglie freni, pressione pneumatici, viscosità olio motore,
+  angolo di piega in curva. Un'informazione errata in questi ambiti
+  può causare incidenti.
+</p>
+
+<div class="callout risk">
+  <strong>Rischio LM non supervisionato</strong>
+  Un modello linguistico, incluso uno addestrato su Wikipedia italiana,
+  genera testo plausibile ma non verificato. Non conosce le specifiche
+  tecniche di un Kawasaki Z900 vs un Honda CB500F. Non distingue
+  intervalli di manutenzione tra modelli diversi dello stesso produttore.
+  Produrrà risposte confident e sbagliate con la stessa frequenza
+  di risposte confident e corrette.
+</div>
+
+<p>
+  Il principio architetturale che ne deriva è non negoziabile:
+</p>
+
+<blockquote style="border-left:3px solid var(--accent);margin:18px 0;padding:12px 18px;background:var(--surface);border-radius:0 6px 6px 0;font-style:italic;color:var(--text-sec);">
+  In un sistema safety-aware, l'LM non può essere la fonte della verità.
+  È il componente che <em>formula</em> la risposta, non quello che la <em>conosce</em>.
+</blockquote>
+
+<p>
+  La conoscenza tecnica risiede in una knowledge base strutturata e verificata
+  (manuali del costruttore, schede tecniche, database manutenzione).
+  L'LM trasforma dati strutturati in linguaggio naturale italiano.
+</p>
+
+<!-- ── 4. ARCHITETTURA PROPOSTA ────────────────────────────────── -->
+<h2><span class="sec-num">04</span> Architettura proposta</h2>
+
+<div class="arch-wrap">
+  <svg class="arch" width="640" height="380" viewBox="0 0 640 380" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#6B7280"/>
+      </marker>
+    </defs>
+    <!-- Colors from theme tokens (hardcoded for SVG) -->
+    <!-- Sensor layer -->
+    <rect x="20" y="20" width="120" height="44" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="80" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#1D4ED8">OBD / CAN BUS</text>
+    <text x="80" y="52" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#1D4ED8">dati strumentazione</text>
+
+    <rect x="155" y="20" width="120" height="44" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="215" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#1D4ED8">GPS + Internet</text>
+    <text x="215" y="52" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#1D4ED8">posizione, meteo, POI</text>
+
+    <rect x="290" y="20" width="120" height="44" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="350" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#1D4ED8">STT (Voce)</text>
+    <text x="350" y="52" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#1D4ED8">input utente</text>
+
+    <rect x="425" y="20" width="120" height="44" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="485" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#1D4ED8">Knowledge Base</text>
+    <text x="485" y="52" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#1D4ED8">manuali, schede tecniche</text>
+
+    <!-- Arrows down to rule layer -->
+    <line x1="80" y1="64" x2="80" y2="118" stroke="#6B7280" stroke-width="1.2" marker-end="url(#arr)"/>
+    <line x1="215" y1="64" x2="215" y2="118" stroke="#6B7280" stroke-width="1.2" marker-end="url(#arr)"/>
+    <line x1="350" y1="64" x2="350" y2="118" stroke="#6B7280" stroke-width="1.2" marker-end="url(#arr)"/>
+    <line x1="485" y1="64" x2="485" y2="118" stroke="#6B7280" stroke-width="1.2" marker-end="url(#arr)"/>
+
+    <!-- Rule-based layer -->
+    <rect x="20" y="120" width="590" height="52" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="1.5"/>
+    <text x="315" y="141" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#92400E" letter-spacing="0.06em">LIVELLO LOGICO (rule-based + intent classifier)</text>
+    <text x="315" y="158" text-anchor="middle" font-family="IBM Plex Sans" font-size="9.5" fill="#92400E">Safety check · Manutenzione DB · Intent routing · Soglie di allerta</text>
+
+    <!-- Arrow down -->
+    <line x1="315" y1="172" x2="315" y2="218" stroke="#6B7280" stroke-width="1.2" marker-end="url(#arr)"/>
+
+    <!-- LM layer -->
+    <rect x="140" y="220" width="350" height="56" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="2"/>
+    <text x="315" y="241" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#15803D" letter-spacing="0.06em">SLM 45M (Q8_0 · 58 MB · ~25 t/s su RPi 5)</text>
+    <text x="315" y="258" text-anchor="middle" font-family="IBM Plex Sans" font-size="9.5" fill="#15803D">NLG: dati strutturati → italiano naturale</text>
+    <text x="315" y="273" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#6B7280">role: VOICE — non cervello</text>
+
+    <!-- Arrow down -->
+    <line x1="315" y1="276" x2="315" y2="316" stroke="#6B7280" stroke-width="1.2" marker-end="url(#arr)"/>
+
+    <!-- Output layer -->
+    <rect x="140" y="318" width="160" height="44" rx="6" fill="#F5F4F0" stroke="#D8D5CF" stroke-width="1.5"/>
+    <text x="220" y="337" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5A5A5A">TTS</text>
+    <text x="220" y="353" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#5A5A5A">voce italiana</text>
+
+    <rect x="315" y="318" width="175" height="44" rx="6" fill="#F5F4F0" stroke="#D8D5CF" stroke-width="1.5"/>
+    <text x="402" y="337" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5A5A5A">Display / App</text>
+    <text x="402" y="353" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#5A5A5A">notifiche, log, mappa</text>
+  </svg>
+</div>
+
+<p>
+  Il livello logico (rule-based) è il guardiano del sistema: conosce le soglie di allerta
+  per ogni tipo di dato di bordo, interroga la knowledge base per la manutenzione,
+  classifica l'intent dell'utente e passa all'LM solo la struttura della risposta da formulare.
+  L'LM non vede mai dati grezzi; vede template da completare.
+</p>
+
+<!-- ── 5. RUOLO DELL'LM ───────────────────────────────────────── -->
+<h2><span class="sec-num">05</span> Cosa fa l'LM (e cosa non fa)</h2>
+
+<div class="role-grid">
+  <div class="role-card can">
+    <div class="role-label">Può fare</div>
+    <ul>
+      <li>Formattare dati strutturati in italiano naturale</li>
+      <li>Generare testo di allerta da template</li>
+      <li>Descrivere POI vicini da dati JSON</li>
+      <li>Rispondere a domande generali sulla cultura motociclistica</li>
+      <li>Riassumere log di manutenzione</li>
+      <li>Suggerire gite su tracce predefinite</li>
+    </ul>
+  </div>
+  <div class="role-card cant">
+    <div class="role-label">Non può fare</div>
+    <ul>
+      <li>Rispondere a domande tecniche senza KB</li>
+      <li>Conoscere intervalli specifici per modello</li>
+      <li>Diagnosticare errori OBD senza mapping</li>
+      <li>Dare consigli di guida safety-critical direttamente</li>
+      <li>Accedere al web in autonomia</li>
+      <li>Operare offline senza knowledge base</li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout info">
+  <strong>Esempio concreto</strong>
+  Il livello logico legge l'OBD: olio a 4.200 km dall'ultimo cambio, soglia configurata a 5.000.
+  Passa all'LM: <code>{"alert": "maintenance", "item": "olio motore", "km_rimanenti": 800, "urgenza": "bassa"}</code>.
+  L'LM genera: <em>"L'olio motore è al 84% della vita stimata. Hai ancora circa 800 km prima del prossimo cambio consigliato."</em>
+</div>
+
+<!-- ── 6. SFT PER QUESTO DOMINIO ──────────────────────────────── -->
+<h2><span class="sec-num">06</span> SFT: cosa addestrare</h2>
+
+<p>
+  Per il ruolo di NLG layer, il SFT richiede esempi nella forma
+  <code>input strutturato → frase italiana</code>.
+  Nessun dialogo libero: l'input è sempre JSON deterministico,
+  l'output è sempre una frase o un breve paragrafo.
+</p>
+
+<pre>
+// Esempio SFT: allerta manutenzione
+{
+  "input": {"tipo": "manutenzione", "componente": "pastiglie_freno_ant",
+            "usura_pct": 22, "km_totali": 18400, "urgenza": "alta"},
+  "output": "Attenzione: le pastiglie del freno anteriore sono al 22% di vita residua.
+             Con 18.400 km percorsi, è consigliabile sostituirle prima del prossimo viaggio."
+}
+
+// Esempio SFT: POI vicino
+{
+  "input": {"tipo": "poi", "categoria": "officina", "nome": "Moto Service Brescia",
+            "distanza_km": 1.4, "aperto": true, "specializzazione": "Kawasaki"},
+  "output": "A 1,4 km c'è Moto Service Brescia, specializzata in Kawasaki, aperta adesso."
+}
+
+// Esempio SFT: suggerimento gita
+{
+  "input": {"tipo": "gita", "percorso": "Lago di Como", "km": 85,
+            "meteo": "soleggiato", "strade": "misto autostrada-statale"},
+  "output": "Oggi si va bene per il giro del Lago di Como: 85 km, meteo soleggiato,
+             misto autostrada e statale. Buon viaggio."
+}
+</pre>
+
+<p>
+  Con 500–1000 esempi di questo tipo, il SLM 45M impara il formato del dominio
+  senza dover generalizzare su conoscenza tecnica. Il dataset è costruibile in
+  pochi giorni a mano o con augmentation da un LLM più grande.
+</p>
+
+<div class="callout ok">
+  <strong>Fattibilità SFT</strong>
+  Questo è il caso d'uso ideale per un SFT a basso volume su un modello piccolo:
+  input deterministico, output breve, dominio ristretto, zero ambiguità semantica.
+  500 esempi sono sufficienti. Il rischio di hallucination è strutturalmente eliminato
+  perché l'LM non genera mai contenuto fattuale, solo forma.
+</div>
+
+<!-- ── 7. ALTERNATIVE AI 45M ─────────────────────────────────── -->
+<h2><span class="sec-num">07</span> Alternative al SLM 45M</h2>
+
+<p>
+  Se si vuole permettere all'utente query in linguaggio naturale
+  più complesse (es. "spiega perché cambio l'olio ogni 5.000 km"),
+  un modello più grande con instruction-following nativo è più adatto.
+</p>
+
+<table class="hw-table">
+  <thead>
+    <tr>
+      <th>Modello</th>
+      <th>Dim. Q4</th>
+      <th>RPi 5 (8GB)</th>
+      <th>Instruction</th>
+      <th>Italiano</th>
+      <th>Nota</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>SLM 45M</strong> (nostro)</td>
+      <td class="mono">58 MB Q8</td>
+      <td class="good">~25 t/s</td>
+      <td class="bad">Solo SFT</td>
+      <td class="good">Nativo</td>
+      <td>NLG layer, nessuna Q&amp;A</td>
+    </tr>
+    <tr>
+      <td>SmolLM2-360M</td>
+      <td class="mono">~230 MB</td>
+      <td class="good">~15 t/s</td>
+      <td class="warn">Base</td>
+      <td class="warn">Limitato</td>
+      <td>Opzione intermedia</td>
+    </tr>
+    <tr>
+      <td>Qwen2.5-0.5B-Instruct</td>
+      <td class="mono">~400 MB</td>
+      <td class="good">~12 t/s</td>
+      <td class="good">Nativo</td>
+      <td class="warn">Accettabile</td>
+      <td>Buon compromesso</td>
+    </tr>
+    <tr>
+      <td>SmolLM2-1.7B-Instruct</td>
+      <td class="mono">~1.1 GB</td>
+      <td class="warn">~6 t/s</td>
+      <td class="good">Buono</td>
+      <td class="warn">Limitato</td>
+      <td>Solo RPi 5, 8GB</td>
+    </tr>
+    <tr>
+      <td>Phi-3.5-mini-Instruct</td>
+      <td class="mono">~2.2 GB</td>
+      <td class="bad">~2 t/s</td>
+      <td class="good">Ottimo</td>
+      <td class="good">Buono</td>
+      <td>Troppo lento per RPi</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  <strong>Raccomandazione</strong>
+  Per il prototipo: SLM 45M (nostro, controllato, veloce) + knowledge base strutturata
+  per tutto ciò che è tecnico. Per Q&A più ricca in v2: Qwen2.5-0.5B-Instruct
+  come drop-in replacement, stesso formato GGUF, compatibile con llama.cpp.
+  Il cambio non richiede riscrivere l'architettura.
+</div>
+
+<!-- ── 8. MATRICE DI DECISIONE ─────────────────────────────────── -->
+<h2><span class="sec-num">08</span> Matrice di decisione</h2>
+
+<table class="dec-table">
+  <thead>
+    <tr>
+      <th>Componente</th>
+      <th>Tecnologia</th>
+      <th>Decisione</th>
+      <th>Motivazione</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="component">NLG (voce del sistema)</td>
+      <td>SLM 45M Q8_0 + SFT</td>
+      <td><span class="badge go">GO</span></td>
+      <td>Veloce su RPi, dominio ristretto, hallucination strutturalmente prevenuta</td>
+    </tr>
+    <tr>
+      <td class="component">Regole di allerta</td>
+      <td>Python rule-based</td>
+      <td><span class="badge go">GO</span></td>
+      <td>Safety-critical: nessun LM su questa logica</td>
+    </tr>
+    <tr>
+      <td class="component">Knowledge base manutenzione</td>
+      <td>SQLite + schede costruttore</td>
+      <td><span class="badge go">GO</span></td>
+      <td>Fonte di verità verificata, non generata</td>
+    </tr>
+    <tr>
+      <td class="component">OBD / CAN bus</td>
+      <td>python-obd o ELM327</td>
+      <td><span class="badge go">GO</span></td>
+      <td>Standard aperto, RPi compatibile via USB/Bluetooth</td>
+    </tr>
+    <tr>
+      <td class="component">GPS + POI</td>
+      <td>gpsd + Overpass API (OSM)</td>
+      <td><span class="badge dep">DIPENDE</span></td>
+      <td>Richiede connettività; offline richiede tile locali (>GB)</td>
+    </tr>
+    <tr>
+      <td class="component">STT (input vocale)</td>
+      <td>Whisper tiny/small</td>
+      <td><span class="badge dep">DIPENDE</span></td>
+      <td>Whisper tiny gira su RPi (~2-3 t/s); piccolo ritardo accettabile</td>
+    </tr>
+    <tr>
+      <td class="component">TTS (output vocale)</td>
+      <td>Piper TTS (italiano)</td>
+      <td><span class="badge go">GO</span></td>
+      <td>Offline, RPi-native, voce italiana naturale, ~100 ms latenza</td>
+    </tr>
+    <tr>
+      <td class="component">Q&A tecnica aperta</td>
+      <td>LLM via API (cloud)</td>
+      <td><span class="badge dep">DIPENDE</span></td>
+      <td>Solo con connettività, non safety-critical, fallback a KB locale</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ── 9. PROSSIMI PASSI ───────────────────────────────────────── -->
+<h2><span class="sec-num">09</span> Prossimi passi</h2>
+
+<h3>Per il SLM (Run #5)</h3>
+<p>
+  Run #5 può essere il SFT per il ruolo NLG nel sistema motociclistico:
+  500–1000 esempi nella forma <code>JSON strutturato → frase italiana</code>,
+  copertura dei template principali (allerta, manutenzione, POI, meteo, gita).
+  Il dataset è costruibile manualmente o con augmentation da GPT-4o/Claude.
+</p>
+
+<h3>Per il sistema completo</h3>
+<ol style="line-height:1.8;color:var(--text-sec);font-size:0.92rem;">
+  <li>Definire il sottoinsieme di dati OBD accessibili sul modello di moto target</li>
+  <li>Costruire la knowledge base di manutenzione per quel modello (schema SQL)</li>
+  <li>Prototipo rule-based → alert text senza LM (validazione logica)</li>
+  <li>SFT sul SLM 45M con 200 esempi pilota, valutare qualità output</li>
+  <li>Integrare Piper TTS italiano + STT Whisper tiny su RPi 5</li>
+  <li>Decidere se servire Q&A tecnica da knowledge base locale o con fallback cloud</li>
+</ol>
+
+<div class="callout ok">
+  <strong>Valutazione complessiva</strong>
+  Il caso d'uso è fattibile. L'architettura ibrida (regole + LM + KB) risolve il
+  problema safety-critical separando la logica dalla voce. Il SLM 45M copre il
+  ruolo NLG in modo efficiente su RPi. Il valore del progetto è nella qualità
+  della knowledge base e nella robustezza del livello logico, non nella capacità
+  del modello linguistico.
+</div>
+
+</div>

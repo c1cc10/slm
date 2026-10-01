@@ -1,0 +1,239 @@
+<title>SLM — Analisi DB e Log Applicativi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F2F4F7;--surface:#FFFFFF;--surface2:#E8EBF0;
+  --text:#0C1020;--text-sec:#404868;--accent:#001428;--accent-l:#1A4070;
+  --border:#C4CCE0;--mono:'IBM Plex Mono',monospace;
+  --risk-bg:#FEF2F2;--risk-br:#FCA5A5;--risk-tx:#991B1B;
+  --ok-bg:#F0FDF4;--ok-br:#86EFAC;--ok-tx:#15803D;
+  --info-bg:#EFF6FF;--info-br:#93C5FD;--info-tx:#1D4ED8;
+  --warn-bg:#FFFBEB;--warn-br:#FDE68A;--warn-tx:#92400E;
+  --nav-bg:#F0F4FF;--nav-br:#6080C0;--nav-tx:#001428;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#060A10;--surface:#0C1018;--surface2:#121820;
+  --text:#C8D8F0;--text-sec:#6080A8;--accent:#4878C0;--accent-l:#80B0E8;
+  --border:#182840;
+  --risk-bg:#2D0A0A;--risk-br:#7F1D1D;--risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;--ok-br:#1A4731;--ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E;--info-br:#1E3A6E;--info-tx:#93C5FD;
+  --warn-bg:#2A1A0A;--warn-br:#7A3A0A;--warn-tx:#FDE68A;
+  --nav-bg:#0A1428;--nav-br:#1E4080;--nav-tx:#80B0E8;
+}}
+:root[data-theme="dark"]{
+  --bg:#060A10;--surface:#0C1018;--surface2:#121820;
+  --text:#C8D8F0;--text-sec:#6080A8;--accent:#4878C0;--accent-l:#80B0E8;
+  --border:#182840;
+  --risk-bg:#2D0A0A;--risk-br:#7F1D1D;--risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;--ok-br:#1A4731;--ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E;--info-br:#1E3A6E;--info-tx:#93C5FD;
+  --warn-bg:#2A1A0A;--warn-br:#7A3A0A;--warn-tx:#FDE68A;
+  --nav-bg:#0A1428;--nav-br:#1E4080;--nav-tx:#80B0E8;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.72;background:var(--bg);color:var(--text);padding:0 20px 80px}
+.page{max-width:720px;margin:0 auto;padding-top:52px}
+.eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-l);margin-bottom:8px}
+h1{font-size:1.7rem;font-weight:600;letter-spacing:-.02em;color:var(--text);margin:0 0 10px;text-wrap:balance}
+.subtitle{color:var(--text-sec);font-size:.92rem;line-height:1.6;margin:0 0 8px}
+.meta{font-family:var(--mono);font-size:.72rem;color:var(--text-sec);margin-bottom:44px;padding-bottom:20px;border-bottom:2px solid var(--accent)}
+h2{font-size:1rem;font-weight:600;color:var(--accent-l);margin:52px 0 14px;padding-top:36px;border-top:1px solid var(--border);display:flex;align-items:baseline;gap:10px}
+.sec-num{font-family:var(--mono);font-size:.7rem;color:var(--text-sec);letter-spacing:.05em}
+h3{font-size:.92rem;font-weight:600;color:var(--text);margin:28px 0 10px}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+.callout{padding:14px 16px;border-radius:6px;border-left:3px solid;font-size:.88rem;line-height:1.6;margin:18px 0}
+.callout strong{display:block;margin-bottom:4px;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase}
+.callout.risk{background:var(--risk-bg);border-color:var(--risk-br);color:var(--risk-tx)}
+.callout.ok{background:var(--ok-bg);border-color:var(--ok-br);color:var(--ok-tx)}
+.callout.info{background:var(--info-bg);border-color:var(--info-br);color:var(--info-tx)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn-br);color:var(--warn-tx)}
+.callout.nav{background:var(--nav-bg);border-color:var(--nav-br);color:var(--nav-tx)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+.split-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px}
+.split-card .sc-title{font-weight:600;font-size:.9rem;margin-bottom:8px;color:var(--text);padding-bottom:8px;border-bottom:1px solid var(--border)}
+.split-card .sc-body{font-size:.85rem;color:var(--text-sec);line-height:1.55}
+.split-card.highlight{border-color:var(--accent-l);border-left:3px solid var(--accent-l)}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:16px 0}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:.85rem}
+.feat-name{font-weight:600;font-size:.88rem;margin-bottom:4px;color:var(--text)}
+.feat-desc{color:var(--text-sec);font-size:.82rem;line-height:1.45;margin-bottom:8px}
+.verdict{font-size:.78rem;padding:2px 8px;border-radius:4px;display:inline-block;font-family:var(--mono)}
+.v-ok{background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-br)}
+.v-w{background:var(--warn-bg);color:var(--warn-tx);border:1px solid var(--warn-br)}
+.v-no{background:var(--risk-bg);color:var(--risk-tx);border:1px solid var(--risk-br)}
+pre{background:#060A10;color:#80B0E8;font-family:var(--mono);font-size:.79rem;padding:16px 18px;border-radius:8px;overflow-x:auto;line-height:1.55;margin:12px 0}
+code{font-family:var(--mono);font-size:.85em;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--accent-l)}
+.data-table{width:100%;border-collapse:collapse;font-size:.88rem;margin:16px 0;overflow-x:auto;display:block}
+.data-table th{text-align:left;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-sec);padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.data-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.data-table tr:last-child td{border-bottom:none}
+.good{color:#15803D;font-weight:500}.warn-c{color:#92400E;font-weight:500}.bad{color:#991B1B;font-weight:500}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:.72rem;font-weight:500}
+.badge.go{background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-br)}
+.badge.dep{background:var(--warn-bg);color:var(--warn-tx);border:1px solid var(--warn-br)}
+</style>
+<div class="page">
+<div class="eyebrow">SLM · Analisi di specializzazione · Case Study #10</div>
+<h1>Analisi DB e Log Applicativi</h1>
+<p class="subtitle">Valutazione di fattibilità per interfaccia in linguaggio naturale su database proprietari (text-to-SQL), classificazione di messaggi di log, generazione di alert narrativi e riassunti di pattern applicativi.</p>
+<div class="meta">Documento di progetto · v0.1 · 2026-09-29</div>
+
+<h2><span class="sec-num">01</span> Due sotto-casi distinti</h2>
+<p>Questo case study comprende due domini tecnici accomunati dallo stesso paradigma architetturale: Python è l'analista, il LM è l'interfaccia. Le sfide specifiche sono però diverse.</p>
+<div class="split">
+  <div class="split-card highlight">
+    <div class="sc-title">DB dump — text-to-SQL</div>
+    <div class="sc-body">Domande in italiano → query SQL corrette per lo schema specifico → risultati → narrativa. Questo è il caso più interessante: elimina il bisogno di esposizione cloud per avere una query interface NL su dati privati.</div>
+  </div>
+  <div class="split-card highlight">
+    <div class="sc-title">Log applicativi — classificazione + alert</div>
+    <div class="sc-body">Messaggi di log → categoria/severity. Pattern anomali rilevati da Python → testo alert in italiano. Il LM classifica e descrive; non diagnostica le cause.</div>
+  </div>
+</div>
+
+<h2><span class="sec-num">02</span> Text-to-SQL: il caso più strategico</h2>
+<p>Un'interfaccia in linguaggio naturale su un database proprietario è una delle funzionalità più richieste nel mondo enterprise — e una delle più difficili da ottenere senza esporre i dati a una API cloud. Il modello deve conoscere lo schema del database e saper tradurre domande informali in SQL corretto.</p>
+<div class="callout nav">
+  <strong>Vantaggio del modello piccolo specializzato</strong>
+  Un modello grande generico (GPT-4, Claude) può fare text-to-SQL con lo schema
+  nel prompt, ma richiede di mandare lo schema e la domanda a un'API esterna.
+  Un 45M addestrato su quel solo schema conosce ogni tabella, ogni colonna,
+  ogni relazione — e gira localmente, zero latenza di rete, zero dati esposti.
+  Per database con dati sensibili (clienti, transazioni, pazienti), questa
+  non è una preferenza: è un obbligo.
+</div>
+
+<pre>
+// Esempi text-to-SQL per schema CRM semplice
+{
+  "schema_context": "Tabelle: users(id, name, email, created_at, plan), orders(id, user_id, amount, status, created_at), products(id, name, category, price)",
+  "input": "quanti utenti si sono registrati questo mese?",
+  "output": "SELECT COUNT(*) FROM users WHERE created_at >= date('now', 'start of month');"
+}
+{
+  "input": "fatturato totale degli ordini completati negli ultimi 7 giorni per categoria prodotto",
+  "output": "SELECT p.category, SUM(o.amount) as fatturato FROM orders o JOIN products p ON o.product_id = p.id WHERE o.status = 'completed' AND o.created_at >= date('now', '-7 days') GROUP BY p.category ORDER BY fatturato DESC;"
+}
+{
+  "input": "quali utenti del piano pro non hanno fatto ordini negli ultimi 30 giorni?",
+  "output": "SELECT u.name, u.email FROM users u WHERE u.plan = 'pro' AND u.id NOT IN (SELECT DISTINCT user_id FROM orders WHERE created_at >= date('now', '-30 days'));"
+}</pre>
+
+<h2><span class="sec-num">03</span> Vincolo di contesto: dimensione dello schema</h2>
+<p>Il modello deve "conoscere" lo schema per generare SQL corretto. Ci sono due strategie:</p>
+<table class="data-table">
+  <thead><tr><th>Strategia</th><th>Come funziona</th><th>Limite</th><th>Quando usare</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Schema nel system prompt</strong></td><td>CREATE TABLE inclusi nel context a runtime</td><td class="warn-c">Occupa token preziosi. ~3-5 tabelle medie entro 512 tok</td><td>Schema piccolo, rapido da implementare</td></tr>
+    <tr><td><strong>Schema nel SFT</strong></td><td>Modello addestrato sullo schema specifico — lo conosce "a memoria"</td><td class="good">Nessun overhead runtime; usa 512 tok tutti per la domanda</td><td>Schema stabile, dataset training costruito sullo schema</td></tr>
+    <tr><td><strong>Schema lookup (RAG)</strong></td><td>Retrieval solo delle tabelle rilevanti per la domanda</td><td class="warn-c">Richiede retriever aggiuntivo</td><td>Schema grande (50+ tabelle)</td></tr>
+  </tbody>
+</table>
+<p>Per un database proprietario con schema stabile (tipico di un prodotto software), il SFT con schema noto è la strategia ottimale. Il modello impara lo schema come parte del suo training — zero overhead a runtime.</p>
+
+<h2><span class="sec-num">04</span> Log applicativi: classificazione e alert</h2>
+<p>I log applicativi sono testo altamente strutturato e ripetitivo: timestamp, severity level, service name, message. Per un'applicazione specifica, i pattern di errore sono finiti e prevedibili — condizione ideale per un modello piccolo.</p>
+<div class="split">
+  <div class="split-card">
+    <div class="sc-title">Cosa fa il LM</div>
+    <div class="sc-body">Classifica la severity (INFO/WARN/ERROR/CRITICAL), determina la categoria (network, database, auth, application), identifica il servizio coinvolto, genera testo di alert leggibile in italiano da un record di log.</div>
+  </div>
+  <div class="split-card">
+    <div class="sc-title">Cosa fa Python</div>
+    <div class="sc-body">Conta le occorrenze, calcola le frequenze nel tempo, rileva anomalie statistiche (spike rispetto alla media), aggrega per finestre temporali, invia notifiche. L'analisi statistica è deterministica.</div>
+  </div>
+</div>
+<pre>
+// Log record → classificazione + alert
+{
+  "input": {
+    "timestamp": "2026-09-29T14:23:01",
+    "level": "ERROR",
+    "service": "api-gateway",
+    "message": "Connection timeout to Redis at cache.internal:6379 after 5000ms",
+    "occurrences_last_hour": 47,
+    "baseline_hourly": 2
+  },
+  "output": {
+    "category": "infrastructure",
+    "subcategory": "cache",
+    "severity": "high",
+    "alert_text": "Attenzione: 47 timeout di connessione a Redis nell'ultima ora (baseline: ~2/h). Il servizio cache sembra non raggiungibile da api-gateway. Verificare la disponibilità di cache.internal:6379."
+  }
+}</pre>
+
+<h2><span class="sec-num">05</span> Cosa il LM non deve fare</h2>
+<div class="callout risk">
+  <strong>Diagnosi causa radice: fuori scope</strong>
+  "Perché si verifica questo errore?" è una domanda a cui il LM non deve rispondere
+  autonomamente. Le cause degli errori applicativi dipendono da configurazioni,
+  versioni di software, stato del sistema, interazioni tra servizi — informazioni
+  che il LM non ha e che non può ricavare dal solo messaggio di log.
+  Una diagnosi confidente ma sbagliata può portare a interventi errati.
+  Il LM descrive il pattern; il devops valuta la causa.
+</div>
+
+<h2><span class="sec-num">06</span> Funzionalità per caso</h2>
+<div class="feat-grid">
+  <div class="feat-card">
+    <div class="feat-name">Q&A NL su database</div>
+    <div class="feat-desc">Domanda → SQL → risultati → risposta italiana. Il workflow completo, end-to-end.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Classificazione log</div>
+    <div class="feat-desc">Messaggio log → categoria + severity. Testo molto breve, distribuzione prevedibile.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Generazione alert narrativi</div>
+    <div class="feat-desc">Anomalia rilevata da Python → testo notifica leggibile. NLG puro da dati strutturati.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Report giornaliero DB</div>
+    <div class="feat-desc">Aggregati Python su attività database → report narrativo per il team. Automatico ogni mattina.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Clustering errori simili</div>
+    <div class="feat-desc">Raggruppare messaggi di errore semanticamente simili. Richiede embedding, non solo LM generativo.</div>
+    <span class="verdict v-w">MEDIA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Diagnosi causa radice</div>
+    <div class="feat-desc">Inferenza della causa da sintomi log. Rischio hallucination elevato. Non adatto.</div>
+    <span class="verdict v-no">ESCLUSO</span>
+  </div>
+</div>
+
+<h2><span class="sec-num">07</span> Dataset SFT</h2>
+<p>Due dataset separati: uno per text-to-SQL, uno per la classificazione e la generazione di alert da log.</p>
+<pre>
+// Track text-to-SQL: 300–500 esempi
+// Costruiti a partire dallo schema del database target
+// Variazione sistematica: filtri temporali, aggregazioni, JOIN, subquery
+// Copertura: le domande che un utente tipico farebbe sul proprio dataset
+
+// Track log classification + alert: 200–300 esempi
+// Partire dai log reali dell'applicazione (anonimizzati se necessario)
+// Annotare manualmente la categoria e la severity
+// Per la generazione alert: costruire JSON anomalia → testo scritto da persona
+
+// Nota: i log reali di un'applicazione sono già anonimi per definizione
+// (non contengono dati utente se l'applicazione è ben progettata)
+// Quindi questo dataset non ha problemi di privacy</pre>
+
+<h2><span class="sec-num">08</span> Connessione con i prodotti aziendali</h2>
+<p>Questo case study ha una connessione diretta con il contesto aziendale: Hokus, Tributum, Amel-IA e il middleware Lu-Mi sono applicazioni con database e log. Un SLM specializzato sul proprio schema potrebbe essere il componente di query interface per ciascun prodotto — eliminando la necessità di esporre i dati degli utenti finali a un'API cloud solo per rispondere a domande interne sul proprio database.</p>
+<div class="callout ok">
+  <strong>Priorità: alta · Connessione diretta con prodotti aziendali</strong>
+  Il text-to-SQL su schema proprietario risolve un problema concreto e immediato:
+  dare al team la possibilità di interrogare il database in italiano senza
+  scrivere SQL, senza esporre i dati a GPT-4, e senza aspettare che
+  il team di BE implementi ogni query come endpoint.
+  Schema piccolo + dataset costruibile in 2 giorni + SFT rapido.
+</div>
+</div>

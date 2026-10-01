@@ -1,0 +1,428 @@
+<title>SLM — Trascrizione Musicale Chitarra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F7F3EE;--surface:#FFFFFF;--surface2:#EDE5D8;
+  --text:#180E04;--text-sec:#6A4820;--accent:#2A1200;--accent-l:#7A4A10;
+  --border:#D8C4A4;--mono:'IBM Plex Mono',monospace;
+  --risk-bg:#FEF2F2;--risk-br:#FCA5A5;--risk-tx:#991B1B;
+  --ok-bg:#F0FDF4;--ok-br:#86EFAC;--ok-tx:#15803D;
+  --info-bg:#EFF6FF;--info-br:#93C5FD;--info-tx:#1D4ED8;
+  --warn-bg:#FFFBEB;--warn-br:#FDE68A;--warn-tx:#92400E;
+  --mus-bg:#FFF8F0;--mus-br:#C87A1A;--mus-tx:#6A2A00;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E0800;--surface:#180E00;--surface2:#201400;
+  --text:#EDD8B8;--text-sec:#A07840;--accent:#D07A30;--accent-l:#E8A060;
+  --border:#3A2800;
+  --risk-bg:#2D0A0A;--risk-br:#7F1D1D;--risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;--ok-br:#1A4731;--ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E;--info-br:#1E3A6E;--info-tx:#93C5FD;
+  --warn-bg:#2A1A0A;--warn-br:#7A3A0A;--warn-tx:#FDE68A;
+  --mus-bg:#280E00;--mus-br:#8A4A10;--mus-tx:#FED7AA;
+}}
+:root[data-theme="dark"]{
+  --bg:#0E0800;--surface:#180E00;--surface2:#201400;
+  --text:#EDD8B8;--text-sec:#A07840;--accent:#D07A30;--accent-l:#E8A060;
+  --border:#3A2800;
+  --risk-bg:#2D0A0A;--risk-br:#7F1D1D;--risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;--ok-br:#1A4731;--ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E;--info-br:#1E3A6E;--info-tx:#93C5FD;
+  --warn-bg:#2A1A0A;--warn-br:#7A3A0A;--warn-tx:#FDE68A;
+  --mus-bg:#280E00;--mus-br:#8A4A10;--mus-tx:#FED7AA;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.72;background:var(--bg);color:var(--text);padding:0 20px 80px}
+.page{max-width:720px;margin:0 auto;padding-top:52px}
+.eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-l);margin-bottom:8px}
+h1{font-size:1.7rem;font-weight:600;letter-spacing:-.02em;color:var(--text);margin:0 0 10px;text-wrap:balance}
+.subtitle{color:var(--text-sec);font-size:.92rem;line-height:1.6;margin:0 0 8px}
+.meta{font-family:var(--mono);font-size:.72rem;color:var(--text-sec);margin-bottom:44px;padding-bottom:20px;border-bottom:2px solid var(--accent)}
+h2{font-size:1rem;font-weight:600;color:var(--accent-l);margin:52px 0 14px;padding-top:36px;border-top:1px solid var(--border);display:flex;align-items:baseline;gap:10px}
+.sec-num{font-family:var(--mono);font-size:.7rem;color:var(--text-sec);letter-spacing:.05em}
+h3{font-size:.92rem;font-weight:600;color:var(--text);margin:28px 0 10px}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+.callout{padding:14px 16px;border-radius:6px;border-left:3px solid;font-size:.88rem;line-height:1.6;margin:18px 0}
+.callout strong{display:block;margin-bottom:4px;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase}
+.callout.risk{background:var(--risk-bg);border-color:var(--risk-br);color:var(--risk-tx)}
+.callout.ok{background:var(--ok-bg);border-color:var(--ok-br);color:var(--ok-tx)}
+.callout.info{background:var(--info-bg);border-color:var(--info-br);color:var(--info-tx)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn-br);color:var(--warn-tx)}
+.callout.mus{background:var(--mus-bg);border-color:var(--mus-br);color:var(--mus-tx)}
+
+/* Pipeline con tre layer distinti */
+.pipeline-full{margin:20px 0;display:flex;flex-direction:column;gap:0}
+.pf-row{display:grid;grid-template-columns:160px 1fr;gap:0}
+.pf-label{background:var(--surface2);font-family:var(--mono);font-size:.72rem;color:var(--text-sec);font-weight:500;display:flex;align-items:center;padding:12px 16px;border:1px solid var(--border);border-right:none;letter-spacing:.04em}
+.pf-content{background:var(--surface);color:var(--text);padding:12px 16px;font-size:.84rem;line-height:1.5;border:1px solid var(--border)}
+.pf-row+.pf-row .pf-label,.pf-row+.pf-row .pf-content{border-top:none}
+.pf-content.not-lm{border-left:3px solid #DC2626}
+.pf-content.partial{border-left:3px solid #D97706}
+.pf-content.is-lm{border-left:3px solid #16A34A}
+.pf-legend{display:flex;gap:16px;margin-bottom:8px;font-size:.8rem}
+.leg{display:flex;align-items:center;gap:6px;color:var(--text-sec)}
+.leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* Tab example */
+.tab-box{background:#0E0800;color:#E8A060;font-family:var(--mono);font-size:.82rem;padding:16px 18px;border-radius:8px;line-height:1.8;margin:12px 0;overflow-x:auto}
+
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin:16px 0}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:.85rem}
+.feat-name{font-weight:600;font-size:.88rem;margin-bottom:4px;color:var(--text)}
+.feat-desc{color:var(--text-sec);font-size:.82rem;line-height:1.45;margin-bottom:8px}
+.verdict{font-size:.78rem;padding:2px 8px;border-radius:4px;display:inline-block;font-family:var(--mono)}
+.v-ok{background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-br)}
+.v-w{background:var(--warn-bg);color:var(--warn-tx);border:1px solid var(--warn-br)}
+.v-no{background:var(--risk-bg);color:var(--risk-tx);border:1px solid var(--risk-br)}
+.v-ext{background:var(--mus-bg);color:var(--mus-tx);border:1px solid var(--mus-br)}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+.split-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px}
+.split-card .sc-title{font-weight:600;font-size:.9rem;margin-bottom:8px;color:var(--text);padding-bottom:8px;border-bottom:1px solid var(--border)}
+.split-card .sc-body{font-size:.85rem;color:var(--text-sec);line-height:1.55}
+.split-card.green{border-left:3px solid #16A34A}
+.split-card.red{border-left:3px solid #DC2626}
+
+.data-table{width:100%;border-collapse:collapse;font-size:.88rem;margin:16px 0;overflow-x:auto;display:block}
+.data-table th{text-align:left;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-sec);padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.data-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.data-table tr:last-child td{border-bottom:none}
+.good{color:#15803D;font-weight:500}.warn-c{color:#92400E;font-weight:500}.bad{color:#991B1B;font-weight:500}
+code{font-family:var(--mono);font-size:.85em;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--accent-l)}
+pre{background:#0E0800;color:#E8A060;font-family:var(--mono);font-size:.79rem;padding:16px 18px;border-radius:8px;overflow-x:auto;line-height:1.55;margin:12px 0}
+blockquote{border-left:3px solid var(--accent-l);margin:18px 0;padding:12px 18px;background:var(--surface);border-radius:0 6px 6px 0;font-style:italic;color:var(--text-sec);font-size:.92rem}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:.72rem;font-weight:500}
+.badge.go{background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-br)}
+.badge.no{background:var(--risk-bg);color:var(--risk-tx);border:1px solid var(--risk-br)}
+.badge.dep{background:var(--warn-bg);color:var(--warn-tx);border:1px solid var(--warn-br)}
+</style>
+
+<div class="page">
+<div class="eyebrow">SLM · Analisi di specializzazione · Case Study #11</div>
+<h1>Trascrizione Musicale per Chitarra</h1>
+<p class="subtitle">Valutazione di fattibilità per la conversione da audio a partitura con tablatura delle posizioni sul manico — riconoscimento altezze, ritmo, accordi e ottimizzazione delle diteggiature.</p>
+<div class="meta">Documento di progetto · v0.1 · 2026-09-30</div>
+
+<!-- ── 1. IL PUNTO CRITICO ────────────────────────────────── -->
+<h2><span class="sec-num">01</span> Il punto critico: questo non è un task linguistico</h2>
+
+<p>
+  Il caso della trascrizione musicale è il più tecnicamente divergente dell'intero set.
+  A differenza di tutti gli altri casi, il nucleo del problema non è linguistico:
+  non c'è testo in ingresso, non c'è testo da classificare o generare nel senso
+  tradizionale. Il SLM 45M come è costruito oggi — tokenizer BPE su italiano,
+  next-token prediction su testo — è lo strumento sbagliato per la parte più difficile.
+</p>
+
+<div class="callout risk">
+  <strong>L'input è audio, non testo</strong>
+  Un SLM lavora su sequenze di token discreti ricavati da testo.
+  Un file audio è un segnale continuo nel tempo. Per passare dall'uno all'altro
+  servono modelli completamente diversi: CNN su spettrogrammi, modelli di
+  stima della frequenza fondamentale (F0), reti per il rilevamento degli onset.
+  Nessuno di questi è un LM, e nessuno è contenuto nell'architettura attuale.
+</div>
+
+<p>
+  Detto questo, il problema si compone di più sotto-problemi distinti.
+  Uno di questi — la scelta delle posizioni sul manico — ha caratteristiche
+  che lo rendono compatibile con un approccio transformer.
+  E c'è un terzo layer, puramente narrativo, dove il SLM attuale è direttamente applicabile.
+</p>
+
+<!-- ── 2. DECOMPOSIZIONE DEL PROBLEMA ─────────────────────── -->
+<h2><span class="sec-num">02</span> Decomposizione in tre layer</h2>
+
+<div class="pf-legend">
+  <div class="leg"><div class="leg-dot" style="background:#DC2626"></div>Non-LM — audio/signal processing</div>
+  <div class="leg"><div class="leg-dot" style="background:#D97706"></div>Transformer applicabile (ma non l'SLM attuale)</div>
+  <div class="leg"><div class="leg-dot" style="background:#16A34A"></div>SLM attuale applicabile</div>
+</div>
+
+<div class="pipeline-full">
+  <div class="pf-row">
+    <div class="pf-label">Input</div>
+    <div class="pf-content not-lm">File audio: .wav, .mp3, .flac — chitarra acustica o elettrica</div>
+  </div>
+  <div class="pf-row">
+    <div class="pf-label">Pitch detection</div>
+    <div class="pf-content not-lm">
+      Stima frequenza fondamentale per note melodiche (pYIN, CREPE, Basic Pitch).<br>
+      Multi-pitch estimation per accordi — problema molto più difficile.
+      <span style="font-size:.8rem;color:#DC2626;display:block;margin-top:4px">Modello audio specializzato, non LM.</span>
+    </div>
+  </div>
+  <div class="pf-row">
+    <div class="pf-label">Onset + ritmo</div>
+    <div class="pf-content not-lm">
+      Rilevamento inizio/fine di ogni nota. Quantizzazione su griglia ritmica (crome, semicrome).
+      <span style="font-size:.8rem;color:#DC2626;display:block;margin-top:4px">Algoritmo deterministico + modello onset detection.</span>
+    </div>
+  </div>
+  <div class="pf-row">
+    <div class="pf-label">Sequenza note</div>
+    <div class="pf-content not-lm">
+      Output intermedio: lista di (pitch, durata, velocità) — equivalente a MIDI.
+      Strumento: Basic Pitch (Spotify, open source).
+    </div>
+  </div>
+  <div class="pf-row">
+    <div class="pf-label">Tab optimizer</div>
+    <div class="pf-content partial">
+      Ogni pitch può essere suonato su più posizioni del manico.
+      Scegliere la sequenza più suonabile è un problema di sequenza → sequenza.
+      <span style="font-size:.8rem;color:#D97706;display:block;margin-top:4px">Transformer applicabile con tokenizzazione musicale. Dataset: file Guitar Pro.</span>
+    </div>
+  </div>
+  <div class="pf-row">
+    <div class="pf-label">Notazione</div>
+    <div class="pf-content partial">
+      Da (pitch, durata, posizione) → testo tab ASCII o LilyPond o MusicXML.
+      Template-based in gran parte, ma può usare seq2seq.
+    </div>
+  </div>
+  <div class="pf-row">
+    <div class="pf-label">Annotazione NL</div>
+    <div class="pf-content is-lm">
+      Genera testo italiano che spiega il brano trascritto: tonalità, scala,
+      tecnica, difficoltà, suggerimenti di esecuzione.
+      <span style="font-size:.8rem;color:#16A34A;display:block;margin-top:4px">SLM 45M direttamente applicabile.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── 3. IL VERO PROBLEMA: LA TABLATURA ───────────────────── -->
+<h2><span class="sec-num">03</span> Il problema più interessante: ottimizzazione tablatura</h2>
+
+<p>
+  La chitarra ha sei corde. Una stessa nota può essere suonata in 3-6 posizioni
+  diverse sul manico. Ad esempio, la nota Mi4 (E4) si trova su:
+</p>
+
+<div class="tab-box">
+e |--0--12--          (corda 1: tasto 0 o tasto 12)
+B |--5--              (corda 2: tasto 5)
+G |--9--              (corda 3: tasto 9)
+D |--14-              (corda 4: tasto 14)
+A |--19-              (corda 5: tasto 19)
+E |--24-              (corda 6: tasto 24, se esiste)</div>
+
+<p>
+  Per un passaggio melodico o un accordo spezzato, la scelta della posizione
+  dipende da: dove si trovava la mano nel momento precedente, quante dita sono
+  disponibili, quale suono si vuole ottenere (open string vs. fretted), e lo stile.
+  Un chitarrista esperto sceglie istintivamente; un algoritmo deve imparare
+  questi pattern da esempi di tablatura umana.
+</p>
+
+<div class="callout mus">
+  <strong>Struttura del dataset: file Guitar Pro</strong>
+  I file Guitar Pro (.gp3/.gp4/.gp5/.gpx) contengono simultaneamente:
+  la sequenza MIDI di note (pitch + durata) E la tablatura con posizioni sul manico.
+  Questo è esattamente la coppia (input, output) necessaria per addestrare
+  un tab optimizer. Online esistono decine di migliaia di file Guitar Pro
+  liberamente scaricabili (Ultimate Guitar, GitHub repositories).
+  Il corpus è abbondante e già etichettato per definizione.
+</div>
+
+<h3>Perché un transformer è adatto all'ottimizzazione tablatura</h3>
+<p>
+  Il tab optimizer è un problema di traduzione di sequenze: sequenza di pitch
+  → sequenza di (corda, tasto). Il contesto rilevante per ogni decisione
+  è limitato (le ultime 4-8 note determinano la posizione della mano),
+  il vocabolario è finito e piccolo (6 corde × 24 tasti ≈ 144 token di posizione,
+  più 128 pitch MIDI = ~272 token totali). Un transformer da 45M su questo
+  spazio sarebbe enormemente sovradimensionato — ne basterebbe uno da 5-10M.
+</p>
+
+<div class="split">
+  <div class="split-card red">
+    <div class="sc-title">Non è il SLM attuale</div>
+    <div class="sc-body">Il tokenizer BPE su italiano, il vocabolario di 16.000 subword, i pesi di pre-training su Wikipedia — nulla di questo è trasferibile. Il tab optimizer è un transformer addestrato da zero con tokenizzazione musicale, completamente separato dal progetto SLM.</div>
+  </div>
+  <div class="split-card green">
+    <div class="sc-title">Stessa architettura, diverso dominio</div>
+    <div class="sc-body">Il codice Python del transformer (attention.py, transformer.py, model.py) è riutilizzabile con modifiche minime: solo la tokenizzazione e il vocabolario cambiano. È un secondo progetto ML, non un prolungamento del primo.</div>
+  </div>
+</div>
+
+<!-- ── 4. STRUMENTI ESISTENTI ─────────────────────────────── -->
+<h2><span class="sec-num">04</span> Strumenti esistenti: punto di partenza realistico</h2>
+
+<table class="data-table">
+  <thead><tr><th>Strumento</th><th>Task</th><th>Qualità</th><th>Licenza</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Basic Pitch</strong> (Spotify)</td>
+      <td>Audio → MIDI (pitch + onset)</td>
+      <td class="good">Ottima per note singole, discreta per accordi</td>
+      <td class="good">Apache 2.0, open source</td>
+    </tr>
+    <tr>
+      <td><strong>Omnizart</strong></td>
+      <td>Trascrizione multi-strumento</td>
+      <td class="warn-c">Buona su dataset specifici, variabile su audio reale</td>
+      <td class="good">MIT, open source</td>
+    </tr>
+    <tr>
+      <td><strong>amt-tools</strong></td>
+      <td>Guitar-specific AMT (Automatic Music Transcription)</td>
+      <td class="warn-c">Ricerca, non production-ready</td>
+      <td class="warn-c">Accesso variabile</td>
+    </tr>
+    <tr>
+      <td><strong>MuseScore</strong></td>
+      <td>MIDI → partitura + tab (editor)</td>
+      <td class="good">Eccellente per notazione, tab naïve (non ottimizzata)</td>
+      <td class="good">GPL, open source</td>
+    </tr>
+    <tr>
+      <td><strong>Guitar Pro parser</strong></td>
+      <td>Lettura file .gp* → dati strutturati</td>
+      <td class="good">Completo, librerie Python disponibili</td>
+      <td class="good">Varie</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Il percorso più rapido verso un sistema funzionante non è addestrare tutto
+  da zero: è <strong>Basic Pitch</strong> per l'audio→MIDI, un tab optimizer
+  addestrato su file Guitar Pro per la posizione, e MuseScore/LilyPond
+  per la notazione finale.
+</p>
+
+<!-- ── 5. DOVE SI INSERISCE IL SLM ───────────────────────── -->
+<h2><span class="sec-num">05</span> Dove si inserisce il SLM attuale</h2>
+
+<p>
+  Il SLM 45M addestrato su Wikipedia IT trova il suo posto nell'ultimo layer
+  della pipeline: la generazione di testo italiano di accompagnamento alla partitura.
+</p>
+
+<div class="feat-grid">
+  <div class="feat-card">
+    <div class="feat-name">Analisi teorica in italiano</div>
+    <div class="feat-desc">Da nota fondamentale + scala rilevata → "Questo riff è in La minore pentatonica, posizione V del manico."</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Nota di difficoltà</div>
+    <div class="feat-desc">Da ampiezza degli stretch, velocità, tecniche → "Livello intermedio: richiede cordofono e bending."</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Suggerimenti di studio</div>
+    <div class="feat-desc">Da struttura del brano → consigli di pratica progressiva in italiano naturale.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Generazione testo tab ASCII</div>
+    <div class="feat-desc">Da dati strutturati (corda, tasto, durata) → testo ASCII tab formattato. Template-based, poca variabilità.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Pitch detection da audio</div>
+    <div class="feat-desc">Non applicabile. Richiede modello CNN su spettrogramma, non LM su testo.</div>
+    <span class="verdict v-no">NON-LM</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Tab optimizer da MIDI</div>
+    <div class="feat-desc">Transformer applicabile ma con tokenizzazione musicale — progetto separato dal SLM.</div>
+    <span class="verdict v-ext">PROGETTO SEPARATO</span>
+  </div>
+</div>
+
+<!-- ── 6. ARCHITETTURA SISTEMA COMPLETO ───────────────────── -->
+<h2><span class="sec-num">06</span> Architettura del sistema completo</h2>
+
+<pre>
+Audio
+  │
+  ▼  Basic Pitch (Spotify, open source)
+MIDI: [(E4, 0.5s), (A3, 0.25s), (D4, 0.25s), ...]
+  │
+  ▼  Tab Optimizer (transformer 5-10M, addestrato su Guitar Pro)
+TAB data: [(str=1, fret=0, dur=8th), (str=2, fret=2, dur=16th), ...]
+  │
+  ├─▶  MuseScore/LilyPond → PDF partitura + tab
+  │
+  └─▶  SLM 45M → testo italiano
+         "La melodia è in Mi minore (4 bemolli). Il passaggio
+          nelle misure 3-4 usa la posizione aperta — suonare
+          con l'indice libero per il vibrato sul Mi."</pre>
+
+<!-- ── 7. SFIDA TECNICA PRINCIPALE ───────────────────────── -->
+<h2><span class="sec-num">07</span> La sfida tecnica principale: chitarra vs. altri strumenti</h2>
+
+<p>
+  La trascrizione audio di chitarra è notoriamente più difficile di pianoforte
+  o voce per ragioni fisiche specifiche:
+</p>
+
+<ul style="color:var(--text-sec);font-size:.92rem;line-height:1.8">
+  <li><strong>Rumore di fretting</strong>: il contatto delle dita con le corde produce artefatti nel segnale</li>
+  <li><strong>Inharmonicity</strong>: le corde di chitarra non sono perfettamente armoniche, specialmente le basse</li>
+  <li><strong>Sustain e sovrapposizione</strong>: le note si sovrappongono per natura dello strumento (soprattutto in arpeggi e accordi)</li>
+  <li><strong>Bending e vibrato</strong>: pitch non stabile nel tempo — sfida per sistemi di pitch detection basati su frequenza fissa</li>
+  <li><strong>Tecniche estese</strong>: hammer-on, pull-off, slide cambiano completamente il profilo del segnale</li>
+</ul>
+
+<div class="callout warn">
+  <strong>Qualità dell'output dipende dall'input</strong>
+  Su registrazioni pulite di chitarra acustica senza riverbero, Basic Pitch
+  produce risultati utilizzabili. Su chitarra elettrica con distorsione,
+  su registrazioni live con rumore, o su brani con più strumenti,
+  la qualità della trascrizione automatica degrada significativamente.
+  Il sistema è più utile come punto di partenza da rifinire manualmente
+  che come trascrittore autonomo.
+</div>
+
+<!-- ── 8. COMPARAZIONE NEL SET ────────────────────────────── -->
+<h2><span class="sec-num">08</span> Posizione nel panorama dei case study</h2>
+
+<table class="data-table">
+  <thead><tr><th>Criterio</th><th>Chitarra (questo)</th><th>Media altri casi</th></tr></thead>
+  <tbody>
+    <tr><td>Input è testo/linguaggio naturale</td><td class="bad">No — audio</td><td class="good">Sì (9/10 casi)</td></tr>
+    <tr><td>SLM attuale applicabile al core</td><td class="bad">No — layer secondario solo</td><td class="good">Sì (task principale)</td></tr>
+    <tr><td>Infrastruttura ML upstream richiesta</td><td class="bad">Sì — audio model specializzato</td><td class="warn-c">Rara (solo audio/video)</td></tr>
+    <tr><td>Dataset di training pubblico e abbondante</td><td class="good">Sì — file Guitar Pro</td><td class="good">Sì nella maggior parte</td></tr>
+    <tr><td>Output verificabile</td><td class="warn-c">Parzialmente (puoi suonarlo)</td><td class="warn-c">Varia per caso</td></tr>
+    <tr><td>Stessa architettura transformer riutilizzabile</td><td class="warn-c">Sì, ma nuovo progetto</td><td class="good">Sì, stesso modello</td></tr>
+    <tr><td>Complessità tecnica complessiva</td><td class="bad">Alta (pipeline multi-modello)</td><td class="warn-c">Media</td></tr>
+  </tbody>
+</table>
+
+<!-- ── 9. DECISIONE ───────────────────────────────────────── -->
+<h2><span class="sec-num">09</span> Decisione</h2>
+
+<p>
+  La trascrizione musicale è un progetto affascinante ma è meglio inquadrarlo
+  come un <em>progetto parallelo</em> al SLM, non come una specializzazione del SLM.
+  La maggior parte del lavoro interessante (pitch detection, tab optimizer)
+  non usa il modello linguistico attuale.
+</p>
+
+<div class="callout ok">
+  <strong>Percorso realistico in tre fasi</strong>
+  <strong>Fase 1</strong> (subito, senza ML): Basic Pitch → MIDI → MuseScore → partitura base.
+  Un sistema funzionante in un weekend con strumenti esistenti.<br><br>
+  <strong>Fase 2</strong> (progetto separato, 2-4 settimane): Tab optimizer addestrato su file Guitar Pro.
+  Stesso codice transformer del SLM, tokenizzazione musicale.
+  Migliora drasticamente la qualità della tablatura rispetto all'output naïve di MuseScore.<br><br>
+  <strong>Fase 3</strong> (integrazione): SLM 45M genera le annotazioni testuali in italiano
+  (analisi teorica, difficoltà, suggerimenti). Questo è il contributo del progetto SLM.
+</div>
+
+<div class="callout mus">
+  <strong>Il valore educativo principale</strong>
+  Il tab optimizer è un problema di sequence modeling su dominio non testuale —
+  un caso di studio ideale per capire dove e come un transformer si generalizza
+  oltre il linguaggio. La stessa architettura, un vocabolario completamente
+  diverso, un dominio dove il "significato" è fisicamente verificabile (suoni sul manico).
+  Come esperimento per comprendere la generalità dell'architettura transformer,
+  questo è uno dei casi più illuminanti del set.
+</div>
+</div>

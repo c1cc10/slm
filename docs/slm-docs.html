@@ -382,6 +382,7 @@ pre code { background: none; color: inherit; padding: 0; border-radius: 0; }
     </div>
     <div class="toc-section">
       <div class="toc-label">Utilizzo</div>
+      <a href="#perplexity">Perplexity</a>
       <a href="#corpus">Corpus</a>
       <a href="#comandi">Comandi</a>
       <a href="#hardware">Hardware &amp; Deploy</a>
@@ -682,6 +683,55 @@ finestra i=0, seq_len=6:
     <tr><td>Val loss cresce mentre train scende</td><td>Overfitting — il modello memorizza il corpus</td><td>Corpus più grande, più dropout</td></tr>
     <tr><td>Generazione sempre uguale</td><td>Temperature troppo bassa, o modello in eval() senza campionamento</td><td>Aumentare temperature a 0.8–1.0</td></tr>
   </table>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────── PERPLEXITY -->
+<section id="perplexity">
+  <h2>Perplexity — quality scorer</h2>
+  <p>La perplexity (PPL) misura quanto il modello è "sorpreso" da un testo: una sequenza simile alla distribuzione di training ha PPL bassa, una sequenza inattesa ha PPL alta.</p>
+
+  <h3>Formula e scala</h3>
+  <p>PPL = exp(loss) dove loss è la cross-entropy media token per token. Run #3 (addestrato su Wikipedia IT) ha val loss 4.08, quindi PPL ≈ 59 sul suo set di validazione.</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Range PPL</th><th>Livello</th><th>Significato per Run #3</th></tr>
+    <tr><td>&lt; 60</td><td>BASSA</td><td>Registro enciclopedico, italiano formale — come Wikipedia IT</td></tr>
+    <tr><td>60–150</td><td>MEDIA</td><td>Italiano buono, registro diverso da enciclopedico</td></tr>
+    <tr><td>150–400</td><td>ALTA</td><td>Testo degradato o misto lingua</td></tr>
+    <tr><td>400+</td><td>MOLTO ALTA</td><td>Lingua straniera, spam, OCR difettoso</td></tr>
+  </table>
+  </div>
+
+  <h3>Cosa rileva (e cosa no)</h3>
+  <p>La PPL non è un correttore grammaticale: misura la distanza dalla distribuzione di training. I risultati empirici su Run #3 mostrano un profilo preciso:</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Tipo</th><th>Rilevabile</th><th>Esempio</th></tr>
+    <tr><td>Lingua straniera</td><td>Sì — forte</td><td>"hi O'sdg" → PPL 2240</td></tr>
+    <tr><td>Registro conversazionale</td><td>Sì — forte</td><td>"ciao sono francesco" → PPL 2690</td></tr>
+    <tr><td>Typo in entità nominate</td><td>Sì — forte</td><td>"Saro Romano Impero" → PPL 615 vs "Sacro" → PPL 39</td></tr>
+    <tr><td>Errori morfosintattici comuni</td><td>Segnale debole</td><td>"ha fondando" → PPL 79 ≈ testo corretto</td></tr>
+    <tr><td>Errori semantici con entità corrette</td><td>No</td><td>Modello non ha world knowledge causale</td></tr>
+  </table>
+  </div>
+  <p>Il meccanismo: entità nominate come "Sacro Romano Impero" compaiono migliaia di volte come unità coesa in Wikipedia — il modello conosce la sequenza con certezza quasi assoluta. Un typo che produce un token raro (Saro) rompe quella certezza. Un errore morfologico (ha fondando) usa token comuni in pattern simili presenti nel corpus — la sorpresa è contenuta.</p>
+  <p><strong>Attenzione ai falsi negativi:</strong> testo ripetitivo (spam, boilerplate) è iper-prevedibile e ottiene PPL bassa. Il filtro PPL va sempre preceduto da un filtro euristico su linee duplicate e densità caratteri.</p>
+
+  <h3>Uso come quality scorer</h3>
+  <pre><code><span class="cm"># REPL interattivo</span>
+python3 tools/eval_ppl.py
+
+<span class="cm"># Singolo testo</span>
+python3 tools/eval_ppl.py <span class="st">"Carlo Magno ha fondato il Sacro Romano Impero"</span>
+
+<span class="cm"># Pipeline filtraggio corpus — scarta top 20% PPL</span>
+python3 tools/filter_corpus.py data/cc100_it_raw.txt \
+    --checkpoint checkpoints/best.pt \
+    --lang it --ppl-cut 0.80 --dedup \
+    --out data/cc100_it_clean.txt</code></pre>
+  <div class="notice">
+    La scala di riferimento (BASSA/MEDIA/ALTA) è relativa al corpus di training di Run #3 (Wikipedia IT). Un modello addestrato su corpus più vari produrrà soglie diverse — riaddestrare il quality scorer ad ogni run migliora la precisione del filtraggio.
   </div>
 </section>
 

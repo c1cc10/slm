@@ -1,0 +1,616 @@
+<title>SLM — Assistente alla Scrittura di Codice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --bg:       #F2F7F4;
+  --surface:  #FFFFFF;
+  --surface2: #E8F0EC;
+  --text:     #111A16;
+  --text-sec: #4A6054;
+  --accent:   #0A4E30;
+  --accent-l: #177A4E;
+  --border:   #C8D8D0;
+  --mono:     'IBM Plex Mono', monospace;
+
+  --risk-bg:  #FEF2F2; --risk-br: #FCA5A5; --risk-tx: #991B1B;
+  --ok-bg:    #F0FDF4; --ok-br:   #86EFAC; --ok-tx:   #15803D;
+  --info-bg:  #EFF6FF; --info-br: #93C5FD; --info-tx: #1D4ED8;
+  --warn-bg:  #FFFBEB; --warn-br: #FDE68A; --warn-tx: #92400E;
+  --cod-bg:   #F0F7F3; --cod-br:  #4CAF85; --cod-tx:  #0A4E30;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0B1610; --surface:#0F211A; --surface2:#162B22;
+    --text:#D4EDE0; --text-sec:#6BA688; --accent:#2EC98A; --accent-l:#56E0A8;
+    --border:#1E3B2A;
+    --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+    --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+    --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+    --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+    --cod-bg:#0A2018;  --cod-br:#1A7A50;  --cod-tx:#56E0A8;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0B1610; --surface:#0F211A; --surface2:#162B22;
+  --text:#D4EDE0; --text-sec:#6BA688; --accent:#2EC98A; --accent-l:#56E0A8;
+  --border:#1E3B2A;
+  --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+  --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+  --cod-bg:#0A2018;  --cod-br:#1A7A50;  --cod-tx:#56E0A8;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px; line-height: 1.72;
+  background: var(--bg); color: var(--text);
+  padding: 0 20px 80px;
+}
+.page { max-width: 720px; margin: 0 auto; padding-top: 52px; }
+
+.eyebrow {
+  font-family: var(--mono); font-size: 0.68rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent-l); margin-bottom: 8px;
+}
+h1 {
+  font-size: 1.7rem; font-weight: 600; letter-spacing: -0.02em;
+  color: var(--text); margin: 0 0 10px; text-wrap: balance;
+}
+.subtitle {
+  color: var(--text-sec); font-size: 0.92rem; line-height: 1.6; margin: 0 0 8px;
+}
+.meta {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--text-sec);
+  margin-bottom: 44px; padding-bottom: 20px; border-bottom: 2px solid var(--accent);
+}
+h2 {
+  font-size: 1.0rem; font-weight: 600; color: var(--accent-l);
+  margin: 52px 0 14px; padding-top: 36px; border-top: 1px solid var(--border);
+  letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 10px;
+}
+.sec-num { font-family: var(--mono); font-size: 0.7rem; color: var(--text-sec); letter-spacing: 0.05em; }
+h3 { font-size: 0.92rem; font-weight: 600; color: var(--text); margin: 28px 0 10px; }
+p { margin: 0 0 14px; }
+p:last-child { margin-bottom: 0; }
+
+.callout {
+  padding: 14px 16px; border-radius: 6px; border-left: 3px solid;
+  font-size: 0.88rem; line-height: 1.6; margin: 18px 0;
+}
+.callout strong { display: block; margin-bottom: 4px; font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.callout.risk  { background: var(--risk-bg); border-color: var(--risk-br); color: var(--risk-tx); }
+.callout.ok    { background: var(--ok-bg);   border-color: var(--ok-br);   color: var(--ok-tx); }
+.callout.info  { background: var(--info-bg); border-color: var(--info-br); color: var(--info-tx); }
+.callout.warn  { background: var(--warn-bg); border-color: var(--warn-br); color: var(--warn-tx); }
+.callout.cod   { background: var(--cod-bg);  border-color: var(--cod-br);  color: var(--cod-tx); }
+
+/* Advantage matrix */
+.adv-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+.adv-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 0.86rem; line-height: 1.55;
+}
+.adv-card .adv-title {
+  font-weight: 600; font-size: 0.88rem;
+  margin-bottom: 6px; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+.adv-card .adv-body { color: var(--text-sec); }
+.adv-card.green { border-left: 3px solid var(--accent-l); }
+.adv-card.amber { border-left: 3px solid #D97706; }
+
+/* Language table */
+.data-table {
+  width: 100%; border-collapse: collapse; font-size: 0.88rem;
+  margin: 16px 0; overflow-x: auto; display: block;
+}
+.data-table th {
+  text-align: left; font-family: var(--mono);
+  font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-sec); padding: 8px 12px;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.data-table td {
+  padding: 9px 12px; border-bottom: 1px solid var(--border);
+  vertical-align: top; line-height: 1.5;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.good { color: #15803D; font-weight: 500; }
+.warn-c { color: #92400E; font-weight: 500; }
+.bad { color: #991B1B; font-weight: 500; }
+
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 500;
+}
+.badge.go  { background: var(--ok-bg);   color: var(--ok-tx);   border: 1px solid var(--ok-br); }
+.badge.no  { background: var(--risk-bg); color: var(--risk-tx); border: 1px solid var(--risk-br); }
+.badge.dep { background: var(--warn-bg); color: var(--warn-tx); border: 1px solid var(--warn-br); }
+
+pre {
+  background: #0D1A14; color: #7EDFAA;
+  font-family: var(--mono); font-size: 0.79rem;
+  padding: 16px 18px; border-radius: 8px;
+  overflow-x: auto; line-height: 1.55; margin: 12px 0;
+}
+.pre-label {
+  font-family: var(--mono); font-size: 0.68rem;
+  color: var(--text-sec); letter-spacing: 0.08em;
+  text-transform: uppercase; margin: 20px 0 4px;
+}
+code {
+  font-family: var(--mono); font-size: 0.85em;
+  background: var(--surface2); padding: 1px 5px;
+  border-radius: 3px; color: var(--accent-l);
+}
+
+/* Spectrum row */
+.spec-row {
+  display: grid;
+  grid-template-columns: 200px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.87rem;
+  margin-bottom: 6px;
+}
+.spec-row .feat { font-weight: 500; }
+.spec-row .bar-track {
+  height: 6px; background: var(--surface2);
+  border-radius: 3px; overflow: hidden;
+}
+.spec-row .bar-fill { height: 100%; border-radius: 3px; }
+.bar-high   { background: #16A34A; }
+.bar-medium { background: #D97706; }
+.bar-low    { background: #DC2626; }
+.spec-label { font-family: var(--mono); font-size: 0.68rem; white-space: nowrap; }
+.sl-high   { color: #16A34A; }
+.sl-medium { color: #D97706; }
+.sl-low    { color: #DC2626; }
+
+blockquote {
+  border-left: 3px solid var(--accent-l);
+  margin: 18px 0; padding: 12px 18px;
+  background: var(--surface); border-radius: 0 6px 6px 0;
+  font-style: italic; color: var(--text-sec);
+}
+</style>
+
+<div class="page">
+
+<div class="eyebrow">SLM · Analisi di specializzazione · Case Study #5</div>
+<h1>Assistente alla Scrittura di Codice</h1>
+<p class="subtitle">Valutazione di fattibilità per completamento, generazione boilerplate e suggerimento di pattern in un linguaggio di programmazione specializzato.</p>
+<div class="meta">Documento di progetto · v0.1 · 2026-09-29</div>
+
+<!-- ── 1. LA TESI CENTRALE ───────────────────────────────────── -->
+<h2><span class="sec-num">01</span> La tesi: il vantaggio strutturale del modello piccolo</h2>
+
+<p>
+  Questo è il caso d'uso in cui il modello piccolo non è un compromesso
+  rispetto al modello grande: è la scelta <em>corretta</em>.
+  Tre ragioni strutturali.
+</p>
+
+<div class="adv-grid">
+  <div class="adv-card green">
+    <div class="adv-title">Corpus finito ed esauribile</div>
+    <div class="adv-body">
+      Python ha decine di miliardi di righe su GitHub. Un linguaggio specializzato
+      ne ha milioni — o meno. Un 45M può vedere l'intero corpus:
+      non esiste "long tail" che sfugge al training.
+    </div>
+  </div>
+  <div class="adv-card green">
+    <div class="adv-title">Distribuzione concentrata</div>
+    <div class="adv-body">
+      Il codice ha grammatica formale. A ogni posizione,
+      i token validi sono un sottoinsieme piccolo. La distribuzione
+      next-token è molto più concentrata che in prosa: il modello piccolo
+      non deve distribuire capacità su variabilità infinita.
+    </div>
+  </div>
+  <div class="adv-card green">
+    <div class="adv-title">Contesto 512 token sufficiente</div>
+    <div class="adv-body">
+      Una funzione media: 20-80 righe, 150-500 token.
+      Il contesto locale è tutto ciò che serve per completamento.
+      Nessun problema di lunghezza del contesto (al contrario della scrittura).
+    </div>
+  </div>
+  <div class="adv-card green">
+    <div class="adv-title">Output verificabile</div>
+    <div class="adv-body">
+      Il codice generato può essere eseguito. Corretto o no
+      è una risposta booleana. Non esiste questa proprietà
+      per nessun altro caso d'uso nel set.
+    </div>
+  </div>
+</div>
+
+<blockquote>
+  Copilot è mediocre per i linguaggi di nicchia perché il suo training corpus
+  è dominato da Python, JS e Java. Un modello da 45M addestrato esclusivamente
+  su ABAP, GDScript o un DSL interno ha visto <em>tutto</em> il codice che esiste
+  in quel linguaggio, mentre Copilot ne ha visto una frazione rumorosa.
+</blockquote>
+
+<!-- ── 2. DIFFERENZA CON IL PRE-TRAINING ATTUALE ─────────────── -->
+<h2><span class="sec-num">02</span> Differenza con il pre-training attuale</h2>
+
+<p>
+  Il modello attuale è addestrato su Wikipedia IT: prosa enciclopedica,
+  italiano, token di testo naturale. Il codice ha caratteristiche molto diverse.
+</p>
+
+<table class="data-table">
+  <thead>
+    <tr><th>Caratteristica</th><th>Wikipedia IT (attuale)</th><th>Codice sorgente</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Vocabolario dominante</td>
+      <td>parole italiane, punteggiatura</td>
+      <td>keyword, identificatori, operatori, simboli</td>
+    </tr>
+    <tr>
+      <td>Struttura sintattica</td>
+      <td>frasi, paragrafi, gerarchie di testo</td>
+      <td>blocchi, indentazione, token terminali precisi</td>
+    </tr>
+    <tr>
+      <td>Sensibilità al whitespace</td>
+      <td>nulla (spazi interscambiabili)</td>
+      <td>critica in Python, significativa ovunque</td>
+    </tr>
+    <tr>
+      <td>Token boundaries BPE</td>
+      <td>ottimizzate per morfologia IT</td>
+      <td>subottimali per <code>camelCase</code>, <code>::</code>, <code>=></code></td>
+    </tr>
+    <tr>
+      <td>Frequenza di sequenze ripetute</td>
+      <td>bassa (variabilità narrativa)</td>
+      <td>alta (boilerplate, pattern idiomatici)</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  <strong>Implicazione: ri-training o tokenizer specializzato</strong>
+  Per un assistente al codice serio, il tokenizer BPE andrebbe ri-addestrato
+  su un corpus misto codice + italiano (per i commenti). Un tokenizer
+  ottimizzato per codice produce token più semanticamente densi:
+  <code>function</code> → 1 token, non frammentato.
+  Alternativa: usare un tokenizer esistente come <code>cl100k_base</code> (tiktoken)
+  che già include vocabolario di codice. Il modello resterebbe 45M;
+  cambierebbe la fase di tokenizzazione.
+</div>
+
+<!-- ── 3. TASK SUPPORTATI ─────────────────────────────────────── -->
+<h2><span class="sec-num">03</span> Task e fattibilità</h2>
+
+<div class="spec-row">
+  <span class="feat">Autocompletamento locale</span>
+  <div class="bar-track"><div class="bar-fill bar-high" style="width:95%"></div></div>
+  <span class="spec-label sl-high">MOLTO ALTA</span>
+</div>
+<div class="spec-row">
+  <span class="feat">Generazione boilerplate</span>
+  <div class="bar-track"><div class="bar-fill bar-high" style="width:90%"></div></div>
+  <span class="spec-label sl-high">MOLTO ALTA</span>
+</div>
+<div class="spec-row">
+  <span class="feat">Pattern idiomatici del linguaggio</span>
+  <div class="bar-track"><div class="bar-fill bar-high" style="width:85%"></div></div>
+  <span class="spec-label sl-high">ALTA</span>
+</div>
+<div class="spec-row">
+  <span class="feat">Corpo funzione da firma + commento</span>
+  <div class="bar-track"><div class="bar-fill bar-high" style="width:80%"></div></div>
+  <span class="spec-label sl-high">ALTA</span>
+</div>
+<div class="spec-row">
+  <span class="feat">Suggerimento nomi variabili/funzioni</span>
+  <div class="bar-track"><div class="bar-fill bar-medium" style="width:65%"></div></div>
+  <span class="spec-label sl-medium">MEDIA</span>
+</div>
+<div class="spec-row">
+  <span class="feat">Generazione test unitari</span>
+  <div class="bar-track"><div class="bar-fill bar-medium" style="width:58%"></div></div>
+  <span class="spec-label sl-medium">MEDIA</span>
+</div>
+<div class="spec-row">
+  <span class="feat">Correzione errore da messaggio compilatore</span>
+  <div class="bar-track"><div class="bar-fill bar-medium" style="width:52%"></div></div>
+  <span class="spec-label sl-medium">MEDIA</span>
+</div>
+<div class="spec-row">
+  <span class="feat">Refactoring multi-file</span>
+  <div class="bar-track"><div class="bar-fill bar-low" style="width:20%"></div></div>
+  <span class="spec-label sl-low">BASSA</span>
+</div>
+<div class="spec-row">
+  <span class="feat">Analisi architetturale codebase</span>
+  <div class="bar-track"><div class="bar-fill bar-low" style="width:8%"></div></div>
+  <span class="spec-label sl-low">NON FATTIBILE</span>
+</div>
+
+<!-- ── 4. CANDIDATI LINGUAGGI ────────────────────────────────── -->
+<h2><span class="sec-num">04</span> Candidati: quale linguaggio specializzato?</h2>
+
+<p>
+  La scelta del linguaggio target è la decisione più importante.
+  Determina la dimensione del corpus, la competitività rispetto agli strumenti esistenti
+  e il valore del modello risultante.
+</p>
+
+<table class="data-table">
+  <thead>
+    <tr><th>Linguaggio / DSL</th><th>Corpus stimato</th><th>Support Copilot</th><th>Opportunità</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>SQL dialetti</strong><br><span style="font-size:0.8rem;color:var(--text-sec)">BigQuery, dbt, Presto</span></td>
+      <td>ampio, ben strutturato</td>
+      <td class="warn-c">Medio (generico)</td>
+      <td class="good">Alta: dialetti e pattern aziendali non coperti</td>
+    </tr>
+    <tr>
+      <td><strong>GDScript</strong><br><span style="font-size:0.8rem;color:var(--text-sec)">Godot game engine</span></td>
+      <td>~50M righe pubbliche</td>
+      <td class="bad">Scarso</td>
+      <td class="good">Corpus piccolo = 45M vede tutto</td>
+    </tr>
+    <tr>
+      <td><strong>Terraform HCL</strong><br><span style="font-size:0.8rem;color:var(--text-sec)">Infrastructure as Code</span></td>
+      <td>ampio su GitHub</td>
+      <td class="warn-c">Medio</td>
+      <td class="warn-c">Media: Copilot già discreto</td>
+    </tr>
+    <tr>
+      <td><strong>ABAP</strong><br><span style="font-size:0.8rem;color:var(--text-sec)">SAP enterprise</span></td>
+      <td>vasto ma chiuso (SAP interno)</td>
+      <td class="bad">Quasi nullo</td>
+      <td class="good">Altissima: mercato enterprise enorme, zero AI</td>
+    </tr>
+    <tr>
+      <td><strong>DSL interno / proprietario</strong><br><span style="font-size:0.8rem;color:var(--text-sec)">linguaggio custom di un prodotto</span></td>
+      <td>totalmente controllato</td>
+      <td class="bad">Zero</td>
+      <td class="good">Massima: non esiste alternativa possibile</td>
+    </tr>
+    <tr>
+      <td><strong>Ladder Logic / ST</strong><br><span style="font-size:0.8rem;color:var(--text-sec)">PLC industriale</span></td>
+      <td>molto piccolo e frammentato</td>
+      <td class="bad">Quasi nullo</td>
+      <td class="warn-c">Media: corpus piccolo = training difficile</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout cod">
+  <strong>Il caso di massimo vantaggio: DSL proprietario</strong>
+  Se un prodotto ha un suo linguaggio di configurazione, un suo query language,
+  o un suo scripting engine — è impossibile che Copilot lo supporti.
+  Un 45M addestrato sull'intero codebase interno diventa l'unico strumento
+  che "capisce" quel linguaggio. La dimensione del corpus è gestibile
+  (il codebase interno di un prodotto è nell'ordine di 1-50 MB di codice),
+  e il modello può essere ri-addestrato a ogni rilascio.
+</div>
+
+<!-- ── 5. ARCHITETTURA DI DEPLOYMENT ─────────────────────────── -->
+<h2><span class="sec-num">05</span> Architettura: LSP server locale</h2>
+
+<p>
+  Il deployment naturale per un assistente al codice è il protocollo LSP
+  (Language Server Protocol), standard supportato da tutti gli editor moderni.
+  Il SLM gira come processo locale; l'editor manda frammenti di codice,
+  riceve completamenti.
+</p>
+
+<pre>
+# Flusso completamento
+Editor (VS Code / Neovim / JetBrains)
+  │
+  │  TCP socket (LSP)
+  ▼
+SLM Server (Python, FastAPI o asyncio raw)
+  │
+  │  context = prefix + suffix (fill-in-the-middle)
+  │  max 512 token
+  ▼
+SLM 45M Q8_0 (llama.cpp, Metal/CUDA)
+  │
+  │  418 t/s → ~60ms per 25-token completion
+  ▼
+Response: { completions: ["..."] }
+  │
+  ▼
+Editor inserisce il completamento</pre>
+
+<p>
+  60 ms per un completamento di 25 token è più veloce di qualsiasi API remota
+  (latenza di rete + processing). Il modello locale è sempre disponibile,
+  funziona offline, non ha costi per token, non ha rate limit.
+</p>
+
+<div class="callout info">
+  <strong>Fill-in-the-middle (FIM)</strong>
+  Il completamento moderno non è solo "continua da qui" ma "riempi questo buco":
+  data la porzione prima e dopo il cursore, genera il testo mancante.
+  Richiede un formato di pre-training specifico: <code>&lt;PRE&gt;...&lt;SUF&gt;...&lt;MID&gt;</code>.
+  Il modello impara questa struttura durante il training se il corpus è
+  preparato con questo formato. Da valutare in fase di dataset preparation.
+</div>
+
+<!-- ── 6. DATASET: DUE TRACK ──────────────────────────────────── -->
+<h2><span class="sec-num">06</span> Dataset: pre-training su corpus + SFT opzionale</h2>
+
+<h3>Track 1: pre-training diretto sul corpus codice</h3>
+<p>
+  Per il completamento e il boilerplate, il pre-training auto-regressivo
+  sul corpus codice è sufficiente. Non servono annotazioni:
+  il modello impara i pattern dal codice stesso, esattamente come
+  ha imparato l'italiano da Wikipedia.
+</p>
+
+<div class="pre-label">Preparazione dataset codice</div>
+<pre>
+# Dataset preparation: corpus codice → training
+# 1. Raccoglie tutti i file del linguaggio target
+# 2. Filtra file troppo brevi (&lt; 50 token) o troppo lunghi
+# 3. Aggiunge separatori di file: &lt;|file_start|&gt; path/to/file.ext &lt;|file_end|&gt;
+# 4. Opzionale: FIM shuffling (prepara il modello al fill-in-the-middle)
+# 5. Finestre di 512 token con stride
+
+import glob, os
+
+def prepare_code_corpus(source_dirs, ext, out_path):
+    docs = []
+    for d in source_dirs:
+        for f in glob.glob(f"{d}/**/*.{ext}", recursive=True):
+            text = open(f).read()
+            if len(text) > 200:                    # filtra file stub
+                docs.append(f"# {f}\n{text}")
+    with open(out_path, 'w') as fout:
+        fout.write("\n\n".join(docs))</pre>
+
+<h3>Track 2: SFT per instruction following (opzionale)</h3>
+<p>
+  Se si vuole "scrivi una funzione che fa X" invece di solo autocompletamento,
+  serve SFT su coppie (istruzione → codice). Volume: 300-600 esempi.
+  Meno prioritario: il completamento locale copre il 90% dell'utilità.
+</p>
+
+<!-- ── 7. COMPARAZIONE CON TUTTI I CASI ───────────────────────── -->
+<h2><span class="sec-num">07</span> Posizione nel panorama dei cinque case study</h2>
+
+<table class="data-table">
+  <thead>
+    <tr><th>Criterio</th><th>Moto</th><th>Assic.</th><th>Scrittura</th><th>Assistente</th><th>Codice</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Vincolo critico</strong></td>
+      <td>Safety</td>
+      <td>GDPR biz</td>
+      <td>Contesto</td>
+      <td>Privacy + stato</td>
+      <td class="good">Nessuno grave</td>
+    </tr>
+    <tr>
+      <td><strong>Ctx 512 token</strong></td>
+      <td class="good">OK</td>
+      <td class="warn-c">Border</td>
+      <td class="bad">Insuffic.</td>
+      <td class="good">OK</td>
+      <td class="good">OK</td>
+    </tr>
+    <tr>
+      <td><strong>Stato persistente</strong></td>
+      <td class="good">No</td>
+      <td class="good">No</td>
+      <td class="good">No</td>
+      <td class="bad">Sì</td>
+      <td class="good">No</td>
+    </tr>
+    <tr>
+      <td><strong>Infrastruttura aggiuntiva</strong></td>
+      <td class="warn-c">GPS/API</td>
+      <td class="warn-c">CRM</td>
+      <td class="good">Nessuna</td>
+      <td class="bad">Database + APIs</td>
+      <td class="good">LSP server (semplice)</td>
+    </tr>
+    <tr>
+      <td><strong>Vantaggio vs modelli grandi</strong></td>
+      <td class="warn-c">Velocità</td>
+      <td class="good">Privacy</td>
+      <td class="good">Stile pers.</td>
+      <td class="warn-c">On-device</td>
+      <td class="good">Corpus esaustivo + latenza</td>
+    </tr>
+    <tr>
+      <td><strong>Output verificabile</strong></td>
+      <td class="bad">No</td>
+      <td class="bad">No</td>
+      <td class="bad">No</td>
+      <td class="warn-c">Parziale</td>
+      <td class="good">Sì (compilare/eseguire)</td>
+    </tr>
+    <tr>
+      <td><strong>Tokenizer attuale adatto</strong></td>
+      <td class="good">Sì</td>
+      <td class="good">Sì</td>
+      <td class="good">Sì</td>
+      <td class="good">Sì</td>
+      <td class="warn-c">Parziale (BPE su IT ≠ code)</td>
+    </tr>
+    <tr>
+      <td><strong>Complessità training</strong></td>
+      <td class="warn-c">Media</td>
+      <td class="warn-c">Media</td>
+      <td class="warn-c">Media</td>
+      <td class="warn-c">Media</td>
+      <td class="good">Bassa (solo pre-training)</td>
+    </tr>
+    <tr>
+      <td><strong>Priorità consigliata</strong></td>
+      <td><span class="badge go">Run #5</span></td>
+      <td><span class="badge dep">v2</span></td>
+      <td><span class="badge go">Track</span></td>
+      <td><span class="badge dep">v2+infra</span></td>
+      <td><span class="badge go">Run #5/6</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ── 8. DECISIONE ───────────────────────────────────────────── -->
+<h2><span class="sec-num">08</span> Decisione: il caso tecnico più pulito</h2>
+
+<p>
+  Il code assistant è il caso d'uso con la minor entropia di implementazione:
+  nessun vincolo di compliance, nessuno stato persistente, nessuna infrastruttura
+  complessa, contesto sufficiente, output verificabile, corpus finito.
+  L'unica variabile aperta è la scelta del linguaggio target.
+</p>
+
+<div class="callout ok">
+  <strong>Raccomandazione</strong>
+  Se esiste un linguaggio o DSL usato nei propri prodotti (Hokus, Tributum, Amel-IA,
+  middleware) che non ha supporto AI adeguato, questo diventa il caso d'uso
+  con il ROI più alto dell'intero set: il modello è l'unico strumento possibile
+  per quel linguaggio, il corpus è controllato e aggiornabile, e il deployment
+  come LSP server richiede meno di una settimana.
+</div>
+
+<div class="callout info">
+  <strong>Training da zero o transfer?</strong>
+  Due opzioni:
+  (a) <strong>Pre-training da zero sul codice</strong>: richiede ri-addestramento completo
+  con nuovo tokenizer. Risultato ottimale. Costo: un run completo.
+  (b) <strong>SFT del modello IT esistente sul codice</strong>: riutilizza i pesi attuali,
+  aggiunge la distribuzione del codice sopra. Tokenizer subottimale ma utilizzabile
+  se il linguaggio target ha sintassi verbosa (SQL, HCL, ABAP).
+  Per un DSL con molti simboli speciali (APL, regex avanzato) serve il pre-training.
+</div>
+
+</div>

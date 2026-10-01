@@ -672,6 +672,168 @@ pre code { background: none; padding: 0; font-size: inherit; }
   <strong>Domanda aperta prima del passo 2:</strong> i testi personali (manoscritti, note lunghe, testi scritti in prima persona) sono il singolo maggiore acceleratore di qualità per un writing assistant. Anche 30–50 K token di prosa propria in italiano valgono più di 1 M di Gutenberg. Se esiste del materiale, va aggiunto qui.
 </div>
 
+<!-- ═══════════════════════════════════════════════
+     6. SFT — MECCANICA
+══════════════════════════════════════════════════ -->
+<h2>6 · Supervised Fine-Tuning — meccanica interna</h2>
+
+<p>Il Continued Pre-Training (CPT, sezioni 1–5) e il Supervised Fine-Tuning (SFT) sembrano la stessa operazione — "training su un checkpoint esistente" — ma differiscono in modo sostanziale nel formato dei dati, nella funzione di loss e negli obiettivi. Capire la differenza è necessario per progettare <code>train_sft.py</code> correttamente.</p>
+
+<!-- 6.1 CLM vs SFT -->
+<h3>6.1 · CLM vs SFT — perché il formato dati cambia</h3>
+
+<p><strong>Pre-training / CPT (Causal Language Modeling su testo continuo):</strong> il corpus è una sequenza piatta di token. Il training chunka questa sequenza in finestre di <code>seq_len</code> token e per ogni finestra calcola la loss su <em>tutti</em> i token: ogni token deve predire il successivo. Non c'è struttura semantica esplicita tra le posizioni — il modello impara la distribuzione generale della lingua.</p>
+
+<p><strong>SFT (coppie prompt → completion):</strong> i dati sono strutturati in coppie dove il prompt è fisso (l'istruzione, il template parziale) e la completion è ciò che il modello deve imparare a produrre. Non si può trattarle come testo continuo, perché il modello imparerebbe anche a "riprodurre la domanda" — il che è inutile e introduce segnale di gradiente verso la distribuzione sbagliata.</p>
+
+<div class="tw">
+<table>
+  <thead><tr><th>Aspetto</th><th>CLM / CPT</th><th>SFT</th></tr></thead>
+  <tbody>
+    <tr><td>Input</td><td>testo continuo, nessuna struttura</td><td>coppie <code>(prompt, completion)</code></td></tr>
+    <tr><td>Loss calcolata su</td><td>tutti i token</td><td>solo i token di completion</td></tr>
+    <tr><td>Dataset tipico</td><td>milioni – miliardi di token</td><td>centinaia – migliaia di esempi</td></tr>
+    <tr><td>Obiettivo</td><td>modellare la lingua in generale</td><td>orientare il comportamento su un task</td></tr>
+    <tr><td>Format file</td><td><code>.txt</code> sliding window</td><td><code>.jsonl</code> con campi prompt/completion</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- 6.2 Loss mascherata -->
+<h3>6.2 · Loss mascherata sul prompt (<code>ignore_index=-100</code>)</h3>
+
+<p>In PyTorch, <code>F.cross_entropy(logits, labels)</code> accetta un parametro <code>ignore_index</code> (default <code>-100</code>): ogni posizione in <code>labels</code> con valore <code>-100</code> viene ignorata nel calcolo della loss — contribuisce zero al gradiente, nessun aggiornamento dei pesi.</p>
+
+<p>In SFT si costruisce il batch così:</p>
+
+<pre># Esempio batch SFT: una convocazione condominiale
+prompt     = "Redigi la convocazione dell'assemblea ordinaria del 15/10/2026."
+completion = "Gentili condomini, si convoca l'assemblea ordinaria del condominio..."
+
+# Tokenizziamo la concatenazione
+input_ids = tokenize(prompt + "\n\n" + completion)
+# len(prompt_tokens) = 18, len(completion_tokens) = 64
+
+# Labels: -100 sul prompt, token reale sulla completion (shiftati di 1)
+labels = [-100] * 18 + input_ids[19:]   # completion[1:] è il target</pre>
+
+<p>Senza questa maschera il modello riceve gradiente anche dai token del prompt — impara a massimizzare la probabilità delle parole della domanda, ottimizzando la distribuzione sbagliata. La convergenza è molto più lenta e il modello tende a confondere cosa deve <em>ricevere</em> (prompt) con cosa deve <em>produrre</em> (completion).</p>
+
+<div class="note warn">
+  <strong>Labels sono shiftati di uno rispetto a input_ids.</strong> Il modello al passo <em>i</em> vede i token 0…<em>i</em> e deve predire il token <em>i+1</em>. Quindi <code>labels[i] = input_ids[i+1]</code>. L'implementazione corretta usa <code>input_ids[1:]</code> come labels e <code>input_ids[:-1]</code> come input, oppure si gestisce internamente con uno shift di offset. Errare su questo dettaglio è la causa più comune di training SFT che converge ma produce output errati.
+</div>
+
+<!-- 6.3 Catastrophic Forgetting -->
+<h3>6.3 · Catastrophic forgetting</h3>
+
+<p>Il pre-training ha codificato la distribuzione dell'italiano in 30 000 step su 47.8 M token. Il SFT spinge i pesi verso un sotto-dominio di questa distribuzione. Se la spinta è troppo forte — LR alta, molte epoche, dataset grande — il modello sovrascrive le rappresentazioni generali e "dimentica" come scrivere di altro.</p>
+
+<div class="tw">
+<table>
+  <thead><tr><th>Condizione SFT</th><th>Forgetting atteso</th><th>Comportamento</th></tr></thead>
+  <tbody>
+    <tr><td>200–300 esempi, LR 1e-5, 3 epoche</td><td class="ok">trascurabile (&lt;5%)</td><td>modello scrive ancora italiano generico correttamente</td></tr>
+    <tr><td>1 000–5 000 esempi, LR 3e-5, 5 epoche</td><td class="par">moderato (5–15%)</td><td>italiano generico leggermente degradato, dominio OK</td></tr>
+    <tr><td>10 000+ esempi, LR 1e-4, 10+ epoche</td><td class="no">severo (&gt;20%)</td><td>il modello "parla solo" di condominio / moto / etc.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><strong>Mitigazioni standard:</strong></p>
+<ul>
+  <li><strong>LR ridotta</strong> (1/10 del pre-training: 1e-5 – 3e-5 invece di 3e-4) — riduce la velocità di sovrascrittura</li>
+  <li><strong>Poche epoche</strong> (2–5) — limita il numero di aggiornamenti</li>
+  <li><strong>Probe Wikipedia</strong> nel val set — segnale diretto di forgetting (vedi sez. 3 e 4)</li>
+  <li><strong>Wikipedia slice nel batch SFT</strong> (opzionale, 10–15%) — mantiene il modello ancorato alla distribuzione generale</li>
+</ul>
+
+<!-- 6.4 Iperparametri -->
+<h3>6.4 · Shift degli iperparametri</h3>
+
+<div class="tw">
+<table>
+  <thead><tr><th>Parametro</th><th>Pre-training</th><th>CPT letterario</th><th>SFT (Branch A)</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">max_lr</td><td class="num">3×10⁻⁴</td><td class="num">7×10⁻⁵</td><td class="num">1×10⁻⁵ – 3×10⁻⁵</td></tr>
+    <tr><td class="mono">min_lr</td><td class="num">3×10⁻⁵</td><td class="num">7×10⁻⁶</td><td class="num">1×10⁻⁶</td></tr>
+    <tr><td class="mono">warmup_steps</td><td class="num">200</td><td class="num">50</td><td class="num">10–30</td></tr>
+    <tr><td class="mono">batch_size</td><td class="num">16</td><td class="num">8</td><td class="num">4–8</td></tr>
+    <tr><td class="mono">epochs</td><td>~2.6 pass sul corpus</td><td>1.5–2.7</td><td>2–5</td></tr>
+    <tr><td class="mono">loss target</td><td>tutti i token</td><td>tutti i token</td><td class="ok">solo completion</td></tr>
+    <tr><td class="mono">val set</td><td>Wikipedia slice</td><td>letterario + Wikipedia probe</td><td>domain test set + Wikipedia probe</td></tr>
+    <tr class="hl"><td><strong>Motivazione LR bassa</strong></td><td colspan="3">Evitare catastrophic forgetting. Il modello si trova già in un minimo buono — passi piccoli.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- 6.5 Formati dati -->
+<h3>6.5 · Formati dati per SFT — tre opzioni</h3>
+
+<p><strong>Opzione A — completamento con separatore testuale</strong> (consigliata per Branch A)</p>
+<pre># data/sft_condominio.jsonl
+{"prompt": "Redigi una convocazione assemblea ordinaria. Data: 15/10/2026. Luogo: sala condominiale. ODG: bilancio preventivo, lavori straordinari.", "completion": "Gentili condomini,\n\nSi convoca l'assemblea ordinaria del condominio..."}
+{"prompt": "Scrivi una diffida per morosità. Condomino: Mario Rossi, scala B, interno 4. Debito: €1.234,00 per quote condominiali arretrate.", "completion": "Raccomandata A/R\n\nEgregio Sig. Mario Rossi..."}
+</pre>
+<p>Il separatore <code>\n\n</code> (o <code>"### Risposta:\n"</code>) nella concatenazione identifica il punto di switch da labels=-100 a labels=token. Nessun token speciale aggiunto al vocabolario. Nessun rischio di destabilizzare gli embedding esistenti.</p>
+
+<p><strong>Opzione B — chat template (ChatML / LLaMA-style)</strong></p>
+<pre>&lt;|im_start|&gt;user
+Redigi una convocazione...
+&lt;|im_end|&gt;
+&lt;|im_start|&gt;assistant
+Gentili condomini...
+&lt;|im_end|&gt;</pre>
+<p>Richiede l'aggiunta di token speciali (<code>&lt;|im_start|&gt;</code>, <code>&lt;|im_end|&gt;</code>, <code>user</code>, <code>assistant</code>) al vocabolario BPE-SPM. I nuovi embedding vengono inizializzati casualmente e non hanno training — fonte di instabilità nelle prime iterazioni. Appropriato per modelli destinati a interfaccia chat. <em>Overkill per Branch A.</em></p>
+
+<p><strong>Opzione C — testo puro con mascheratura by offset</strong></p>
+<p>Concatenazione raw senza separatore esplicito, con mascheratura calcolata dal numero di token del prompt. Fragile (un token in più/meno nel prompt sposta tutto) e non consigliata.</p>
+
+<div class="note safe">
+  <strong>Per Branch A (condominio, moto, scrittura): Opzione A.</strong> Separatore testuale esplicito, JSONL, nessun token speciale. Implementazione semplice, stabile, facile da ispezionare. Il modello impara a generare il testo dopo il separatore — sufficiente per tutti i task NLG del Branch A.
+</div>
+
+<!-- 6.6 Evaluation SFT -->
+<h3>6.6 · Evaluation specifica per SFT</h3>
+
+<p>La val loss su testo continuo (usata in pre-training e CPT) è insufficiente per valutare l'SFT. Una val loss bassa dice che il modello assegna alta probabilità ai token del test set — non che il testo generato abbia la struttura corretta.</p>
+
+<div class="tw">
+<table>
+  <thead><tr><th>Metrica</th><th>Cosa misura</th><th>Quando usarla</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>PPL su domain test set</strong></td>
+      <td>adattamento al dominio SFT (20% holdout del dataset)</td>
+      <td>segnale primario durante training</td>
+    </tr>
+    <tr>
+      <td><strong>PPL su Wikipedia probe</strong></td>
+      <td>catastrophic forgetting</td>
+      <td>segnale secondario durante training</td>
+    </tr>
+    <tr>
+      <td><strong>chrF / BLEU</strong></td>
+      <td>sovrapposizione con reference su task template (convocazione, verbale)</td>
+      <td>post-training su completions di test set</td>
+    </tr>
+    <tr>
+      <td><strong>Validità strutturale</strong></td>
+      <td>la convocazione ha data + luogo + ODG? il JSON è parsabile?</td>
+      <td>rule-based check automatizzabile</td>
+    </tr>
+    <tr>
+      <td><strong>Ispezione manuale</strong></td>
+      <td>qualità percepita, appropriatezza del registro, errori factual</td>
+      <td>dopo ogni esperimento, su 5–10 prompt non visti</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note">
+  <strong>La metrica più importante per Branch A è l'ispezione manuale.</strong> Con 200–300 esempi SFT, l'overfitting è raro e la val loss converge rapidamente. Ciò che non si vede dai numeri: se il modello genera una convocazione con la data sbagliata, un nome di condominio inventato, o un verbale privo dell'ordine del giorno. Questi errori si vedono solo leggendo l'output.
+</div>
+
 <div class="foot">
   <p>SLM · Fine-tuning e Valutazione — <a href="slm-journal.html">← Diario</a> · <a href="slm-docs.html">Documentazione completa</a> · <a href="index.html">Home</a></p>
 </div>

@@ -1,0 +1,281 @@
+<title>SLM — Case Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#0C0C0E;--surface:#18181C;--surface2:#20202A;
+  --text:#E8E8F0;--text-sec:#8888A0;--text-dim:#555568;
+  --accent:#D97706;--accent-l:#F59E0B;--accent-dim:#7A4200;
+  --border:#2A2A38;--mono:'IBM Plex Mono',monospace;
+  --run5:#2A1A00;--run5b:#D97706;
+  --nlg-bg:#0D1F3E;--nlg-c:#93C5FD;
+  --nlu-bg:#13271A;--nlu-c:#6EE7B7;
+  --ag-bg:#281A2A;--ag-c:#D8B4FE;
+  --both-bg:#1E1A0A;--both-c:#FDE68A;
+  --no-bg:#2D0A0A;--no-c:#FCA5A5;
+}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --bg:#F0EEF8;--surface:#FFFFFF;--surface2:#EEEAF6;
+  --text:#0C0C18;--text-sec:#504E6A;--text-dim:#A0A0BC;
+  --accent:#B45309;--accent-l:#92400E;--accent-dim:#FDE68A;
+  --border:#D8D4EC;
+  --run5:#FFFBEB;--run5b:#B45309;
+  --nlg-bg:#EFF6FF;--nlg-c:#1D4ED8;
+  --nlu-bg:#F0FDF4;--nlu-c:#15803D;
+  --ag-bg:#FAF5FF;--ag-c:#7E22CE;
+  --both-bg:#FFFBEB;--both-c:#92400E;
+  --no-bg:#FEF2F2;--no-c:#991B1B;
+}}
+:root[data-theme="light"]{
+  --bg:#F0EEF8;--surface:#FFFFFF;--surface2:#EEEAF6;
+  --text:#0C0C18;--text-sec:#504E6A;--text-dim:#A0A0BC;
+  --accent:#B45309;--accent-l:#92400E;--accent-dim:#FDE68A;
+  --border:#D8D4EC;
+  --run5:#FFFBEB;--run5b:#B45309;
+  --nlg-bg:#EFF6FF;--nlg-c:#1D4ED8;
+  --nlu-bg:#F0FDF4;--nlu-c:#15803D;
+  --ag-bg:#FAF5FF;--ag-c:#7E22CE;
+  --both-bg:#FFFBEB;--both-c:#92400E;
+  --no-bg:#FEF2F2;--no-c:#991B1B;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:0 20px 80px;font-size:14px;line-height:1.6}
+.page{max-width:820px;margin:0 auto;padding-top:52px}
+
+/* Header */
+.header{margin-bottom:48px}
+.eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+h1{font-size:1.5rem;font-weight:600;letter-spacing:-.02em;margin:0 0 8px;color:var(--text)}
+.subtitle{color:var(--text-sec);font-size:.9rem;margin:0 0 24px;max-width:560px}
+.run5-banner{background:var(--run5);border:1px solid var(--run5b);border-radius:8px;padding:12px 16px;font-size:.82rem;color:var(--text-sec);line-height:1.5}
+.run5-banner strong{color:var(--accent-l);display:block;margin-bottom:3px;font-size:.8rem;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+
+/* Panorama link — full width top */
+.panorama-link{display:flex;align-items:center;gap:16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px 20px;text-decoration:none;color:inherit;margin-bottom:32px;transition:border-color .15s,background .15s}
+.panorama-link:hover{border-color:var(--accent);background:var(--surface)}
+.pano-icon{font-size:1.8rem;flex-shrink:0;line-height:1}
+.pano-text .pano-title{font-weight:600;font-size:1rem;color:var(--text);margin-bottom:2px}
+.pano-text .pano-desc{font-size:.83rem;color:var(--text-sec)}
+.pano-arrow{margin-left:auto;font-size:1.1rem;color:var(--text-dim);flex-shrink:0}
+
+/* Section label */
+.section-label{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:40px}
+
+/* Card */
+.card{display:block;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;text-decoration:none;color:inherit;transition:border-color .15s,background .15s;position:relative}
+.card:hover{border-color:var(--accent);background:var(--surface2)}
+.card.run5{border-left:3px solid var(--run5b)}
+.card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+.card-icon{font-size:1.5rem;line-height:1;flex-shrink:0;margin-top:1px}
+.card-num{font-family:var(--mono);font-size:.7rem;color:var(--text-dim);letter-spacing:.05em}
+.card-title{font-weight:600;font-size:.9rem;color:var(--text);line-height:1.3;margin-top:2px}
+.card-desc{font-size:.82rem;color:var(--text-sec);line-height:1.5;margin-bottom:10px}
+.card-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-family:var(--mono);font-size:.68rem;font-weight:500;letter-spacing:.02em}
+.b-nlg{background:var(--nlg-bg);color:var(--nlg-c)}
+.b-nlu{background:var(--nlu-bg);color:var(--nlu-c)}
+.b-ag{background:var(--ag-bg);color:var(--ag-c)}
+.b-both{background:var(--both-bg);color:var(--both-c)}
+.b-no{background:var(--no-bg);color:var(--no-c)}
+.b-run5{background:var(--run5);color:var(--run5b);border:1px solid var(--run5b)}
+.card-link{margin-left:auto;font-family:var(--mono);font-size:.72rem;color:var(--accent);opacity:.7;flex-shrink:0}
+.card:hover .card-link{opacity:1}
+</style>
+
+<div class="page">
+
+  <div class="header">
+    <div class="eyebrow">SLM · 45M parametri · Run #5</div>
+    <h1>Case Study — Specializzazioni</h1>
+    <p class="subtitle">11 casi di studio per la specializzazione del modello SLM 45M italiano. Ogni pagina analizza paradigma, fattibilità, dataset, infrastruttura e raccomandazione.</p>
+    <div class="run5-banner">
+      <strong>Candidati Run #5 SFT</strong>
+      Assistente Motociclistico · Assistente alla Scrittura (stile personale) · Amministratore di Condominio
+    </div>
+  </div>
+
+  <a class="panorama-link" href="https://claude.ai/code/artifact/0d2264cb-d0b4-4349-9745-c18c4df4a158" target="_blank" rel="noopener">
+    <div class="pano-icon">🗺️</div>
+    <div class="pano-text">
+      <div class="pano-title">Panorama delle Specializzazioni</div>
+      <div class="pano-desc">Matrice di decisione per tutti i 10 casi proposti + 11 proposte aggiuntive — paradigma, fattibilità, vincoli, valore differenziante, priorità Run #5/#6/#7.</div>
+    </div>
+    <div class="pano-arrow">↗</div>
+  </a>
+
+  <div class="section-label">Casi proposti</div>
+  <div class="grid">
+
+    <a class="card run5" href="https://claude.ai/code/artifact/a497c46f-3e8c-4f81-a406-5773239487cc" target="_blank" rel="noopener">
+      <div class="card-top">
+        <div class="card-icon">🏍</div>
+        <div>
+          <div class="card-num">#01</div>
+          <div class="card-title">Assistente Motociclistico</div>
+        </div>
+      </div>
+      <div class="card-desc">Guida al touring, meccanica, manutenzione e normativa — dominio a vocabolario altamente specializzato.</div>
+      <div class="card-foot">
+        <span class="badge b-nlg">NLG</span>
+        <span class="badge b-run5">RUN #5</span>
+        <span class="card-link">↗</span>
+      </div>
+    </a>
+
+    <a class="card" href="https://claude.ai/code/artifact/7e7034bf-fb63-40cc-affd-32715986c1a4" target="_blank" rel="noopener">
+      <div class="card-top">
+        <div class="card-icon">📋</div>
+        <div>
+          <div class="card-num">#02</div>
+          <div class="card-title">Assistente Assicurativo</div>
+        </div>
+      </div>
+      <div class="card-desc">Classificazione sinistri da testo libero, estrazione entità, compilazione moduli strutturati.</div>
+      <div class="card-foot">
+        <span class="badge b-nlu">NLU</span>
+        <span class="card-link">↗</span>
+      </div>
+    </a>
+
+    <a class="card run5" href="https://claude.ai/code/artifact/8e6c623a-710e-4783-9807-6f106feac54b" target="_blank" rel="noopener">
+      <div class="card-top">
+        <div class="card-icon">✍️</div>
+        <div>
+          <div class="card-num">#03</div>
+          <div class="card-title">Assistente alla Scrittura</div>
+        </div>
+      </div>
+      <div class="card-desc">Continuazione nello stile personale, narrazione, blog — il caso più forte per fine-tuning sulla voce dell'autore.</div>
+      <div class="card-foot">
+        <span class="badge b-both">NLG+NLU</span>
+        <span class="badge b-run5">RUN #5</span>
+        <span class="card-link">↗</span>
+      </div>
+    </a>
+
+    <a class="card" href="https://claude.ai/code/artifact/e3a721dd-a905-4ab2-8fa8-3f70bc6bbf92" target="_blank" rel="noopener">
+      <div class="card-top">
+        <div class="card-icon">📅</div>
+        <div>
+          <div class="card-num">#04</div>
+          <div class="card-title">Assistente Personale</div>
+        </div>
+      </div>
+      <div class="card-desc">Agenda familiare, scadenze, calendar, promemoria medici e pet care — paradigma agentico.</div>
+      <div class="card-foot">
+        <span class="badge b-ag">AGENTIC</span>
+        <span class="card-link">↗</span>
+      </div>
+    </a>
+
+    <a class="card" href="https://claude.ai/code/artifact/e39af128-a0a5-4503-b1b1-10d188eac601" target="_blank" rel="noopener">
+      <div class="card-top">
+        <div class="card-icon">💻</div>
+        <div>
+          <div class="card-num">#05</div>
+          <div class="card-title">Assistente al Codice</div>
+        </div>
+      </div>
+      <div class="card-desc">Completamento per linguaggi niche (GDScript, HCL, DSL proprietari) — vantaggio strutturale su Copilot per corpus esaustivi.</div>
+      <div class="card-foot">
+        <span class="badge b-nlg">NLG</span>
+        <span class="card-link">↗</span>
+      </div>
+    </a>
+
+    <a class="card" href="https://claude.ai/code/artifact/caa40647-d69a-471a-86c7-858309afe2f2" target="_blank" rel="noopener">
+      <div class="card-top">
+        <div class="card-icon">🏠</div>
+        <div>
+          <div class="card-num">#06</div>
+          <div class="card-title">Agente Domotica</div>
+        </div>
+      </div>
+      <div class="card-desc">Comandi vocali per Home Assistant e MQTT — spazio dei comandi enumerabile, 50–150 esempi SFT sufficienti.</div>
+      <div class="card-foot">
+        <span class="badge b-nlu">NLU→JSON</span>
+        <span class="card-link">↗</span>
+      </div>
+    </a>
+
+    <a class="card" href="https://claude.ai/code/artifact/ecdce0fa-4545-4647-bfbb-5da044186831" target="_blank" rel="noopener">
+      <div class="card-top">
+        <div class="card-icon">🎬</div>
+        <div>
+          <div class="card-num">#07</div>
+          <div class="card-title">Gestione Audio e Video</div>
+        </div>
+      </div>
+      <div class="card-desc">Archivio multimediale, retrieval in linguaggio naturale — pipeline upstream Whisper + YOLO + EXIF necessaria.</div>
+      <div class="card-foot">
+        <span class="badge b-both">NLU+NLG</span>
+        <span class="card-link">↗</span>
+      </div>
+    </a>
+
+    <a class="card run5" href="https://claude.ai/code/artifact/eb5d5b0e-3aaa-418c-8f83-cfcb3a7f0cbc" target="_blank" rel="noopener">
+      <div class="card-top">
+        <div class="card-icon">🏢</div>
+        <div>
+          <div class="card-num">#08</div>
+          <div class="card-title">Amministratore di Condominio</div>
+        </div>
+      </div>
+      <div class="card-desc">Documentazione burocratica formulaica (convocazioni, verbali, diffide) — linguaggio ad altissima concentrazione next-token.</div>
+      <div class="card-foot">
+        <span class="badge b-nlg">NLG</span>
+        <span class="badge b-run5">RUN #5</span>
+        <span class="card-link">↗</span>
+      </div>
+    </a>
+
+    <a class="card" href="https://claude.ai/code/artifact/2975ba1e-b841-446b-9e2c-552467e3dbef" target="_blank" rel="noopener">
+      <div class="card-top">
+        <div class="card-icon">💰</div>
+        <div>
+          <div class="card-num">#09</div>
+          <div class="card-title">Gestione Conti Domestici</div>
+        </div>
+      </div>
+      <div class="card-desc">Categorizzazione spese e report narrativo da CSV bancari — Python per l'analisi, SLM per il testo.</div>
+      <div class="card-foot">
+        <span class="badge b-both">NLU+NLG</span>
+        <span class="card-link">↗</span>
+      </div>
+    </a>
+
+    <a class="card" href="https://claude.ai/code/artifact/77ad9b83-9132-478e-a392-110f6c6c7112" target="_blank" rel="noopener">
+      <div class="card-top">
+        <div class="card-icon">🗄️</div>
+        <div>
+          <div class="card-num">#10</div>
+          <div class="card-title">Analisi DB e Log Applicativi</div>
+        </div>
+      </div>
+      <div class="card-desc">Text-to-SQL su schema proprietario, classificazione pattern da log — zero data exposure, output verificabile.</div>
+      <div class="card-foot">
+        <span class="badge b-nlu">NLU→SQL</span>
+        <span class="card-link">↗</span>
+      </div>
+    </a>
+
+    <a class="card" href="https://claude.ai/code/artifact/5061d4b7-91e9-40b6-8340-5d93598ec879" target="_blank" rel="noopener">
+      <div class="card-top">
+        <div class="card-icon">🎸</div>
+        <div>
+          <div class="card-num">#11</div>
+          <div class="card-title">Trascrizione Musicale Chitarra</div>
+        </div>
+      </div>
+      <div class="card-desc">Audio → partitura + tablatura — core AMT non-LM (Basic Pitch + tab optimizer), SLM solo per annotazioni in italiano.</div>
+      <div class="card-foot">
+        <span class="badge b-no">NON-LM CORE</span>
+        <span class="card-link">↗</span>
+      </div>
+    </a>
+
+  </div>
+</div>

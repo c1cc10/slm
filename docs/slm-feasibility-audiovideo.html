@@ -1,0 +1,248 @@
+<title>SLM — Gestione Audio e Video</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F2F8;--surface:#FFFFFF;--surface2:#ECEAF4;
+  --text:#12101E;--text-sec:#4A4870;--accent:#16004A;--accent-l:#4A3A9A;
+  --border:#D0CEEA;--mono:'IBM Plex Mono',monospace;
+  --risk-bg:#FEF2F2;--risk-br:#FCA5A5;--risk-tx:#991B1B;
+  --ok-bg:#F0FDF4;--ok-br:#86EFAC;--ok-tx:#15803D;
+  --info-bg:#EFF6FF;--info-br:#93C5FD;--info-tx:#1D4ED8;
+  --warn-bg:#FFFBEB;--warn-br:#FDE68A;--warn-tx:#92400E;
+  --ind-bg:#F5F3FF;--ind-br:#A78BFA;--ind-tx:#3B0764;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0A0818;--surface:#120F24;--surface2:#1A1730;
+  --text:#DDD8F8;--text-sec:#8880C0;--accent:#9080D8;--accent-l:#B8AEFF;
+  --border:#282460;
+  --risk-bg:#2D0A0A;--risk-br:#7F1D1D;--risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;--ok-br:#1A4731;--ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E;--info-br:#1E3A6E;--info-tx:#93C5FD;
+  --warn-bg:#2A1A0A;--warn-br:#7A3A0A;--warn-tx:#FDE68A;
+  --ind-bg:#1A1038;--ind-br:#4C3A8A;--ind-tx:#C4B5FD;
+}}
+:root[data-theme="dark"]{
+  --bg:#0A0818;--surface:#120F24;--surface2:#1A1730;
+  --text:#DDD8F8;--text-sec:#8880C0;--accent:#9080D8;--accent-l:#B8AEFF;
+  --border:#282460;
+  --risk-bg:#2D0A0A;--risk-br:#7F1D1D;--risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;--ok-br:#1A4731;--ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E;--info-br:#1E3A6E;--info-tx:#93C5FD;
+  --warn-bg:#2A1A0A;--warn-br:#7A3A0A;--warn-tx:#FDE68A;
+  --ind-bg:#1A1038;--ind-br:#4C3A8A;--ind-tx:#C4B5FD;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.72;background:var(--bg);color:var(--text);padding:0 20px 80px}
+.page{max-width:720px;margin:0 auto;padding-top:52px}
+.eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-l);margin-bottom:8px}
+h1{font-size:1.7rem;font-weight:600;letter-spacing:-.02em;color:var(--text);margin:0 0 10px;text-wrap:balance}
+.subtitle{color:var(--text-sec);font-size:.92rem;line-height:1.6;margin:0 0 8px}
+.meta{font-family:var(--mono);font-size:.72rem;color:var(--text-sec);margin-bottom:44px;padding-bottom:20px;border-bottom:2px solid var(--accent)}
+h2{font-size:1rem;font-weight:600;color:var(--accent-l);margin:52px 0 14px;padding-top:36px;border-top:1px solid var(--border);display:flex;align-items:baseline;gap:10px}
+.sec-num{font-family:var(--mono);font-size:.7rem;color:var(--text-sec);letter-spacing:.05em}
+h3{font-size:.92rem;font-weight:600;color:var(--text);margin:28px 0 10px}
+p{margin:0 0 14px}p:last-child{margin-bottom:0}
+.callout{padding:14px 16px;border-radius:6px;border-left:3px solid;font-size:.88rem;line-height:1.6;margin:18px 0}
+.callout strong{display:block;margin-bottom:4px;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase}
+.callout.risk{background:var(--risk-bg);border-color:var(--risk-br);color:var(--risk-tx)}
+.callout.ok{background:var(--ok-bg);border-color:var(--ok-br);color:var(--ok-tx)}
+.callout.info{background:var(--info-bg);border-color:var(--info-br);color:var(--info-tx)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn-br);color:var(--warn-tx)}
+.callout.ind{background:var(--ind-bg);border-color:var(--ind-br);color:var(--ind-tx)}
+.pipeline{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch;margin:20px 0}
+.pipe-col{display:flex;flex-direction:column;gap:6px}
+.pipe-step{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:.83rem;line-height:1.45}
+.pipe-step .ps-label{font-family:var(--mono);font-size:.68rem;color:var(--text-sec);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
+.pipe-step.highlight{background:var(--ind-bg);border-color:var(--ind-br)}
+.pipe-step.highlight .ps-label{color:var(--ind-tx)}
+.pipe-arrow{display:flex;align-items:center;padding:0 12px;font-size:1.2rem;color:var(--text-sec)}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin:16px 0}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:.85rem}
+.feat-name{font-weight:600;font-size:.88rem;margin-bottom:4px;color:var(--text)}
+.feat-desc{color:var(--text-sec);font-size:.82rem;line-height:1.5;margin-bottom:8px}
+.verdict{font-size:.78rem;padding:2px 8px;border-radius:4px;display:inline-block;font-family:var(--mono)}
+.v-ok{background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-br)}
+.v-w{background:var(--warn-bg);color:var(--warn-tx);border:1px solid var(--warn-br)}
+.v-no{background:var(--risk-bg);color:var(--risk-tx);border:1px solid var(--risk-br)}
+pre{background:#0A0818;color:#B8AEFF;font-family:var(--mono);font-size:.79rem;padding:16px 18px;border-radius:8px;overflow-x:auto;line-height:1.55;margin:12px 0}
+code{font-family:var(--mono);font-size:.85em;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--accent-l)}
+.data-table{width:100%;border-collapse:collapse;font-size:.88rem;margin:16px 0;overflow-x:auto;display:block}
+.data-table th{text-align:left;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-sec);padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.data-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+.data-table tr:last-child td{border-bottom:none}
+.good{color:#15803D;font-weight:500}.warn-c{color:#92400E;font-weight:500}.bad{color:#991B1B;font-weight:500}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:.72rem;font-weight:500}
+.badge.go{background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-br)}
+.badge.dep{background:var(--warn-bg);color:var(--warn-tx);border:1px solid var(--warn-br)}
+</style>
+<div class="page">
+<div class="eyebrow">SLM · Analisi di specializzazione · Case Study #7</div>
+<h1>Gestione Audio e Video</h1>
+<p class="subtitle">Valutazione di fattibilità per organizzazione di archivi multimediali, ricerca in linguaggio naturale su metadati, generazione di descrizioni e sottotitoli da trascrizioni.</p>
+<div class="meta">Documento di progetto · v0.1 · 2026-09-29</div>
+
+<h2><span class="sec-num">01</span> Il vincolo principale: il LM non vede i file</h2>
+<p>Un SLM non può leggere un file audio o video. Non percepisce suoni né immagini. Tutto ciò che il LM può fare in questo caso d'uso dipende da <em>metadati</em> estratti da strumenti separati. Questa non è una limitazione di dimensione del modello — è strutturale per qualsiasi LM.</p>
+<p>Il sistema si divide in due layer ben distinti: un <strong>layer di estrazione</strong> (non-LM) che processa i file e popola un database di metadati, e un <strong>layer LM</strong> che usa quei metadati come interfaccia in linguaggio naturale.</p>
+<div class="callout warn">
+  <strong>Il problema del cold start</strong>
+  Se l'archivio esiste già (anni di foto e video non organizzati), il layer di estrazione
+  deve essere eseguito una volta su tutti i file prima che il LM possa fare qualcosa.
+  Per un archivio di 10.000 file, Whisper + EXIF + face recognition può richiedere
+  ore. Il LM è pronto in minuti; l'infrastruttura richiede giorni di setup.
+</div>
+
+<h2><span class="sec-num">02</span> Pipeline di estrazione metadati</h2>
+<div class="pipeline">
+  <div class="pipe-col">
+    <div class="pipe-step">
+      <div class="ps-label">Immagini</div>
+      EXIF: data, GPS, camera model<br>Face recognition: persone presenti<br>YOLO: oggetti, scene
+    </div>
+    <div class="pipe-step">
+      <div class="ps-label">Audio</div>
+      ID3/FLAC tags: artista, album, anno<br>Whisper: trascrizione parlato<br>Fingerprint: duplicati
+    </div>
+    <div class="pipe-step">
+      <div class="ps-label">Video</div>
+      FFprobe: durata, risoluzione, codec<br>EXIF: data registrazione<br>Whisper: trascrizione audio<br>Frame sampling: scene chiave
+    </div>
+  </div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-col">
+    <div class="pipe-step highlight">
+      <div class="ps-label">SQLite media DB</div>
+      file_path, type, date, duration<br>persons[], objects[], location<br>transcript_text, tags[]<br>description (generata da LM)
+    </div>
+    <div class="pipe-step highlight">
+      <div class="ps-label">SLM 45M</div>
+      NL query → structured search<br>Metadata → descrizione IT<br>Transcript → sintesi/sinossi<br>Metadata → nome file/cartella
+    </div>
+  </div>
+</div>
+
+<h2><span class="sec-num">03</span> Funzionalità e fattibilità</h2>
+<div class="feat-grid">
+  <div class="feat-card">
+    <div class="feat-name">Ricerca NL su archivio</div>
+    <div class="feat-desc">"Trova i video del compleanno di Marco del 2022." → query strutturata su DB.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Generazione nomi file</div>
+    <div class="feat-desc">Da metadati → nome file descrittivo: <code>2022-06-15_compleanno_marco_giardino.mp4</code></div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Suggerimento struttura cartelle</div>
+    <div class="feat-desc">Analisi cluster di eventi → propone organizzazione per anno/evento/persona.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Sinossi da trascrizione</div>
+    <div class="feat-desc">Transcript Whisper breve (< 512 token) → riassunto italiano. Podcast, riunioni, interviste.</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Descrizioni per libreria</div>
+    <div class="feat-desc">Metadati evento → didascalia leggibile: "Festa di laurea di Giulia, giugno 2022, 23 foto."</div>
+    <span class="verdict v-ok">ALTA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Sinossi da trascrizione lunga</div>
+    <div class="feat-desc">Podcast di 1h → trascrizione > 8k token. Richiede chunking + aggregazione progressiva.</div>
+    <span class="verdict v-w">MEDIA</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Riconoscimento persone</div>
+    <div class="feat-desc">Dipende dal modello face recognition upstream, non dal LM. Se riconosce, LM usa il nome.</div>
+    <span class="verdict v-w">UPSTREAM</span>
+  </div>
+  <div class="feat-card">
+    <div class="feat-name">Comprensione contenuto visivo</div>
+    <div class="feat-desc">Il LM non vede fotogrammi. Dipende da YOLO/vision upstream. LM usa solo i tag estratti.</div>
+    <span class="verdict v-no">UPSTREAM</span>
+  </div>
+</div>
+
+<h2><span class="sec-num">04</span> Ruolo del SLM: due task distinti</h2>
+<h3>Task 1 — NL → query strutturata (NLU)</h3>
+<p>L'utente chiede in italiano; il LM traduce in criteri di ricerca per SQLite. Identico al caso assistente personale: alta fattibilità, contesto breve, output verificabile.</p>
+<pre>
+// NL → query
+{
+  "input": "tutte le registrazioni dove c'è Marco, estate 2021",
+  "output": {
+    "type": ["video", "audio"],
+    "persons": ["Marco"],
+    "date_from": "2021-06-01",
+    "date_to": "2021-08-31"
+  }
+}
+
+// NL → query per contenuto
+{
+  "input": "foto scattate in montagna",
+  "output": {"type": "image", "tags": ["montagna"], "location_type": "mountain"}
+}</pre>
+
+<h3>Task 2 — metadati → testo italiano (NLG)</h3>
+<p>Dal record strutturato del database, il LM genera nomi file, didascalie, sinossi brevi. Stesso paradigma del caso moto: dati strutturati → testo. Alta fattibilità.</p>
+<pre>
+// Metadati → nome file
+{
+  "input": {"type":"video","date":"2022-06-15","persons":["Giulia"],"event":"laurea","location":"Milano"},
+  "output": "2022-06-15_laurea_giulia_milano.mp4"
+}
+
+// Metadati → didascalia libreria
+{
+  "input": {"type":"album","event":"vacanza","location":"Sardegna","date":"2023-08","count":47,"persons":["famiglia"]},
+  "output": "Vacanza in Sardegna, agosto 2023. 47 foto con tutta la famiglia."
+}
+
+// Transcript breve → sinossi
+{
+  "input": {"transcript": "Oggi parleremo del nuovo aggiornamento...", "duration_min": 12, "title": "Episodio 42"},
+  "output": "Episodio 42: aggiornamenti sul progetto, roadmap per il secondo trimestre e discussione sulle nuove funzionalità annunciate la settimana scorsa."
+}</pre>
+
+<h2><span class="sec-num">05</span> Stack tecnico upstream</h2>
+<table class="data-table">
+  <thead><tr><th>Tool</th><th>Task</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td><code>Whisper (openai/whisper)</code></td><td>Trascrizione audio/video in italiano</td><td class="good">Open source, gira in locale, modello medium ~769MB</td></tr>
+    <tr><td><code>ExifTool</code></td><td>Metadati EXIF foto e video</td><td class="good">Gratuito, velocissimo, nessun modello ML</td></tr>
+    <tr><td><code>FFprobe</code></td><td>Metadati tecnici video</td><td class="good">Parte di FFmpeg, zero ML</td></tr>
+    <tr><td><code>face_recognition</code> (dlib)</td><td>Identificazione persone</td><td class="warn-c">Richiede corpus foto etichettate per ogni persona</td></tr>
+    <tr><td><code>YOLO v8</code></td><td>Oggetti e scene in frame</td><td class="warn-c">~25MB, ma richiede campionamento frame video</td></tr>
+    <tr><td><code>Mutagen</code></td><td>Tag ID3/FLAC/MP4 audio</td><td class="good">Python puro, nessun modello</td></tr>
+  </tbody>
+</table>
+
+<h2><span class="sec-num">06</span> Dataset SFT</h2>
+<p>Il SFT ha due track con dataset separati. Volume totale: 400–600 esempi.</p>
+<ul style="color:var(--text-sec);font-size:.92rem;line-height:1.8">
+  <li><strong>Track NL → query</strong> (200–300 esempi): coppie (domanda NL, criteri JSON). Costruibile sinteticamente: genera domande da query SQL reali dell'archivio.</li>
+  <li><strong>Track metadati → testo</strong> (200–300 esempi): record metadati → nome file / didascalia / sinossi. Costruibile sinteticamente: genera metadati casuali, scrivi manualmente le descrizioni target.</li>
+</ul>
+
+<h2><span class="sec-num">07</span> Raccomandazione</h2>
+<div class="callout ok">
+  <strong>Il LM è pronto; l'infrastruttura è la sfida</strong>
+  La parte LM (SFT, deployment) richiede 3–5 giorni.
+  La pipeline upstream (Whisper + EXIF + face_recognition + YOLO su archivio esistente)
+  richiede 1–3 settimane di setup e ore di processing per archivi grandi.
+  Consiglio: avvia il SFT del LM subito; costruisci la pipeline in parallelo.
+  Il valore più immediato è la ricerca NL + generazione nomi file, che richiede
+  solo EXIF (rapido) e nessun modello ML aggiuntivo.
+</div>
+<div class="callout ind">
+  <strong>Connessione con la roadmap multimodale</strong>
+  L'integrazione YOLO v3 già pianificata nella roadmap del progetto produce
+  i tag visivi necessari per questo caso d'uso. I due track convergono:
+  il modello YOLO genera tag → il LM li usa per ricerca e descrizione.
+  Questo è il caso d'uso naturale per il milestone multimodale.
+</div>
+</div>

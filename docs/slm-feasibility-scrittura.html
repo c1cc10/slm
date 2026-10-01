@@ -1,0 +1,583 @@
+<title>SLM — Assistente alla Scrittura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --bg:       #F4F3EF;
+  --surface:  #FFFFFF;
+  --surface2: #ECEAE4;
+  --text:     #1C1A15;
+  --text-sec: #5E5C52;
+  --accent:   #1A3A28;
+  --accent-l: #2D6347;
+  --border:   #D6D3CA;
+  --mono:     'IBM Plex Mono', monospace;
+
+  --risk-bg:  #FEF2F2; --risk-br: #FCA5A5; --risk-tx: #991B1B;
+  --ok-bg:    #F0FDF4; --ok-br:   #86EFAC; --ok-tx:   #15803D;
+  --info-bg:  #EFF6FF; --info-br: #93C5FD; --info-tx: #1D4ED8;
+  --warn-bg:  #FFFBEB; --warn-br: #FDE68A; --warn-tx: #92400E;
+  --lit-bg:   #FDF8F0; --lit-br:  #D4A853; --lit-tx:  #7B4F12;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#111009; --surface:#1C1B12; --surface2:#272519;
+    --text:#E8E4D8; --text-sec:#908C7A; --accent:#5C9E78; --accent-l:#7DC49A;
+    --border:#322F22;
+    --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+    --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+    --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+    --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+    --lit-bg:#2A1E08;  --lit-br:#7B4F12;  --lit-tx:#F3C97A;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#111009; --surface:#1C1B12; --surface2:#272519;
+  --text:#E8E4D8; --text-sec:#908C7A; --accent:#5C9E78; --accent-l:#7DC49A;
+  --border:#322F22;
+  --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+  --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+  --lit-bg:#2A1E08;  --lit-br:#7B4F12;  --lit-tx:#F3C97A;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px; line-height: 1.72;
+  background: var(--bg); color: var(--text);
+  padding: 0 20px 80px;
+}
+.page { max-width: 720px; margin: 0 auto; padding-top: 52px; }
+
+.eyebrow {
+  font-family: var(--mono); font-size: 0.68rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 8px;
+}
+h1 {
+  font-size: 1.7rem; font-weight: 600; letter-spacing: -0.02em;
+  color: var(--text); margin: 0 0 10px; text-wrap: balance;
+}
+.subtitle {
+  color: var(--text-sec); font-size: 0.92rem; line-height: 1.6; margin: 0 0 8px;
+}
+.meta {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--text-sec);
+  margin-bottom: 44px; padding-bottom: 20px; border-bottom: 2px solid var(--accent);
+}
+h2 {
+  font-size: 1.0rem; font-weight: 600; color: var(--accent);
+  margin: 52px 0 14px; padding-top: 36px; border-top: 1px solid var(--border);
+  letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 10px;
+}
+.sec-num { font-family: var(--mono); font-size: 0.7rem; color: var(--text-sec); letter-spacing: 0.05em; }
+h3 { font-size: 0.92rem; font-weight: 600; color: var(--text); margin: 28px 0 10px; }
+p { margin: 0 0 14px; }
+p:last-child { margin-bottom: 0; }
+
+.callout {
+  padding: 14px 16px; border-radius: 6px; border-left: 3px solid;
+  font-size: 0.88rem; line-height: 1.6; margin: 18px 0;
+}
+.callout strong { display: block; margin-bottom: 4px; font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.callout.risk  { background: var(--risk-bg); border-color: var(--risk-br); color: var(--risk-tx); }
+.callout.ok    { background: var(--ok-bg);   border-color: var(--ok-br);   color: var(--ok-tx); }
+.callout.info  { background: var(--info-bg); border-color: var(--info-br); color: var(--info-tx); }
+.callout.warn  { background: var(--warn-bg); border-color: var(--warn-br); color: var(--warn-tx); }
+.callout.lit   { background: var(--lit-bg);  border-color: var(--lit-br);  color: var(--lit-tx); }
+
+/* Feature spectrum */
+.spectrum {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.spec-row {
+  display: grid;
+  grid-template-columns: 200px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.87rem;
+}
+.spec-row .feat { font-weight: 500; }
+.spec-row .bar-track {
+  height: 6px; background: var(--surface2);
+  border-radius: 3px; overflow: hidden;
+}
+.spec-row .bar-fill { height: 100%; border-radius: 3px; }
+.bar-high   { background: #16A34A; }
+.bar-medium { background: #D97706; }
+.bar-low    { background: #DC2626; }
+.spec-label { font-family: var(--mono); font-size: 0.68rem; white-space: nowrap; }
+.sl-high   { color: #16A34A; }
+.sl-medium { color: #D97706; }
+.sl-low    { color: #DC2626; }
+
+/* Context diagram */
+.ctx-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+.ctx-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 0.85rem;
+}
+.ctx-card .doc-type {
+  font-weight: 600; font-size: 0.9rem;
+  margin-bottom: 4px; color: var(--text);
+}
+.ctx-card .tokens {
+  font-family: var(--mono); font-size: 0.78rem;
+  color: var(--text-sec); margin-bottom: 8px;
+}
+.ctx-card .verdict {
+  font-size: 0.8rem; padding: 2px 8px; border-radius: 4px;
+  display: inline-block; font-family: var(--mono);
+}
+.v-ok  { background: var(--ok-bg);   color: var(--ok-tx);   border: 1px solid var(--ok-br); }
+.v-w   { background: var(--warn-bg); color: var(--warn-tx); border: 1px solid var(--warn-br); }
+.v-no  { background: var(--risk-bg); color: var(--risk-tx); border: 1px solid var(--risk-br); }
+
+/* Tables */
+.data-table {
+  width: 100%; border-collapse: collapse; font-size: 0.88rem;
+  margin: 16px 0; overflow-x: auto; display: block;
+}
+.data-table th {
+  text-align: left; font-family: var(--mono);
+  font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-sec); padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.data-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+.data-table tr:last-child td { border-bottom: none; }
+.good { color: #15803D; font-weight: 500; }
+.warn-c { color: #92400E; font-weight: 500; }
+.bad { color: #991B1B; font-weight: 500; }
+.mono { font-family: var(--mono); font-size: 0.82rem; }
+
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 500;
+}
+.badge.go  { background: var(--ok-bg);   color: var(--ok-tx);   border: 1px solid var(--ok-br); }
+.badge.no  { background: var(--risk-bg); color: var(--risk-tx); border: 1px solid var(--risk-br); }
+.badge.dep { background: var(--warn-bg); color: var(--warn-tx); border: 1px solid var(--warn-br); }
+
+pre {
+  background: #111827; color: #A8C4D8;
+  font-family: var(--mono); font-size: 0.79rem;
+  padding: 16px 18px; border-radius: 8px;
+  overflow-x: auto; line-height: 1.55; margin: 12px 0;
+}
+code {
+  font-family: var(--mono); font-size: 0.85em;
+  background: var(--surface2); padding: 1px 5px;
+  border-radius: 3px; color: var(--accent-l);
+}
+
+blockquote {
+  border-left: 3px solid var(--accent);
+  margin: 18px 0; padding: 12px 18px;
+  background: var(--surface); border-radius: 0 6px 6px 0;
+  font-style: italic; color: var(--text-sec);
+}
+</style>
+
+<div class="page">
+
+<div class="eyebrow">SLM · Analisi di specializzazione · Case Study #3</div>
+<h1>Assistente alla Scrittura Creativa</h1>
+<p class="subtitle">Valutazione di fattibilità per critica stilistica, verifica fatti, analisi narrativa, generazione di sinossi e continuazione nello stile personale.</p>
+<div class="meta">Documento di progetto · v0.1 · 2026-09-29</div>
+
+<!-- ── 1. IL PROBLEMA DEL CONTESTO ───────────────────────────── -->
+<h2><span class="sec-num">01</span> Il vincolo primario: il contesto</h2>
+
+<p>
+  Prima di analizzare le funzionalità, occorre stabilire il vincolo strutturale
+  che condiziona tutte le scelte. Un assistente alla scrittura lavora su testi lunghi.
+  Il SLM ha <code>max_seq_len = 512 token</code>.
+</p>
+
+<div class="ctx-grid">
+  <div class="ctx-card">
+    <div class="doc-type">Paragrafo</div>
+    <div class="tokens">50–150 token</div>
+    <span class="verdict v-ok">COMPATIBILE</span>
+  </div>
+  <div class="ctx-card">
+    <div class="doc-type">Scena breve</div>
+    <div class="tokens">200–400 token</div>
+    <span class="verdict v-ok">COMPATIBILE</span>
+  </div>
+  <div class="ctx-card">
+    <div class="doc-type">Articolo / blog</div>
+    <div class="tokens">700–3.000 token</div>
+    <span class="verdict v-w">PARZIALE</span>
+  </div>
+  <div class="ctx-card">
+    <div class="doc-type">Racconto</div>
+    <div class="tokens">1.300–6.700 token</div>
+    <span class="verdict v-no">TRONCATO</span>
+  </div>
+  <div class="ctx-card">
+    <div class="doc-type">Capitolo romanzo</div>
+    <div class="tokens">4.000–11.000 token</div>
+    <span class="verdict v-no">IMPOSSIBILE</span>
+  </div>
+  <div class="ctx-card">
+    <div class="doc-type">Sceneggiatura</div>
+    <div class="tokens">24.000–32.000 token</div>
+    <span class="verdict v-no">IMPOSSIBILE</span>
+  </div>
+</div>
+
+<p>
+  Il SLM 512 non può "leggere" un racconto intero, figuriamoci un romanzo.
+  Qualsiasi funzionalità che richieda comprensione della struttura complessiva
+  (coerenza dei personaggi, arco narrativo, coerenza dei fatti su più scene)
+  non è realizzabile senza un livello architetturale che gestisce il contesto lungo.
+</p>
+
+<div class="callout warn">
+  <strong>Implicazione per il Run #5</strong>
+  Se il target è l'assistente alla scrittura su testi lunghi, il Run #5 dovrebbe
+  aumentare <code>max_seq_len</code> da 512 a 1024 o 2048.
+  Con RoPE questo è tecnicamente possibile senza ripartire da zero,
+  ma richiede SFT su sequenze della nuova lunghezza.
+  Un contesto di 2048 token copre scene e articoli; non copre capitoli interi.
+</div>
+
+<!-- ── 2. SPETTRO DI FATTIBILITÀ ──────────────────────────────── -->
+<h2><span class="sec-num">02</span> Spettro di fattibilità per funzionalità</h2>
+
+<div class="spectrum">
+  <div class="spec-row">
+    <span class="feat">Continuazione stile personale</span>
+    <div class="bar-track"><div class="bar-fill bar-high" style="width:92%"></div></div>
+    <span class="spec-label sl-high">ALTA</span>
+  </div>
+  <div class="spec-row">
+    <span class="feat">Riscrittura dialoghi (breve)</span>
+    <div class="bar-track"><div class="bar-fill bar-high" style="width:78%"></div></div>
+    <span class="spec-label sl-high">ALTA</span>
+  </div>
+  <div class="spec-row">
+    <span class="feat">Critica locale (paragrafo)</span>
+    <div class="bar-track"><div class="bar-fill bar-medium" style="width:58%"></div></div>
+    <span class="spec-label sl-medium">MEDIA</span>
+  </div>
+  <div class="spec-row">
+    <span class="feat">Estrazione schema da scena</span>
+    <div class="bar-track"><div class="bar-fill bar-medium" style="width:52%"></div></div>
+    <span class="spec-label sl-medium">MEDIA</span>
+  </div>
+  <div class="spec-row">
+    <span class="feat">Sinossi da riassunto fornito</span>
+    <div class="bar-track"><div class="bar-fill bar-medium" style="width:48%"></div></div>
+    <span class="spec-label sl-medium">MEDIA</span>
+  </div>
+  <div class="spec-row">
+    <span class="feat">Critica strutturale (opera intera)</span>
+    <div class="bar-track"><div class="bar-fill bar-low" style="width:18%"></div></div>
+    <span class="spec-label sl-low">BASSA</span>
+  </div>
+  <div class="spec-row">
+    <span class="feat">Verifica fatti citati</span>
+    <div class="bar-track"><div class="bar-fill bar-low" style="width:12%"></div></div>
+    <span class="spec-label sl-low">BASSA</span>
+  </div>
+  <div class="spec-row">
+    <span class="feat">Analisi arco personaggi (intero romanzo)</span>
+    <div class="bar-track"><div class="bar-fill bar-low" style="width:8%"></div></div>
+    <span class="spec-label sl-low">NON FATTIBILE</span>
+  </div>
+</div>
+
+<!-- ── 3. OPPORTUNITÀ: STILE PERSONALE ───────────────────────── -->
+<h2><span class="sec-num">03</span> L'opportunità forte: stile personale</h2>
+
+<p>
+  La continuazione nello stile personale è il caso d'uso dove un modello piccolo
+  addestrato su un corpus specifico batte sistematicamente modelli grandi generici.
+  GPT-4 non ha mai letto i tuoi testi; un SLM 45M addestrato esclusivamente
+  sul tuo corpus letterario conosce il tuo ritmo, le tue strutture sintattiche preferite,
+  i tuoi marcatori lessicali.
+</p>
+
+<blockquote>
+  Il problema della continuazione nello stile non è la dimensione del modello,
+  è la specificità del corpus. Un modello piccolo specializzato su 50.000 parole
+  di un autore specifico supera un modello grande addestrato su internet.
+</blockquote>
+
+<p>
+  Il progetto ha già <code>data/corpus_letterario.txt</code>: narrativa contemporanea
+  italiana in prima persona. Questo è il materiale base.
+  Il SFT su questo corpus per la continuazione di stile è la funzionalità
+  più immediata e differenziante dell'intero case study.
+</p>
+
+<div class="callout lit">
+  <strong>Due corpora, due modelli possibili</strong>
+  Wikipedia IT (corpus attuale) → registro enciclopedico, terza persona, fatti.
+  Corpus letterario personale → registro narrativo, prima persona, voce.
+  Questi richiedono due SFT distinti o un modello che impara a distinguere
+  i registri da un prompt di sistema. La transizione da un registro all'altro
+  nel base model è già visibile: il modello "sceglie" stile in base al prompt.
+</div>
+
+<!-- ── 4. VERIFICA FATTI ───────────────────────────────────────── -->
+<h2><span class="sec-num">04</span> Perché la verifica dei fatti è il problema più difficile</h2>
+
+<p>
+  La verifica dei fatti è strutturalmente incompatibile con un LM standalone,
+  indipendentemente dalla dimensione. Un LM genera testo plausibile;
+  non verifica — non ha questa operazione nella sua architettura.
+</p>
+
+<div class="callout risk">
+  <strong>Il problema della verifica</strong>
+  Un LM che "verifica un fatto" sta in realtà generando la risposta più probabile
+  in base al suo training. Se il training contiene un fatto errato,
+  lo "verificherà" come corretto con alta confidenza.
+  Se il fatto è posteriore al training, lo inventerà.
+  Se il fatto è raro nel corpus, genererà qualcosa di plausibile ma sbagliato.
+  Questo non è un limite del SLM 45M: è un limite strutturale di tutti gli LM.
+</div>
+
+<p>
+  L'unica architettura che permette verifica affidabile combina:
+</p>
+<ol style="line-height:1.8;color:var(--text-sec);font-size:0.92rem;">
+  <li><strong>Estrazione claim</strong> — l'LM identifica le affermazioni fattuali nel testo</li>
+  <li><strong>Retrieval</strong> — un retriever cerca fonti verificate per ogni claim</li>
+  <li><strong>Confronto</strong> — l'LM o una rule-based layer compara claim con fonte</li>
+  <li><strong>Output</strong> — verdetto con fonte citata, non verità assoluta</li>
+</ol>
+
+<p>
+  Il SLM 45M può fare il passo 1 (estrazione claim) e parzialmente il passo 3
+  su testi brevi. Il retriever è un sistema separato (Elasticsearch, DuckDuckGo API,
+  Wikipedia API). Senza retriever, la "verifica" è solo allucinazione strutturata.
+</p>
+
+<!-- ── 5. FUNZIONALITÀ NARRATIVE ──────────────────────────────── -->
+<h2><span class="sec-num">05</span> Sinossi, schemi, personaggi</h2>
+
+<p>
+  Queste funzionalità richiedono che il modello abbia letto l'opera completa.
+  Con un contesto di 512 token, non è possibile. Esistono però due approcci
+  che rendono alcune di queste funzionalità realizzabili.
+</p>
+
+<h3>Approccio 1: chunking + aggregazione</h3>
+<p>
+  Si divide il testo in chunk da 400 token, si estrae da ciascuno le
+  informazioni strutturali (personaggi presenti, evento principale, setting),
+  poi si aggrega. L'LM lavora su chunk, non sul testo completo.
+  Funziona per schemi lineari; perde le relazioni a lungo raggio.
+</p>
+
+<pre>
+// Schema per estrazione da chunk
+{
+  "chunk_id": 3,
+  "personaggi_presenti": ["Marco", "Elena"],
+  "evento_principale": "litigio in cucina",
+  "setting": "appartamento, sera",
+  "tono": "tensione",
+  "foreshadowing": null,
+  "nuove_informazioni": "Elena menziona il viaggio di Marco a Berlino"
+}</pre>
+
+<h3>Approccio 2: sinossi da riassunto fornito dall'utente</h3>
+<p>
+  L'utente scrive un riassunto dell'opera (abbastanza breve da entrare nel contesto);
+  il modello lo trasforma in sinossi, scheda personaggi, o pitch editoriale.
+  Il modello non legge l'opera originale: lavora sul riassunto.
+  Questo è un task di riformattazione, non di comprensione.
+</p>
+
+<div class="callout info">
+  <strong>Caso d'uso realistico</strong>
+  "Ecco la trama in 300 parole. Trasformala in: (a) sinossi per editore,
+  (b) scheda personaggi, (c) pitch di una pagina."
+  Questo funziona bene a 45M con SFT su esempi di questo tipo.
+  L'autore mantiene il controllo della sintesi; il modello cura la forma.
+</div>
+
+<!-- ── 6. DATASET SFT ─────────────────────────────────────────── -->
+<h2><span class="sec-num">06</span> Dataset SFT: struttura</h2>
+
+<h3>Track 1: continuazione stile (corpus personale)</h3>
+<p>
+  Addestramento auto-regressivo diretto sul corpus letterario:
+  il modello impara la distribuzione del testo dell'autore.
+  Non servono annotazioni: il corpus stesso è il supervisore.
+  200-500 passi di SFT su sequenze da 256-512 token estratte dal corpus.
+</p>
+
+<h3>Track 2: trasformazioni narrative (SFT con esempi)</h3>
+<pre>
+// Riscrittura dialogo (tono → altro tono)
+{
+  "input": {
+    "task": "riscrivi_dialogo",
+    "tono_originale": "formale",
+    "tono_target": "colloquiale teso",
+    "testo": "— Desidera qualcosa? — chiese l'uomo.\n— No, grazie — risposi io."
+  },
+  "output": "— Vuoi qualcosa? — L'uomo mi fissava.\n— No. — Tenni lo sguardo basso."
+}
+
+// Critica locale (paragrafo)
+{
+  "input": {
+    "task": "critica_stilistica",
+    "testo": "Era una bella giornata di sole. Marco uscì di casa. Si sentiva felice."
+  },
+  "output": {
+    "osservazioni": [
+      "Le tre frasi brevi creano un ritmo spezzato che non si adatta a un contesto disteso.",
+      "Gli aggettivi valutativi (bella, felice) dicono senza mostrare.",
+      "Suggerimento: mostrare il calore del sole su un dettaglio concreto."
+    ],
+    "riscrittura_proposta": "Il sole batteva sul marciapiede in lastre di calore. Marco chiuse la porta dietro di sé e rimase un momento immobile sul gradino."
+  }
+}
+
+// Sinossi da trama fornita
+{
+  "input": {
+    "task": "sinossi_editoriale",
+    "trama": "Un fotografo torna al paese natale dopo 20 anni..."
+  },
+  "output": "Una storia di ritorno e rimozione. Un fotografo che ha costruito la sua carriera sull'oblio..."
+}</pre>
+
+<p>
+  Volume: 300-600 esempi per Track 2 sono sufficienti per la specializzazione.
+  Track 1 non richiede esempi annotati.
+</p>
+
+<!-- ── 7. COMPARAZIONE CON I CASI PRECEDENTI ──────────────────── -->
+<h2><span class="sec-num">07</span> Comparazione con i tre case study</h2>
+
+<table class="data-table">
+  <thead>
+    <tr><th>Criterio</th><th>Moto</th><th>Assicurativo</th><th>Scrittura</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Ruolo LM</strong></td>
+      <td>NLG (voce)</td>
+      <td>NLU (estrazione)</td>
+      <td>NLG + NLU (creazione + comprensione)</td>
+    </tr>
+    <tr>
+      <td><strong>Vincolo critico</strong></td>
+      <td>Safety fisica</td>
+      <td>GDPR / compliance</td>
+      <td>Lunghezza contesto</td>
+    </tr>
+    <tr>
+      <td><strong>Ctx 512 token</strong></td>
+      <td class="good">Sufficiente</td>
+      <td class="warn-c">Borderline</td>
+      <td class="bad">Insufficiente per la maggioranza dei task</td>
+    </tr>
+    <tr>
+      <td><strong>Hallucination risk</strong></td>
+      <td class="good">Basso (template)</td>
+      <td class="warn-c">Medio (campi null)</td>
+      <td class="bad">Alto (verifica fatti, critica strutturale)</td>
+    </tr>
+    <tr>
+      <td><strong>Dataset costruibile senza dati reali</strong></td>
+      <td class="good">Sì (sintetico)</td>
+      <td class="good">Sì (sintetico)</td>
+      <td class="good">Sì (corpus personale + sintetico)</td>
+    </tr>
+    <tr>
+      <td><strong>Funzionalità core con 45M</strong></td>
+      <td class="good">Tutte</td>
+      <td class="warn-c">Classificazione + estrazione breve</td>
+      <td class="warn-c">Solo stile personale + task locali</td>
+    </tr>
+    <tr>
+      <td><strong>Valore differenziante del modello piccolo</strong></td>
+      <td class="warn-c">Medio (velocità locale)</td>
+      <td class="good">Alto (privacy on-premise)</td>
+      <td class="good">Molto alto (stile personale)</td>
+    </tr>
+    <tr>
+      <td><strong>Necessità modello > 1B</strong></td>
+      <td class="good">No</td>
+      <td class="warn-c">Per Q&A tecnica aperta</td>
+      <td class="bad">Sì, per analisi strutturale completa</td>
+    </tr>
+    <tr>
+      <td><strong>Priorità consigliata</strong></td>
+      <td><span class="badge go">Run #5</span></td>
+      <td><span class="badge dep">v2</span></td>
+      <td><span class="badge dep">Track 1 in Run #5</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ── 8. DECISIONE ───────────────────────────────────────────── -->
+<h2><span class="sec-num">08</span> Decisione e strategia</h2>
+
+<p>
+  Il caso scrittura ha la caratteristica di essere <em>parzialmente</em> adatto
+  al SLM 45M. La divisione è netta:
+</p>
+
+<div class="callout ok">
+  <strong>Adatto al SLM 45M — Run #5 Track 1</strong>
+  Continuazione stile personale: addestramento diretto su <code>corpus_letterario.txt</code>.
+  Riscrittura dialoghi su input brevi. Sinossi da trama fornita (riformattazione).
+  Critiche locali su paragrafo singolo. Questi task funzionano
+  dentro 512 token e valorizzano la specificità del modello piccolo.
+</div>
+
+<div class="callout risk">
+  <strong>Non adatto al SLM 45M — richiede architettura diversa</strong>
+  Verifica fatti: strutturalmente impossibile senza retriever esterno, indipendentemente
+  dalla dimensione del modello. Analisi strutturale di opere lunghe: richiede contesto
+  almeno 8k-32k e modello 3B+. Critica stilistica globale con coerenza: idem.
+</div>
+
+<p>
+  La strategia ottimale è costruire il Track 1 (stile personale) come parte del Run #5
+  assieme al track motociclistico — sono due SFT con obiettivi distinti sullo stesso
+  modello base, o su due modelli separati se le interferenze sono problematiche.
+  Il valore immediato e dimostrabile è nella continuazione di stile:
+  è la funzionalità che non può essere replicata da GPT-4 senza il corpus personale.
+</p>
+
+<div class="callout lit">
+  <strong>La tesi del modello piccolo per la scrittura</strong>
+  GPT-4 ha letto miliardi di testi. Non ha letto i tuoi.
+  Un modello da 45M addestrato sul tuo corpus sa come finisci una frase,
+  quali costruzioni sintattiche eviti, qual è il tuo ritmo nel dialogo.
+  Per la scrittura personale, questa specificità vale più della capacità generica.
+  Il modello piccolo non è il fallback del modello grande: è uno strumento diverso.
+</div>
+
+</div>
