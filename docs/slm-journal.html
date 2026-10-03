@@ -2021,6 +2021,34 @@ tmux attach -t run5</div>
 
 <div class="narr">La generazione a step 1000 è già enciclopedica e grammaticalmente corretta. Il testo descrive un edificio storico con lessico architettonico specifico: segnale che il modello sta assorbendo il registro di CulturaX, diverso da Wikipedia.</div>
 
+<h3>Checkpoint Step 2500 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>2500 / 8000 (shard 1, 31%)</td></tr>
+    <tr><td>Train loss</td><td>4.1206</td></tr>
+    <tr><td>Val loss</td><td>4.1491  <span style="color:#059669">▼ −0.107 da step 1000</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>94m 16s (~2.1s/step)</td></tr>
+    <tr><td>Generazione campione</td><td><em>"e la loro identità sono la stessa: il nome di un luogo che non ha bisogno di farla si è creato in base a un altro punt[...]"</em></td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Val loss in discesa costante: 4.456 → 4.326 → 4.256 → 4.149 ogni 500–1000 step. La discesa è più rapida di quanto atteso su corpus nuovo, segno che CulturaX condivide abbastanza distribuzione con Wikipedia per permettere transfer efficace. Velocità effettiva: 2.1s/step → ETA shard 1: ~4.6 ore, totale 7 shard: ~32 ore.</div>
+
+<h3>Checkpoint Step 3500 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>3500 / 8000 (shard 1, 44%)</td></tr>
+    <tr><td>Train loss</td><td>4.0436</td></tr>
+    <tr><td>Val loss</td><td>4.0916  <span style="color:#059669">▼ −0.058 da step 2500</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>126m 02s (~2.1s/step)</td></tr>
+    <tr><td>Generazione campione</td><td><em>"di via A.F. 09/03/2017 (T.F. 10/03/2017), n. 131 del 18/03/2017 (T.F. 10/03/2017). Il sindaco Massimo D'Azeglio è il Pre[...]"</em></td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Val loss sotto 4.1 per la prima volta. La generazione mostra testo amministrativo ufficiale con date in formato italiano ("n. 131 del 18/03/2017") — registro completamente assente in Wikipedia, segnale che il modello sta assorbendo la varietà di CulturaX. Il gap train/val (4.04/4.09 = 0.05) è stretto: nessun overfitting. Curva val loss shard 1: 4.456 → 4.326 → 4.256 → 4.149 → 4.092.</div>
+
 <h3>Pubblicazione su HuggingFace</h3>
 <div class="narr">I file GGUF di Run #4 sono stati pubblicati su <a href="https://huggingface.co/c1cc10/slm-italiano" target="_blank">huggingface.co/c1cc10/slm-italiano</a>:
 <ul>
