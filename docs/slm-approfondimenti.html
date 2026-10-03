@@ -1,0 +1,326 @@
+<meta charset="UTF-8">
+<title>SLM — Approfondimenti</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Lora:ital,wght@0,400;1,400&display=swap">
+<style>
+:root {
+  --bg:#F7F9FC; --surface:#FFFFFF; --text:#1C2333; --text-sec:#5A6478;
+  --accent:#0A6E6E; --border:#DDE3EE; --code-bg:#111827; --code-fg:#A8C4D8;
+  --tag-bg:#EFF6FF; --tag-text:#1E40AF; --tag-br:#BFDBFE;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg:#0D1117; --surface:#161B22; --text:#E6EDF3; --text-sec:#8B949E;
+  --accent:#2BBFBF; --border:#21262D; --code-bg:#0D1117; --code-fg:#79B8FF;
+  --tag-bg:#0D1F3E; --tag-text:#93C5FD; --tag-br:#1E3A6E;
+}}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --text:#E6EDF3; --text-sec:#8B949E;
+  --accent:#2BBFBF; --border:#21262D; --code-bg:#0D1117; --code-fg:#79B8FF;
+  --tag-bg:#0D1F3E; --tag-text:#93C5FD; --tag-br:#1E3A6E;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 15px; line-height: 1.65; padding-bottom: 80px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
+  background: var(--code-bg); color: var(--code-fg); padding: 1px 5px; border-radius: 3px; }
+
+.header { max-width: 860px; margin: 0 auto; padding: 40px 32px 28px;
+  border-bottom: 1px solid var(--border); }
+.header-eyebrow { font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-sec); margin-bottom: 8px; }
+.header h1 { font-size: 26px; font-weight: 600; }
+.header-sub { margin-top: 8px; color: var(--text-sec); }
+.nav-strip { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px; font-size: 12px; }
+.nav-strip a { color: var(--text-sec); }
+.nav-strip a:hover { color: var(--accent); }
+
+.toc { max-width: 860px; margin: 28px auto 0; padding: 0 32px; }
+.toc h2 { font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-sec); margin-bottom: 10px; }
+.toc ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.toc ul li a { font-size: 13px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 4px 12px; display: block; color: var(--text-sec); }
+.toc ul li a:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+
+.articles { max-width: 860px; margin: 0 auto; padding: 0 32px; }
+
+.article { margin-top: 52px; padding-top: 36px; border-top: 1px solid var(--border); }
+.article:first-child { border-top: none; }
+
+.article-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.article-tag { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  background: var(--tag-bg); color: var(--tag-text); border: 1px solid var(--tag-br);
+  padding: 2px 8px; border-radius: 100px; }
+.article-date { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-sec); }
+
+.article h2 { font-size: 20px; font-weight: 600; margin-bottom: 14px; line-height: 1.3; }
+.article p { margin-bottom: 14px; color: var(--text); }
+.article p:last-child { margin-bottom: 0; }
+.article ul, .article ol { margin: 12px 0 14px 20px; }
+.article li { margin-bottom: 6px; }
+
+.article h3 { font-size: 14px; font-weight: 600; letter-spacing: .03em;
+  color: var(--text-sec); text-transform: uppercase; margin: 22px 0 8px; }
+
+.cmd { background: var(--code-bg); color: var(--code-fg); font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px; padding: 16px 18px; border-radius: 6px; margin: 14px 0;
+  overflow-x: auto; white-space: pre; line-height: 1.6; }
+
+.note { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 14px 0; font-size: 13.5px; color: var(--text-sec); }
+.note strong { color: var(--text); }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; font-size: 13px; width: 100%; }
+th { background: var(--surface); color: var(--text-sec); font-size: 11px; text-transform: uppercase;
+  letter-spacing: .06em; padding: 8px 12px; border-bottom: 2px solid var(--border); text-align: left; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+.backlinks { margin-top: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
+.backlink { font-size: 12px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 3px 10px; color: var(--text-sec); }
+.backlink:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+.backlink::before { content: '← '; }
+
+@media (max-width: 560px) {
+  .header, .toc, .articles { padding-left: 18px; padding-right: 18px; }
+}
+</style>
+
+<div class="header">
+  <div class="header-eyebrow">SLM — Small Language Model</div>
+  <h1>Approfondimenti</h1>
+  <p class="header-sub">Articoli verticali su problemi specifici, osservazioni pratiche e riflessioni tecniche. Linkati dal diario tecnico e dalla cronaca.</p>
+  <nav class="nav-strip">
+    <a href="index.html">Indice</a>
+    <a href="slm-journal.html">Diario tecnico</a>
+    <a href="slm-cronaca.html">Cronaca</a>
+    <a href="slm-glossario.html">Glossario</a>
+  </nav>
+</div>
+
+<nav class="toc">
+  <h2>Articoli</h2>
+  <ul>
+    <li><a href="#ppl-bias">Il bias del PPL scorer</a></li>
+    <li><a href="#oom-shard">Training a shard — OOM</a></li>
+    <li><a href="#buffering">Python buffering con tee</a></li>
+    <li><a href="#alnum">Token alfanumerici misti</a></li>
+    <li><a href="#ftell">f.tell() con iteratore</a></li>
+    <li><a href="#rope-vs-pe">RoPE vs PE sinusoidale</a></li>
+  </ul>
+</nav>
+
+<div class="articles">
+
+  <!-- ══ PPL BIAS ══ -->
+  <article class="article" id="ppl-bias">
+    <div class="article-meta">
+      <span class="article-tag">Corpus · Qualità</span>
+      <span class="article-date">2026-10-03</span>
+    </div>
+    <h2>Il bias del PPL scorer: poesia esclusa, pubblicità inclusa</h2>
+
+    <p>Il quality scorer basato sulla perplexity (PPL scorer) usa il checkpoint Run #3 — addestrato su Wikipedia italiana — per misurare quanto un testo sembri "italiano normale". Documenti con alta perplexity vengono esclusi come rumore.</p>
+
+    <p>Il problema: il giudice ha un'idea molto specifica di cosa sia "italiano normale". Sa com'è scritto Wikipedia. Non sa com'è scritta una poesia.</p>
+
+    <h3>Cosa succede in pratica</h3>
+    <ul>
+      <li><strong>Poesia esclusa</strong>: la sintassi poetica è volutamente inusuale — inversioni, enjambement, assenza di verbi. Il scorer la vede come errore e assegna alta perplexity. Una poesia di Pascoli nel corpus viene rigettata.</li>
+      <li><strong>Pubblicità inclusa</strong>: i testi pubblicitari sono grammaticalmente corretti, usano un vocabolario standard, hanno struttura sintattica regolare. Il scorer non ha motivo per escluderli. Vengono tenuti.</li>
+    </ul>
+
+    <h3>Perché non è un bug</h3>
+    <p>Il scorer fa esattamente quello che gli è stato chiesto: trovare testi simili a Wikipedia. Il bias è una conseguenza diretta della distribuzione del training data del giudice. Un scorer addestrato su narrativa includerebbe la poesia ed escluderebbe (forse) la pubblicità.</p>
+
+    <h3>La valutazione per CulturaX</h3>
+    <p>Per CulturaX — un dataset già pre-filtrato dai suoi autori con metodi simili — il PPL scorer aggiunge più bias che segnale. Il testo che esclude non è necessariamente cattivo: è solo diverso da Wikipedia. La soglia al 95° percentile è stata mantenuta come misura conservativa, consapevoli del bias.</p>
+
+    <div class="note"><strong>Implicazione per run future:</strong> addestrare scorer separati per dominio (narrativo, enciclopedico, tecnico) e applicarli selettivamente per tipo di fonte. Alternativa: usare solo euristico + dedup per corpus già pre-filtrati.</div>
+
+    <div class="backlinks">
+      <a class="backlink" href="slm-journal.html#corpus-validazione">Journal — validazione corpus</a>
+      <a class="backlink" href="slm-cronaca.html#culturax">Cronaca — CulturaX</a>
+    </div>
+  </article>
+
+  <!-- ══ OOM SHARD ══ -->
+  <article class="article" id="oom-shard">
+    <div class="article-meta">
+      <span class="article-tag">Infrastruttura · RAM</span>
+      <span class="article-date">2026-10-03</span>
+    </div>
+    <h2>Training a shard: quando il corpus non sta in memoria</h2>
+
+    <h3>Il problema</h3>
+    <p>Il corpus Run #5 pesa 8.29 GB. Su un Mac M2 con 8 GB di RAM condivisa tra CPU e GPU, il processo di caricamento andava in crash prima che il training iniziasse.</p>
+
+    <p>La causa era in tre passaggi consecutivi del codice originale:</p>
+    <ol>
+      <li><code>Path.read_text()</code> legge l'intero file → <strong>8.29 GB</strong> in RAM come stringa Python</li>
+      <li><code>tok.encode(text)</code> restituisce una lista Python di interi → ogni intero Python è un oggetto da ~28 byte → <strong>~44 GB</strong> per 1.56B token</li>
+      <li><code>torch.tensor(ids, dtype=torch.long)</code> → <strong>~12.5 GB</strong> aggiuntivi (int64, 8 byte/token)</li>
+    </ol>
+
+    <p>Picco totale stimato: oltre 20 GB. Su 8 GB disponibili, il processo veniva terminato dal sistema operativo.</p>
+
+    <h3>Fix 1 — encoding streaming in numpy int16</h3>
+    <p>La lista Python è il collo di bottiglia. La sostituzione: leggere il file a chunk da 10M caratteri, codificare ciascuno con SPM, accumulare in <code>numpy.ndarray</code> di tipo <code>int16</code>.</p>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Rappresentazione</th><th>Token</th><th>Byte/token</th><th>Totale</th></tr></thead>
+      <tbody>
+        <tr><td>Lista Python (int)</td><td>1.56B</td><td>~28 B</td><td>~44 GB</td></tr>
+        <tr><td>numpy int64</td><td>1.56B</td><td>8 B</td><td>12.5 GB</td></tr>
+        <tr><td>numpy int16 ✓</td><td>1.56B</td><td>2 B</td><td>3.1 GB</td></tr>
+      </tbody>
+    </table></div>
+
+    <p><code>int16</code> è sufficiente: il vocabolario ha 16.000 elementi (ID 0–15.999), che rientrano in <code>int16</code> (range: −32.768 a +32.767). <code>torch.from_numpy(arr)</code> è zero-copy. Il cast a <code>long</code> (necessario per l'embedding lookup) avviene solo sui 16.384 token del batch corrente.</p>
+
+    <h3>Fix 2 — split in 7 shard da ~1.2 GB</h3>
+    <p>Anche con il fix int16, il tensor da 3.1 GB più il modello (530 MB) e l'overhead MPS lasciava pochi margini. La soluzione definitiva: spezzare il corpus in 7 file separati da ~1.2 GB ciascuno (~5.9M righe) e iterare.</p>
+
+    <div class="cmd">bash tools/train_chunked.sh
+# Split → per ogni shard: tokenizza (→ cache .pt) + train --resume
+# 7 shard × 8.000 step = 56.000 step totali</div>
+
+    <p>La cache viene salvata dopo il primo encoding: i riavvii successivi caricano direttamente il tensor senza re-codificare il testo.</p>
+
+    <h3>Limitazione nota — LR ciclico non pianificato</h3>
+    <p>Ogni shard avvia il proprio ciclo warmup → cosine decay (100 step di warmup, poi 8.000 step). Produce 7 cicli LR consecutivi invece di un singolo ciclo su 56.000 step. L'effetto pratico è un LR schedule ciclico simile al "Cyclical Learning Rates" di Smith (2017) — non ottimale ma non dannoso. Da correggere in run future passando il contatore cumulativo di step.</p>
+
+    <div class="backlinks">
+      <a class="backlink" href="slm-journal.html#run5-oom">Journal — crash OOM e shard</a>
+      <a class="backlink" href="slm-cronaca.html#run5">Cronaca — Run #5</a>
+    </div>
+  </article>
+
+  <!-- ══ BUFFERING ══ -->
+  <article class="article" id="buffering">
+    <div class="article-meta">
+      <span class="article-tag">Debug · Python</span>
+      <span class="article-date">2026-10-02</span>
+    </div>
+    <h2>Python buffering con tee: il log restava vuoto per ore</h2>
+
+    <p>Il processo di filtering era avviato su Vast.ai. <code>ps aux</code> mostrava il processo in esecuzione con 3.005% CPU. Ma <code>/root/filter.log</code> era vuoto. Per ore.</p>
+
+    <h3>Causa</h3>
+    <p>Python bufferizza lo stdout quando non è collegato a un terminale (TTY). In modalità buffered, <code>print()</code> non scrive immediatamente: accumula output finché il buffer (tipicamente 8 KB) non è pieno, o finché il processo non termina. Una pipe verso <code>tee</code> non è un TTY.</p>
+
+    <div class="cmd"># Senza -u: buffer → log vuoto per ore
+python3 filter_corpus.py ... 2>&1 | tee filter.log
+
+# Con -u: unbuffered → log aggiornato in tempo reale
+python3 -u filter_corpus.py ... 2>&1 | tee filter.log</div>
+
+    <h3>Perché non è ovvio</h3>
+    <p>Il comportamento dipende da come Python viene invocato. In un terminale interattivo, stdout va a un TTY e il buffering è per-linea — ogni <code>print()</code> appare immediatamente. In una pipe, il buffering è a blocchi. La stessa riga di codice si comporta diversamente a seconda del contesto.</p>
+
+    <div class="note"><strong>Regola:</strong> usare sempre <code>python3 -u</code> quando l'output va in pipe verso <code>tee</code> o viene rediretto su file. Aggiungere <code>flush=True</code> nei <code>print()</code> critici è una misura difensiva aggiuntiva.</div>
+
+    <div class="backlinks">
+      <a class="backlink" href="slm-journal.html#ppl-empirico">Journal — esperimento PPL empirico</a>
+    </div>
+  </article>
+
+  <!-- ══ ALNUM ══ -->
+  <article class="article" id="alnum">
+    <div class="article-meta">
+      <span class="article-tag">Corpus · Euristico</span>
+      <span class="article-date">2026-10-03</span>
+    </div>
+    <h2>Token alfanumerici misti: il problema "v4sta"</h2>
+
+    <p>Ispezionando a campione il corpus CulturaX filtrato, sono comparsi token come <code>v4sta</code>, <code>c4n</code>, <code>cl1ck</code> — combinazioni di lettere e numeri tipiche del web: username, codici prodotto, testo obfuscato, titoli di giochi. Non sono italiano scritto, ma passano tutti i filtri precedenti (lunghezza, densità simboli, lingua).</p>
+
+    <h3>Il fix in filter_corpus.py</h3>
+    <div class="cmd"># In passes_heuristic(), prima del return True finale:
+mixed_alnum = sum(1 for w in words if re.search(r'[a-zA-Z]\d|\d[a-zA-Z]', w))
+if mixed_alnum / len(words) > 0.05:
+    return False  # più del 5% delle parole → documento rigettato</div>
+
+    <p>La regex <code>[a-zA-Z]\d|\d[a-zA-Z]</code> individua qualsiasi parola dove una lettera è adiacente a una cifra. La soglia del 5% tollera numeri legittimi nel testo (anni, dati, misure) ma rigetta documenti dove questo pattern è sistematico.</p>
+
+    <h3>Perché non tutti i numeri sono rumore</h3>
+    <p>Un documento che parla di "Serie A 2025" o "3 km di percorso" ha numeri adiacenti a testo ma non è rumore. La soglia del 5% è calibrata per distinguere l'eccezione (numeri contestuali) dal pattern (testo strutturalmente non-linguistico).</p>
+
+    <div class="backlinks">
+      <a class="backlink" href="slm-journal.html#corpus-validazione">Journal — validazione corpus</a>
+      <a class="backlink" href="slm-cronaca.html#culturax">Cronaca — CulturaX</a>
+    </div>
+  </article>
+
+  <!-- ══ FTELL ══ -->
+  <article class="article" id="ftell">
+    <div class="article-meta">
+      <span class="article-tag">Debug · Python</span>
+      <span class="article-date">2026-10-02</span>
+    </div>
+    <h2>f.tell() con iteratore: OSError silenziosa</h2>
+
+    <p><code>filter_corpus.py</code> calcolava l'ETA del filtering usando <code>f_in.tell()</code> per sapere quanti byte erano stati letti. Il codice usava <code>for line in f_in:</code> per iterare le righe. Il programma andava in crash con:</p>
+
+    <div class="cmd">OSError: telling position disabled by next() call</div>
+
+    <h3>Causa</h3>
+    <p>Quando Python itera un file con <code>for line in f:</code>, usa il protocollo iteratore che implementa un read-ahead buffer interno. Questo buffer disabilita <code>f.tell()</code> — Python non sa più a quale posizione nel file si trova, perché ha già letto in anticipo oltre la riga corrente.</p>
+
+    <h3>Fix</h3>
+    <div class="cmd"># Prima (rompe tell):
+for line in f_in:
+    line = line.rstrip('\n')
+    ...
+
+# Dopo (compatibile con tell):
+while True:
+    line = f_in.readline()
+    if not line:
+        break
+    line = line.rstrip('\n')
+    ...</div>
+
+    <p><code>readline()</code> legge esattamente una riga senza read-ahead, preservando il funzionamento di <code>tell()</code>.</p>
+
+    <div class="backlinks">
+      <a class="backlink" href="slm-journal.html#ppl-empirico">Journal — Fix bug f.tell()</a>
+    </div>
+  </article>
+
+  <!-- ══ ROPE ══ -->
+  <article class="article" id="rope-vs-pe">
+    <div class="article-meta">
+      <span class="article-tag">Architettura</span>
+      <span class="article-date">2026-09-27</span>
+    </div>
+    <h2>RoPE vs positional encoding sinusoidale: confronto empirico</h2>
+
+    <p>I transformer devono sapere l'ordine dei token — "gatto mangia pesce" e "pesce mangia gatto" hanno gli stessi token in ordine diverso e significato opposto. Il positional encoding aggiunge questa informazione. Ci sono due approcci principali.</p>
+
+    <h3>PE sinusoidale (Run #3)</h3>
+    <p>Aggiunge al vettore di ogni token una sequenza di seni e coseni dipendente dalla sua posizione assoluta nel testo. Semplice, deterministico, nessun parametro aggiuntivo. Limite: la posizione assoluta è rigida — il modello non generalizza bene su sequenze più lunghe di quelle viste durante il training.</p>
+
+    <h3>RoPE — Rotary Position Embedding (Run #4)</h3>
+    <p>Invece di aggiungere un vettore di posizione, RoPE ruota i vettori di query e key nell'attenzione in modo che il loro prodotto scalare dipenda dalla distanza relativa tra i token. Nessun parametro aggiuntivo. Generalizza meglio a sequenze lunghe. Standard nei modelli moderni (LLaMA, Mistral, Gemma).</p>
+
+    <h3>Risultato empirico</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Run</th><th>PE</th><th>Strati</th><th>Best val loss</th><th>Perplexity</th><th>Step per superare Run #3</th></tr></thead>
+      <tbody>
+        <tr><td>Run #3</td><td>Sinusoidale</td><td>8</td><td>4.0768</td><td>~59</td><td>—</td></tr>
+        <tr><td>Run #4</td><td>RoPE</td><td>12</td><td>3.5861</td><td>~36</td><td>8.000 (27% del budget)</td></tr>
+      </tbody>
+    </table></div>
+
+    <p>Run #4 ha più strati (12 vs 8), quindi il confronto non è perfettamente isolato. Tuttavia la velocità di convergenza — superare Run #3 al 27% del budget — suggerisce che la combinazione RoPE + strati aggiuntivi sia sinergica.</p>
+
+    <div class="backlinks">
+      <a class="backlink" href="slm-journal.html#run4">Journal — Run #4</a>
+      <a class="backlink" href="slm-cronaca.html#run4">Cronaca — Run #4</a>
+    </div>
+  </article>
+
+</div>

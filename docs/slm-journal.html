@@ -1932,4 +1932,102 @@ tail -f /tmp/run5.log</div>
 
 <div class="note"><strong>Mac M2 vs Vast.ai per Run #5:</strong> MPS è ~10–15× più lento di RTX 4090. Stima: 56.000 step → 23–35 ore su M2 vs 2.5 ore su GPU. Scelta M2 motivata da disponibilità macchina per 36h consecutive e credito Vast.ai residuo (~$4.65) da preservare per run futuri o iterazioni rapide.</div>
 
+<h2 id="run5-oom">Run #5 — crash OOM e training a shard (2026-10-03)</h2>
+
+<div class="narr">Il primo avvio di Run #5 ha prodotto due crash consecutivi per esaurimento memoria. Causa: <code>train.py</code> caricava l'intero corpus da 8.29 GB come stringa Python, poi lo convertiva in una lista Python di interi (overhead ~28 byte/elemento) prima di creare il tensor. Picco stimato: 20+ GB su un sistema da 8 GB.</div>
+
+<h3>Fix 1 — encoding in streaming (train.py)</h3>
+<p>Tre modifiche a <code>train.py</code>:</p>
+<ol>
+  <li><strong>Eliminato <code>Path.read_text()</code></strong>: il file non viene mai caricato interamente in RAM. Per tokenizer <code>bpe-spm</code> e <code>bpe-tiktoken</code>, il testo non serve al tokenizer (che carica un modello già addestrato).</li>
+  <li><strong><code>_encode_with_progress</code> → streaming</strong>: legge il file a chunk da 10 M caratteri, codifica ciascuno con SPM, accumula in <code>numpy.ndarray</code> di tipo <code>int16</code> (vocab 16.000 &lt; 32.767 = max int16). <code>numpy</code> usa array C contigui: nessun overhead per oggetto.</li>
+  <li><strong>Cache e tensor in <code>int16</code></strong>: <code>torch.from_numpy(arr)</code> è zero-copy. <code>get_batch()</code> fa il cast a <code>.long()</code> solo sui 16.384 token del batch corrente — overhead trascurabile.</li>
+</ol>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Fase</th><th>Prima (int64 / lista Python)</th><th>Dopo (int16 / numpy streaming)</th></tr></thead>
+  <tbody>
+    <tr><td>Lettura file</td><td>7.7 GB stringa Python in RAM</td><td>10 MB per chunk, scartato dopo encode</td></tr>
+    <tr><td>Lista intermedia</td><td>1.56B interi × 28 B = ~44 GB</td><td>array numpy: 1.56B × 2 B = 3.1 GB</td></tr>
+    <tr><td>Tensor finale</td><td>1.56B × 8 B = 12.5 GB (int64)</td><td>1.56B × 2 B = 3.1 GB (int16)</td></tr>
+    <tr><td>Picco totale</td><td>&gt;20 GB</td><td>~3–4 GB</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Fix 2 — training a shard (<code>tools/train_chunked.sh</code>)</h3>
+<div class="narr">Anche con il fix di encoding, il corpus da 8.29 GB genera un tensor int16 da 3.1 GB che, sommato a modello (530 MB), overhead MPS e OS, resta al limite degli 8 GB. Per eliminare il rischio, il corpus viene spezzato in 7 shard da ~1.2 GB ciascuno. Lo script <code>tools/train_chunked.sh</code> orchestra il ciclo: <strong>split → per ogni shard: tokenizza + salva cache → training --resume</strong>.</div>
+
+<div class="cmd"># Avvio training a shard (7 shard, 8000 step ciascuno = 56000 totali)
+tmux new-session -d -s run5 \
+  'bash tools/train_chunked.sh 2>&1 | tee /tmp/run5_chunked.log'
+
+# Monitoraggio
+tail -f /tmp/run5_chunked.log
+# oppure
+tmux attach -t run5</div>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Parametro</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Shard</td><td>7 × ~1.2 GB (~5.9M righe/shard)</td></tr>
+    <tr><td>Step per shard</td><td>8.000 (LR schedule completo per shard)</td></tr>
+    <tr><td>Step totali</td><td>56.000 (~917M token processati)</td></tr>
+    <tr><td>Cache shard</td><td>salvata dopo primo encoding → riavvii istantanei</td></tr>
+    <tr><td>ETA stimata</td><td>~4–6h tokenizzazione + ~24–30h training su MPS</td></tr>
+  </tbody>
+</table></div>
+
+<div class="note"><strong>LR schedule per shard:</strong> ogni shard ricomincia il proprio ciclo warmup → cosine decay (100 step di re-warmup, poi decay su 8.000 step). Produce un LR ciclico non pianificato — tollerabile per una run di ricerca, da correggere in run future con un LR schedule globale (passando il contatore di step cumulativi).</div>
+
+<div class="note"><strong>Caveat tokenizzazione:</strong> con chunk da 10M caratteri, il confine tra chunk può spezzare una sequenza BPE. L'effetto è trascurabile (al più 1 token scorretto ogni 10M caratteri), ma va tenuto a mente se si osservano anomalie nei token a inizio documento.</div>
+
+<h2 id="run5-shard1-progress">Run #5 — shard 1/7: prime metriche (2026-10-03)</h2>
+
+<div class="narr">Dopo tre avvii falliti (fix <code>--rope</code> mancante, poi OOM MPS con batch 32), il training di Run #5 è stabile con <code>--batch 8</code>. Il training su M2 con batch ridotto comporta ~2.5s/step (vs ~0.15s/step su RTX 4090). ETA per shard 1: ~5.5 ore.</div>
+
+<h3>Correzioni rispetto al piano iniziale</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Problema</th><th>Causa</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr><td>Checkpoint incompatibile (<code>missing key: pos_encoding.pe</code>)</td><td><code>train_chunked.sh</code> mancava di <code>--rope</code>: il modello era costruito con PE sinusoidale invece di RoPE</td><td>Aggiunto <code>--rope</code> al comando in <code>train_chunked.sh</code></td></tr>
+    <tr><td>OOM MPS (<code>allocated 8.96GB / max 9.07GB</code>)</td><td>Batch 32 × seq 512 × 12 layer → attivazioni ~9GB su M2 con memoria GPU/CPU condivisa</td><td>Ridotto a <code>--batch 8</code></td></tr>
+    <tr><td>GGUF mancanti su disco</td><td>Generati su Vast.ai durante Run #4, mai scaricati prima della destroy dell'istanza</td><td>Riconvertiti da <code>checkpoints/run4_best.pt</code> via <code>tools/convert_to_gguf.py</code> e <code>tools/quantize_q8.py</code></td></tr>
+  </tbody>
+</table></div>
+
+<h3>Checkpoint Step 500 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>500 / 8000 (shard 1)</td></tr>
+    <tr><td>Train loss</td><td>4.2399</td></tr>
+    <tr><td>Val loss</td><td>4.3260</td></tr>
+    <tr><td>Tempo da avvio</td><td>13m 58s</td></tr>
+    <tr><td>Generazione campione</td><td><em>"come l'imperia che ha dato vita ad una vera e propria famiglia. L'imperia è sempre una sorta di 'pacchetto', dove si p[...]"</em></td></tr>
+  </tbody>
+</table></div>
+
+<h3>Checkpoint Step 1000 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>1000 / 8000 (shard 1)</td></tr>
+    <tr><td>Train loss</td><td>4.1928</td></tr>
+    <tr><td>Val loss</td><td>4.2557  <span style="color:#059669">▼ −0.070 da step 500</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>41m 28s</td></tr>
+    <tr><td>Generazione campione</td><td><em>"la cui costruzione risale al 1700 e ne conserva l'intero campanile; a destra del portale è presente un'unica navata e"</em></td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">La generazione a step 1000 è già enciclopedica e grammaticalmente corretta. Il testo descrive un edificio storico con lessico architettonico specifico: segnale che il modello sta assorbendo il registro di CulturaX, diverso da Wikipedia.</div>
+
+<h3>Pubblicazione su HuggingFace</h3>
+<div class="narr">I file GGUF di Run #4 sono stati pubblicati su <a href="https://huggingface.co/c1cc10/slm-italiano" target="_blank">huggingface.co/c1cc10/slm-italiano</a>:
+<ul>
+  <li><code>slm-run4.gguf</code> — 207 MB fp32</li>
+  <li><code>slm-run4-q8_0.gguf</code> — 56 MB Q8_0</li>
+</ul>
+Uso con llama.cpp: <code>llama-cli -hf c1cc10/slm-italiano --hf-file slm-run4-q8_0.gguf -p "Il Parlamento europeo" -n 100</code>
+</div>
+
 

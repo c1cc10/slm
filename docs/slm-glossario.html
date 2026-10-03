@@ -1,0 +1,328 @@
+<meta charset="UTF-8">
+<title>SLM — Glossario</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&family=Lora:ital@1&display=swap">
+<style>
+:root {
+  --bg:#F7F9FC; --surface:#FFFFFF; --text:#1C2333; --text-sec:#5A6478;
+  --accent:#0A6E6E; --border:#DDE3EE; --code-bg:#111827; --code-fg:#A8C4D8;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg:#0D1117; --surface:#161B22; --text:#E6EDF3; --text-sec:#8B949E;
+  --accent:#2BBFBF; --border:#21262D; --code-bg:#0D1117; --code-fg:#79B8FF;
+}}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --text:#E6EDF3; --text-sec:#8B949E;
+  --accent:#2BBFBF; --border:#21262D; --code-bg:#0D1117; --code-fg:#79B8FF;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 15px; line-height: 1.65; padding-bottom: 80px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
+  background: var(--code-bg); color: var(--code-fg); padding: 1px 5px; border-radius: 3px; }
+
+.header { max-width: 860px; margin: 0 auto; padding: 40px 32px 28px; border-bottom: 1px solid var(--border); }
+.header-eyebrow { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-sec); margin-bottom: 8px; }
+.header h1 { font-size: 26px; font-weight: 600; }
+.header-sub { margin-top: 8px; color: var(--text-sec); }
+.nav-strip { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px; font-size: 12px; }
+.nav-strip a { color: var(--text-sec); }
+.nav-strip a:hover { color: var(--accent); }
+
+.alpha-nav { max-width: 860px; margin: 24px auto 0; padding: 0 32px;
+  display: flex; gap: 6px; flex-wrap: wrap; }
+.alpha-nav a { font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+  padding: 3px 8px; color: var(--text-sec); }
+.alpha-nav a:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+
+.glossary { max-width: 860px; margin: 0 auto; padding: 0 32px; }
+
+.letter-section { margin-top: 40px; }
+.letter-heading { font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--text-sec); padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+
+.term { padding: 14px 0; border-bottom: 1px solid var(--border); display: grid;
+  grid-template-columns: 200px 1fr; gap: 0 24px; }
+.term:last-child { border-bottom: none; }
+.term-name { font-weight: 600; font-size: 14px; padding-top: 1px; }
+.term-name code { font-size: 13px; }
+.term-body { }
+.term-def { color: var(--text); margin-bottom: 6px; }
+.term-def em { font-family: 'Lora', serif; color: var(--text-sec); }
+.term-links { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.term-link { font-size: 11px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 8px; color: var(--text-sec); }
+.term-link:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+
+@media (max-width: 620px) {
+  .header, .alpha-nav, .glossary { padding-left: 18px; padding-right: 18px; }
+  .term { grid-template-columns: 1fr; }
+  .term-name { margin-bottom: 6px; }
+}
+</style>
+
+<div class="header">
+  <div class="header-eyebrow">SLM — Small Language Model</div>
+  <h1>Glossario</h1>
+  <p class="header-sub">Definizioni dei termini tecnici usati nel diario e nella cronaca. Ogni termine è linkabile — <code>#nome-termine</code>.</p>
+  <nav class="nav-strip">
+    <a href="index.html">Indice</a>
+    <a href="slm-journal.html">Diario tecnico</a>
+    <a href="slm-cronaca.html">Cronaca</a>
+    <a href="slm-approfondimenti.html">Approfondimenti</a>
+  </nav>
+</div>
+
+<nav class="alpha-nav">
+  <a href="#A">A</a><a href="#B">B</a><a href="#C">C</a><a href="#D">D</a>
+  <a href="#E">E</a><a href="#G">G</a><a href="#L">L</a><a href="#M">M</a>
+  <a href="#N">N</a><a href="#P">P</a><a href="#R">R</a><a href="#S">S</a>
+  <a href="#T">T</a><a href="#V">V</a><a href="#W">W</a>
+</nav>
+
+<div class="glossary">
+
+  <section class="letter-section" id="A">
+    <div class="letter-heading">A</div>
+
+    <div class="term" id="attenzione">
+      <div class="term-name">Attenzione<br><small style="font-weight:400;color:var(--text-sec)">attention</small></div>
+      <div class="term-body">
+        <p class="term-def">Meccanismo che permette al modello di "guardare" altri token nel testo mentre elabora quello corrente. Per ogni token, calcola quanto ogni altro token è rilevante (punteggio di attenzione) e combina le informazioni in proporzione a quel punteggio. <em>Multi-head attention</em>: il calcolo viene eseguito in parallelo su più "teste", ognuna con parametri propri.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-docs.html#attention">Docs → Architettura</a>
+          <a class="term-link" href="slm-teoria.html">Teoria → formule</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="term" id="adamw">
+      <div class="term-name">AdamW</div>
+      <div class="term-body">
+        <p class="term-def">Algoritmo di ottimizzazione usato per aggiornare i parametri del modello durante il training. Combina Adam (stima del gradiente con momenti del primo e secondo ordine) con weight decay disaccoppiato. I parametri vengono aggiornati nella direzione opposta al gradiente, scalata per la stima della varianza.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-ottimizzatore.html">Approfondimento → AdamW</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="B">
+    <div class="letter-heading">B</div>
+
+    <div class="term" id="bpe">
+      <div class="term-name">BPE<br><small style="font-weight:400;color:var(--text-sec)">tokenizer</small></div>
+      <div class="term-body">
+        <p class="term-def">Byte Pair Encoding — algoritmo per costruire un vocabolario di "pezzi di parola". Parte da caratteri singoli e unisce iterativamente le coppie più frequenti fino a raggiungere il vocabolario target. Il risultato è un set di token che bilancia copertura (parole rare → pezzi comuni) e compattezza (parole comuni → token unici).</p>
+        <p class="term-def">Il progetto usa SentencePiece (SPM) come implementazione BPE, vocabolario 16.000 token addestrato su Wikipedia italiana.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-cronaca.html#run3">Cronaca → Run #3</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="C">
+    <div class="letter-heading">C</div>
+
+    <div class="term" id="chinchilla">
+      <div class="term-name">Chinchilla optimal</div>
+      <div class="term-body">
+        <p class="term-def">Risultato empirico di Hoffmann et al. (2022) che stima il rapporto ottimale tra numero di parametri e token di training. Formula approssimata: <strong>token = 20 × parametri</strong>. Per 45.9M parametri → 918M token. Superare questo rapporto (più dati) o stare sotto (più parametri) produce modelli sub-ottimali a parità di compute.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-cronaca.html#culturax">Cronaca → CulturaX</a>
+          <a class="term-link" href="slm-journal.html#corpus-fonti">Journal → strategia corpus</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="term" id="checkpoint">
+      <div class="term-name">Checkpoint</div>
+      <div class="term-body">
+        <p class="term-def">Snapshot del modello (pesi + stato ottimizzatore + step corrente) salvato su disco durante il training. Permette di riprendere da dove si era fermati (<code>--resume</code>) e di distribuire il modello senza dover ri-addestrare. Il checkpoint migliore (miglior val loss) viene salvato separatamente da quello corrente.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-docs.html">Docs</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="D">
+    <div class="letter-heading">D</div>
+
+    <div class="term" id="decoder-only">
+      <div class="term-name">Decoder-only</div>
+      <div class="term-body">
+        <p class="term-def">Architettura transformer che usa solo la parte "decoder" (con attenzione causale — ogni token vede solo i token precedenti, non quelli successivi). È l'architettura di GPT, LLaMA, Mistral e di questo modello. Adatta per generazione di testo e completamento.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="E">
+    <div class="letter-heading">E</div>
+
+    <div class="term" id="embedding">
+      <div class="term-name">Embedding</div>
+      <div class="term-body">
+        <p class="term-def">Vettore numerico (d_model = 512 elementi) che rappresenta un token. La tabella di embedding mappa ogni ID token nel vocabolario al suo vettore corrispondente. I vettori vengono appresi durante il training: token semanticamente simili tendono ad avere vettori vicini nello spazio.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="G">
+    <div class="letter-heading">G</div>
+
+    <div class="term" id="gguf">
+      <div class="term-name">GGUF</div>
+      <div class="term-body">
+        <p class="term-def">Formato binario per la distribuzione di modelli LLM, usato da llama.cpp. Contiene pesi, architettura e metadati in un unico file. Supporta vari livelli di quantizzazione (fp16, Q8_0, Q4_K_M…). Il modello Run #4 è distribuito come <code>slm-run4.gguf</code> (fp16) e <code>slm-run4-q8_0.gguf</code> (Q8_0).</p>
+        <div class="term-links">
+          <a class="term-link" href="../README.md">README → Provare il modello</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="term" id="gradient">
+      <div class="term-name">Gradiente</div>
+      <div class="term-body">
+        <p class="term-def">Vettore che indica quanto e in quale direzione cambiare ogni parametro per ridurre la loss. Viene calcolato con backpropagation (regola della catena applicata all'intero grafo computazionale). L'ottimizzatore usa il gradiente per aggiornare i pesi.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-ottimizzatore.html">Approfondimento → AdamW</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="L">
+    <div class="letter-heading">L</div>
+
+    <div class="term" id="loss">
+      <div class="term-name">Loss / Val loss</div>
+      <div class="term-body">
+        <p class="term-def">Misura di quanto il modello sbaglia le sue previsioni. In language modeling, è la cross-entropy tra la distribuzione prevista e il token corretto. <em>Training loss</em>: calcolata sui dati di training (tende a scendere). <em>Val loss</em>: calcolata su dati non visti — misura la generalizzazione, quella che conta.</p>
+      </div>
+    </div>
+
+    <div class="term" id="lora">
+      <div class="term-name">LoRA</div>
+      <div class="term-body">
+        <p class="term-def">Low-Rank Adaptation — tecnica di fine-tuning efficiente. Invece di aggiornare tutti i parametri (costoso), aggiunge due matrici piccole (A e B, con rango r basso) a ogni layer. Solo queste vengono addestrate. Risultato: adapter da ~25 MB che specializzano il modello su un dominio senza modificare i pesi base.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="M">
+    <div class="letter-heading">M</div>
+
+    <div class="term" id="mps">
+      <div class="term-name">MPS<br><small style="font-weight:400;color:var(--text-sec)">Metal Performance Shaders</small></div>
+      <div class="term-body">
+        <p class="term-def">Backend GPU per PyTorch su Mac Apple Silicon (M1/M2/M3). Usa il chip Neural Engine e GPU integrata del SoC. Circa 10–15× più lento di un RTX 4090 per il training — ma disponibile localmente, a costo zero, senza latenza di rete.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="N">
+    <div class="letter-heading">N</div>
+
+    <div class="term" id="numpy-int16">
+      <div class="term-name"><code>numpy int16</code></div>
+      <div class="term-body">
+        <p class="term-def">Tipo di dato usato per salvare i token in cache. int16 copre valori −32.768 a +32.767 — sufficiente per un vocabolario di 16.000 token (ID 0–15.999). Occupa 2 byte per token contro gli 8 di <code>torch.long</code> (int64). Il cast a long avviene solo nel batch, riducendo il picco di RAM da 12 GB a 3 GB per corpus da 8 GB.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-approfondimenti.html#oom-shard">Approfondimento → OOM e shard</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="P">
+    <div class="letter-heading">P</div>
+
+    <div class="term" id="perplexity">
+      <div class="term-name">Perplexity (PPL)</div>
+      <div class="term-body">
+        <p class="term-def">Esponenziale della val loss: <strong>PPL = e^(val_loss)</strong>. Misura intuitiva di quanto il modello è "sorpreso" dal testo. Un modello con PPL 36 assegna in media a ogni token una probabilità equivalente a scegliere tra 36 opzioni equiprobabili. Lower is better. Run #4: PPL ~36, Run #3: PPL ~59.</p>
+        <p class="term-def">Come <em>quality scorer</em>: si usa la perplexity del checkpoint Run #3 per valutare se un documento è "italiano enciclopedico". Alta PPL = testo insolito rispetto a Wikipedia → potenziale rumore.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-approfondimenti.html#ppl-bias">Approfondimento → bias PPL</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="term" id="pre-norm">
+      <div class="term-name">Pre-norm</div>
+      <div class="term-body">
+        <p class="term-def">Variante dell'architettura transformer dove la LayerNormalization viene applicata <em>prima</em> dell'attenzione e del feed-forward (invece che dopo). Stabilizza il training, in particolare nelle architetture profonde. Usata in LLaMA, GPT-NeoX e in questo modello.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="R">
+    <div class="letter-heading">R</div>
+
+    <div class="term" id="rope">
+      <div class="term-name">RoPE<br><small style="font-weight:400;color:var(--text-sec)">Rotary Position Embedding</small></div>
+      <div class="term-body">
+        <p class="term-def">Codifica di posizione che ruota i vettori di query e key nell'attenzione in modo che il loro prodotto scalare dipenda dalla distanza <em>relativa</em> tra i token (non dalla posizione assoluta). Nessun parametro aggiuntivo. Generalizza meglio a sequenze lunghe rispetto al PE sinusoidale. Standard in LLaMA, Mistral, Gemma. Introdotto in Run #4: val loss 3.59 vs 4.08 di Run #3.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-approfondimenti.html#rope-vs-pe">Approfondimento → RoPE vs PE</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="S">
+    <div class="letter-heading">S</div>
+
+    <div class="term" id="sft">
+      <div class="term-name">SFT<br><small style="font-weight:400;color:var(--text-sec)">Supervised Fine-Tuning</small></div>
+      <div class="term-body">
+        <p class="term-def">Fase di addestramento successiva al pre-training, su coppie prompt/completamento curate. Il modello impara a seguire istruzioni invece di completare testo arbitrario. La loss viene calcolata solo sulla parte "risposta" (masked loss) — il prompt non contribuisce al gradiente.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="T">
+    <div class="letter-heading">T</div>
+
+    <div class="term" id="tensor">
+      <div class="term-name">Tensor</div>
+      <div class="term-body">
+        <p class="term-def">Array multidimensionale di numeri, struttura dati fondamentale di PyTorch. Il corpus tokenizzato è un tensor 1D di ID interi. I batch di training sono tensor 2D (batch_size × seq_len). I pesi del modello sono tensori 2D e 3D. Le operazioni sui tensori vengono eseguite in parallelo su GPU/MPS.</p>
+      </div>
+    </div>
+
+    <div class="term" id="token">
+      <div class="term-name">Token</div>
+      <div class="term-body">
+        <p class="term-def">Unità atomica di testo che il modello elabora. Può essere un carattere (tokenizer char-level), una parte di parola (BPE) o una parola intera. Il vocabolario BPE del progetto ha 16.000 token: la parola "addestramento" potrebbe diventare ["addestr", "amento"], "il" rimane ["il"].</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="V">
+    <div class="letter-heading">V</div>
+
+    <div class="term" id="val-split">
+      <div class="term-name">Val split</div>
+      <div class="term-body">
+        <p class="term-def">Porzione del corpus tenuta separata dal training per misurare la generalizzazione. Tipicamente il 10% finale del corpus. Il modello non vede mai questi dati durante il training — la loss su questi dati è l'indicatore più onesto della qualità.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="W">
+    <div class="letter-heading">W</div>
+
+    <div class="term" id="weight-tying">
+      <div class="term-name">Weight tying</div>
+      <div class="term-body">
+        <p class="term-def">Tecnica che condivide i pesi tra la tabella di embedding (input) e la testa di proiezione finale (output). Invece di due matrici separate da vocab_size × d_model, si usa la stessa matrice per entrambe. Riduce i parametri del modello di ~16M e spesso migliora la qualità — il modello usa la stessa rappresentazione per capire e produrre un token.</p>
+      </div>
+    </div>
+  </section>
+
+</div>

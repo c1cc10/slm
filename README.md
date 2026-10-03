@@ -98,7 +98,19 @@ python3 -u tools/filter_corpus.py \
 
 ## Provare il modello
 
-I file GGUF del Run #4 sono nella root del repo. Ci sono due modi per usarli.
+I file GGUF del Run #4 sono distribuiti come **GitHub Release** (non stanno nel repo perché superano il limite di 100 MB di GitHub).
+
+**Scarica i file:**
+```
+https://github.com/c1cc10/slm/releases/tag/v0.4
+```
+
+Oppure con `gh`:
+```bash
+gh release download v0.4 --repo c1cc10/slm
+```
+
+Ci sono due modi per usarli.
 
 ---
 
@@ -165,6 +177,15 @@ python train.py --generate "La capitale d'Italia" --temp 0.8 --max-new-tokens 20
 Il checkpoint `checkpoints/best.pt` e il tokenizer `checkpoints/tokenizer.model` devono essere presenti nella directory.
 
 ---
+
+**Alternativa: costruire il GGUF dal checkpoint PyTorch**
+
+Se hai il checkpoint `checkpoints/best.pt` e llama.cpp clonato localmente, puoi convertirlo tu stesso:
+```bash
+# dalla directory llama.cpp
+python3 convert_hf_to_gguf.py /percorso/slm --outtype f16 --outfile slm-run4.gguf
+./build/bin/llama-quantize slm-run4.gguf slm-run4-q8_0.gguf Q8_0
+```
 
 > **Nota**: questo è un modello di ricerca (45.9M parametri, solo pre-training). Genera testo in italiano ma non segue istruzioni — è un completion model, non un assistente conversazionale.
 

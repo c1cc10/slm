@@ -1,0 +1,373 @@
+<meta charset="UTF-8">
+<title>SLM — Cronaca</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+:root {
+  --bg:       #F6F3EE;
+  --surface:  #FFFFFF;
+  --text:     #1A1714;
+  --text-sec: #6B6560;
+  --accent:   #2D5F2D;
+  --accent2:  #8B5800;
+  --border:   #DDD8CE;
+  --pull-bg:  #EEF4EE;
+  --pull-br:  #2D5F2D;
+  --link-bg:  #F0EDE6;
+  --tag-bg:   #EAE6DF;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg:#15130E; --surface:#1E1B14; --text:#EDE9E0; --text-sec:#A09880;
+  --accent:#7DBA7D; --accent2:#F9A825; --border:#3A3630;
+  --pull-bg:#182218; --pull-br:#7DBA7D; --link-bg:#201E18; --tag-bg:#2A2720;
+}}
+:root[data-theme="dark"] {
+  --bg:#15130E; --surface:#1E1B14; --text:#EDE9E0; --text-sec:#A09880;
+  --accent:#7DBA7D; --accent2:#F9A825; --border:#3A3630;
+  --pull-bg:#182218; --pull-br:#7DBA7D; --link-bg:#201E18; --tag-bg:#2A2720;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Lora', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.75;
+  padding-bottom: 80px;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Header ── */
+.masthead {
+  border-bottom: 1px solid var(--border);
+  padding: 40px 0 28px;
+  text-align: center;
+}
+.masthead-eyebrow {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--text-sec);
+  margin-bottom: 8px;
+}
+.masthead h1 {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+.masthead-sub {
+  margin-top: 8px;
+  font-style: italic;
+  color: var(--text-sec);
+  font-size: 15px;
+}
+.nav-strip {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px;
+}
+.nav-strip a { color: var(--text-sec); }
+.nav-strip a:hover { color: var(--accent); }
+
+/* ── Contenuto ── */
+.container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ── Fase (entry) ── */
+.fase {
+  margin-top: 56px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+.fase:first-child { border-top: none; }
+
+.fase-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.fase-date {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px;
+  color: var(--text-sec);
+  letter-spacing: .04em;
+}
+.fase-tag {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  background: var(--tag-bg);
+  color: var(--text-sec);
+  padding: 2px 8px;
+  border-radius: 100px;
+}
+.fase-tag.done   { background: #D4EDDA; color: #1A5C2E; }
+.fase-tag.active { background: #FFF3CC; color: #7A4800; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  .fase-tag.done { background: #0E2818; color: #6EE7B7; }
+  .fase-tag.active { background: #2A1800; color: #FDE68A; }
+}}
+
+.fase h2 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -.01em;
+  text-wrap: balance;
+  margin-bottom: 18px;
+}
+.fase p {
+  margin-bottom: 16px;
+  color: var(--text);
+}
+.fase p:last-child { margin-bottom: 0; }
+
+/* ── Pull quote ── */
+.pull {
+  background: var(--pull-bg);
+  border-left: 3px solid var(--pull-br);
+  padding: 14px 18px;
+  margin: 20px 0;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--text);
+  border-radius: 0 6px 6px 0;
+}
+
+/* ── Link atoms ── */
+.atoms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.atom {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px;
+  background: var(--link-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  color: var(--text-sec);
+  text-decoration: none;
+  transition: border-color .15s;
+}
+.atom:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+.atom.approfondimento::before { content: '→ '; }
+.atom.glossario::before { content: '# '; }
+
+/* ── Risultato ── */
+.risultato {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+}
+.risultato-label {
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-sec);
+  margin-bottom: 6px;
+}
+.risultato strong { color: var(--accent); }
+
+/* ── Separatore ── */
+.sep {
+  text-align: center;
+  color: var(--border);
+  margin: 12px 0;
+  font-size: 20px;
+  letter-spacing: 8px;
+}
+
+@media (max-width: 560px) {
+  body { font-size: 16px; }
+  .fase h2 { font-size: 20px; }
+  .container { padding: 0 18px; }
+}
+</style>
+
+<div class="masthead">
+  <div class="masthead-eyebrow">SLM — Small Language Model</div>
+  <h1>Cronaca di un modello</h1>
+  <p class="masthead-sub">Come si costruisce un modello linguistico italiano da zero — il racconto, fase per fase.</p>
+  <nav class="nav-strip">
+    <a href="index.html">Indice</a>
+    <a href="slm-journal.html">Diario tecnico</a>
+    <a href="slm-approfondimenti.html">Approfondimenti</a>
+    <a href="slm-glossario.html">Glossario</a>
+    <a href="slm-docs.html">Documentazione</a>
+  </nav>
+</div>
+
+<div class="container">
+
+  <!-- ══ Fase 1 ══ -->
+  <article class="fase" id="fase1">
+    <div class="fase-meta">
+      <span class="fase-date">Settembre 2026</span>
+      <span class="fase-tag done">Completata</span>
+    </div>
+    <h2>Capire ogni pezzo prima di usarlo</h2>
+
+    <p>Il punto di partenza era una convinzione semplice: se devo costruire un prodotto sopra un modello linguistico, devo capire cosa c'è dentro — non come si chiama, ma come funziona davvero. Così abbiamo deciso di costruirne uno da zero, in Python, senza copiare architetture preconfezionate.</p>
+
+    <p>La prima versione non aveva nemmeno un vocabolario di parole: operava carattere per carattere. Ogni lettera, spazio, punto — un token separato. Il modello imparava la probabilità del prossimo carattere dato il contesto precedente. Ingenuo, ma sufficiente per capire i meccanismi fondamentali: come l'attenzione "guarda" indietro nel testo, come il gradiente scorre durante l'apprendimento, perché la loss scende lentamente all'inizio e poi accelera.</p>
+
+    <div class="pull">Non imparare come si usa uno strumento prima di capire cosa fa. Il valore didattico di questa fase non stava nel risultato — stava nel processo.</div>
+
+    <p>Dopo 5.000 passi di training su un corpus di narrativa italiana contemporanea (552 KB), la loss era 1.73. Il modello generava testo italiano leggibile, con struttura sintattica approssimativa. Non era il punto — il punto era che capivamo ogni riga di codice.</p>
+
+    <div class="risultato">
+      <div class="risultato-label">Risultato</div>
+      Val loss <strong>1.73</strong> · 5.000 step · 46 min su Mac M2 · architettura scritta interamente from scratch
+    </div>
+
+    <div class="atoms">
+      <a class="atom glossario" href="slm-glossario.html#loss">loss</a>
+      <a class="atom glossario" href="slm-glossario.html#attenzione">attenzione</a>
+      <a class="atom glossario" href="slm-glossario.html#token">token</a>
+      <a class="atom glossario" href="slm-glossario.html#gradient">gradiente</a>
+    </div>
+  </article>
+
+  <div class="sep">· · ·</div>
+
+  <!-- ══ Run #3 ══ -->
+  <article class="fase" id="run3">
+    <div class="fase-meta">
+      <span class="fase-date">26 settembre 2026</span>
+      <span class="fase-tag done">Completata</span>
+    </div>
+    <h2>Dare al modello un vocabolario vero</h2>
+
+    <p>Operare carattere per carattere ha un limite pratico: il contesto utile è breve. "La capitale d'Italia" è 20 caratteri — e il modello deve usarli tutti per rappresentare un'informazione che un essere umano codifica in cinque parole. La soluzione è il tokenizer: un vocabolario di pezzi di parola che condensano la struttura della lingua.</p>
+
+    <p>Abbiamo addestrato un tokenizer BPE su Wikipedia italiana — 208 milioni di caratteri di testo enciclopedico. Il vocabolario risultante conta 16.000 token: abbastanza per coprire la morfologia italiana (prefissi, suffissi, desinenze) senza esplodere in dimensioni ingestibili. Poi abbiamo scalato il modello: da 6 a 8 strati, dal milione di parametri a 46 milioni.</p>
+
+    <p>Il risultato interessante non fu la loss finale (4.08, perplexity circa 59) ma quello che il modello generava: frasi sulla geopolitica internazionale, coerenza narrativa su più clausole, un registro enciclopedico riconoscibile. Era diventato qualcosa che assomigliava a conoscenza.</p>
+
+    <div class="pull">Questo checkpoint è rimasto nel progetto con una funzione inaspettata: è diventato il "giudice" per valutare la qualità dei testi futuri — un misuratore di quanto un documento sia simile all'italiano enciclopedico che conosce.</div>
+
+    <div class="risultato">
+      <div class="risultato-label">Risultato</div>
+      Val loss <strong>4.08</strong> (perplexity ~59) · 30.000 step · Wikipedia IT · checkpoint usato come quality scorer PPL
+    </div>
+
+    <div class="atoms">
+      <a class="atom glossario" href="slm-glossario.html#bpe">BPE / tokenizer</a>
+      <a class="atom glossario" href="slm-glossario.html#perplexity">perplexity</a>
+      <a class="atom approfondimento" href="slm-approfondimenti.html#ppl-bias">Il bias del PPL scorer</a>
+    </div>
+  </article>
+
+  <div class="sep">· · ·</div>
+
+  <!-- ══ Run #4 ══ -->
+  <article class="fase" id="run4">
+    <div class="fase-meta">
+      <span class="fase-date">27 settembre 2026</span>
+      <span class="fase-tag done">Completata</span>
+    </div>
+    <h2>Una modifica architetturale e il primo salto su cloud</h2>
+
+    <p>C'è una differenza tra capire qualcosa e misurarla. Sapevamo dalla letteratura che RoPE — un modo alternativo di codificare la posizione dei token nel testo — funzionava meglio del metodo tradizionale, soprattutto su sequenze lunghe. Volevamo verificarlo empiricamente, non fidarci della letteratura.</p>
+
+    <p>Per rendere il confronto significativo, abbiamo usato per la prima volta una GPU in cloud — un RTX 4090 noleggiato su Vast.ai. Il training che sul Mac avrebbe richiesto giorni è durato 76 minuti. Il costo: 4,60 dollari. La differenza di velocità — circa 50 volte più rapido — ha cambiato il modo di pensare alle iterazioni.</p>
+
+    <p>RoPE ha vinto chiaramente: val loss 3.59 contro 4.08, perplexity che scende da 59 a 36. E ha superato la versione precedente già al 27% del budget di step — molto prima del previsto.</p>
+
+    <div class="risultato">
+      <div class="risultato-label">Risultato</div>
+      Val loss <strong>3.59</strong> (perplexity ~36) · 76 min su RTX 4090 · $4.60 · miglior checkpoint del progetto
+    </div>
+
+    <div class="atoms">
+      <a class="atom glossario" href="slm-glossario.html#rope">RoPE</a>
+      <a class="atom glossario" href="slm-glossario.html#gguf">GGUF</a>
+      <a class="atom approfondimento" href="slm-approfondimenti.html#vastai">Training su cloud — Vast.ai</a>
+    </div>
+  </article>
+
+  <div class="sep">· · ·</div>
+
+  <!-- ══ CulturaX ══ -->
+  <article class="fase" id="culturax">
+    <div class="fase-meta">
+      <span class="fase-date">1–3 ottobre 2026</span>
+      <span class="fase-tag done">Completata</span>
+    </div>
+    <h2>Costruire un corpus: qualità contro quantità</h2>
+
+    <p>Il modello aveva visto Wikipedia italiana — circa 47 milioni di token. Secondo la formula Chinchilla (una stima del rapporto ottimale tra dati e parametri), ne servono circa 918 milioni. Eravamo al 5%. Bisognava espandere il corpus.</p>
+
+    <p>La fonte principale è stata CulturaX, un dataset di testo italiano estratto dal web, già pre-filtrato dai ricercatori che lo hanno pubblicato. 8.2 gigabyte, 2.7 milioni di documenti. Abbiamo applicato il nostro filtro di qualità: regole euristiche (lunghezza, densità di simboli, duplicati), rilevamento della lingua, e infine il nostro quality scorer basato sulla perplexity — lo stesso Run #3 che giudicava quanto un testo somigliasse all'italiano enciclopedico.</p>
+
+    <p>Questa scelta ha un problema che abbiamo scoperto guardando i risultati: il giudice conosce solo Wikipedia. Tende a escludere la poesia (sintassi inusuale = alta perplexity) e a tenere la pubblicità (grammatica corretta = bassa perplexity). Non è un errore del sistema — è un bias strutturale da tenere a mente.</p>
+
+    <div class="pull">Guardare a campione i documenti esclusi è stato più istruttivo che guardare quelli tenuti. Una poesia di Pascoli era stata rigettata. Molti annunci commerciali erano stati accettati. Il filtro faceva quello che doveva — ma "quello che doveva" non era quello che volevamo.</div>
+
+    <p>Abbiamo anche trovato parole come "v4sta" — token che mescolano lettere e numeri, tipici del web ma non dell'italiano scritto. Abbiamo corretto il filtro per escluderle.</p>
+
+    <div class="risultato">
+      <div class="risultato-label">Risultato</div>
+      2.722.042 documenti in → <strong>2.439.329 tenuti</strong> (89.6%) · 7.5 GB · 7h 27m su RTX 4090
+    </div>
+
+    <div class="atoms">
+      <a class="atom glossario" href="slm-glossario.html#chinchilla">Chinchilla optimal</a>
+      <a class="atom glossario" href="slm-glossario.html#perplexity">perplexity scorer</a>
+      <a class="atom approfondimento" href="slm-approfondimenti.html#ppl-bias">Il bias del PPL scorer</a>
+      <a class="atom approfondimento" href="slm-approfondimenti.html#alnum">Token alfanumerici misti</a>
+    </div>
+  </article>
+
+  <div class="sep">· · ·</div>
+
+  <!-- ══ Run #5 ══ -->
+  <article class="fase" id="run5">
+    <div class="fase-meta">
+      <span class="fase-date">3 ottobre 2026 — in corso</span>
+      <span class="fase-tag active">In corso</span>
+    </div>
+    <h2>Il corpus non stava in memoria — abbiamo cambiato il metodo</h2>
+
+    <p>Il corpus concatenato — Wikipedia più CulturaX filtrato più il corpus letterario — pesava 8.3 gigabyte. Abbiamo avviato il training. Il processo è andato in crash due volte per esaurimento memoria.</p>
+
+    <p>Il problema non era ovvio: il codice aveva già un sistema di cache per evitare di ricodificare il corpus ad ogni avvio. Ma la prima volta — quando la cache non esiste ancora — deve leggere l'intero file, convertirlo in una lista Python di numeri interi, e poi trasformarla in un tensor. Una lista Python di un miliardo di interi pesa circa 28 gigabyte. Su una macchina con 8 gigabyte di RAM, non c'è spazio.</p>
+
+    <div class="pull">Il problema non era nel training. Era nel modo in cui si caricavano i dati prima che il training potesse iniziare. Una distinzione sottile che ha richiesto tempo per emergere.</div>
+
+    <p>Abbiamo riscritto il caricamento del corpus: invece di leggere tutto il file in memoria, lo leggiamo a pezzi da 10 milioni di caratteri alla volta. Ogni pezzo viene codificato e convertito in un formato compatto (int16 invece di int64 — la metà dello spazio, sufficiente per un vocabolario di 16.000 elementi). Il picco di memoria è sceso da oltre 20 gigabyte a circa 3-4.</p>
+
+    <p>Poi abbiamo fatto un ulteriore passo: abbiamo spezzato il corpus in 7 shard da circa 1.2 gigabyte ciascuno. Il training procede in sequenza su ciascuno, riprendendo sempre dal checkpoint precedente. È meno elegante di un training continuo, ma funziona — e nel mezzo di un problema di risorse, funzionare vale più dell'eleganza.</p>
+
+    <div class="risultato">
+      <div class="risultato-label">Stato attuale</div>
+      7 shard · 8.000 step / shard · 56.000 step totali · <strong>in esecuzione su Mac M2</strong> · ETA ~30h
+    </div>
+
+    <div class="atoms">
+      <a class="atom glossario" href="slm-glossario.html#tensor">tensor</a>
+      <a class="atom approfondimento" href="slm-approfondimenti.html#oom-shard">Training a shard — quando il corpus non sta in RAM</a>
+      <a class="atom approfondimento" href="slm-approfondimenti.html#buffering">Python buffering con tee</a>
+    </div>
+  </article>
+
+</div>

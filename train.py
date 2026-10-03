@@ -19,6 +19,7 @@ Esempi:
 """
 
 import os, sys, math, time, argparse, urllib.request
+import numpy as np
 import torch
 import torch.nn.functional as F
 from dataclasses import dataclass
@@ -333,8 +334,9 @@ class TextDataset:
                 f"Servono almeno {self.seq_len + 2} token. Usa un corpus più grande."
             )
         ix = torch.randint(n, (batch_size,))
-        x  = torch.stack([self.data[i   : i + self.seq_len    ] for i in ix])
-        y  = torch.stack([self.data[i+1 : i + self.seq_len + 1] for i in ix])
+        # .long() gestisce sia cache int16 (nuova) che int64 (vecchia)
+        x  = torch.stack([self.data[i   : i + self.seq_len    ].long() for i in ix])
+        y  = torch.stack([self.data[i+1 : i + self.seq_len + 1].long() for i in ix])
         return x.to(device), y.to(device)
 
 
@@ -416,33 +418,41 @@ def _cache_is_valid(cache_path: str, data_path: str, spm_model_path) -> bool:
     return True
 
 
-def _encode_with_progress(tok, text: str):
-    """Encoding a chunk con percentuale e ETA stampati a schermo.
+def _encode_with_progress(tok, data_path: str):
+    """Codifica il corpus in streaming dal file, senza mai caricare l'intero testo in RAM.
 
-    Divide il testo in blocchi da 5MB, codifica ciascuno e stampa il progresso.
-    Più lento di una singola chiamata encode() ma mostra avanzamento in tempo reale.
+    Legge chunk da 10 M caratteri, codifica ciascuno in numpy int16 e concatena.
+    int16 è sufficiente: vocab_size 16000 < 32767 (max int16).
+    Picco di RAM: ~un chunk (10 MB testo) + array numpy crescente.
     """
-    CHUNK   = 5_000_000   # 5 MB di testo per iterazione
-    total   = len(text)
-    all_ids = []
-    t0      = time.time()
+    CHUNK     = 10_000_000          # 10 M caratteri per iterazione
+    file_size = os.path.getsize(data_path)
+    est_chars = file_size / 1.05    # stima: UTF-8 italiano ≈ 1.05 byte/char
+    parts     = []
+    n_tok     = 0
+    read_chars = 0
+    t0        = time.time()
 
-    for start in range(0, total, CHUNK):
-        chunk = text[start : start + CHUNK]
-        all_ids.extend(tok.encode(chunk))
-
-        done    = min(start + CHUNK, total)
-        pct     = done / total * 100
-        elapsed = time.time() - t0
-        eta     = (elapsed / max(pct, 0.01)) * (100 - pct)
-        print(
-            f"\r  Encoding  {pct:5.1f}%  |  {len(all_ids):>12,} token  |  ETA {eta:5.0f}s   ",
-            end='', flush=True,
-        )
+    with open(data_path, 'r', encoding='utf-8', errors='replace') as f:
+        while True:
+            chunk = f.read(CHUNK)
+            if not chunk:
+                break
+            ids         = tok.encode(chunk)
+            parts.append(np.array(ids, dtype=np.int16))
+            n_tok      += len(ids)
+            read_chars += len(chunk)
+            pct     = min(read_chars / max(est_chars, 1) * 100, 99.9)
+            elapsed = time.time() - t0
+            eta     = (elapsed / max(pct, 0.1)) * (100 - pct)
+            print(
+                f"\r  Encoding  {pct:5.1f}%  |  {n_tok:>12,} token  |  ETA {eta:5.0f}s   ",
+                end='', flush=True,
+            )
 
     elapsed_total = time.time() - t0
-    print(f"\r  Encoding  100.0%  |  {len(all_ids):>12,} token  |  {elapsed_total:.0f}s totali          ")
-    return all_ids
+    print(f"\r  Encoding  100.0%  |  {n_tok:>12,} token  |  {elapsed_total:.0f}s totali          ")
+    return np.concatenate(parts)   # numpy int16, zero-copy verso torch.from_numpy()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -470,12 +480,20 @@ def train(cfg: TrainConfig):
         print(f"    python3 train.py --download   scarica corpus di prova")
         sys.exit(1)
 
-    print(f"\n  Corpus : {cfg.data_path}")
-    text = Path(cfg.data_path).read_text(encoding='utf-8')
-    print(f"  Testo  : {len(text):,} caratteri")
+    file_size = os.path.getsize(cfg.data_path)
+    print(f"\n  Corpus : {cfg.data_path}  ({file_size / 1e9:.2f} GB)")
 
     # ── Tokenizer ─────────────────────────────────────────────────────────────
-    tok        = make_tokenizer(cfg, text)
+    # char-level richiede il testo completo per costruire il vocabolario;
+    # bpe-spm e tiktoken caricano un modello già addestrato — il testo non serve.
+    if cfg.tokenizer == 'char':
+        text = Path(cfg.data_path).read_text(encoding='utf-8')
+        print(f"  Testo  : {len(text):,} caratteri")
+        tok = make_tokenizer(cfg, text)
+    else:
+        text = None
+        tok  = make_tokenizer(cfg)
+
     vocab_size = tok.vocab_size
     print(f"  Vocab  : {vocab_size:,}  (tokenizer={cfg.tokenizer})")
     tok.print_info()
@@ -486,12 +504,18 @@ def train(cfg: TrainConfig):
     if not cfg.no_cache and _cache_is_valid(cache_path, cfg.data_path, spm_path):
         print(f"  Cache   : {cache_path}")
         data = torch.load(cache_path, weights_only=True)
-        print(f"  Token   : {len(data):,}  (da cache — avvio istantaneo)")
+        # cache nuova: int16 (efficiente); cache vecchia: int64 (compatibile via get_batch)
+        print(f"  Token   : {len(data):,}  dtype={data.dtype}  (da cache — avvio istantaneo)")
     else:
         reason = ' (--no-cache)' if cfg.no_cache else ''
-        print(f"  Encoding corpus{reason}  ({len(text):,} caratteri → token)...")
-        ids  = _encode_with_progress(tok, text)
-        data = torch.tensor(ids, dtype=torch.long)
+        if cfg.tokenizer == 'char':
+            print(f"  Encoding corpus{reason}  ({len(text):,} caratteri → token)...")
+            ids  = tok.encode(text)
+            data = torch.tensor(ids, dtype=torch.long)
+        else:
+            print(f"  Encoding corpus{reason}  ({file_size/1e9:.2f} GB in streaming)...")
+            arr  = _encode_with_progress(tok, cfg.data_path)   # numpy int16
+            data = torch.from_numpy(arr)                        # zero-copy
         torch.save(data, cache_path)
         mb = os.path.getsize(cache_path) / 1024**2
         print(f"  Cache   : {cache_path}  ({mb:.0f} MB)")
