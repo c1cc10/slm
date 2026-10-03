@@ -168,7 +168,7 @@ def fetch(args):
         print(f"    File output       : {args.out}  ({size_mb:.0f} MB)")
         print(f"\n  Prossimo step: filtraggio qualità")
         print(f"    python3 tools/filter_corpus.py {args.out} \\")
-        print(f"        --checkpoint checkpoints/run3_best.pt \\")
+        print(f"        --checkpoint checkpoints/run4_best.pt \\")
         print(f"        --dedup --ppl-cut 0.80 --out {Path(args.out).stem}_clean.txt")
 
 

@@ -13,6 +13,7 @@ Sei un agente che gestisce il ciclo di vita di un'istanza Vast.ai per il progett
 
 - Root progetto: directory di lavoro corrente
 - Checkpoint: `checkpoints/best.pt`
+- **Chiave SSH Vast.ai:** `/Users/francescorana/.ssh/vastai_slm` — usare sempre con `-i` in tutti i comandi ssh/rsync/scp
 - Corpus: `data/corpus_bpe.txt`
 - Cache token: `data/corpus_bpe.txt.bpe-spm.v16000.tokens.pt`
 - Comando training: `python3 train.py --tokenizer bpe-spm --data data/corpus_bpe.txt --preset medium --steps 30000 --resume`
@@ -135,10 +136,13 @@ Chiedi: "Quale ID vuoi noleggiare? (o 'annulla')"
 Chiedi:
 ```
 Immagine Docker:
-  1)  pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime  (consigliata)
-  2)  pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
+  1)  nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu20.04  (consigliata — ~3GB, spesso cached, pip install torch sul nodo)
+  2)  pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime  (all-inclusive ~8GB — lenta se non cached)
   3)  Inserisci URL immagine personalizzata
 ```
+
+Nota: l'immagine pytorch/pytorch completa richiede 15-30 min di download se il nodo non la ha in cache.
+Con nvidia/cuda base: al setup remoto aggiungere `pip install torch --index-url https://download.pytorch.org/whl/cu121`.
 
 ### P3. Conferma e crea
 

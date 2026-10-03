@@ -726,28 +726,72 @@ python3 tools/eval_ppl.py
 python3 tools/eval_ppl.py <span class="st">"Carlo Magno ha fondato il Sacro Romano Impero"</span>
 
 <span class="cm"># Pipeline filtraggio corpus — scarta top 20% PPL</span>
-python3 tools/filter_corpus.py data/cc100_it_raw.txt \
+python3 tools/filter_corpus.py data/corpus_raw.txt \
     --checkpoint checkpoints/best.pt \
-    --lang it --ppl-cut 0.80 --dedup \
-    --out data/cc100_it_clean.txt</code></pre>
+    --ppl-cut 0.80 --dedup \
+    --out data/corpus_clean.txt
+
+<span class="cm"># Con log dei documenti scartati (per ispezione manuale)</span>
+python3 tools/filter_corpus.py data/corpus_raw.txt \
+    --checkpoint checkpoints/best.pt \
+    --ppl-cut 0.95 --dedup \
+    --out data/corpus_ppl95.txt \
+    --rejected data/corpus_rejected.txt</code></pre>
+
+  <h3>Limite critico: il bias del quality scorer</h3>
+  <p>Il PPL scorer è affidabile <strong>solo quando la distribuzione del scorer e quella del corpus target sono compatibili</strong>. Usare un modello addestrato su Wikipedia IT per filtrare testo web colloquiale introduce un bias sistematico: il modello giudica "sorprendente" l'italiano informale non perché sia di bassa qualità, ma perché non ne ha mai visto.</p>
+  <p>Esempio concreto: "ciao, sono Francesco" ottiene PPL 2690 su Run #4 (addestrato su Wikipedia). Non è testo degradato — è semplicemente un registro che il modello non ha mai incontrato. Applicare un cut percentile in questo contesto scarta preferenzialmente il testo colloquiale, <strong>rafforzando lo skew sintattico esistente</strong> invece di correggerlo.</p>
+  <p>Regola pratica:</p>
+  <ul>
+    <li>Corpus enciclopedico / stesso dominio del training → PPL scorer affidabile</li>
+    <li>Corpus web / registro diverso dal training → solo filtro euristico + dedup; PPL scorer con soglia molto conservativa (p95+) per rimuovere solo garbage estremo</li>
+    <li>Dopo ogni run che amplia la distribuzione, il quality scorer va rivalutato sul nuovo modello</li>
+  </ul>
   <div class="notice">
-    La scala di riferimento (BASSA/MEDIA/ALTA) è relativa al corpus di training di Run #3 (Wikipedia IT). Un modello addestrato su corpus più vari produrrà soglie diverse — riaddestrare il quality scorer ad ogni run migliora la precisione del filtraggio.
+    La scala di riferimento (BASSA/MEDIA/ALTA) è relativa al corpus di training del modello usato come scorer. Run #3/4 (Wikipedia IT) producono soglie valide per testo enciclopedico. Un modello addestrato su corpus più vari produrrà soglie diverse e più rappresentative dell'italiano moderno.
   </div>
 </section>
 
 <!-- ─────────────────────────────────────── CORPUS -->
 <section id="corpus">
   <h2>Corpus</h2>
-  <p>La scelta del corpus è determinante per il carattere del modello. L'addestramento su italiano generico non è necessariamente ottimale per un modello con use case professionali definiti.</p>
+  <p>La scelta del corpus è determinante per il carattere del modello. La legge di scaling di Chinchilla (Hoffmann et al. 2022) stabilisce che il punto ottimale di training è <strong>20 token per parametro</strong>: per un modello da 45.9M parametri, il target è 918M token. Run #4 è stato addestrato su 47.8M token — il 5.3% dell'ottimale.</p>
 
-  <h3>Teoria del corpus domain-focused</h3>
-  <p>Un corpus selezionato per dominio produce un modello che:</p>
-  <ul>
-    <li>Ha nel vocabolario BPE (Fase 2) i termini di dominio come token singoli</li>
-    <li>Apprende le strutture sintattiche tipiche del dominio (comunicazione professionale, documentazione tecnica)</li>
-    <li>Non "spreca" capacità su registri irrilevanti</li>
-  </ul>
-  <p>Una quota di testo generale (~20–30%) rimane utile per evitare <em>brittleness</em>: il modello deve comprendere qualsiasi input dell'utente, non solo testi formali.</p>
+  <h3>Qualità prima della quantità</h3>
+  <p>Chinchilla dimostra che un modello più piccolo addestrato su più dati di qualità supera un modello più grande addestrato su meno dati. La conseguenza pratica: prima di scalare l'architettura, è necessario costruire un corpus adeguato. Questo ha guidato la ricerca delle fonti per Run #5.</p>
+
+  <h3>Ricerca delle fonti — italiano moderno</h3>
+  <p>Il vincolo principale: il pubblico dominio italiano copre per definizione autori morti da più di 70 anni — cioè italiano pre-novecentesco. I dataset PD (Liber Liber, PleIAs Italian-PD, Project Gutenberg) contengono italiano arcaico del XIII–XIX secolo, inappropriato per un modello su italiano contemporaneo.</p>
+  <p>I dataset web (Common Crawl, mC4, OSCAR) contengono italiano moderno ma non sono PD. Per uso di ricerca sono comunque utilizzabili — la licenza CommonCrawl permette l'uso non commerciale.</p>
+
+  <h3>Dataset scelto: CulturaX IT</h3>
+  <p><code>uonlp/CulturaX</code> config <code>it</code> è la combinazione pulita e deduplicata di mC4 e OSCAR italiano, prodotta per il pre-training di LLM. Contiene italiano moderno del web — giornalismo, blog, forum, articoli — già filtrato e deduplicato alla fonte. Richiede autenticazione HuggingFace (account gratuito).</p>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Dataset</th><th>Tipo</th><th>Decisione</th><th>Motivo</th></tr>
+    <tr><td><code>uonlp/CulturaX</code> it</td><td>Web moderno</td><td class="good">Scelto</td><td>mC4+OSCAR pulito, italiano contemporaneo, streaming HF</td></tr>
+    <tr><td>Wikipedia IT dump</td><td>Enciclopedico</td><td class="good">Incluso (25%)</td><td>Già estratto, base di Run #3/4</td></tr>
+    <tr><td>EPUB personali</td><td>Narrativo IT</td><td class="good">Incluso (5%)</td><td>Narrativa contemporanea, prima persona</td></tr>
+    <tr><td><code>mii-community/liberliber-cleaned</code></td><td>Letterario PD</td><td class="bad">Escluso</td><td>Italiano arcaico XIII–XIX sec.</td></tr>
+    <tr><td><code>PleIAs/Italian-PD</code></td><td>Letterario PD</td><td class="bad">Escluso</td><td>Focus pre-1884, stesso problema arcaismo</td></tr>
+    <tr><td><code>gsarti/clean_mc4_it</code></td><td>Web</td><td class="bad">Escluso</td><td>Loading script Python deprecato, non caricabile</td></tr>
+  </table>
+  </div>
+
+  <h3>Mix target Run #5 — 918M token</h3>
+  <div class="table-wrap">
+  <table>
+    <tr><th>Categoria</th><th>Token</th><th>%</th><th>Fonte</th></tr>
+    <tr><td>Web generale</td><td>~550M</td><td>60%</td><td>CulturaX IT filtrato</td></tr>
+    <tr><td>Enciclopedico</td><td>~230M</td><td>25%</td><td>Wikipedia IT dump</td></tr>
+    <tr><td>Tecnico</td><td>~92M</td><td>10%</td><td>PDF/DOCX personali</td></tr>
+    <tr><td>Narrativo</td><td>~46M</td><td>5%</td><td>Corpus EPUB personale</td></tr>
+  </table>
+  </div>
+
+  <h3>Filtraggio CulturaX: euristico + dedup, no PPL scorer</h3>
+  <p>Per il corpus web CulturaX il PPL scorer non viene usato come filtro principale (vedi sezione Perplexity — bias del quality scorer). Il filtro applicato è euristico + deduplicazione MD5 per paragrafo.</p>
+  <p>Risultati su 2.72M documenti (8 GB): 94.8% mantenuto, 5.2% scartato dall'euristico, dedup quasi zero (CulturaX è già deduplicato alla fonte). Un confronto controllato con filtraggio PPL a soglia conservativa (p95) è in corso per validare la scelta.</p>
 
   <h3>Caratteri non-ASCII — cosa tenere e cosa pulire</h3>
   <div class="table-wrap">

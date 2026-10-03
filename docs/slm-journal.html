@@ -1565,4 +1565,371 @@ python3 tools/filter_corpus.py data/culturax_it_raw.txt \
 
 <div class="narr">Il PPL scorer rimane valido per: filtrare corpus enciclopedici successivi, valutare la qualità del modello post-training, e come quality scorer <em>dopo</em> Run #5 (quando la distribuzione del modello sarà più ampia e rappresentativa dell'italiano moderno).</div>
 
+<h3>Confronto controllato: euristico vs euristico + PPL 0.95 (2026-10-02)</h3>
+<div class="narr">Per validare la decisione sul PPL scorer, produciamo due file a partire dallo stesso input grezzo — così l'unica variabile è la presenza o assenza del filtro PPL:</div>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>File</th><th>Pipeline</th><th>Stato</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>data/culturax_it_clean.txt</code></td>
+      <td>raw → euristico + dedup</td>
+      <td class="good">Prodotto — 2.58M doc, 8.16 GB</td>
+    </tr>
+    <tr>
+      <td><code>data/culturax_it_ppl95.txt</code></td>
+      <td>raw → euristico + dedup + PPL 0.95</td>
+      <td class="warn">Da produrre</td>
+    </tr>
+    <tr>
+      <td><code>data/culturax_ppl95_rejected.txt</code></td>
+      <td>campione 500 doc scartati da PPL con score</td>
+      <td class="warn">Da produrre (via --rejected)</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="narr">Il file <code>rejected</code> contiene i primi 500 documenti scartati dal PPL scorer con il loro score — consente di leggere direttamente cosa viene eliminato e valutare se si tratta di garbage reale o di italiano colloquiale valido.</div>
+
+<div class="cmd"># Produzione file B — stesso raw, aggiunge PPL scorer a p95
+python3 tools/filter_corpus.py data/culturax_it_raw.txt \
+    --checkpoint checkpoints/best.pt \
+    --ppl-cut 0.95 --dedup \
+    --out data/culturax_it_ppl95.txt \
+    --rejected data/culturax_ppl95_rejected.txt</div>
+
+<h2 id="vastai-infra">Infrastruttura cloud — Vast.ai (2026-10-02)</h2>
+
+<div class="narr">Il PPL scorer su CPU (M2 Mac) processa ~7 doc/secondo. Su 2.6 M documenti CulturaX la stima era 4 giorni. Soluzione: spostare il job su GPU via Vast.ai, dove la stessa inference sul modello da 45.9 M parametri è 50–100× più veloce. Stima su RTX 4090: 2–3 ore.</div>
+
+<h3>Perché la velocità cala con il PPL scorer</h3>
+<p>La fase euristico+dedup è I/O bound: processa migliaia di documenti al secondo perché legge testo e applica regole in Python puro. Il PPL scorer aggiunge un forward pass del modello per ogni documento. Su CPU: ~140 ms per documento (tokenizzazione + 12 layer attention + softmax + cross-entropy). Su RTX 4090: ~2–3 ms. Il collo di bottiglia non è il corpus, è l'inferenza.</p>
+
+<h3>Fix applicati a filter_corpus.py</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Problema</th><th>Prima</th><th>Dopo</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Device hardcoded (1°)</td>
+      <td class="mono">device = 'cpu'</td>
+      <td class="mono">cuda → mps → cpu (auto-detect)<br>override con --device</td>
+    </tr>
+    <tr>
+      <td>Device hardcoded (2°) — scoperto in produzione</td>
+      <td class="mono">device = 'cpu' <em>dopo</em> l'auto-detect,<br>dentro load_ppl_scorer()</td>
+      <td>Riga rimossa. Il parametro device passato alla funzione<br>viene ora usato direttamente da map_location e .to(device)</td>
+    </tr>
+    <tr>
+      <td>f.tell() con iteratore — scoperto in produzione</td>
+      <td class="mono">for line in f_in:</td>
+      <td class="mono">while True: line = f_in.readline()<br>L'iteratore Python disabilita f.tell(); readline() no.</td>
+    </tr>
+    <tr>
+      <td>Log threshold fisso</td>
+      <td class="mono">ogni 100 000 doc</td>
+      <td class="mono">ogni 5 000 doc se PPL attivo<br>ogni 100 000 altrimenti</td>
+    </tr>
+    <tr>
+      <td>Nessun avanzamento visibile</td>
+      <td>—</td>
+      <td>% completamento + ETA calcolata da bytes letti / dimensione file</td>
+    </tr>
+    <tr>
+      <td>Avviso assente per CPU lento</td>
+      <td>—</td>
+      <td>Stampa stima ore all'avvio se device=cpu</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note"><strong>Caveat produzione — python3 -u obbligatorio:</strong> quando filter_corpus.py è lanciato con <code>2&gt;&amp;1 | tee filter.log</code>, Python entra in modalità fully-buffered perché stdout non è un terminale. Le <code>print()</code> vengono accumulate in memoria e il log rimane vuoto per ore. Soluzione: usare sempre <code>python3 -u</code> (unbuffered). Senza questo flag il log appare vuoto anche con job attivo.</div>
+
+<h3>Workflow Vast.ai — provisioning</h3>
+<p>Il ciclo di vita è gestito dalla skill <code>.claude/agents/vastai-slm.md</code>. Comandi chiave:</p>
+
+<div class="cmd"># Autenticazione (API key in .vastai-apikey, mai committata)
+KEY=$(cat .vastai-apikey) && vastai set api-key "$KEY"
+
+# Ricerca offerta — RTX 4090 on-demand, ordinata per costo
+vastai search offers 'gpu_name=RTX_4090 cuda_vers>=12.0 disk_space>=40 num_gpus=1' -o dph_base --raw
+
+# Crea istanza (ID offerta scelto: 44885351, $0.360/ora, affidabilità 100%)
+vastai create instance 44885351 \
+  --image pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime \
+  --disk 40 --raw
+# → restituisce {"new_contract": <ID>, "success": true}
+# Salva ID in .vastai-instance
+
+# Attendi Running
+vastai show instances --raw   # controlla actual_status
+
+# SSH access
+vastai ssh-url <ID>   # → ssh -p <PORTA> root@<HOST></div>
+
+<div class="note"><strong>Criteri di selezione offerta:</strong> RTX 4090 (VRAM 24 GB, sufficiente per modello 45.9 M param + batch inference), CUDA ≥ 12.0, disk ≥ 40 GB (8 GB corpus + 6 GB output + margine), ordinata per costo. Istanza on-demand (non interruptible): il job di filtering non ha checkpoint intermedi, una terminazione anticipata perderebbe tutto il progresso.</div>
+
+<h3>Setup remoto e avvio job</h3>
+<div class="cmd"># Trasferimento (codice + checkpoint, ~600 MB; corpus ri-scaricato su Vast.ai)
+rsync -avz -e "ssh -p PORT -o StrictHostKeyChecking=no" \
+  --exclude='.git' --exclude='data/' --exclude='*.gguf' --exclude='.claude' \
+  . root@HOST:~/slm/
+
+# Installa dipendenze
+ssh -p PORT root@HOST "pip install sentencepiece datasets huggingface_hub"
+
+# Autentica HF (token personale, mai nel codice)
+ssh -p PORT root@HOST "export HF_TOKEN=hf_xxx"
+
+# Riscarica CulturaX raw (cloud-to-cloud: ~8 GB in pochi minuti)
+ssh -p PORT root@HOST "cd ~/slm && python3 tools/fetch_hf_corpus.py \
+  --dataset uonlp/CulturaX --config it --text-field text \
+  --max-gb 8 --out data/culturax_it_raw.txt"
+
+# Avvia filtering in tmux (sopravvive alla disconnessione SSH)
+# python3 -u = unbuffered: senza questo flag il log resta vuoto per ore (tee bufferizza)
+# --device cuda: esplicito anche se auto-detect è attivo — evita sorprese
+ssh -p PORT root@HOST "cd ~/slm && tmux new-session -d -s filter \
+  'python3 -u tools/filter_corpus.py data/culturax_it_raw.txt \
+    --checkpoint checkpoints/best.pt \
+    --ppl-cut 0.95 --dedup \
+    --device cuda \
+    --out data/culturax_it_ppl95.txt \
+    --rejected data/culturax_ppl95_rejected.txt \
+    2>&1 | tee /root/filter.log'"</div>
+
+<h3>Rimpatrio e cleanup</h3>
+<div class="cmd"># Scarica risultati (~6 GB output + 300 KB rejected)
+rsync -avz --progress -e "ssh -p PORT -o StrictHostKeyChecking=no" \
+  root@HOST:~/slm/data/culturax_it_ppl95.txt data/
+rsync -avz -e "ssh -p PORT -o StrictHostKeyChecking=no" \
+  root@HOST:~/slm/data/culturax_ppl95_rejected.txt data/
+
+# Distruggi istanza (interrompe il costo)
+vastai destroy instance <ID>
+rm .vastai-instance</div>
+
+<div class="note"><strong>Costo operazione:</strong> $0.360/ora × ~3 ore = ~$1.08. Con $8.36 di credito disponibili: margine di ~21 ore aggiuntive. Il costo è addebitato anche quando l'istanza è idle — distruggerla subito dopo il rimpatrio.</div>
+
+<h3>Procedura manuale completa (per esecuzioni non automatizzate)</h3>
+<p>Sequenza completa per eseguire il job di filtering su una nuova istanza Vast.ai, passo per passo, senza automazione Claude Code.</p>
+
+<div class="cmd"># ── FASE 0: Prerequisiti locali ──────────────────────────────────
+
+# Installa vastai CLI (se assente)
+pip install vastai
+
+# Configura API key (salvata in .vastai-apikey nel progetto)
+KEY=$(cat .vastai-apikey) && vastai set api-key "$KEY"
+
+# Verifica account e credito
+vastai show user
+
+# ── FASE 1: Cerca offerta GPU non-US ─────────────────────────────
+
+vastai search offers \
+  'gpu_name=RTX_4090 cuda_vers>=12.0 disk_space>=40 num_gpus=1' \
+  -o dph_base --raw | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+# filtra non-US
+offers = [o for o in data if 'US' not in str(o.get('geolocation',''))][:8]
+for o in offers:
+    print(o['id'], o.get('gpu_name'), o.get('dph_base'), o.get('reliability2'), o.get('geolocation'))
+"
+# Scegli un ID con affidabilità ≥ 99% e prezzo contenuto
+
+# ── FASE 2: Crea istanza ──────────────────────────────────────────
+
+# Immagine leggera: nvidia/cuda base (~3GB, 5-10min) + pip install torch sul nodo
+# NON usare pytorch/pytorch completa (~8GB, 20-40min)
+vastai create instance <OFFER_ID> \
+  --image nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu20.04 \
+  --disk 40 --raw
+# → prendi new_contract = ID istanza, salvalo
+
+# Attendi running (controlla ogni 30s)
+vastai show instances --raw   # cerca actual_status=running per il tuo ID
+
+# ── FASE 3: Connessione SSH ───────────────────────────────────────
+
+# Ottieni HOST e PORTA
+vastai ssh-url <INSTANCE_ID>   # → ssh -p <PORTA> root@<HOST>
+
+# Test connessione
+ssh -i ~/.ssh/vastai_slm -o StrictHostKeyChecking=no -p <PORTA> root@<HOST> \
+  "echo OK && nvidia-smi --query-gpu=name --format=csv,noheader"
+
+# ── FASE 4: Trasferimento progetto ───────────────────────────────
+
+# Crea tar locale (solo codice + checkpoint, senza data/ e .git)
+cd /path/to/slm
+tar -czf ~/slm_vastai.tar.gz \
+  --exclude='./.git' --exclude='./.claude' \
+  --exclude='./data' --exclude='./private' --exclude='./docs' \
+  --exclude='./*.gguf' --exclude='./checkpoints/run3_best.pt' \
+  --exclude='./checkpoints/run4_best.pt' --exclude='./__pycache__' .
+
+# Upload (~500MB)
+rsync -az --progress \
+  -e "ssh -i ~/.ssh/vastai_slm -o StrictHostKeyChecking=no -p <PORTA>" \
+  ~/slm_vastai.tar.gz root@<HOST>:~/
+
+# ── FASE 5: Setup remoto ─────────────────────────────────────────
+
+ssh -i ~/.ssh/vastai_slm -o StrictHostKeyChecking=no -p <PORTA> root@<HOST>
+
+# Sul nodo remoto:
+mkdir -p ~/slm && tar -xzf ~/slm_vastai.tar.gz -C ~/slm
+
+# Upgrade pip (l'immagine ubuntu:20.04 ha pip 20.x, troppo vecchio)
+python3 -m pip install --upgrade pip
+
+# Installa dipendenze in tmux (sopravvive alla disconnessione SSH)
+tmux new-session -d -s setup \
+  'pip3 install torch --index-url https://download.pytorch.org/whl/cu121 \
+   sentencepiece datasets huggingface_hub 2>&1 | tee /root/pip.log && echo DONE >> /root/pip.log'
+
+# Monitora
+tail -f /root/pip.log   # ctrl+c per uscire senza interrompere
+
+# Verifica al termine
+python3 -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+
+# ── FASE 6: Autentica HuggingFace e scarica CulturaX ─────────────
+
+# Autentica (token personale da huggingface.co → Settings → Access Tokens)
+export HF_TOKEN=hf_xxxxxxxxxxxx
+# oppure:
+python3 tools/hf_auth.py login hf_xxxxxxxxxxxx
+
+# Scarica CulturaX in tmux (cloud-to-cloud, ~15-25 min per 8GB)
+tmux new-session -d -s fetch \
+  'cd ~/slm && python3 tools/fetch_hf_corpus.py \
+    --dataset uonlp/CulturaX --config it \
+    --text-field text --max-gb 8 \
+    --out data/culturax_it_raw.txt 2>&1 | tee /root/fetch.log'
+
+tail -f /root/fetch.log
+
+# ── FASE 7: Avvia job di filtering ───────────────────────────────
+
+# IMPORTANTE: python3 -u (unbuffered) obbligatorio con tee — altrimenti log vuoto
+# IMPORTANTE: --device cuda esplicito — l'auto-detect funziona ma meglio non rischiare
+tmux new-session -d -s filter \
+  'cd ~/slm && python3 -u tools/filter_corpus.py data/culturax_it_raw.txt \
+    --checkpoint checkpoints/best.pt \
+    --ppl-cut 0.95 --dedup \
+    --device cuda \
+    --out data/culturax_it_ppl95.txt \
+    --rejected data/culturax_ppl95_rejected.txt \
+    2>&1 | tee /root/filter.log'
+
+# Monitora (log ogni 5000 doc, mostra % e ETA)
+tail -f /root/filter.log
+
+# Verifica device usato (deve mostrare "cuda", non "cpu"):
+grep "Scorer pronto" /root/filter.log
+# Distribuzione PPL empirica su CulturaX IT (campione 5000 doc, modello run3):
+#   p10=47.7  mediana=80.1  p95=203.2  → soglia al 95% = 203.2
+
+# ── FASE 8: Rimpatrio risultati ───────────────────────────────────
+
+# Dal Mac (dopo completamento job, ~4-8 ore)
+rsync -avz --progress \
+  -e "ssh -i ~/.ssh/vastai_slm -o StrictHostKeyChecking=no -p <PORTA>" \
+  root@<HOST>:~/slm/data/culturax_it_ppl95.txt data/
+rsync -avz \
+  -e "ssh -i ~/.ssh/vastai_slm -o StrictHostKeyChecking=no -p <PORTA>" \
+  root@<HOST>:~/slm/data/culturax_ppl95_rejected.txt data/
+
+# ── FASE 9: Destroy istanza ───────────────────────────────────────
+
+vastai destroy instance <INSTANCE_ID>
+rm .vastai-instance
+# Il costo si interrompe immediatamente</div>
+
+<div class="note"><strong>Tempi misurati su RTX 4090 (Italia, $0.436/h, 2026-10-02):</strong>
+Download immagine nvidia/cuda: ~8 min | pip install torch+sentencepiece: ~12 min | Download CulturaX 8GB da HF: ~36 min (misurato: da 0.5k a 1.2k doc/s, totale 2174s) | PPL filter 2.6M doc: ~7h (ETA misurata a inizio job, 100 doc/s su GPU batch=1) | Rimpatrio 6GB: 15–20 min. Costo totale stimato: $3–$4.
+<br><strong>Distribuzione PPL empirica su CulturaX IT</strong> (campione 5000 doc, scorer run3, cut=95%): p10=47.7 · mediana=80.1 · p95=203.2. Il 5% dei documenti scartati supera PPL=203 — testo non-italiano, boilerplate, o troppo frammentato per il tokenizzatore BPE.</div>
+
+<h2 id="corpus-validazione">Validazione corpus CulturaX filtrato — osservazioni (2026-10-03)</h2>
+
+<div class="narr">Dopo il rimpatrio, ispezione manuale a campione di <code>culturax_it_ppl95.txt</code> (kept) e <code>culturax_ppl95_rejected.txt</code> (scartati). Risultati complessivamente positivi, con tre criticità identificate.</div>
+
+<h3>Risultati del filtraggio (definitivi)</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Documenti in input</td><td>2.722.042</td></tr>
+    <tr><td>Kept (output)</td><td>2.439.329 (89.6%)</td></tr>
+    <tr><td>Scartati euristico</td><td>140.635 (5.2%)</td></tr>
+    <tr><td>Scartati dedup</td><td>115 (0.004% — corpus già quasi privo di duplicati)</td></tr>
+    <tr><td>Scartati PPL &gt;203.2</td><td>141.963 (5.2%)</td></tr>
+    <tr><td>Dimensione output</td><td>7.5 GB</td></tr>
+    <tr><td>Durata RTX 4090</td><td>7h 26m 53s</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Criticità 1 — Token alfanumerici misti nel corpus kept</h3>
+<div class="narr">Il corpus filtrato contiene documenti con parole come <code>v4sta</code>, <code>c4n</code> — pattern da nomi utente, codici prodotto, leetspeak da web. L'euristico attuale non li coglie perché il documento supera i controlli di lunghezza, caratteri speciali e lingua. Questo tipo di rumore è particolarmente dannoso per il training perché contamina la distribuzione lessicale del BPE: il tokenizzatore (addestrato su Wikipedia) spezza questi token in unità sub-word inattese.</div>
+<div class="note"><strong>Fix applicato (2026-10-03):</strong> aggiunto controllo in <code>passes_heuristic()</code>: se più del 5% delle parole contiene pattern lettera-cifra o cifra-lettera (<code>re.search(r'[a-zA-Z]\d|\d[a-zA-Z]', w)</code>), il documento viene scartato. Soglia conservativa — cattura leetspeak e username senza penalizzare testo tecnico che cita versioni software in modo isolato.</div>
+
+<h3>Criticità 2 — PPL scorer esclude poesia, include pubblicità</h3>
+<div class="narr">Il PPL scorer addestrato su Wikipedia produce distorsioni sistematiche su CulturaX (testo web):
+<ul>
+  <li><strong>Poesia esclusa (falso negativo)</strong>: sintassi non-standard, enjambement, inversioni → PPL alta → scartata. La poesia è italiano di alta qualità ma non assomiglia a un articolo enciclopedico.</li>
+  <li><strong>Pubblicità inclusa (falso positivo)</strong>: frasi brevi, grammaticalmente corrette, registro formale → PPL bassa → mantenuta. Le pubblicità superano il filtro perché il modello le trova "prevedibili".</li>
+</ul>
+Comportamento atteso e già predetto nel principio del PPL scorer. Conferma che il filtro PPL su CulturaX non misura "qualità assoluta" ma "somiglianza alla distribuzione Wikipedia".</div>
+
+<h3>Decisione: corpus usato così com'è per Run #5</h3>
+<div class="narr">Nonostante le criticità, il corpus da 2.4M documenti / 7.5 GB viene usato per Run #5 senza ulteriore ri-filtraggio. Motivazioni:
+<ul>
+  <li>Il volume (7.5 GB) vale più della pulizia marginale ottenibile con un secondo passaggio.</li>
+  <li>Le pubblicità sono italiano reale — il modello impara strutture sintattiche valide anche da testo commerciale.</li>
+  <li>Il fix alfanumerici misti si applica ai run futuri, non retroattivamente (costo di ri-filtraggio: 7h su GPU).</li>
+  <li>CulturaX è già pre-filtrato dagli autori (mC4 + OSCAR con deduplication) — la qualità baseline è alta.</li>
+</ul></div>
+
+<h2 id="run5-setup">Run #5 — setup e avvio training (2026-10-03)</h2>
+
+<div class="narr">Run #5: prima espansione del corpus oltre Wikipedia. Obiettivo: avvicinarsi al target Chinchilla-optimal di 918 M token partendo dal checkpoint Run #4 (val loss 3.5861, perplexity ~36). Training in locale su Mac M2 (8GB, MPS) — scelta motivata dalla disponibilità della macchina per 36h consecutive e dal costo zero rispetto a Vast.ai (~$1.50 stimato per il training).</div>
+
+<h3>Corpus Run #5</h3>
+<div class="narr">Mix target 918 M token (Chinchilla: 20 × 45.9 M param). Composizione attuale disponibile:</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Fonte</th><th>File</th><th>Peso nel mix</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>Wikipedia IT</td><td><code>data/wiki_it.txt</code></td><td>25%</td><td>Già usato in Run #3–4. Registro enciclopedico.</td></tr>
+    <tr><td>CulturaX IT (filtrato)</td><td><code>data/culturax_it_ppl95.txt</code></td><td>60%</td><td>7.5 GB, 2.4M doc, testo web italiano moderno.</td></tr>
+    <tr><td>Corpus letterario</td><td><code>data/corpus_letterario.txt</code></td><td>5%</td><td>EPUB narrativa contemporanea, prima persona.</td></tr>
+    <tr><td>Corpus tecnico personale</td><td><code>data/corpus.txt</code></td><td>10%</td><td>Testi di dominio.</td></tr>
+  </tbody>
+</table></div>
+
+<div class="cmd"># Backup checkpoint prima di --resume (OBBLIGATORIO)
+cp checkpoints/best.pt checkpoints/run4_best.pt
+
+# Prepara corpus concatenato (proporzioni approssimate da dimensione file)
+cat data/wiki_it.txt data/culturax_it_ppl95.txt \
+    data/corpus_letterario.txt data/corpus.txt \
+    > data/corpus_run5.txt
+
+# Avvia training con --resume da Run #4
+# tmux per sopravvivere alla disconnessione del terminale
+tmux new-session -d -s run5 \
+  'python3 train.py \
+    --tokenizer bpe-spm \
+    --data data/corpus_run5.txt \
+    --resume \
+    2>&1 | tee /tmp/run5.log'
+
+tail -f /tmp/run5.log</div>
+
+<div class="note"><strong>Mac M2 vs Vast.ai per Run #5:</strong> MPS è ~10–15× più lento di RTX 4090. Stima: 56.000 step → 23–35 ore su M2 vs 2.5 ore su GPU. Scelta M2 motivata da disponibilità macchina per 36h consecutive e credito Vast.ai residuo (~$4.65) da preservare per run futuri o iterazioni rapide.</div>
+
 

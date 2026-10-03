@@ -65,6 +65,12 @@ def passes_heuristic(doc: str, min_words: int) -> bool:
     if alpha_ratio < 0.30:
         return False
 
+    # Token alfanumerici misti (es: 'v4sta', 'c4n', username, codici prodotto)
+    # Segnale di testo non-linguistico: rumore da web, forum, codice inline
+    mixed_alnum = sum(1 for w in words if re.search(r'[a-zA-Z]\d|\d[a-zA-Z]', w))
+    if mixed_alnum / len(words) > 0.05:
+        return False
+
     return True
 
 
@@ -128,13 +134,18 @@ def dedup_doc(doc: str, seen_hashes: set) -> str:
 # QUALITY SCORE — PPL con checkpoint SLM esistente
 # ─────────────────────────────────────────────────────────────────────────────
 
-def load_ppl_scorer(checkpoint_path: str):
+def load_ppl_scorer(checkpoint_path: str, device: str = None):
     """
-    Carica il modello SLM dal checkpoint e restituisce una funzione
-    scorer(text) → float che stima la PPL del testo.
+    Carica il modello SLM dal checkpoint e restituisce (scorer, device).
+    device: 'cuda' | 'mps' | 'cpu' — auto-detect se None.
     """
     import torch
     import torch.nn.functional as F
+
+    if device is None:
+        device = ('cuda' if torch.cuda.is_available() else
+                  'mps'  if torch.backends.mps.is_available() else
+                  'cpu')
 
     # Aggiunge il parent dir al path per importare model.py
     project_root = str(Path(checkpoint_path).parent.parent)
@@ -180,7 +191,6 @@ def load_ppl_scorer(checkpoint_path: str):
     except Exception:
         pass
 
-    device = 'cpu'
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
 
     tok_state = ckpt.get('tokenizer_state', ckpt.get('vocab', {}))
@@ -200,15 +210,15 @@ def load_ppl_scorer(checkpoint_path: str):
         if len(ids) < 8:
             return float('inf')
         ids = ids[:max_seq + 1]
-        x   = torch.tensor([ids[:-1]], dtype=torch.long)
-        y   = torch.tensor([ids[1:]],  dtype=torch.long)
+        x   = torch.tensor([ids[:-1]], dtype=torch.long, device=device)
+        y   = torch.tensor([ids[1:]],  dtype=torch.long, device=device)
         logits, _ = model(x)
         loss = F.cross_entropy(
             logits.view(-1, model.config.vocab_size), y.view(-1)
         )
         return math.exp(loss.item())
 
-    return scorer
+    return scorer, device
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -220,9 +230,15 @@ def filter_corpus(args):
     out_path = Path(args.out)
     os.makedirs(out_path.parent, exist_ok=True)
 
+    rej_path = Path(args.rejected) if args.rejected else None
+    if rej_path:
+        os.makedirs(rej_path.parent, exist_ok=True)
+
     print(f"\n  filter_corpus.py")
     print(f"  Input  : {in_path}  ({in_path.stat().st_size / 1024**2:.0f} MB)")
     print(f"  Output : {out_path}")
+    if rej_path:
+        print(f"  Rejected: {rej_path}  (campione doc scartati da PPL con score)")
     active = []
     if args.lang:        active.append(f"lingua={args.lang}")
     if args.dedup:       active.append("dedup")
@@ -235,13 +251,19 @@ def filter_corpus(args):
     ppl_scores = []
     if args.checkpoint:
         print(f"  Caricamento checkpoint per PPL scorer...")
-        scorer = load_ppl_scorer(args.checkpoint)
-        print(f"  Scorer pronto.")
+        scorer, ppl_device = load_ppl_scorer(args.checkpoint, getattr(args, 'device', None))
+        print(f"  Scorer pronto  [device: {ppl_device}]")
+        if ppl_device == 'cpu':
+            est_h = int(2_600_000 / 7 / 3600)
+            print(f"  AVVISO: PPL scorer su CPU — stima ~{est_h}h per 2.6M doc. Usa --device cuda su Vast.ai.")
+
+    # Soglia di log: più frequente quando PPL scorer attivo (lento)
+    LOG_EVERY = 5_000 if scorer is not None else 100_000
 
     # Prima passata PPL (calcola distribuzione per determinare cut)
     ppl_cut_abs = None
     if scorer is not None:
-        print(f"  Prima passata — calcolo distribuzione PPL su campione...")
+        print(f"  Prima passata — calcolo distribuzione PPL su campione (5 000 doc)...")
         sample_scores = []
         with open(in_path, encoding='utf-8', errors='replace') as f:
             doc = []
@@ -263,9 +285,10 @@ def filter_corpus(args):
             sample_scores.sort()
             idx = int(len(sample_scores) * args.ppl_cut)
             ppl_cut_abs = sample_scores[min(idx, len(sample_scores) - 1)]
+            pct_label = f"p{int(args.ppl_cut * 100)}"
             print(f"  Distribuzione PPL: p10={sample_scores[len(sample_scores)//10]:.1f}"
                   f"  mediana={sample_scores[len(sample_scores)//2]:.1f}"
-                  f"  p80={ppl_cut_abs:.1f}  (soglia al {args.ppl_cut:.0%})")
+                  f"  {pct_label}={ppl_cut_abs:.1f}  (soglia al {args.ppl_cut:.0%})")
         else:
             print(f"  AVVISO: impossibile calcolare distribuzione PPL — PPL scorer disabilitato")
             scorer = None
@@ -274,12 +297,19 @@ def filter_corpus(args):
     seen_hashes = set() if args.dedup else None
     counts = {'in': 0, 'heuristic': 0, 'lang': 0, 'dedup': 0, 'ppl': 0, 'out': 0}
     t_start = time.time()
+    rej_written = 0
+    REJ_MAX = 500   # max esempi nel file rejected
+    file_size = in_path.stat().st_size
 
     with open(in_path, encoding='utf-8', errors='replace') as f_in, \
-         open(out_path, 'w', encoding='utf-8') as f_out:
+         open(out_path, 'w', encoding='utf-8') as f_out, \
+         (open(rej_path, 'w', encoding='utf-8') if rej_path else open(os.devnull, 'w')) as f_rej:
 
         doc = []
-        for line in f_in:
+        while True:
+            line = f_in.readline()
+            if not line:
+                break
             line = line.rstrip('\n')
             if line == '':
                 text = '\n'.join(doc).strip()
@@ -306,22 +336,33 @@ def filter_corpus(args):
                     ppl = scorer(text)
                     if ppl > ppl_cut_abs:
                         counts['ppl'] += 1
+                        if rej_written < REJ_MAX:
+                            f_rej.write(f"=== PPL {ppl:.1f} ===\n{text[:600]}\n\n")
+                            rej_written += 1
                         continue
 
                 f_out.write(text)
                 f_out.write('\n\n')
                 counts['out'] += 1
 
-                if counts['in'] % 100_000 == 0:
-                    elapsed = int(time.time() - t_start)
+                if counts['in'] % LOG_EVERY == 0:
+                    elapsed  = time.time() - t_start
                     kept_pct = counts['out'] / max(counts['in'], 1) * 100
                     drop_h   = counts['heuristic'] / max(counts['in'], 1) * 100
                     drop_d   = counts['dedup']     / max(counts['in'], 1) * 100
                     drop_p   = counts['ppl']       / max(counts['in'], 1) * 100
                     speed    = counts['in'] / max(elapsed, 1) / 1000
+                    pos      = f_in.tell()
+                    pct_done = pos / file_size * 100 if file_size > 0 else 0
+                    if pct_done > 0.1:
+                        eta_sec = elapsed / (pct_done / 100) - elapsed
+                        eta_str = f"  ETA {int(eta_sec//3600)}h{int((eta_sec%3600)//60):02d}m"
+                    else:
+                        eta_str = ""
                     print(f"  {counts['in']:>9,} in  {counts['out']:>9,} kept ({kept_pct:.1f}%)"
                           f"  -heur {drop_h:.1f}%  -dedup {drop_d:.1f}%  -ppl {drop_p:.1f}%"
-                          f"  {speed:.1f}k doc/s  {elapsed//60}m{elapsed%60:02d}s")
+                          f"  {speed:.1f}k doc/s  {int(elapsed)//60}m{int(elapsed)%60:02d}s"
+                          f"  {pct_done:.1f}%{eta_str}")
             else:
                 doc.append(line)
 
@@ -364,12 +405,16 @@ def main():
                         help='parole minime per documento (default: 50)')
     parser.add_argument('--lang',       default=None,
                         help='filtra per lingua ISO 639-1 (es. it) — richiede fasttext')
+    parser.add_argument('--rejected',   default=None,
+                        help='file dove salvare un campione (max 500) dei doc scartati dal PPL scorer con il loro score')
     parser.add_argument('--dedup',      action='store_true',
                         help='rimuove paragrafi duplicati via hash MD5')
     parser.add_argument('--checkpoint', default=None,
                         help='checkpoint SLM per quality scoring PPL')
     parser.add_argument('--ppl-cut',    type=float, default=0.80, dest='ppl_cut',
                         help='percentile PPL da scartare (default: 0.80 = top 20%%)')
+    parser.add_argument('--device',     default=None,
+                        help='device per PPL scorer: cuda | mps | cpu (default: auto-detect)')
 
     args = parser.parse_args()
 
