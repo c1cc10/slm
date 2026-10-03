@@ -31,6 +31,9 @@ env/
 *.pt
 !checkpoints/tokenizer.model
 
+# Modelli GGUF (file binari grandi, distribuire separatamente)
+*.gguf
+
 # Log e output temporanei
 *.log
 runs/
