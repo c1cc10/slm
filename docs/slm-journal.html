@@ -2357,7 +2357,31 @@ Stesso pattern di step 6000: sequenza-seme inusuale (`_602 -`) innesca un loop a
 <div class="narr">Shard 3 ha il <strong>minimo assoluto più basso di Run #5 finora</strong> (3.821 a step 7500), ma un micro-uptick finale porta la val 8000 a 3.845 — tra shard 1 e shard 2. Il micro-uptick è atteso quando LR→min con varianza batch residua. Il checkpoint best.pt registra ancora Run #4 (3.5861). Generazione step 8000: <code>"Il tema è un'opera che ha visto la partecipazione di numerosi artisti e professionisti, con un'accoglienza di appassio"</code> — italiano culturale coerente.</div>
 
 <h2 id="run5-shard4">Run #5 — Shard 4/7 (shard_ad.txt) — inizio 2026-10-04 12:02</h2>
-<div class="narr">Shard 4 avviato alle 12:02:36. Corpus: <code>shard_ad.txt</code> (1.18 GB). Tokenizzazione in corso (17%, ETA ~12 min).</div>
+<div class="narr">Shard 4 avviato alle 12:02:36. Corpus: <code>shard_ad.txt</code> (1.18 GB). Tokenizzazione completata: 290,085,185 token totali, train 261M / val 29M. Cache: <code>shard_ad.txt.bpe-spm.v16000.tokens.pt</code> (553 MB). Ripreso da step 27500, val_loss=3.5861 (Run #4 — confermato: tutti gli shard ripartono dallo stesso checkpoint Run #4). Re-warmup: 100 step.</div>
+
+<div class="narr"><strong>Nota meccanismo:</strong> ogni shard riparte da <code>best.pt</code> (Run #4, step 27500, val 3.5861). best.pt non viene aggiornato perché nessuno shard ha superato 3.5861. Il miglioramento shard-su-shard nel minimo di val loss (3.852 → 3.834 → 3.821) è quindi legato a differenze nel corpus (difficoltà, distribuzione linguistica), non ad accumulo di pesi tra shard.</div>
+
+<h3>Tabella checkpoint — shard_ad.txt</h3>
+<div class="table-wrap"><table>
+  <thead>
+    <tr><th>Step</th><th>Train loss</th><th>Val loss</th><th>Tempo (mm:ss)</th><th>LR</th><th>Note</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>0</td><td>4.4522</td><td>4.4721</td><td>01:07</td><td>1.50×10⁻⁴ (re-warmup)</td><td>Avvio shard 4</td></tr>
+    <tr><td>500</td><td>4.3123</td><td>4.2846</td><td>14:24</td><td>2.98×10⁻⁴</td><td>−0.187; gen. meta-ripetitiva "disponibilità" (LR alta)</td></tr>
+    <tr><td>1000</td><td>4.2451</td><td>4.2416</td><td>33:20</td><td>2.91×10⁻⁴</td><td>−0.043; gen. coerente: "coniugi... insoddisfazione... possibilità" ✓</td></tr>
+    <tr><td>1500</td><td>4.1879</td><td>4.2101</td><td>52:13</td><td>2.80×10⁻⁴</td><td>−0.032; gen. medico-legale: "violazione del trattamento"</td></tr>
+    <tr><td>2000</td><td>4.1660</td><td>4.1583</td><td>74:14</td><td>2.63×10⁻⁴</td><td>−0.052; gen. cirillico in apertura + italiano EU coerente — artefatto seed</td></tr>
+    <tr><td>2500</td><td>4.1238</td><td>4.1507</td><td>91:48</td><td>2.43×10⁻⁴</td><td>−0.008; curva si appiattisce (atteso); gen. italiana corretta "qualità di vita" ✓</td></tr>
+    <tr><td>3000</td><td>4.0670</td><td>4.0961</td><td>108:51</td><td>2.20×10⁻⁴</td><td>−0.055; drop dopo mini-plateau; gen. news/politica IT coerente ✓</td></tr>
+    <tr><td>3500</td><td>4.0509</td><td>4.0621</td><td>166:33</td><td>1.94×10⁻⁴</td><td>−0.034; ⚠️ rallentamento per swap — velocità ripresa a step 4000</td></tr>
+    <tr><td>4000</td><td>4.0030</td><td>3.9965</td><td>191:14</td><td>1.68×10⁻⁴</td><td>−0.065; 🎯 primo attraversamento sotto 4.0 · gen. commerciale IT ✓</td></tr>
+    <tr><td>4500</td><td>3.9615</td><td>4.0091</td><td>220:59</td><td>1.41×10⁻⁴</td><td>+0.013 mini-uptick (normale); gen. commerciale IT; velocità ~3.5 s/step ripristinata</td></tr>
+    <tr><td>5000</td><td>3.9379</td><td>3.9558</td><td>251:21</td><td>~1.16×10⁻⁴</td><td>−0.053; nuovo minimo shard 4 · cosine LR in discesa accelerata</td></tr>
+    <tr><td>5500</td><td>3.9148</td><td>3.9196</td><td>278:42</td><td>~9.1×10⁻⁵</td><td>−0.036; nuovo minimo · velocità ~2.6 s/step (pressione mem. normalizzata)</td></tr>
+    <tr><td>6000</td><td>3.8810</td><td>3.8961</td><td>308:15</td><td>7.05×10⁻⁵</td><td>−0.023; primo attraversamento sotto 3.9 · gen. turismo IT ✓ · ~2.4 s/step</td></tr>
+  </tbody>
+</table></div>
 <div class="narr">Step 500: generazione <code>"in questo periodo di un'attività di ricerca di personale o di attività di ricerca e di ricerca di attività di ricerca e "</code> — loop ripetitivo tipico con LR alta (2.98×10⁻⁴). Non è un segnale di degrado: il modello è in fase di esplorazione aggressiva dello spazio dei pesi.</div>
 
 <h3>Checkpoint Step 7000 — shard_ab.txt</h3>
