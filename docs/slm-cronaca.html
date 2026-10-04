@@ -370,4 +370,186 @@ a:hover { text-decoration: underline; }
     </div>
   </article>
 
+  <div class="sep">· · ·</div>
+
+  <!-- ══ Risorse ══ -->
+  <article class="fase" id="run5-risorse">
+    <div class="fase-meta">
+      <span class="fase-date">4 ottobre 2026 — note tecniche</span>
+      <span class="fase-tag">Approfondimento</span>
+    </div>
+    <h2>Otto gigabyte per tutto: modello, dati, sistema operativo</h2>
+
+    <p>La macchina su cui gira il training — un Mac M2 con 8 gigabyte di RAM — non funziona come un computer tradizionale con una scheda grafica dedicata. Su queste macchine, la GPU e la CPU condividono la stessa memoria fisica. Non ci sono due serbatoi separati: c'è un unico bacino da 8 gigabyte che deve bastare per tutto.</p>
+
+    <p>Durante il training, abbiamo misurato come vengono usati questi 8 gigabyte:</p>
+
+    <ul style="margin: 1em 0 1em 1.5em; line-height: 1.8;">
+      <li><strong>5.76 GB</strong> sono occupati dal modello e dal suo meccanismo di apprendimento — i pesi della rete, le statistiche che l'ottimizzatore tiene per ogni parametro, i calcoli intermedi di ogni batch. Questa memoria è "bloccata": il sistema operativo non può spostarla o comprimerla mentre il training è in corso.</li>
+      <li><strong>0.95 GB</strong> vengono gestiti dal compressore interno del sistema operativo, che comprime le pagine di memoria meno usate per guadagnare spazio.</li>
+      <li><strong>0.08 GB</strong> (81 megabyte) sono liberi — praticamente zero.</li>
+    </ul>
+
+    <div class="pull">Il modello vive in un sistema operativo che ha quasi esaurito la sua memoria. Ogni gigabyte ha una funzione. Non c'è margine.</div>
+
+    <p>La CPU — quella che esegue il codice Python — occupa meno di 40 megabyte, una frazione. Il lavoro pesante lo fa la GPU integrata (chiamata MPS nel framework PyTorch), che esegue le operazioni matematiche in parallelo su migliaia di core minuscoli.</p>
+
+    <p>In termini di velocità: su questo hardware il training procede a circa 2.1 secondi per ogni step. Su una GPU professionale come quella usata per il Run #4 (Vast.ai, circa 1,50€/ora), lo stesso step richiedeva 0.15 secondi — quattordici volte più veloce. Il training completo di Run #5, che su GPU professionale richiederebbe meno di un'ora, richiede qui circa 30 ore. La differenza è il prezzo del non pagare per l'infrastruttura.</p>
+
+    <p>Nonostante questo, il modello impara. A metà del primo shard dei sette, la sua capacità di prevedere testo italiano ha già superato il risultato migliore del Run #3, che aveva richiesto 30.000 step su Wikipedia. La varietà del corpus nuovo — testi amministrativi, articoli enciclopedici, narrativa — porta più informazione per unità di testo.</p>
+
+    <div class="risultato">
+      <div class="risultato-label">Metriche a step 4.500 / 56.000</div>
+      RAM usata 91.8% · val loss 4.001 · velocità 2.1s/step · sotto Run #3 (4.077) già al 8% del totale
+    </div>
+
+    <div class="atoms">
+      <a class="atom tecnico" href="slm-journal.html#run5-risorse">Diario → dati tecnici completi</a>
+      <a class="atom glossario" href="slm-glossario.html#mps">MPS</a>
+    </div>
+  </article>
+
+  <article id="run5-shard1-fine">
+    <div class="article-meta">Run #5 · Shard 1 completato · Ottobre 2026</div>
+    <h2>La prima tappa: quattro ore e quaranta minuti</h2>
+
+    <p>Il primo blocco del training è terminato. Quattro ore e quaranta minuti di calcolo continuo su un chip da otto gigabyte, senza interruzioni. Il modello ha attraversato 8.000 aggiornamenti su un pezzo di corpus italiano — articoli enciclopedici, testi amministrativi, narrativa — e alla fine di questo primo blocco la sua capacità di prevedere il testo italiano si è migliorata in modo misurabile.</p>
+
+    <p>La metrica che usiamo per valutarlo, la <em>val loss</em>, è passata da 4.46 a inizio shard a 3.87 a fine shard. In termini concreti: il modello sbaglia meno spesso nella previsione della parola successiva. Non è ancora fluente come un modello addestrato per settimane su supercomputer, ma il miglioramento è reale e documentato passo dopo passo.</p>
+
+    <div class="pull">Il modello non ha ancora superato il suo risultato migliore. Ci vorranno altri shard.</div>
+
+    <p>Il checkpoint più preciso che abbiamo appartiene ancora al run precedente — quello eseguito su GPU professionale nel settembre 2026. Il primo shard del nuovo training non ha ancora raggiunto quel livello. Ma questo era previsto: ogni shard parte da zero in termini di velocità di apprendimento, si scalda nei primi cento aggiornamenti, poi scende lungo una curva a coseno fino a quasi fermarsi. Il vero vantaggio del corpus più ampio si vedrà man mano che i shard si accumulano.</p>
+
+    <p>Mentre il primo shard terminava, il programma ha già iniziato a preparare il secondo: sta leggendo e trasformando in numeri il prossimo pezzo di testo italiano, 1.18 gigabyte di dati che il modello non ha ancora mai visto. Questo processo di codifica richiede circa dieci minuti, poi ripartirà il ciclo.</p>
+
+    <div class="risultato">
+      <div class="risultato-label">Shard 1 completato — riepilogo</div>
+      Durata: 4h 40m · Val loss: 4.46 → 3.87 · Best assoluto ancora Run #4 (3.59) · Shard 2/7 in corso
+    </div>
+
+    <div class="atoms">
+      <a class="atom tecnico" href="slm-journal.html#run5-shard1-progress">Diario → curva completa shard 1</a>
+      <a class="atom glossario" href="slm-glossario.html#val-split">Val loss</a>
+    </div>
+  </article>
+
+  <article id="run5-shard2-sotto4">
+    <div class="article-meta">Run #5 · Shard 2 · Ottobre 2026</div>
+    <h2>Il secondo blocco impara più in fretta</h2>
+
+    <p>Il secondo blocco di training ha raggiunto la stessa qualità del primo in meno tempo. Nel primo blocco ci vollero cinque mila aggiornamenti per portare la metrica di qualità sotto una soglia significativa. Nel secondo blocco ci sono voluti quattro mila aggiornamenti — un quinto in meno.</p>
+
+    <p>Non è solo una curiosità numerica. Significa che il modello, dopo aver lavorato sul primo blocco di testo, era già in una posizione migliore per imparare dal secondo. I pesi — cioè i milioni di numeri che rappresentano la "conoscenza" del modello — erano già orientati nel verso giusto. Il secondo blocco ha richiesto meno correzioni per adattarsi.</p>
+
+    <div class="pull">Ogni blocco rende il prossimo leggermente più facile da imparare.</div>
+
+    <p>È questo il vantaggio del continued pre-training: non si riparte mai da zero. Il modello accumula una comprensione dell'italiano che si consolida blocco dopo blocco, anche quando i testi cambiano registro — da articoli enciclopedici a testi amministrativi, da narrativa a giornalismo. La varietà non confonde, costruisce.</p>
+
+    <div class="risultato">
+      <div class="risultato-label">Shard 2 — step 4000</div>
+      Val loss 3.98 · sotto 4.0 con 1000 step di anticipo rispetto a shard 1 · 2 ore di training
+    </div>
+
+    <div class="atoms">
+      <a class="atom tecnico" href="slm-journal.html#run5-shard2">Diario → shard 2</a>
+      <a class="atom glossario" href="slm-glossario.html#continued-pretraining">Continued pre-training</a>
+    </div>
+  </article>
+
+  <article id="run5-budget">
+    <div class="article-meta">Run #5 · Ottobre 2026</div>
+    <h2>Un quarto di strada, non una corsa persa</h2>
+
+    <p>Nel campo dell'addestramento dei modelli linguistici esiste una regola empirica, emersa da un articolo pubblicato da DeepMind nel 2022 e chiamata informalmente <em>legge di Chinchilla</em>. La regola dice: per addestrare un modello in modo ottimale, servono circa venti token per ogni parametro. Il nostro modello ha 46 milioni di parametri. Il target ottimale è quindi circa 920 milioni di token.</p>
+
+    <p>Con il batch size che stiamo usando su M2 — otto esempi per ogni aggiornamento — Run #5 raggiungerà circa 229 milioni di token al termine dei suoi 56.000 step. Un quarto del target. Non è un fallimento: è una scelta consapevole dettata dai limiti dell'hardware disponibile in questa fase.</p>
+
+    <div class="pull">Il budget token non è un limite di un singolo run. È la somma di tutti i run.</div>
+
+    <p>Il punto chiave è che i training si sommano, non si sostituiscono. Ogni run parte dai pesi del precedente, come se riprendesse un libro dal segnalibro invece di ricominciare dalla prima pagina. Run #4 ha aggiunto 245 milioni di token su Wikipedia. Run #5 ne aggiunge altri 229 milioni su un corpus più vasto. Run #6 — pianificato su GPU professionale, con un batch quattro volte più grande — completerà il percorso con altri 918 milioni di token. Alla fine, il totale sarà circa 1.15 miliardi di token: il 25% in eccesso rispetto al target Chinchilla.</p>
+
+    <p>In questo senso, Run #5 svolge un ruolo specifico: espone il modello a un testo italiano molto più vario di quanto avesse visto finora — articoli enciclopedici, testi amministrativi, narrativa contemporanea — prima che Run #6 consolidi questa conoscenza su scala industriale. Non è una fase di transizione: è un training vero, con risultati misurabili, che produce un checkpoint utile per il passo successivo.</p>
+
+    <div class="risultato">
+      <div class="risultato-label">Budget cumulativo pianificato</div>
+      Run #4: 245M · Run #5: +229M · Run #6: +918M → Totale: ~1.15B token (125% Chinchilla)
+    </div>
+
+    <div class="atoms">
+      <a class="atom tecnico" href="slm-journal.html#run5-run6-budget">Diario → analisi budget</a>
+      <a class="atom glossario" href="slm-glossario.html#token-budget">Token budget</a>
+      <a class="atom glossario" href="slm-glossario.html#chinchilla">Chinchilla optimal</a>
+      <a class="atom glossario" href="slm-glossario.html#continued-pretraining">Continued pre-training</a>
+    </div>
+  </article>
+
+  <article id="run5-shard2-fine">
+    <div class="article-meta">Run #5 · Shard 2 · Ottobre 2026</div>
+    <h2>Il secondo blocco chiude più in basso — e più in fretta</h2>
+
+    <p>Shard 2 è terminato. Quattro ore e sei minuti, trentaquattro minuti in meno di shard 1. La val loss finale è 3.834, contro il 3.867 con cui si era concluso il primo blocco. Non sono numeri che cambierebbero un articolo di giornale, ma nel contesto dell'addestramento sono un segnale preciso: il modello sta progredendo.</p>
+
+    <p>Ogni shard applica un ciclo completo di apprendimento — 8.000 aggiornamenti con la variante cosine del tasso di apprendimento, che parte alto, scende gradualmente, e si ferma prima di toccare zero per lasciare margine a una ripartenza. I pesi che arrivano a fine shard 2 sono leggermente migliori di quelli che arrivavano a fine shard 1. Il corpus cambia, ma il modello porta con sé tutto quello che ha imparato.</p>
+
+    <div class="pull">Ogni shard eredita ciò che il precedente ha costruito. Non si riparte da zero: si va più avanti partendo da un punto già più avanzato.</div>
+
+    <p>È questo che rende l'addestramento a blocchi diverso da un unico lungo ciclo: invece di un percorso lineare, il modello attraversa sette paesaggi linguistici diversi, ognuno dei quali lascia una traccia. La val loss cumulativa non è l'unica misura che conta — ma il fatto che scenda di shard in shard suggerisce che la direzione è quella giusta.</p>
+
+    <div class="risultato">
+      <div class="risultato-label">Shard 2 — riepilogo</div>
+      Val loss finale: 3.834 · Shard 1: 3.867 · Miglioramento: −0.033 · Durata: 4h 06m
+    </div>
+
+    <div class="atoms">
+      <a class="atom tecnico" href="slm-journal.html#run5-shard2">Diario tecnico → shard 2</a>
+    </div>
+  </article>
+
+  <article id="run5-shard3-sotto4">
+    <div class="article-meta">Run #5 · Shard 3 · Ottobre 2026</div>
+    <h2>Il terzo blocco tocca la soglia 4.0 — stessa velocità del secondo</h2>
+
+    <p>Il terzo blocco di addestramento ha raggiunto la soglia 4.0 di val loss al passo 4500, circa due ore e trentacinque minuti dall'avvio. Shard 2 l'aveva toccata al passo 4000. La differenza è contenuta — mezzo blocco, meno di dieci minuti — e suggerisce che la velocità di convergenza si sta stabilizzando: il modello impara sempre più rapidamente rispetto ai blocchi iniziali, ma il margine di miglioramento shard su shard tende a ridursi man mano che i pesi si avvicinano a una configurazione stabile.</p>
+
+    <p>La val loss a metà percorso (step 4500 su 8000, il 56%) è 4.001. È un numero che ha in sé qualcosa di simbolico: la soglia del 4 nella perplexità logaritmica corrisponde, in modo approssimativo, a un modello che si è lasciato alle spalle le fasi più elementari dell'apprendimento linguistico e comincia a operare su strutture più sottili. Non è un traguardo finale, ma un indicatore che l'addestramento procede in modo sano.</p>
+
+    <div class="pull">La val loss di 4.0 non è un traguardo: è il punto in cui comincia la parte più interessante del percorso.</div>
+
+    <p>I campioni di generazione a questo passo mostrano ancora artefatti da parole-seme insolite — ripetizioni di singole parole in maiuscolo, loop di termini tecnici — ma questi sono comportamenti legati ai token di innesco, non alla qualità generale dei pesi. Quando il seme è una parola normale, il modello produce già frasi italiane grammaticalmente corrette.</p>
+
+    <div class="risultato">
+      <div class="risultato-label">Shard 3 — step 4500</div>
+      Val loss: 4.001 · Soglia 4.0 raggiunta · 56% del shard completato · Tempo: 2h 35m
+    </div>
+
+    <div class="atoms">
+      <a class="atom tecnico" href="slm-journal.html#run5-shard3">Diario tecnico → shard 3</a>
+    </div>
+  </article>
+
+  <article id="run5-shard3-fine">
+    <div class="article-meta">Run #5 · Shard 3 · Ottobre 2026</div>
+    <h2>Il terzo blocco conclude con il minimo più basso — poi un passo indietro</h2>
+
+    <p>Shard 3 è terminato in quattro ore e trentasei minuti. Il risultato finale è un po' ambivalente, ma in modo interessante: al passo 7500, cioè a circa novantaquattro per cento del percorso, il modello ha raggiunto una val loss di 3.821 — il valore più basso registrato in tutta la Run #5 finora, meglio del minimo di shard 2 (3.834). Poi, negli ultimi cinquecento passi, c'è stato un leggero rialzo: la val loss finale a step 8000 è 3.845.</p>
+
+    <p>Questo comportamento ha un nome: micro-uptick. Accade quando il tasso di apprendimento è talmente basso da non poter più correggere le fluttuazioni casuali introdotte dai singoli batch di testo. In pratica, il modello ha smesso di imparare cose nuove e ha cominciato a oscillare leggermente intorno alla sua posizione migliore, come un ago di bussola che si assesta. Non è un segnale negativo — è anzi una conferma che il training ha estratto quasi tutto quello che poteva da quel corpus con quella configurazione.</p>
+
+    <div class="pull">Il minimo reale non è sempre l'ultimo passo. A volte il momento migliore arriva poco prima della fine, e il checkpoint lo registra.</div>
+
+    <p>Il checkpoint <code>best.pt</code> salva automaticamente il momento di val loss più bassa — in questo caso, il passo 7500 con 3.821. È quello che il modello userà come punto di partenza per shard 4. Il valore finale a step 8000 è quello che appare nel log di completamento, ma il checkpoint effettivo è quello migliore.</p>
+
+    <p>La tendenza generale resta chiara: ogni shard sposta il minimo assoluto verso il basso. Shard 1: 3.852. Shard 2: 3.834. Shard 3: 3.821. L'abbassamento rallenta, ma continua.</p>
+
+    <div class="risultato">
+      <div class="risultato-label">Shard 3 — riepilogo</div>
+      Minimo val loss: 3.821 (step 7500) · Val finale: 3.845 · Durata: 4h 36m · Shard 4 già in avvio
+    </div>
+
+    <div class="atoms">
+      <a class="atom tecnico" href="slm-journal.html#run5-shard3">Diario tecnico → shard 3</a>
+    </div>
+  </article>
+
 </div>

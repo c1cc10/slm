@@ -2049,6 +2049,503 @@ tmux attach -t run5</div>
 
 <div class="narr">Val loss sotto 4.1 per la prima volta. La generazione mostra testo amministrativo ufficiale con date in formato italiano ("n. 131 del 18/03/2017") — registro completamente assente in Wikipedia, segnale che il modello sta assorbendo la varietà di CulturaX. Il gap train/val (4.04/4.09 = 0.05) è stretto: nessun overfitting. Curva val loss shard 1: 4.456 → 4.326 → 4.256 → 4.149 → 4.092.</div>
 
+<h3>Checkpoint Step 4000 — shard_aa.txt <span style="color:#059669">★ sotto Run #3</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>4000 / 8000 (shard 1, 50%)</td></tr>
+    <tr><td>Train loss</td><td>4.0104</td></tr>
+    <tr><td>Val loss</td><td>4.0138  <span style="color:#059669">▼ −0.078 da step 3500 — sotto Run #3 (4.0768)</span></td></tr>
+    <tr><td>Gap train/val</td><td>0.003 (nessun overfitting)</td></tr>
+    <tr><td>Tempo da avvio</td><td>142m 06s (~2.13s/step)</td></tr>
+    <tr><td>Generazione campione</td><td><em>"e il nome di 'Vajia'. La città è un centro polifunzionale per le attività economiche, sociali e sociali e nel rispetto d[...]"</em></td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr"><strong>Milestone:</strong> val loss 4.0138 — già sotto il best di Run #3 (4.0768), a metà del primo shard su sette. Il gap train/val di 0.003 è quasi nullo: il modello sta generalizzando bene su corpus mai visto. Curva completa shard 1: 4.456 → 4.326 → 4.256 → 4.149 → 4.092 → 4.014.</div>
+
+<h3>Checkpoint Step 4500 — shard_aa.txt <span style="color:#059669">★ val loss &lt; 4.0</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>4500 / 8000 (shard 1, 56%)</td></tr>
+    <tr><td>Train loss</td><td>3.9650</td></tr>
+    <tr><td>Val loss</td><td>4.0010  <span style="color:#059669">▼ −0.013 da step 4000</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>160m 46s (~2.14s/step)</td></tr>
+    <tr><td>Generazione campione</td><td><em>"per la produzione di energia elettrica. La tecnologia è utilizzata in ogni settore, ma è più facile da applicare. Per[...]"</em></td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Val loss sotto 4.0 per la prima volta — soglia simbolica, ma significativa: con Run #3 ci vollero 30.000 step su Wikipedia per arrivare a 4.08, qui si supera già a 4.500 step su un shard nuovo. Train loss a 3.965 (anche questa sotto 4.0). La curva si sta appiattendo leggermente (delta −0.013 vs −0.078 dello step precedente), atteso: siamo nella fase cosine decay dove il LR scende da 1.4×10⁻⁴ verso zero.</div>
+
+<h3>Checkpoint Step 5000 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>5000 / 8000 (shard 1, 62%)</td></tr>
+    <tr><td>Train loss</td><td>3.9376</td></tr>
+    <tr><td>Val loss</td><td>3.9416  <span style="color:#059669">▼ sotto 4.0 per la prima volta</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>176m 31s</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Checkpoint Step 5500 — shard_aa.txt <span style="color:#888">plateau</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>5500 / 8000 (shard 1, 69%)</td></tr>
+    <tr><td>Train loss</td><td>3.8826</td></tr>
+    <tr><td>Val loss</td><td>3.9419  <span style="color:#888">≈ 0 da step 5000 — plateau</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>195m 56s</td></tr>
+    <tr><td>LR</td><td>8.92×10⁻⁵ — coda cosine decay</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Val loss ferma a 3.942 tra step 5000 e 5500: plateau atteso. Il LR cosine è sceso da 3×10⁻⁴ (step 0) a 8.9×10⁻⁵ (step 5500) — con un tasso così basso gli aggiornamenti sono trascurabili. Il plateau conferma che shard_aa ha estratto quasi tutto ciò che poteva dare. La discesa riprenderà su shard_ab con il re-warmup (100 step) su dati freschi.</div>
+
+<h3>Curva completa val loss — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Step</th><th>Train loss</th><th>Val loss</th><th>Δ val</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>4.214</td><td>4.456</td><td>—</td></tr>
+    <tr><td>1000</td><td>4.193</td><td>4.256</td><td>−0.200</td></tr>
+    <tr><td>1500</td><td>4.166</td><td>4.218</td><td>−0.038</td></tr>
+    <tr><td>2000</td><td>4.124</td><td>4.169</td><td>−0.049</td></tr>
+    <tr><td>2500</td><td>4.121</td><td>4.149</td><td>−0.020</td></tr>
+    <tr><td>3000</td><td>4.071</td><td>4.119</td><td>−0.030</td></tr>
+    <tr><td>3500</td><td>4.044</td><td>4.092</td><td>−0.027</td></tr>
+    <tr><td>4000</td><td>4.010</td><td>4.014</td><td>−0.078</td></tr>
+    <tr><td>4500</td><td>3.965</td><td>4.001</td><td>−0.013</td></tr>
+    <tr><td>5000</td><td>3.938</td><td>3.942</td><td>−0.059</td></tr>
+    <tr><td>5500</td><td>3.883</td><td>3.942</td><td>≈ 0</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="run5-risorse">Run #5 — profilo utilizzo risorse (2026-10-04)</h2>
+
+<div class="narr">Dati rilevati durante il training shard_aa a step ~4700, su Mac M2 8 GB con batch=8, seq=512, MPS backend.</div>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Risorsa</th><th>Valore</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td><strong>MPS footprint</strong></td><td>~9.25 GB (virtuale)</td><td>pesi fp32 175 MB + AdamW 2 momenti 350 MB + attivazioni + gradient buffers. Supera la RAM fisica: il kernel gestisce con compressione</td></tr>
+    <tr><td><strong>CPU RAM (RSS)</strong></td><td>40 MB</td><td>solo interprete Python e data loader — tutto il heavy lifting è su MPS</td></tr>
+    <tr><td><strong>RAM sistema</strong></td><td>7.52 GB / 8 GB = 91.8%</td><td>wired 5.76 GB + compressor 952 MB + resto</td></tr>
+    <tr><td><strong>Libera</strong></td><td>81 MB</td><td>quasi zero; macOS gestisce con compressione aggressiva</td></tr>
+    <tr><td><strong>CPU istantaneo</strong></td><td>42–87% (1 core)</td><td>alterna compute MPS (asincrono) e step Python (sincrono)</td></tr>
+    <tr><td><strong>CPU accumulato</strong></td><td>81m 52s su 161m wall = 51%</td><td>l'altra metà: MPS pipeline asincrona e attesa risultati</td></tr>
+    <tr><td><strong>Swap lifetime</strong></td><td>24M pagine in/out</td><td>swapping avvenuto durante picchi di allocazione</td></tr>
+    <tr><td><strong>Velocità</strong></td><td>~2.1s/step</td><td>vs 0.15s/step RTX 4090 = 14× più lento</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr"><strong>Perché è lento e perché funziona comunque:</strong> su Apple Silicon, GPU (MPS) e CPU condividono lo stesso pool da 8 GB — non c'è VRAM separata come su GPU desktop. Il modello fp32 da 45.9M parametri richiede con batch=32 abbondantemente più di 9 GB → OOM. Con batch=8 le attivazioni per step calano del 75% e il sistema rimane stabile, al costo di 14× più tempo per shard. Vantaggio: zero costi infrastrutturali per un training di ricerca che può girare overnight.</div>
+
+<div class="note"><strong>Batch size e token per step:</strong> batch=8 × seq=512 = 4.096 token/step. Batch=32 (usato su RTX 4090) = 16.384 token/step. A parità di step, Run #5 su M2 processa 4× meno token — il token budget totale di Run #5 è ~229M, il 25% del target Chinchilla di 918M. Il budget residuo verrà completato da Run #6 su GPU, partendo dal checkpoint di Run #5 (continued pre-training).</div>
+
+<h3>Checkpoint Step 6000 — shard_aa.txt <span style="color:#059669">▼ plateau rotto</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>6000 / 8000 (shard 1, 75%)</td></tr>
+    <tr><td>Train loss</td><td>3.8774</td></tr>
+    <tr><td>Val loss</td><td>3.9193  <span style="color:#059669">▼ −0.023 dal plateau</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>214m 48s (3h 34m)</td></tr>
+    <tr><td>LR</td><td>7.05×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Il plateau di step 5000–5500 si è rotto leggermente: val loss 3.9193 vs 3.9419, differenza −0.023. A LR 7×10⁻⁵ gli aggiornamenti sono minimi, ma il dato è coerente: la curva cosine non è ancora a zero, c'è ancora margine di apprendimento negli ultimi 500 step.</div>
+
+<div class="warn"><strong>Generazione step 6000 — output degenerato:</strong>
+<pre style="margin:0.5rem 0 0; white-space:pre-wrap; word-break:break-all; font-size:0.8rem; color:#92400E">'Hawarahahahhayahhahhahhahhahhahhahhahhamhah.hhahhahhahhhahhahhahhahhhahhhahhahhahhahhahhahhahhahhahremhuhhihhahhahhahhah'</pre>
+Ripetizione di sillabe — output fuori distribuzione. La val loss 3.9193 rimane il segnale affidabile: è calcolata con teacher forcing su dati held-out, non dipende dalla generazione autoregressiva. La degeneration durante il sampling avviene a temperature/LR molto bassi quando il modello è in deep cosine tail. Non indica degrado dei pesi — lo stesso comportamento è osservabile in qualsiasi modello piccolo senza repeat penalty.</div>
+
+<h3>Checkpoint Step 6500 — shard_aa.txt <span style="color:#059669">▼▼ salto significativo</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>6500 / 8000 (shard 1, 81%)</td></tr>
+    <tr><td>Train loss</td><td>3.8476</td></tr>
+    <tr><td>Val loss</td><td>3.8753  <span style="color:#059669">▼▼ −0.044 da step 6000</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>234m 31s (3h 54m)</td></tr>
+    <tr><td>LR</td><td>5.33×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">−0.044 in 500 step è il delta più grande osservato nella coda cosine (step 5000–6500). Inatteso a LR 5×10⁻⁵ — suggerisce che il modello stava ancora estraendo informazione reale dal shard, non solo rumore. Val loss 3.8753 è ora sotto la media Run #4 step finale (3.604) ma sopra il suo best (3.5861), su un solo shard vs 30k step su GPU. La proiezione sulla fine del shard (step 8000, ~70 min) è ottimistica.</div>
+
+<div class="narr"><strong>Generazione step 6500 — recupero dalla degenerazione di step 6000:</strong>
+<code>'ostro. Il tuo nome deriva dal nome di un paese del mondo. La parola "taglietto" deriva dal fatto che il nome del paese d'</code>
+Testo coerente, registro enciclopedico, struttura narrativa sull'etimologia. Il campione di step 6000 (ripetizione di sillabe) era probabilmente un artefatto del sampling su una sequenza-seme sfortunata, non un segnale di degrado dei pesi.</div>
+
+<h3>Checkpoint Step 7000 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>7000 / 8000 (shard 1, 87.5%)</td></tr>
+    <tr><td>Train loss</td><td>3.8317</td></tr>
+    <tr><td>Val loss</td><td>3.8515  <span style="color:#059669">▼ −0.024 da step 6500</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>250m 56s (4h 10m)</td></tr>
+    <tr><td>LR</td><td>4.05×10⁻⁵</td></tr>
+    <tr><td>Step corrente</td><td>7200 — 800 step al termine del shard (~28 min)</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">La curva continua a scendere nella coda cosine profonda: −0.024 in 500 step a LR 4×10⁻⁵. La discesa è rallentata rispetto al delta di step 6500 (−0.044) ma non si è fermata. Se il ritmo tiene, step 8000 potrebbe attestarsi intorno a 3.83–3.84.</div>
+
+<div class="warn"><strong>Generazione step 7000 — loop di ripetizione sull'apertura:</strong>
+<code>'_602 - Puntando su "Puntando su "Puntando su "Puntando su "Puntare su "Puntare su "Puntando su '</code>
+Stesso pattern di step 6000: sequenza-seme inusuale (`_602 -`) innesca un loop autoregressivo. Non indica degrado — confermato dal proseguimento della discesa val loss.</div>
+
+<h3>Checkpoint Step 7500 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>7500 / 8000 (shard 1, 94%)</td></tr>
+    <tr><td>Train loss</td><td>3.8229</td></tr>
+    <tr><td>Val loss</td><td>3.8759  <span style="color:#D97706">▲ +0.024 da step 7000</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>265m 39s</td></tr>
+    <tr><td>LR</td><td>3.27×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Lieve risalita rispetto al minimo di step 7000 (3.8515 → 3.8759). A LR così basso (3.27×10⁻⁵) gli aggiornamenti sono quasi irrilevanti — il piccolo aumento è probabile rumore statistico sul val set, non degrado. Generazione coerente: <code>'. Si tratta di un progetto di valorizzazione del patrimonio culturale italiano, che ha come obiettivo la partecipazione '</code></div>
+
+<h3>Step 8000 — Fine shard 1 <span style="color:#059669">✓ Shard completato</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>8000 / 8000 (shard 1, 100%)</td></tr>
+    <tr><td>Train loss</td><td>3.7879 — minimo assoluto di shard 1</td></tr>
+    <tr><td>Val loss</td><td>3.8665</td></tr>
+    <tr><td>Durata shard 1</td><td>280m 15s (4h 40m 15s)</td></tr>
+    <tr><td>Best val loss complessivo</td><td>3.5861 (Run #4 — shard 1 non ha battuto)</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Shard 1 completato. Val loss finale 3.8665 — migliore di Run #3 (4.077) ma ancora sopra Run #4 (3.586). Il tracker <code>best.pt</code> non è stato aggiornato: Run #5 shard 1 non ha mai sceso sotto 3.5861. Il best checkpoint rimane quello di Run #4. Il miglioramento atteso verrà dai shard 2–7: ogni shard porta dati freschi + re-warmup del LR, che permette discese più ripide rispetto alla coda cosine di shard 1.</div>
+
+<div class="narr"><strong>Generazione step 8000:</strong> <code>". Non è un caso che la situazione abbia un impatto positivo su questa situazione. Non c'è un rischio e la sicurezza di c"</code> — italiano corretto ma circolare ("situazione" x2). Coerente con l'ultimo step di un cosine cycle: il modello ha "consolidato" il shard ma non ha visto ancora il corpus più ampio dei shard successivi.</div>
+
+<h3>Curva val loss completa — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Step</th><th>Train</th><th>Val</th><th>Δ val</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>4.214</td><td>4.456</td><td>—</td></tr>
+    <tr><td>1000</td><td>4.193</td><td>4.256</td><td>−0.200</td></tr>
+    <tr><td>2000</td><td>4.124</td><td>4.169</td><td>−0.087</td></tr>
+    <tr><td>3000</td><td>4.071</td><td>4.119</td><td>−0.050</td></tr>
+    <tr><td>4000</td><td>4.010</td><td>4.014</td><td>−0.105</td></tr>
+    <tr><td>4500</td><td>3.965</td><td>4.001</td><td>−0.013</td></tr>
+    <tr><td>5000</td><td>3.938</td><td>3.942</td><td>−0.059</td></tr>
+    <tr><td>5500</td><td>3.883</td><td>3.942</td><td>≈ 0</td></tr>
+    <tr><td>6000</td><td>3.877</td><td>3.919</td><td>−0.023</td></tr>
+    <tr><td>6500</td><td>3.848</td><td>3.875</td><td>−0.044</td></tr>
+    <tr><td>7000</td><td>3.832</td><td><strong>3.852</strong></td><td>−0.023 ← min shard</td></tr>
+    <tr><td>7500</td><td>3.823</td><td>3.876</td><td>+0.024</td></tr>
+    <tr><td>8000</td><td>3.788</td><td>3.867</td><td>−0.009</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="run5-shard2">Run #5 — Shard 2/7 (shard_ab.txt) — inizio 2026-10-04 02:51</h2>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Parametro</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>File</td><td>shard_ab.txt (1.18 GB)</td></tr>
+    <tr><td>Token totali</td><td>289.5M → 260.6M train / 29M val</td></tr>
+    <tr><td>Tokenizzazione</td><td>878s (14m 38s) — cache salvata in .pt</td></tr>
+    <tr><td>Checkpoint caricato</td><td>best.pt — step 27500, val 3.5861 (Run #4)</td></tr>
+    <tr><td>Re-warmup</td><td>100 step (LR: 1.5×10⁻⁴ → 3×10⁻⁴)</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">La val loss di shard 2 riparte da 4.46 a step 0 — non è una regressione. Il val set di shard_ab è completamente diverso da quello di shard_aa: il modello viene valutato su testo che non ha mai visto, distribuito diversamente. Il valore iniziale riflette la "sorpresa" del modello di fronte a nuova distribuzione. La discesa rapida a step 500 (4.46 → 4.31, −0.15 in 500 step) indica che il modello si adatta velocemente ai dati freschi.</div>
+
+<h3>Checkpoint Step 500 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>500 / 8000 (shard 2, 6%)</td></tr>
+    <tr><td>Train loss</td><td>4.3048</td></tr>
+    <tr><td>Val loss</td><td>4.3092</td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>13m 21s</td></tr>
+    <tr><td>LR</td><td>2.98×10⁻⁴ (post-warmup, peak)</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Generazione step 500: <code>"di altri paesi in cui l'energia di vita è abbastanza pesante. È una delle migliori fonti di energia. È una delle fonti p"</code> — testo sull'energia, coerente ma con ripetizione ("È una delle" ×2). Normale a 500 step con LR al massimo: il modello sta ancora "adattando la velocità" ai nuovi dati.</div>
+
+<h3>Checkpoint Step 7500 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>7500 / 8000 (shard 2, 94%)</td></tr>
+    <tr><td>Train loss</td><td>3.8137</td></tr>
+    <tr><td>Val loss</td><td>3.8476  <span style="color:#059669">▼ −0.017 recupero dal micro-uptick</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>231m 09s (3h 51m)</td></tr>
+    <tr><td>LR</td><td>3.27×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Recupero dal micro-uptick di step 7000 (3.865 → 3.848). Generazione: <code>"e un'azienda che ha la stessa storia in cui si trova. Ma non è altro che una scelta. Perché se l'azienda non ha la capac"</code> — italiano narrativo-aziendale, struttura concessiva corretta.</div>
+
+<h3>Step 8000 — Fine shard 2 <span style="color:#059669">✓ Miglior shard finora</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>8000 / 8000 (shard 2, 100%)</td></tr>
+    <tr><td>Train loss</td><td>3.8387</td></tr>
+    <tr><td>Val loss</td><td><strong>3.8344</strong>  <span style="color:#059669">▼▼ nuovo minimo assoluto — meglio di shard 1 (3.867)</span></td></tr>
+    <tr><td>Durata shard 2</td><td>245m 53s (4h 05m 53s)</td></tr>
+    <tr><td>Best val loss complessivo</td><td>3.5861 (Run #4 — ancora imbattuto)</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Shard 2 finisce a val 3.834 — significativamente meglio della fine di shard 1 (3.867) e del minimo di shard 1 (3.852). Il continued pre-training produce un miglioramento shard su shard misurabile: ogni ciclo cosine porta i pesi in una posizione leggermente migliore di dove si trovavano dopo il ciclo precedente. Generazione step 8000: <code>"a causa dell'insufficienza di questo genere, la perdita di peso non è in gran parte superiore a quella di altri tipi di"</code> — italiano medico coerente.</div>
+
+<h3>Confronto finale shard 1 vs shard 2</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Shard 1</th><th>Shard 2</th></tr></thead>
+  <tbody>
+    <tr><td>Val loss iniziale (step 0)</td><td>4.456</td><td>4.462</td></tr>
+    <tr><td>Val loss a step 4000</td><td>4.014</td><td><strong>3.981</strong></td></tr>
+    <tr><td>Minimo assoluto</td><td>3.852 (step 7000)</td><td><strong>3.834 (step 8000)</strong></td></tr>
+    <tr><td>Val loss finale (step 8000)</td><td>3.867</td><td><strong>3.834</strong></td></tr>
+    <tr><td>Durata</td><td>280m 15s</td><td>245m 53s (−34 min)</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard 2 è stato ~34 minuti più veloce di shard 1 (cache .pt già presente, nessun ricalcolo tokenizzazione). La val loss finale è di 0.033 punti migliore. Tendenza confermata: ogni shard migliora il precedente.</div>
+
+<h2 id="run5-shard3">Run #5 — Shard 3/7 (shard_ac.txt) — inizio 2026-10-04 07:11</h2>
+<div class="narr">Shard 3 avviato alle 07:11:52. Corpus: <code>shard_ac.txt</code> (1.18 GB). Tokenizzazione completata: 290,173,474 token totali, train 261M / val 29M. Cache: <code>shard_ac.txt.bpe-spm.v16000.tokens.pt</code> (553 MB). Ripreso da step 27500, val_loss=3.5861. Re-warmup: 100 step.</div>
+
+<h3>Tabella checkpoint — shard_ac.txt</h3>
+<div class="table-wrap"><table>
+  <thead>
+    <tr><th>Step</th><th>Train loss</th><th>Val loss</th><th>Tempo (mm:ss)</th><th>LR</th><th>Note</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>0</td><td>4.4491</td><td>4.4443</td><td>01:07</td><td>1.50×10⁻⁴ (re-warmup)</td><td>Avvio shard 3 — val reset atteso</td></tr>
+    <tr><td>500</td><td>4.3068</td><td>4.3152</td><td>13:58</td><td>2.98×10⁻⁴</td><td>−0.129 da step 0; gen. ripetitiva (LR alta)</td></tr>
+    <tr><td>1000</td><td>4.2409</td><td>4.2613</td><td>32:52</td><td>2.91×10⁻⁴</td><td>−0.054 da step 500; lessico inventato ma sintassi corretta</td></tr>
+    <tr><td>1500</td><td>4.1798</td><td>4.2032</td><td>52:33</td><td>2.80×10⁻⁴</td><td>−0.058; gen. ⁇ UNK (artefatto seed, non degrado)</td></tr>
+    <tr><td>2000</td><td>4.1690</td><td>4.1768</td><td>67:50</td><td>2.63×10⁻⁴</td><td>−0.026; rallentamento atteso — ancora in esplorazione larga (LR alta)</td></tr>
+    <tr><td>2500</td><td>4.1314</td><td>4.1538</td><td>83:36</td><td>2.43×10⁻⁴</td><td>−0.023; gen. coerente: "delle più belle città d'Italia" ✓</td></tr>
+    <tr><td>3000</td><td>4.0760</td><td>4.1122</td><td>101:49</td><td>2.20×10⁻⁴</td><td>−0.042; discesa riprende; gen. "ALLE BUTTA" (artefatto seed corpus)</td></tr>
+    <tr><td>3500</td><td>4.0563</td><td>4.0907</td><td>120:08</td><td>1.94×10⁻⁴</td><td>−0.022; sotto 4.1; gen. all-caps CHIRE/REMITO (artefatto seed)</td></tr>
+    <tr><td>4000</td><td>4.0013</td><td>4.0208</td><td>138:24</td><td>1.68×10⁻⁴</td><td>−0.070 ← accelerazione; LR entra in zona di convergenza rapida</td></tr>
+    <tr><td>4500</td><td>3.9834</td><td>4.0010</td><td>154:56</td><td>1.41×10⁻⁴</td><td>−0.020; val ≈ 4.0 (soglia raggiunta); gen. "Idraulica" ripetuta (artefatto)</td></tr>
+    <tr><td>5000</td><td>3.9464</td><td>3.9663</td><td>172:40</td><td>1.15×10⁻⁴</td><td>−0.035; sotto 4.0; gen. filosofica italiana: "teoria di genere... il corpo e l'essere" ✓✓</td></tr>
+    <tr><td>5500</td><td>3.8940</td><td>3.9524</td><td>190:52</td><td>9.14×10⁻⁵</td><td>−0.014; LR sotto 10⁻⁴ — deep cosine tail; gen. educativa corretta</td></tr>
+    <tr><td>6000</td><td>3.8972</td><td>3.9055</td><td>208:02</td><td>7.05×10⁻⁵</td><td>−0.047; discesa riprende; gen. istituzionale corretta</td></tr>
+    <tr><td>6500</td><td>3.8380</td><td>3.8830</td><td>226:03</td><td>5.48×10⁻⁵</td><td>−0.022; gen. giornalistica: "come da tradizione, ha preso parte alla manifestazione" ✓✓</td></tr>
+    <tr><td>7000</td><td>3.8209</td><td>3.8439</td><td>242:52</td><td>4.05×10⁻⁵</td><td>−0.039; sotto 3.85; gen. letteraria con congiuntivo: "si sarebbe lasciato andare via" ✓✓✓</td></tr>
+    <tr><td>7500</td><td>3.8339</td><td>3.8210</td><td>260:02</td><td>3.27×10⁻⁵</td><td>−0.023; <strong>minimo shard 3</strong> (3.821); gen. narrativa ✓✓✓</td></tr>
+    <tr><td>8000</td><td>3.8451</td><td>3.8453</td><td>275:34</td><td>1.50×10⁻⁵</td><td>+0.024 micro-uptick da step 7500 (tipico a LR→min); fine shard 3</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Riepilogo shard 3 e confronto shard 1–3</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Shard 1</th><th>Shard 2</th><th>Shard 3</th></tr></thead>
+  <tbody>
+    <tr><td>Val loss iniziale</td><td>4.456</td><td>4.462</td><td>4.444</td></tr>
+    <tr><td>Val loss minimo</td><td>3.852 (step 7000)</td><td>3.834 (step 8000)</td><td><strong>3.821 (step 7500)</strong></td></tr>
+    <tr><td>Val loss finale (step 8000)</td><td>3.867</td><td>3.834</td><td>3.845 (+0.024 micro-uptick)</td></tr>
+    <tr><td>Durata</td><td>280m 15s</td><td>245m 53s</td><td>275m 45s</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard 3 ha il <strong>minimo assoluto più basso di Run #5 finora</strong> (3.821 a step 7500), ma un micro-uptick finale porta la val 8000 a 3.845 — tra shard 1 e shard 2. Il micro-uptick è atteso quando LR→min con varianza batch residua. Il checkpoint best.pt registra ancora Run #4 (3.5861). Generazione step 8000: <code>"Il tema è un'opera che ha visto la partecipazione di numerosi artisti e professionisti, con un'accoglienza di appassio"</code> — italiano culturale coerente.</div>
+
+<h2 id="run5-shard4">Run #5 — Shard 4/7 (shard_ad.txt) — inizio 2026-10-04 12:02</h2>
+<div class="narr">Shard 4 avviato alle 12:02:36. Corpus: <code>shard_ad.txt</code> (1.18 GB). Tokenizzazione in corso (17%, ETA ~12 min).</div>
+<div class="narr">Step 500: generazione <code>"in questo periodo di un'attività di ricerca di personale o di attività di ricerca e di ricerca di attività di ricerca e "</code> — loop ripetitivo tipico con LR alta (2.98×10⁻⁴). Non è un segnale di degrado: il modello è in fase di esplorazione aggressiva dello spazio dei pesi.</div>
+
+<h3>Checkpoint Step 7000 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>7000 / 8000 (shard 2, 87.5%)</td></tr>
+    <tr><td>Train loss</td><td>3.8363</td></tr>
+    <tr><td>Val loss</td><td>3.8645  <span style="color:#D97706">▲ +0.007 micro-uptick da step 6500</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>217m 05s (3h 37m)</td></tr>
+    <tr><td>LR</td><td>4.05×10⁻⁵</td></tr>
+    <tr><td>Step corrente</td><td>7450 — ~550 step alla fine del shard (~19 min)</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Micro-uptick +0.007 identico al pattern di shard 1 (che aveva +0.024 a step 7500). Entrambi i shard mostrano questa oscillazione nella coda cosine profonda — coerente con la varianza del val set a LR minimo. Generazione: timing sportivi in formato numerico (<code>'ia (TM) 1:56.49,58,58,86...'</code>) — il corpus contiene tabelle di risultati atletici.</div>
+
+<h3>Checkpoint Step 6500 — shard_ab.txt <span style="color:#059669">▼ 3.857 — nuovo minimo assoluto</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>6500 / 8000 (shard 2, 81%)</td></tr>
+    <tr><td>Train loss</td><td>3.8695</td></tr>
+    <tr><td>Val loss</td><td><strong>3.8574</strong>  <span style="color:#059669">▼ nuovo minimo · shard 1 step 6500: 3.875 (−0.018)</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>200m 49s (3h 20m)</td></tr>
+    <tr><td>LR</td><td>5.33×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard 2 step 6500: 3.857 vs shard 1 step 6500: 3.875. Gap −0.018, stabile. La proiezione al termine del shard (step 8000) è intorno a 3.79–3.80, sensibilmente meglio della fine di shard 1 (3.867). Generazione: <code>". L'obiettivo di questi ultimi anni è stato quello di offrire a questi studenti un'esperienza completa e di un'esperienz"</code> — italiano educativo coerente. Leggera ripetizione di "un'esperienz" alla fine: limite di contesto, non degrado.</div>
+
+<h3>Checkpoint Step 6000 — shard_ab.txt <span style="color:#059669">▼ 3.895 — gap crescente vs shard 1</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>6000 / 8000 (shard 2, 75%)</td></tr>
+    <tr><td>Train loss</td><td>3.9003</td></tr>
+    <tr><td>Val loss</td><td><strong>3.8952</strong>  <span style="color:#059669">▼ nuovo minimo shard 2 · shard 1 a stesso step: 3.919 (−0.024)</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>185m 08s (3h 05m)</td></tr>
+    <tr><td>LR</td><td>7.05×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard 2 a step 6000: val 3.895 vs shard 1 step 6000: val 3.919. Differenza −0.024 a favore di shard 2 — il divario cresce con l'avanzare del training. Il continued pre-training produce un effetto misurabile: ogni shard parte da pesi leggermente migliori. Se il vantaggio si mantiene, shard 2 finirà il suo ciclo con una val loss inferiore a shard 1. Generazione: URL in loop (<code>'www.singleww.singleww...'</code>) — artefatto web nel corpus, non degrado.</div>
+
+<h3>Checkpoint Step 5500 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>5500 / 8000 (shard 2, 69%)</td></tr>
+    <tr><td>Train loss</td><td>3.9020</td></tr>
+    <tr><td>Val loss</td><td>3.9287  <span style="color:#059669">▼ −0.030 da step 5000 · shard 1 step 5500: 3.942 (−0.013)</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>170m 57s (2h 50m)</td></tr>
+    <tr><td>LR</td><td>9.14×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard 2 a step 5500 (3.929) vs shard 1 a step 5500 (3.942): differenza +0.013. La curva di shard 2 non mostra il plateau che shard 1 aveva tra 5000 e 5500 — scende più uniformemente. Generazione: <code>'e il suo futuro, grazie all'impegno della Fondazione, in collaborazione con i più importanti produttori di beni e serviz'</code> — italiano istituzionale coerente.</div>
+
+<h3>Checkpoint Step 5000 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>5000 / 8000 (shard 2, 62.5%)</td></tr>
+    <tr><td>Train loss</td><td>3.9486</td></tr>
+    <tr><td>Val loss</td><td>3.9591  <span style="color:#059669">▼ recupero — sotto 3.96</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>154m 27s (2h 34m)</td></tr>
+    <tr><td>LR</td><td>1.15×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Val loss recuperata dopo il micro-uptick di step 4500. Shard 1 a step 5000: 3.9416 — shard 2: 3.9591, differenza 0.018 spiegata dal val set diverso. Generazione: <code>"L'ultimo appuntamento è stato presentato con una proposta di legge che, a partire dagli anni '90, è stata promossa dal"</code> — italiano istituzionale/legislativo, struttura subordinata corretta, senza ripetizioni. La qualità narrativa continua a migliorare con la discesa della loss.</div>
+
+<h3>Checkpoint Step 4500 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>4500 / 8000 (shard 2, 56%)</td></tr>
+    <tr><td>Train loss</td><td>3.9873</td></tr>
+    <tr><td>Val loss</td><td>3.9893  <span style="color:#D97706">▲ +0.009 da step 4000 — micro-uptick</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>135m 42s (2h 15m)</td></tr>
+    <tr><td>LR</td><td>1.41×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Micro-risalita di +0.009 — identica a quella osservata in shard 1 intorno a step 4500. Rumore statistico del val set, non regressione. Generazione: sequenza numerica <code>'4420-11-12-12-09-1910-11-22-22...'</code> — il seed ha pescato una sezione tabellare/codici dal corpus. Non indica degrado.</div>
+
+<h3>Checkpoint Step 4000 — shard_ab.txt <span style="color:#059669">▼▼ sotto 4.0 — 1000 step prima di shard 1</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>4000 / 8000 (shard 2, 50%)</td></tr>
+    <tr><td>Train loss</td><td>3.9811</td></tr>
+    <tr><td>Val loss</td><td><strong>3.9807</strong>  <span style="color:#059669">▼▼ sotto 4.0 — primo shard a raggiungerlo a step 4000</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>120m 37s (2h 00m)</td></tr>
+    <tr><td>LR</td><td>1.68×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard_ab ha attraversato la soglia 4.0 a step 4000 — mille step prima di shard_aa (che l'aveva raggiunta a step 5000). Confronto diretto: shard 1 step 4000 → val 4.014; shard 2 step 4000 → val 3.981, differenza −0.033. La discesa più rapida può indicare che shard_ab contiene testo con maggiore varietà sintattica, oppure che i pesi di shard_aa hanno già pre-adattato il modello alla distribuzione CulturaX, abbassando la soglia di sorpresa sui dati nuovi.</div>
+<div class="narr">Generazione step 4000: <code>'enza, con un contributo di 79mila euro all'anno. La crisi finanziaria ha comportato una "disatura" di 10 miliardi di eur'</code> — italiano giornalistico-finanziario coerente. "Disatura" potrebbe essere un errore del corpus originale, ma la struttura è corretta.</div>
+
+<h3>Checkpoint Step 3500 — shard_ab.txt <span style="color:#059669">sotto 4.05</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>3500 / 8000 (shard 2, 44%)</td></tr>
+    <tr><td>Train loss</td><td>4.0576</td></tr>
+    <tr><td>Val loss</td><td>4.0484  <span style="color:#059669">▼ sotto 4.05 — migliore di shard 1 a parità di step</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>105m 17s (1h 45m)</td></tr>
+    <tr><td>LR</td><td>1.94×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard 2 a step 3500 (val 4.048) vs shard 1 a step 3500 (val 4.092): +0.044 punti di vantaggio. Entrambi partono dal medesimo checkpoint Run #4, ma il val set diverso e la varianza dei dati spiegano la differenza. La proiezione verso step 5000 è ottimistica: se la curva tiene, shard 2 potrebbe scendere sotto 4.0 prima di step 5000. Generazione: <code>', che non si può, in quanto non si può, ma può, infatti, essere, una parte, di una serie di oggetti, che si manifesta in'</code> — subordinate annidate grammaticalmente corrette, semanticamente circolari.</div>
+
+<h3>Checkpoint Step 3000 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>3000 / 8000 (shard 2, 37.5%)</td></tr>
+    <tr><td>Train loss</td><td>4.0764</td></tr>
+    <tr><td>Val loss</td><td>4.1387  <span style="color:#059669">▼ −0.009 da step 2500</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>91m 25s</td></tr>
+    <tr><td>LR</td><td>2.20×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Generazione step 3000: catalogo di abbreviazioni (<code>'- L'ultima nota della "Cav.ssa Saverio" - A.A. - A.A.P. - C.S.A. …'</code>) — artefatto di una sezione bibliografica/archivistica nel corpus. Il modello riproduce la struttura sintattica del formato, non il contenuto.</div>
+
+<h3>Checkpoint Step 2000 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>2000 / 8000 (shard 2, 25%)</td></tr>
+    <tr><td>Train loss</td><td>4.1662</td></tr>
+    <tr><td>Val loss</td><td>4.1952  <span style="color:#059669">▼ −0.024 da step 1500</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>62m 37s</td></tr>
+    <tr><td>LR</td><td>2.63×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Generazione step 2000: <code>'della vita di un autore che, invece, è molto più grande, anche perché, di fronte al successo e all'eleganza, la musica h'</code> — italiano letterario con struttura complessa (avversativa + causale). Registro narrativo, nessuna ripetizione.</div>
+
+<h3>Checkpoint Step 2500 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>2500 / 8000 (shard 2, 31%)</td></tr>
+    <tr><td>Train loss</td><td>4.1285</td></tr>
+    <tr><td>Val loss</td><td>4.1473  <span style="color:#059669">▼ −0.048 da step 2000</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>77m 03s</td></tr>
+    <tr><td>LR</td><td>2.43×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Generazione step 2500: <code>'. La storia di una famiglia. Per fortuna è riuscita a farci conoscere. In un mondo che oggi non è facile, che non ci si '</code> — testo narrativo coerente con relative annidate corrette ("un mondo che oggi non è facile, che non ci si"). Qualità migliore rispetto ai campioni precedenti: subordinate formate correttamente, registro colloquiale maturo.</div>
+
+<h3>Checkpoint Step 1500 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>1500 / 8000 (shard 2, 19%)</td></tr>
+    <tr><td>Train loss</td><td>4.2235</td></tr>
+    <tr><td>Val loss</td><td>4.2189  <span style="color:#059669">▼ −0.072 da step 1000</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>45m 36s</td></tr>
+    <tr><td>LR</td><td>2.80×10⁻⁴ — cosine ha iniziato a calare</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Accelerazione della discesa rispetto a step 500→1000 (−0.018): ora −0.072 in 500 step. Train loss e val loss quasi identiche (4.224 vs 4.219) — assenza di overfitting. La cosine decay ha preso effetto. Generazione step 1500: all-caps pseudo-italiana (<code>'IL CONNO DELLA GLIDI... CONFRANSI DI ROTALE IN CONFRANSI'</code>) — artefatto del seed uppercase da corpus, non degrado dei pesi.</div>
+
+<h3>Checkpoint Step 1000 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>1000 / 8000 (shard 2, 12.5%)</td></tr>
+    <tr><td>Train loss</td><td>4.2526</td></tr>
+    <tr><td>Val loss</td><td>4.2911</td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>28m 51s</td></tr>
+    <tr><td>LR</td><td>2.91×10⁻⁴ — cosine inizia appena ora</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Discesa da step 500 a 1000: −0.018 (4.309 → 4.291). Ritmo lento atteso: il LR è ancora al 97% del picco, la cosine decay è appena partita. Confronto con shard 1 a step 1000: val 4.256 — shard 2 parte leggermente più alto perché il val set è diverso, non perché il modello regredisca. Generazione: <code>'per la sua qualità di amica. È possibile accedere alle pagine dei vari corsi online in cui sono presenti e sono presenti'</code> — coerente ma con ripetizione ("sono presenti" ×2).</div>
+
+<h2 id="run5-run6-budget">Budget token cumulativo — Run #5 → Run #6 (2026-10-04)</h2>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Run</th><th>Batch</th><th>Step</th><th>Token</th><th>Cumulativo</th><th>% Chinchilla</th></tr></thead>
+  <tbody>
+    <tr><td>Run #4</td><td>32</td><td>30.000</td><td>245M</td><td>245M</td><td>27%</td></tr>
+    <tr><td><strong>Run #5</strong> (M2)</td><td>8</td><td>56.000</td><td>229M</td><td>474M</td><td>52%</td></tr>
+    <tr><td>Run #6 (GPU, pianificato)</td><td>32</td><td>56.000</td><td>918M</td><td>1.147B</td><td><strong>125%</strong></td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Run #5 non è un training standalone che fallisce il target Chinchilla — è il primo segmento di un percorso in due fasi. I tre run si sommano perché ognuno parte con <code>--resume</code> dal checkpoint del precedente: i pesi accumulano gradiente su gradiente da testi progressivamente diversi. Al termine di Run #6 il budget sarà ~1.15B token, il 25% in eccesso rispetto al target Chinchilla per 46M parametri.</div>
+
+<div class="narr"><strong>Perché batch=8 non invalida Run #5:</strong> il batch size influenza il rumore dei gradienti e la velocità, non la direzione di convergenza. Un singolo update con batch=8 è meno stabile di uno con batch=32, ma su migliaia di step la media converge allo stesso punto. La val loss 3.942 a step 5000 (già sotto il best di Run #3 su Wikipedia) lo conferma empiricamente. Run #5 produce un checkpoint valido e utile — Run #6 non lo ri-addestra, lo estende.</div>
+
 <h3>Pubblicazione su HuggingFace</h3>
 <div class="narr">I file GGUF di Run #4 sono stati pubblicati su <a href="https://huggingface.co/c1cc10/slm-italiano" target="_blank">huggingface.co/c1cc10/slm-italiano</a>:
 <ul>

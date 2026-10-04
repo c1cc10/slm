@@ -15,7 +15,7 @@ Ogni componente scritto e compreso prima di passare al successivo: architettura 
 | Parametri | 45.9M (~175 MB fp32) |
 | Tokenizer | BPE-SPM, 16 000 token |
 | Miglior checkpoint | Run #4 — val loss **3.5861** (perplexity ~36) |
-| Run in corso | #5 — corpus espanso Wikipedia + CulturaX IT, Mac M2 |
+| Run in corso | #5 — shard 3/7 completato · val loss min Run #5: **3.821** · shard 4/7 in training |
 | Target Chinchilla | 918M token (20 × 45.9M param) — Run #5 ne processa ~917M |
 | Deployment | `slm-run4.gguf` (fp16) · `slm-run4-q8_0.gguf` (Q8_0) |
 
@@ -213,7 +213,7 @@ python3 convert_hf_to_gguf.py /percorso/slm --outtype f16 --outfile slm-run4.ggu
 | 2 | BPE-SPM tokenizer, Wikipedia IT | ✅ completata |
 | 3 | Pre-training medium (Run #3) | ✅ val loss 4.08 — scorer PPL |
 | 4 | RoPE, Run #4, export GGUF | ✅ val loss 3.59 — best checkpoint |
-| 5 | Corpus espansione + Run #5 (Chinchilla-optimal) | 🔄 in corso — Mac M2, ~30h |
+| 5 | Corpus espansione + Run #5 (Chinchilla-optimal) | 🔄 in corso — shard 3/7 ✓ · val min 3.821 · ~16h rimanenti |
 | 6 | Run #6 su GPU, corpus mix finale | ⏳ dopo valutazione Run #5 |
 | 7 | SFT su dataset istruzione-seguente italiano | ⏳ pianificata |
 | 8 | LoRA adapter per dominio applicativo | ⏳ pianificata |

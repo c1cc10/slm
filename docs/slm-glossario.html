@@ -138,6 +138,16 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
       </div>
     </div>
 
+    <div class="term" id="continued-pretraining">
+      <div class="term-name">Continued pre-training</div>
+      <div class="term-body">
+        <p class="term-def">Tecnica in cui un run di training parte dai pesi già appresi da un run precedente (<code>--resume</code>), aggiungendo token al budget totale invece di ricominciare da zero. I token dei run precedenti e di quello corrente si sommano. È più efficiente di ripartire dall'inizializzazione casuale: il modello converge più in fretta perché i pesi sono già in una zona ragionevole dello spazio dei parametri. Run #5 → Run #6 segue questo schema.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-journal.html#run5-run6-budget">Journal → budget cumulativo</a>
+        </div>
+      </div>
+    </div>
+
     <div class="term" id="checkpoint">
       <div class="term-name">Checkpoint</div>
       <div class="term-body">
@@ -299,6 +309,18 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
       <div class="term-name">Token</div>
       <div class="term-body">
         <p class="term-def">Unità atomica di testo che il modello elabora. Può essere un carattere (tokenizer char-level), una parte di parola (BPE) o una parola intera. Il vocabolario BPE del progetto ha 16.000 token: la parola "addestramento" potrebbe diventare ["addestr", "amento"], "il" rimane ["il"].</p>
+      </div>
+    </div>
+
+    <div class="term" id="token-budget">
+      <div class="term-name">Token budget</div>
+      <div class="term-body">
+        <p class="term-def">Numero totale di token consumati durante il training, calcolato come <code>batch_size × seq_len × steps</code>. Determina quanto testo il modello "vede" complessivamente — non quanti dati hai su disco, ma quanti ne passano realmente attraverso i pesi durante gli aggiornamenti.</p>
+        <p class="term-def" style="margin-top:0.5rem">Per Run #5: 8 × 512 × 56.000 = <strong>229M token</strong> (25% del target Chinchilla). Per Run #6: aggiunge 32 × 512 × 56.000 = 918M token partendo dal checkpoint di Run #5. Budget cumulativo finale: ~1.15B token ≈ 1.25× Chinchilla.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#chinchilla">Glossario → Chinchilla optimal</a>
+          <a class="term-link" href="slm-glossario.html#continued-pretraining">Glossario → Continued pre-training</a>
+        </div>
       </div>
     </div>
   </section>
