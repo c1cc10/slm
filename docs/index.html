@@ -11,27 +11,31 @@
   --accent:  #0A6E6E;
   --pub:     #7A4F1E;
   --border:  #DDE3EE;
+  --code-bg: #111827;
+  --code-fg: #A8C4D8;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
     --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF;
     --pub:#C97B30; --border:#21262D;
+    --code-bg:#0A0C14; --code-fg:#79B8FF;
   }
 }
 :root[data-theme="dark"] {
   --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
   --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF;
   --pub:#C97B30; --border:#21262D;
+  --code-bg:#0A0C14; --code-fg:#79B8FF;
 }
 *, *::before, *::after { box-sizing: border-box; }
 body {
   background: var(--bg); color: var(--text);
   font-family: 'IBM Plex Sans', system-ui, sans-serif;
-  font-size: 15px; line-height: 1.65; margin: 0;
+  font-size: 15px; line-height: 1.7; margin: 0;
   padding: 0 20px 72px;
 }
-.container { max-width: 580px; margin: 0 auto; padding-top: 56px; }
+.container { max-width: 640px; margin: 0 auto; padding-top: 56px; }
 
 .eyebrow {
   font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem;
@@ -40,13 +44,76 @@ body {
 }
 h1 {
   font-size: 1.85rem; font-weight: 600; letter-spacing: -0.02em;
-  margin: 0 0 14px; line-height: 1.2; text-wrap: balance;
+  margin: 0 0 20px; line-height: 1.2; text-wrap: balance;
 }
-.genesi {
-  font-size: 0.93rem; color: var(--text-sec);
-  margin: 0 0 36px; line-height: 1.7;
+
+/* ── Intro prose ── */
+.intro-lead {
+  font-size: 1rem; color: var(--text-sec);
+  margin: 0 0 28px; line-height: 1.75;
+  border-left: 3px solid var(--accent);
+  padding-left: 16px;
 }
-.genesi em { font-style: italic; color: var(--text); }
+
+.intro-note {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px 20px;
+  margin: 0 0 32px; font-size: 0.88rem; color: var(--text-sec);
+  line-height: 1.7;
+}
+.intro-note strong { color: var(--text); }
+
+.intro-section { margin: 0 0 32px; }
+.intro-section h3 {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 10px;
+}
+.intro-section p {
+  margin: 0 0 12px; font-size: 0.92rem; color: var(--text-sec); line-height: 1.75;
+}
+.intro-section p:last-child { margin-bottom: 0; }
+.intro-section strong { color: var(--text); }
+.intro-section a { color: var(--accent); text-decoration: none; }
+.intro-section a:hover { text-decoration: underline; }
+
+.step-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem;
+  color: var(--accent); font-weight: 500; margin: 16px 0 4px;
+}
+
+pre {
+  background: var(--code-bg); color: var(--code-fg);
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem;
+  border-radius: 5px; padding: 12px 16px; overflow-x: auto;
+  margin: 6px 0 14px; line-height: 1.6;
+}
+
+code {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.84em;
+  background: var(--surface2); padding: 1px 5px; border-radius: 3px;
+}
+pre code { background: none; padding: 0; }
+
+.intro-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; margin: 10px 0 16px; }
+.intro-table th {
+  text-align: left; font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-sec);
+  border-bottom: 2px solid var(--border); padding: 6px 10px;
+}
+.intro-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-sec); }
+.intro-table td:first-child { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--text); }
+.intro-table tr:last-child td { border-bottom: none; }
+
+.callout {
+  background: var(--surface2); border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0; padding: 12px 16px;
+  font-size: 0.88rem; color: var(--text-sec); margin: 12px 0 20px;
+  line-height: 1.7;
+}
+.callout strong { color: var(--accent); }
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
 
 /* ── Path cards ── */
 .paths {
@@ -102,7 +169,7 @@ h1 {
   border-radius: 2px; overflow: hidden; margin-top: 3px;
 }
 .progress-fill {
-  height: 100%; background: var(--accent); border-radius: 2px; width: 100%;
+  height: 100%; background: var(--accent); border-radius: 2px;
 }
 
 /* ── Footer links ── */
@@ -120,6 +187,7 @@ h1 {
 @media (max-width: 460px) {
   .paths { grid-template-columns: 1fr; }
   h1 { font-size: 1.55rem; }
+  .intro-table { font-size: 0.8rem; }
 }
 </style>
 
@@ -128,12 +196,175 @@ h1 {
   <p class="eyebrow">SLM · Small Language Model</p>
   <h1>Un transformer italiano costruito dall'interno</h1>
 
-  <p class="genesi">
-    Costruire qualcosa dall'interno è il modo più diretto per capirlo.
-    SLM è un transformer decoder in italiano, 46 milioni di parametri, addestrato da zero sull'enciclopedia italiana su un laptop da 8 GB.
-    Non è un'alternativa ai grandi modelli.
-    <em>È uno strumento per capire, per scrivere con una voce specifica, e per lasciare qualcosa di utile a chi viene dopo.</em>
+  <p class="intro-lead">
+    I grandi modelli linguistici sembrano capire l'italiano. Scrivono, rispondono, ragionano.
+    SLM è un esperimento per capire cosa c'è davvero dietro — costruendone uno da zero, piccolo,
+    con un laptop da 8 GB e qualche mese di lavoro. Non è un'alternativa ai grandi modelli.
+    È uno strumento per capire come funzionano dall'interno, perché costruire qualcosa è il modo
+    più onesto per capirlo davvero.
   </p>
+
+  <div class="intro-note">
+    <strong>Una nota prima di cominciare.</strong> Le dimensioni che troverete in questa
+    documentazione — 46 milioni di parametri, un vocabolario di 16.000 unità, 512 dimensioni
+    per ogni rappresentazione, 12 livelli di elaborazione — non sono la forma obbligata di un
+    transformer. Sono scelte deliberate, fatte per un progetto con due obiettivi espliciti:
+    essere comprensibile e girare su hardware piccolo, un Mac con 8 GB di memoria.
+    Un transformer può avere 7 miliardi di parametri, come LLaMA 3, oppure 70 miliardi, come
+    i modelli di fascia alta, oppure 46 milioni, come questo. Il meccanismo è lo stesso in tutti
+    i casi: stessa architettura, stesse operazioni, stessa logica. Cambiano le dimensioni, e con
+    le dimensioni cambiano le capacità. I numeri che seguono sono un'istanza di un continuum,
+    non valori assoluti.
+  </div>
+
+  <!-- ── Sezione 1: Dal testo ai numeri ── -->
+  <div class="intro-section">
+    <h3>Dal testo ai numeri</h3>
+
+    <p>Prima di entrare nell'architettura, c'è una cosa da tenere a mente per tutto il resto
+    della lettura: <strong>il modello non vede mai il testo</strong>. Da quando il corpus viene
+    processato, il testo scompare. Quello che rimane sono numeri, e da numeri si parte fino
+    alla fine.</p>
+
+    <p class="step-label">Step 1 — Tokenizzazione (avviene una volta sola, offline)</p>
+    <p>Un <a href="slm-glossario.html#bpe">tokenizer</a> — nel nostro caso BPE-SPM con un
+    vocabolario di 16.000 unità — divide il testo in pezzi chiamati
+    <a href="slm-glossario.html#token">token</a> e assegna a ciascuno un numero identificativo.
+    "il" potrebbe essere il token 312. "gatto" potrebbe essere due token: "gat" e "to".
+    "addestramento" potrebbe diventare "addestr" e "amento". La suddivisione è statistica,
+    non grammaticale. Il risultato è una sequenza di interi salvata in un file <code>.pt</code>
+    su disco. Quel file è l'unica forma in cui il corpus esiste per il modello. Il testo
+    originale non viene mai più letto.</p>
+<pre>"il gatto dorme sul tetto"
+        ↓
+[312, 8741, 2093, 451, 9834]</pre>
+
+    <p class="step-label">Step 2 — Embedding (primo strato del modello)</p>
+    <p>Una sequenza di interi non è ancora qualcosa su cui si possa fare algebra utile.
+    Il primo strato del modello — l'<a href="slm-glossario.html#embedding">embedding</a> —
+    è una tabella di lookup: per ogni intero da 0 a 15.999, associa un vettore di 512
+    numeri float. Questa tabella è parte del modello e viene appresa durante il training.
+    All'inizio i vettori sono casuali. Dopo milioni di step, token con significati simili
+    si troveranno vicini nello stesso spazio geometrico.
+    <strong>L'embedding è l'unico punto in cui un intero diventa un vettore.</strong>
+    Da qui in avanti, il modello non sa più che c'era del testo.</p>
+<pre>312  →  [0.12, −0.45, 0.87, …, 0.33]   ← 512 dimensioni
+8741 →  [−0.91, 0.22, 0.04, …, 0.67]</pre>
+
+    <p class="step-label">Step 3 — Transformer (pura algebra lineare)</p>
+    <p>I <a href="slm-glossario.html#layer">layer</a> elaborano la sequenza di vettori
+    attraverso meccanismi di <a href="slm-glossario.html#attenzione">attenzione</a> e reti
+    <a href="slm-glossario.html#ffn">feed-forward</a>. Nessun riferimento al testo originale:
+    solo operazioni su <a href="slm-glossario.html#tensor">tensori</a> float.</p>
+
+    <p class="step-label">Step 4 — Prediction e loss</p>
+    <p>L'output finale è una distribuzione di probabilità su tutti i 16.000 token del
+    vocabolario. Il modello risponde: "dato questo contesto, quale token viene dopo?"
+    Il target è il token successivo reale, letto direttamente dal <code>.pt</code>.
+    La <a href="slm-glossario.html#loss">loss</a> misura l'errore; la backpropagation
+    aggiusta i pesi.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── Sezione 2: Embedding, attenzione, parametri ── -->
+  <div class="intro-section">
+    <h3>Embedding, attenzione, parametri</h3>
+
+    <p><strong>L'embedding — lo spazio delle rappresentazioni.</strong>
+    La tabella di embedding non codifica relazioni tra token: rappresenta ogni token
+    individualmente come un punto in uno spazio di 512 dimensioni. Dopo il training,
+    token simili per significato tendono a stare vicini in quello spazio, ma questa
+    vicinanza emerge come effetto del training, non è programmata. L'embedding costruisce
+    il terreno su cui l'attenzione può lavorare.</p>
+
+    <p><strong>L'attenzione — il calcolo delle relazioni.</strong>
+    Le relazioni tra token non vengono memorizzate: vengono calcolate ogni volta che una
+    sequenza passa attraverso il modello. Per ogni token, il meccanismo di
+    <a href="slm-glossario.html#attenzione">attenzione</a> calcola tre proiezioni usando
+    tre matrici di pesi (W_Q, W_K, W_V) che il modello impara durante il training:</p>
+<pre>query  → "cosa sto cercando?"
+key    → "cosa offro agli altri?"
+value  → "cosa trasmetto se vengo scelto?"</pre>
+    <p>Il prodotto scalare tra la query di un token e le key di tutti gli altri produce
+    punteggi di rilevanza. Dopo una normalizzazione (softmax), questi punteggi diventano
+    pesi per una media dei value. Le matrici W_Q, W_K, W_V non contengono relazioni
+    memorizzate: contengono funzioni per rilevarle.</p>
+    <p>Un singolo meccanismo di questo tipo si chiama
+    <a href="slm-glossario.html#head">head</a>. Il nostro modello usa 8 head in parallelo,
+    ognuna con le proprie matrici. Ciascuna impara a rilevare un tipo diverso di relazione.
+    Questa specializzazione emerge dal training, non è progettata.</p>
+
+    <p><strong>I parametri — la conoscenza distribuita.</strong>
+    I <a href="slm-glossario.html#parametri">parametri</a> sono tutti i numeri che compongono
+    le matrici del modello. Prima del training, sono valori casuali. Dopo milioni di step,
+    ogni numero è stato aggiustato finché il modello non ha imparato a predire l'italiano.
+    La conoscenza non è localizzata in nessun posto specifico: è distribuita su tutti
+    i 45.997.056 numeri insieme.</p>
+
+    <table class="intro-table">
+      <thead>
+        <tr><th>Matrice</th><th>Dimensioni</th><th>Parametri</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Embedding</td><td>16.000 × 512</td><td>8.192.000</td></tr>
+        <tr><td>W_Q, W_K, W_V, W_O (per layer)</td><td>512 × 512 × 4</td><td>1.048.576</td></tr>
+        <tr><td>FFN W1 + W2 (per layer)</td><td>512×2048 + 2048×512</td><td>2.097.152</td></tr>
+        <tr><td>Layer norm ×2 (per layer)</td><td>512 × 2 × 2</td><td>2.048</td></tr>
+        <tr><td>× 12 layer</td><td></td><td>~37,8M</td></tr>
+        <tr><td>Embedding</td><td></td><td>8,2M</td></tr>
+        <tr><td><strong>Totale</strong></td><td></td><td><strong>45.997.056</strong></td></tr>
+      </tbody>
+    </table>
+
+    <p>Il file <code>best.pt</code> è esattamente questo: un dizionario di matrici con i
+    valori appresi. Caricarlo significa copiare quei numeri in memoria. Il
+    <a href="slm-glossario.html#continued-pretraining">continued pre-training</a> riparte
+    da quei numeri invece che dal caos iniziale. I numeri che non vengono mai toccati dal
+    training si chiamano <a href="slm-glossario.html#iperparametri">iperparametri</a>:
+    <code>d_model</code>, <code>n_heads</code>, <code>n_layers</code>,
+    <code>learning_rate</code>. Definiscono la struttura e il processo, non il contenuto.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── Sezione 3: Capacità del modello ── -->
+  <div class="intro-section">
+    <h3>Cosa può fare questo modello</h3>
+
+    <p>Un <a href="slm-glossario.html#decoder-only">decoder-only transformer</a> impara
+    un'unica cosa: predire il token successivo. Tutto il resto — grammatica, coerenza, fatti,
+    stile — emerge come side effect di questa previsione ripetuta su enormi quantità di testo.
+    La capacità di un decoder dipende da tre fattori che interagiscono:</p>
+
+    <table class="intro-table">
+      <thead>
+        <tr><th>Fattore</th><th>In questo modello</th><th>Cosa determina</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Numero di parametri</td><td>45.997.056</td><td>Quanti pattern il modello può memorizzare e distinguere</td></tr>
+        <tr><td>Numero di layer</td><td>12</td><td>La profondità dell'elaborazione — quanti livelli di astrazione sopra la sequenza grezza</td></tr>
+        <tr><td>Dimensione embedding</td><td>512</td><td>La risoluzione delle rappresentazioni — quanta sfumatura ogni token può portare</td></tr>
+      </tbody>
+    </table>
+
+    <p>Con 46 milioni di parametri addestrati su corpus italiano di qualità, questo modello
+    può produrre italiano grammaticalmente corretto, sviluppare coerenza a livello di frase
+    e di paragrafo breve, e riflettere lo stile del corpus su cui è stato addestrato. Non può
+    costruire ragionamenti complessi a più passi, non copre in modo affidabile la conoscenza
+    enciclopedica, e la sua finestra di contesto è limitata a 512 token.</p>
+
+    <p>I grandi modelli — GPT-4, LLaMA 3 70B — hanno parametri nell'ordine dei miliardi.
+    Il meccanismo è lo stesso: stessa architettura, più numeri, più layer, finestre di contesto
+    molto più lunghe, e quantità di testo di training su scala industriale.
+    La <a href="slm-glossario.html#perplexity">perplexity</a> misura la distanza: Run #4 è a
+    PPL ~36. I modelli di riferimento sull'italiano sono a PPL ~5–8.</p>
+
+    <div class="callout">
+      <strong>I due percorsi qui sotto</strong> permettono di esplorare questo progetto da due
+      angolature diverse: la storia e le ragioni, oppure l'architettura e il codice.
+    </div>
+  </div>
 
   <div class="paths">
 
@@ -154,12 +385,12 @@ h1 {
   </div>
 
   <div class="status">
-    <div class="status-live"><div class="status-dot"></div>Run #5 in corso — shard 4/7</div>
+    <div class="status-live"><div class="status-dot"></div>Run #5 in corso — shard 5/7</div>
     <span><span class="s-label">target </span><span class="s-val">56 000 step / 918M token</span></span>
     <span><span class="s-label">best val loss </span><span class="s-val">3.5861 (Run #4)</span></span>
     <span><span class="s-label">corpus </span><span class="s-val">7.7 GB · 7 shard</span></span>
     <div class="progress-row">
-      <div class="progress-track"><div class="progress-fill" style="width:43%"></div></div>
+      <div class="progress-track"><div class="progress-fill" style="width:57%"></div></div>
     </div>
   </div>
 

@@ -325,6 +325,75 @@ window.MathJax = {
     </div>
   </header>
 
+  <!-- ── 0. Pipeline fondamentale ── -->
+  <section class="section" id="pipeline">
+    <div class="section-label">
+      <span class="section-num">00</span>
+      <h2>Dal testo al modello: il pipeline fondamentale</h2>
+    </div>
+    <p>
+      Prima di entrare nell'architettura, c'è una cosa da tenere a mente: il modello non vede
+      mai il testo. Da quando il corpus viene processato, il testo scompare. Quello che rimane
+      sono numeri, e da numeri si parte fino alla fine.
+    </p>
+
+    <h3>Step 1 — Tokenizzazione</h3>
+    <p>
+      Il <a href="slm-glossario.html#bpe">tokenizer</a> (BPE-SPM) converte il testo in una
+      sequenza di interi — gli ID dei <a href="slm-glossario.html#token">token</a> nel
+      vocabolario (16.000 entry). Il risultato viene salvato in un file <code>.pt</code>:
+      un <a href="slm-glossario.html#tensor">tensor</a> monodimensionale di interi, lungo
+      milioni di elementi. Il testo originale non serve più.
+    </p>
+<pre><code>"il gatto dorme sul tetto"
+        ↓
+[312, 8741, 2093, 451, 9834]</code></pre>
+
+    <h3>Step 2 — Embedding lookup</h3>
+    <p>
+      Ogni intero viene trasformato in un vettore denso di 512 numeri float tramite la
+      <a href="slm-glossario.html#embedding">embedding matrix</a> (16.000 × 512). Questa tabella
+      è parte del modello — inizializzata a caso e appresa durante il training come tutti gli
+      altri pesi. <strong>È l'unico punto in cui un intero diventa un vettore.</strong> Da qui
+      in poi, il modello non sa più che c'era del testo.
+    </p>
+<pre><code>312  →  [0.12, −0.45, 0.87, …, 0.33]   ← 512 dimensioni
+8741 →  [−0.91, 0.22, 0.04, …, 0.67]</code></pre>
+
+    <h3>Step 3 — Transformer</h3>
+    <p>
+      I <a href="slm-glossario.html#layer">layer</a> del transformer prendono la sequenza di
+      vettori e la passano attraverso meccanismi di
+      <a href="slm-glossario.html#attenzione">attenzione</a> e
+      <a href="slm-glossario.html#ffn">feed-forward network</a>. Nessun riferimento al testo
+      originale: solo operazioni su tensori float.
+    </p>
+
+    <h3>Step 4 — Prediction e loss</h3>
+    <p>
+      L'output finale è una distribuzione di probabilità su tutti i 16.000 token del vocabolario:
+      "dato questo contesto, qual è il token successivo più probabile?" Il target è il token
+      successivo reale, preso direttamente dal <code>.pt</code> — un intero. La
+      <a href="slm-glossario.html#loss">loss</a> (cross-entropy) misura l'errore; la
+      backpropagation aggiusta i pesi.
+    </p>
+
+    <div class="callout">
+      <strong>Il punto chiave:</strong> il testo scompare dopo il tokenizer. Il modello impara
+      relazioni tra ID interi — più precisamente, tra i vettori che quegli ID proiettano nello
+      spazio delle embedding. La comprensione della lingua emerge come side effect
+      dell'ottimizzare la previsione del prossimo intero.
+    </div>
+
+    <div style="margin-top:1rem; display:flex; gap:6px; flex-wrap:wrap;">
+      <a style="font-size:11px;background:var(--formula-bg);border:1px solid var(--border);border-radius:4px;padding:2px 8px;color:var(--text-muted);text-decoration:none;" href="slm-glossario.html#token">Glossario → Token</a>
+      <a style="font-size:11px;background:var(--formula-bg);border:1px solid var(--border);border-radius:4px;padding:2px 8px;color:var(--text-muted);text-decoration:none;" href="slm-glossario.html#embedding">Glossario → Embedding</a>
+      <a style="font-size:11px;background:var(--formula-bg);border:1px solid var(--border);border-radius:4px;padding:2px 8px;color:var(--text-muted);text-decoration:none;" href="slm-glossario.html#pipeline-training">Glossario → Pipeline testo→modello</a>
+    </div>
+  </section>
+
+  <hr class="divider">
+
   <!-- ── 1. Scaled Dot-Product Attention ── -->
   <section class="section">
     <div class="section-label">

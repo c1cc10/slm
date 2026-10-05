@@ -77,7 +77,8 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
 
 <nav class="alpha-nav">
   <a href="#A">A</a><a href="#B">B</a><a href="#C">C</a><a href="#D">D</a>
-  <a href="#E">E</a><a href="#G">G</a><a href="#L">L</a><a href="#M">M</a>
+  <a href="#E">E</a><a href="#F">F</a><a href="#G">G</a><a href="#H">H</a>
+  <a href="#I">I</a><a href="#L">L</a><a href="#M">M</a>
   <a href="#N">N</a><a href="#P">P</a><a href="#R">R</a><a href="#S">S</a>
   <a href="#T">T</a><a href="#V">V</a><a href="#W">W</a>
 </nav>
@@ -181,6 +182,21 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
     </div>
   </section>
 
+  <section class="letter-section" id="F">
+    <div class="letter-heading">F</div>
+
+    <div class="term" id="ffn">
+      <div class="term-name">Feed-Forward Network<br><small style="font-weight:400;color:var(--text-sec)">FFN</small></div>
+      <div class="term-body">
+        <p class="term-def">Componente di ogni layer transformer che elabora ogni token individualmente, dopo che l'attenzione ha aggregato informazioni dalla sequenza. È una rete neurale fully-connected a due strati: il primo espande la dimensione da d_model a 4×d_model (512→2048 nel nostro modello), applica una funzione di attivazione non lineare (GELU), poi il secondo ricomprime a d_model. A differenza dell'attenzione, che mescola informazioni tra token, il FFN opera su ogni posizione in modo indipendente. L'intuizione comune è che l'attenzione "decide cosa guardare", il FFN "ragiona su quello che ha visto".</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#attenzione">Glossario → Attenzione</a>
+          <a class="term-link" href="slm-teoria.html">Teoria → Transformer completo</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="letter-section" id="G">
     <div class="letter-heading">G</div>
 
@@ -205,6 +221,36 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
     </div>
   </section>
 
+  <section class="letter-section" id="H">
+    <div class="letter-heading">H</div>
+
+    <div class="term" id="head">
+      <div class="term-name">Head<br><small style="font-weight:400;color:var(--text-sec)">attention head</small></div>
+      <div class="term-body">
+        <p class="term-def">Un singolo meccanismo di attenzione con le proprie matrici W_Q, W_K, W_V. Il modello usa 8 head in parallelo (multi-head attention): ognuna proietta i token in un sotto-spazio diverso di 64 dimensioni (512÷8) e impara a rilevare un tipo diverso di relazione tra token — accordi grammaticali, riferimenti pronominali, strutture sintattiche. I risultati vengono concatenati e riproiettati con una matrice W_O. La specializzazione di ogni head emerge dal training, non viene programmata.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#attenzione">Glossario → Attenzione</a>
+          <a class="term-link" href="slm-teoria.html">Teoria → Multi-Head Attention</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="letter-section" id="I">
+    <div class="letter-heading">I</div>
+
+    <div class="term" id="iperparametri">
+      <div class="term-name">Iperparametri</div>
+      <div class="term-body">
+        <p class="term-def">I numeri che definiscono la struttura del modello e il processo di training, scelti prima dell'addestramento e mai modificati dalla backpropagation. Si distinguono dai <a href="slm-glossario.html#parametri">parametri</a>, che vengono appresi. Per questo modello: <code>d_model=512</code> (dimensione embedding), <code>n_heads=8</code> (teste di attenzione), <code>n_layers=12</code> (layer transformer), <code>seq_len=512</code> (finestra di contesto), <code>vocab_size=16000</code>, learning rate massimo 3×10⁻⁴. La scelta degli iperparametri bilancia capacità del modello, costo computazionale e hardware disponibile.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#parametri">Glossario → Parametri</a>
+          <a class="term-link" href="slm-glossario.html#loss">Glossario → Loss</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="letter-section" id="L">
     <div class="letter-heading">L</div>
 
@@ -212,6 +258,18 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
       <div class="term-name">Loss / Val loss</div>
       <div class="term-body">
         <p class="term-def">Misura di quanto il modello sbaglia le sue previsioni. In language modeling, è la cross-entropy tra la distribuzione prevista e il token corretto. <em>Training loss</em>: calcolata sui dati di training (tende a scendere). <em>Val loss</em>: calcolata su dati non visti — misura la generalizzazione, quella che conta.</p>
+      </div>
+    </div>
+
+    <div class="term" id="layer">
+      <div class="term-name">Layer<br><small style="font-weight:400;color:var(--text-sec)">blocco transformer</small></div>
+      <div class="term-body">
+        <p class="term-def">Unità funzionale completa del transformer, composta da multi-head attention e feed-forward network, ognuna preceduta da una layer norm e seguita da una connessione residuale. Prende in ingresso una sequenza di vettori e produce una sequenza trasformata della stessa forma. Il modello impila 12 layer in sequenza: i layer bassi tendono a catturare pattern locali (morfologia, strutture di frase brevi), i layer alti relazioni più astratte e a lungo raggio. Questa specializzazione emerge dal training.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#attenzione">Glossario → Attenzione</a>
+          <a class="term-link" href="slm-glossario.html#ffn">Glossario → FFN</a>
+          <a class="term-link" href="slm-teoria.html">Teoria → Blocco Transformer</a>
+        </div>
       </div>
     </div>
 
@@ -258,6 +316,31 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
         <p class="term-def">Come <em>quality scorer</em>: si usa la perplexity del checkpoint Run #3 per valutare se un documento è "italiano enciclopedico". Alta PPL = testo insolito rispetto a Wikipedia → potenziale rumore.</p>
         <div class="term-links">
           <a class="term-link" href="slm-approfondimenti.html#ppl-bias">Approfondimento → bias PPL</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="term" id="parametri">
+      <div class="term-name">Parametri</div>
+      <div class="term-body">
+        <p class="term-def">L'insieme completo dei numeri che compongono il modello — tutto ciò che viene appreso durante il training tramite backpropagation. Ogni matrice (embedding, W_Q, W_K, W_V, W_O, FFN W1, FFN W2, layer norm) è fatta di numeri float: la loro somma totale è il "numero di parametri" del modello. Per questo modello: 45.997.056. All'inizio del training sono valori casuali. Dopo milioni di step, codificano tutta la conoscenza acquisita — distribuita su ogni singolo numero, non localizzata in nessun posto specifico. Il file <code>best.pt</code> è un dizionario di matrici con i valori appresi.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#iperparametri">Glossario → Iperparametri</a>
+          <a class="term-link" href="slm-glossario.html#embedding">Glossario → Embedding</a>
+          <a class="term-link" href="slm-glossario.html#continued-pretraining">Glossario → Continued pre-training</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="term" id="pipeline-training">
+      <div class="term-name">Pipeline testo→modello</div>
+      <div class="term-body">
+        <p class="term-def">Il percorso completo dal corpus grezzo al training. <strong>Step 1:</strong> il tokenizer converte il testo in interi (token ID) e li salva in un file <code>.pt</code> — da questo momento il testo originale non serve più. <strong>Step 2:</strong> l'embedding lookup trasforma ogni intero in un vettore float — unico punto di contatto tra il mondo degli interi e quello vettoriale. <strong>Step 3:</strong> i layer transformer elaborano la sequenza di vettori via attenzione e FFN, senza mai riferirsi al testo. <strong>Step 4:</strong> l'output è una distribuzione di probabilità sul token successivo, confrontata con il token reale dal <code>.pt</code> via cross-entropy loss.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#token">Glossario → Token</a>
+          <a class="term-link" href="slm-glossario.html#embedding">Glossario → Embedding</a>
+          <a class="term-link" href="slm-glossario.html#attenzione">Glossario → Attenzione</a>
+          <a class="term-link" href="slm-teoria.html">Teoria → Pipeline fondamentale</a>
         </div>
       </div>
     </div>
