@@ -1,0 +1,449 @@
+<meta charset="UTF-8">
+<title>SLM — Architetture Modulari</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Lora:ital,wght@0,400;1,400&display=swap">
+<style>
+:root {
+  --bg:#F7F9FC; --surface:#FFFFFF; --text:#1C2333; --text-sec:#5A6478;
+  --accent:#0A6E6E; --border:#DDE3EE; --code-bg:#111827; --code-fg:#A8C4D8;
+  --tag-bg:#EFF6FF; --tag-text:#1E40AF; --tag-br:#BFDBFE;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg:#0D1117; --surface:#161B22; --text:#E6EDF3; --text-sec:#8B949E;
+  --accent:#2BBFBF; --border:#21262D; --code-bg:#0D1117; --code-fg:#79B8FF;
+  --tag-bg:#0D1F3E; --tag-text:#93C5FD; --tag-br:#1E3A6E;
+}}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --text:#E6EDF3; --text-sec:#8B949E;
+  --accent:#2BBFBF; --border:#21262D; --code-bg:#0D1117; --code-fg:#79B8FF;
+  --tag-bg:#0D1F3E; --tag-text:#93C5FD; --tag-br:#1E3A6E;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 15px; line-height: 1.65; padding-bottom: 80px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
+  background: var(--code-bg); color: var(--code-fg); padding: 1px 5px; border-radius: 3px; }
+
+.header { max-width: 860px; margin: 0 auto; padding: 40px 32px 28px;
+  border-bottom: 1px solid var(--border); }
+.header-eyebrow { font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-sec); margin-bottom: 8px; }
+.header h1 { font-size: 26px; font-weight: 600; }
+.header-sub { margin-top: 8px; color: var(--text-sec); }
+.nav-strip { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px; font-size: 12px; }
+.nav-strip a { color: var(--text-sec); }
+.nav-strip a:hover { color: var(--accent); }
+
+.toc { max-width: 860px; margin: 28px auto 0; padding: 0 32px; }
+.toc h2 { font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-sec); margin-bottom: 10px; }
+.toc ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.toc ul li a { font-size: 13px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 4px 12px; display: block; color: var(--text-sec); }
+.toc ul li a:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+
+.articles { max-width: 860px; margin: 0 auto; padding: 0 32px; }
+
+.article { margin-top: 52px; padding-top: 36px; border-top: 1px solid var(--border); }
+.article:first-child { border-top: none; }
+
+.article-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.article-tag { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  background: var(--tag-bg); color: var(--tag-text); border: 1px solid var(--tag-br);
+  padding: 2px 8px; border-radius: 100px; }
+.article-date { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-sec); }
+
+.article h2 { font-size: 20px; font-weight: 600; margin-bottom: 14px; line-height: 1.3; }
+.article p { margin-bottom: 14px; color: var(--text); }
+.article p:last-child { margin-bottom: 0; }
+.article ul, .article ol { margin: 12px 0 14px 20px; }
+.article li { margin-bottom: 6px; }
+
+.article h3 { font-size: 14px; font-weight: 600; letter-spacing: .03em;
+  color: var(--text-sec); text-transform: uppercase; margin: 22px 0 8px; }
+
+.cmd { background: var(--code-bg); color: var(--code-fg); font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px; padding: 16px 18px; border-radius: 6px; margin: 14px 0;
+  overflow-x: auto; white-space: pre; line-height: 1.6; }
+
+.note { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 14px 0; font-size: 13.5px; color: var(--text-sec); }
+.note strong { color: var(--text); }
+
+.table-wrap { overflow-x: auto; margin: 14px 0; }
+table { border-collapse: collapse; font-size: 13px; width: 100%; }
+th { background: var(--surface); color: var(--text-sec); font-size: 11px; text-transform: uppercase;
+  letter-spacing: .06em; padding: 8px 12px; border-bottom: 2px solid var(--border); text-align: left; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+.backlinks { margin-top: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
+.backlink { font-size: 12px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 3px 10px; color: var(--text-sec); }
+.backlink:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+.backlink::before { content: '← '; }
+
+@media (max-width: 560px) {
+  .header, .toc, .articles { padding-left: 18px; padding-right: 18px; }
+}
+</style>
+
+<div class="header">
+  <div class="header-eyebrow">SLM — Small Language Model</div>
+  <h1>Architetture Modulari</h1>
+  <p class="header-sub">MoE, LoRA adapters e Modular LLM Stack: come costruire sistemi capaci partendo da modelli piccoli.</p>
+  <nav class="nav-strip">
+    <a href="index.html">Indice</a>
+    <a href="slm-approfondimenti.html">Approfondimenti</a>
+    <a href="slm-glossario.html">Glossario</a>
+    <a href="slm-finetune.html">Fine-tuning</a>
+  </nav>
+</div>
+
+<nav class="toc">
+  <h2>Sezioni</h2>
+  <ul>
+    <li><a href="#moe-vs-specialists">MoE vs. Mixture of Specialists</a></li>
+    <li><a href="#lora">LoRA adapters</a></li>
+    <li><a href="#modular-stack">Il Modular LLM Stack</a></li>
+  </ul>
+</nav>
+
+<div class="articles">
+
+  <!-- ══ MOE VS SPECIALISTS ══ -->
+  <article class="article" id="moe-vs-specialists">
+    <div class="article-meta">
+      <span class="article-tag">Architettura · Sistema</span>
+      <span class="article-date">2026-10-05</span>
+    </div>
+    <h2>MoE architetturale vs. Mixture of Specialists</h2>
+
+    <p>
+      Quando si parla di modelli "a esperti", si confondono spesso due cose molto diverse:
+      il Mixture of Experts (MoE) come tecnica interna a un singolo modello, e il Mixture of Specialists
+      come architettura di sistema composta da più modelli distinti. La differenza è sostanziale.
+    </p>
+
+    <h3>MoE architetturale</h3>
+
+    <p>
+      In un modello MoE come Mixtral 8×7B, ogni <a href="slm-glossario.html#layer">layer</a> del transformer
+      contiene N reti feed-forward in parallelo, chiamate esperti. Un meccanismo di gating
+      (una piccola rete che apprende anch'essa) valuta ogni token in ingresso e lo instrada
+      verso k-di-N esperti, tipicamente 2 su 8. Il calcolo è quindi sparso: molti
+      <a href="slm-parametri">parametri</a> totali, pochi attivi per ogni token.
+    </p>
+
+    <p>
+      Il risultato pratico è che Mixtral 8×7B ha circa 47 miliardi di parametri totali
+      ma usa attivamente circa 14 miliardi per ogni forward pass. Il costo di inferenza
+      è simile a un modello da 14B, con la capacità di un modello da 47B.
+      Questa architettura vive interamente dentro un singolo file di pesi: non è separabile,
+      non è modulabile, non può essere estesa senza riaddestrare tutto.
+    </p>
+
+    <h3>Mixture of Specialists</h3>
+
+    <p>
+      Il Mixture of Specialists è un'architettura di sistema, non di modello.
+      N modelli distinti, ognuno addestrato o fine-tuned per un dominio specifico,
+      vengono coordinati da un componente di routing che riceve l'input dell'utente
+      e decide quale specialista chiamare.
+    </p>
+
+    <p>
+      È una tecnica usata in produzione da anni, spesso senza darle un nome formale.
+      I vantaggi rispetto a un singolo modello generalista della stessa dimensione totale sono concreti:
+      ogni specialista lavora su una distribuzione molto più stretta, raggiunge performance
+      più alte sul proprio dominio, e può essere aggiornato o sostituito senza toccare gli altri.
+    </p>
+
+    <div class="note">
+      <strong>La distinzione chiave:</strong> MoE è un'ottimizzazione interna a un singolo modello,
+      non separabile. Mixture of Specialists è un pattern architetturale a livello di sistema,
+      componibile e modificabile nel tempo.
+    </div>
+
+    <div class="backlinks">
+      <a class="backlink" href="slm-glossario.html#parametri">Glossario → Parametri</a>
+      <a class="backlink" href="slm-glossario.html#layer">Glossario → Layer</a>
+      <a class="backlink" href="#lora">Sezione → LoRA adapters</a>
+    </div>
+  </article>
+
+  <!-- ══ LORA ══ -->
+  <article class="article" id="lora">
+    <div class="article-meta">
+      <span class="article-tag">Fine-tuning · Efficienza</span>
+      <span class="article-date">2026-10-05</span>
+    </div>
+    <h2>LoRA adapters — la chiave per la modularità efficiente</h2>
+
+    <p>
+      LoRA (Low-Rank Adaptation) è la tecnica che rende economicamente sostenibile
+      il Mixture of Specialists applicato a modelli piccoli. L'idea di base è semplice:
+      invece di modificare tutti i <a href="slm-glossario.html#parametri">parametri</a>
+      del modello durante il fine-tuning, si congelano i pesi originali e si aggiungono
+      due piccole matrici per ogni layer.
+    </p>
+
+    <h3>Come funziona</h3>
+
+    <p>
+      Per ogni layer del transformer, LoRA introduce due matrici: A di dimensioni
+      <code>d_model × r</code> e B di dimensioni <code>r × d_model</code>, dove r è il rank,
+      un iperparametro tipicamente tra 4 e 64. Il delta di pesi che il fine-tuning
+      introdurrebbe viene approssimato dal prodotto A × B.
+    </p>
+
+    <p>
+      Durante il fine-tuning, solo A e B vengono aggiornati. Il modello base rimane
+      congelato. Questo riduce il numero di parametri allenabili da decine di milioni
+      a poche centinaia di migliaia, con un impatto minimo sulla qualità finale
+      per task ben definiti e distribuzioni strette.
+    </p>
+
+    <h3>Dimensioni concrete per questo modello</h3>
+
+    <p>
+      Per il modello SLM da 46M parametri in fp16, con rank r=16:
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Componente</th>
+            <th>Memoria (fp16)</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Modello base (condiviso)</td>
+            <td>~92 MB</td>
+            <td>Sempre in memoria, non modificato</td>
+          </tr>
+          <tr>
+            <td>LoRA adapter per specialista (r=16)</td>
+            <td>~8–15 MB</td>
+            <td>Swappato in millisecondi</td>
+          </tr>
+          <tr>
+            <td>Router (46M fine-tuned completo)</td>
+            <td>~92 MB</td>
+            <td>Classificatore intent</td>
+          </tr>
+          <tr>
+            <td>Verifier (46M fine-tuned completo)</td>
+            <td>~92 MB</td>
+            <td>Validazione strutturale output</td>
+          </tr>
+          <tr>
+            <td><strong>Sistema completo (5 specialist + router + verifier)</strong></td>
+            <td><strong>~340 MB totali</strong></td>
+            <td>Su 8 GB RAM unificata: ampio margine</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      A differenza di N copie complete del modello base, il sistema condivide un unico
+      modello base in memoria e swappa solo gli adapter. Il costo di switching tra specialisti
+      è dell'ordine dei millisecondi, non dei secondi.
+    </p>
+
+    <h3>Costo del fine-tuning</h3>
+
+    <p>
+      Con LoRA, fine-tunare uno specialista richiede in genere 200–500 esempi annotati
+      per task ben definiti (classificazione, estrazione di entità con schema fisso, routing).
+      Su hardware M2 con MPS, il fine-tuning di un adapter per questo modello richiede
+      ore, non giorni. Il prerequisito fondamentale è un base model già buono:
+      un modello pre-trained a <a href="slm-glossario.html#chinchilla">Chinchilla parity</a>
+      riduce il dato necessario per ogni fine-tuning di circa un ordine di grandezza
+      rispetto a un modello pre-trained su corpus ridotto.
+    </p>
+
+    <div class="note">
+      <strong>Il costo del sistema si concentra nel base model.</strong>
+      Il pre-training fino a Chinchilla parity è il pezzo costoso e non ripetibile.
+      Tutto il resto — specialisti, router, verifier — si costruisce sopra in modo incrementale.
+    </div>
+
+    <div class="backlinks">
+      <a class="backlink" href="slm-glossario.html#iperparametri">Glossario → Iperparametri</a>
+      <a class="backlink" href="slm-finetune.html">Fine-tuning SFT</a>
+      <a class="backlink" href="#modular-stack">Sezione → Modular LLM Stack</a>
+    </div>
+  </article>
+
+  <!-- ══ MODULAR STACK ══ -->
+  <article class="article" id="modular-stack">
+    <div class="article-meta">
+      <span class="article-tag">Architettura · Sistema · Produzione</span>
+      <span class="article-date">2026-10-05</span>
+    </div>
+    <h2>Il Modular LLM Stack</h2>
+
+    <p>
+      Un Modular LLM Stack è un sistema composto da più modelli linguistici piccoli,
+      ognuno con un ruolo preciso, coordinati da un layer Python che gestisce il flusso
+      dei dati, le chiamate API esterne e la logica applicativa. È l'alternativa
+      pratica all'uso di un singolo modello grande per ogni task.
+    </p>
+
+    <h3>Architettura del sistema</h3>
+
+<div class="cmd">Messaggio utente (italiano)
+       ↓
+   [Router 46M]         ← classifica l'intent: 3–8 categorie
+       ↓
+[Base 46M + LoRA_X]    ← specialista del dominio appropriato
+   genera risposta
+       ↓
+  [Verifier 46M]        ← validazione strutturale dell'output
+   approva / rigetta
+       ↓
+   Risposta finale      ← o escalation a modello più grande</div>
+
+    <p>
+      Il layer Python che coordina il sistema si occupa di tutto ciò che non è linguaggio:
+      chiamate API esterne, conversione di formati, gestione degli errori, escalation,
+      logging. Il modello non ragiona su questi aspetti — esegue solo la parte linguistica
+      del task (classificazione, estrazione, generazione di testo strutturato).
+    </p>
+
+    <h3>Cosa può fare un componente da 46M (con fine-tuning specifico)</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Affidabilità a 46M</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Classificare intent (3–8 classi coarse)</td>
+            <td>Alta</td>
+            <td>Task binario o multiclasse semplice</td>
+          </tr>
+          <tr>
+            <td>Estrarre entità nominate (date, importi, nomi)</td>
+            <td>Alta su schema fisso</td>
+            <td>Con grammar-constrained decoding</td>
+          </tr>
+          <tr>
+            <td>Convertire linguaggio naturale in JSON (schema fisso)</td>
+            <td>Media/Alta con vincoli</td>
+            <td>Richiede librerie come <code>outlines</code></td>
+          </tr>
+          <tr>
+            <td>Classificare tono, urgenza, rilevanza</td>
+            <td>Alta</td>
+            <td>Con fine-tuning dominio-specifico</td>
+          </tr>
+          <tr>
+            <td>Ragionamento multi-step complesso</td>
+            <td>Bassa</td>
+            <td>Limite architetturale della dimensione</td>
+          </tr>
+          <tr>
+            <td>Verifica logica profonda dell'output</td>
+            <td>Bassa</td>
+            <td>Solo sanity check strutturale</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Il problema della metacognizione</h3>
+
+    <p>
+      Un componente critico di qualsiasi sistema agentico è la capacità di decidere
+      quando escalare: riconoscere che un task supera le proprie capacità e passarlo
+      a un modello più grande o a un sistema diverso. Questa è metacognizione,
+      e i modelli da 46M non la possiedono in modo affidabile.
+    </p>
+
+    <p>
+      La soluzione pratica è spostare questa logica nel layer Python: soglie di confidenza
+      esplicite sull'output del classificatore, lunghezza massima dell'input, complessità
+      stimata del task. Il modello non decide di escalare — il codice lo decide per lui,
+      in base a regole esplicite.
+    </p>
+
+    <h3>Taglie minime per task più complessi</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Modello minimo pratico</th>
+            <th>Opzioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Classificazione intent (3–8 classi)</td>
+            <td>46M fine-tuned</td>
+            <td>Questo modello</td>
+          </tr>
+          <tr>
+            <td>Entity extraction (output semi-strutturato)</td>
+            <td>1–3B fine-tuned</td>
+            <td>LoRA su modello più grande</td>
+          </tr>
+          <tr>
+            <td>Dialogo multi-turno + JSON affidabile</td>
+            <td>7B con function calling</td>
+            <td>Mistral 7B, LLaMA 3 8B Instruct</td>
+          </tr>
+          <tr>
+            <td>Ragionamento complesso, contesti lunghi</td>
+            <td>13B+</td>
+            <td>Self-hosted</td>
+          </tr>
+          <tr>
+            <td>Zero margine di errore in produzione</td>
+            <td>API esterna</td>
+            <td>Claude, GPT-4</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Il ruolo di questo progetto nel sistema</h3>
+
+    <p>
+      Il base model pre-trained a <a href="slm-glossario.html#chinchilla">Chinchilla parity</a>
+      su italiano è il fondamento dell'intero stack. Il fine-tuning degli adapter LoRA
+      è economico solo se il base model è già buono: una base solida riduce il dato
+      necessario per ogni specializzazione di circa un ordine di grandezza, e migliora
+      la qualità dell'output anche con fine-tuning ridotto. Costruire il base model
+      è il pezzo costoso e non ripetibile. Tutto il resto si aggiunge in modo incrementale.
+    </p>
+
+    <div class="note">
+      <strong>Grammar-constrained decoding:</strong> per ottenere output JSON affidabile
+      da modelli piccoli, librerie come <code>outlines</code> o <code>lm-format-enforcer</code>
+      costringono il campionamento a produrre solo token compatibili con uno schema JSON
+      valido. Questo risolve il problema dell'output malformato senza richiedere
+      un modello più grande.
+    </div>
+
+    <div class="backlinks">
+      <a class="backlink" href="slm-glossario.html#parametri">Glossario → Parametri</a>
+      <a class="backlink" href="slm-glossario.html#iperparametri">Glossario → Iperparametri</a>
+      <a class="backlink" href="slm-finetune.html">Fine-tuning SFT</a>
+      <a class="backlink" href="#lora">Sezione → LoRA adapters</a>
+    </div>
+  </article>
+
+</div>
