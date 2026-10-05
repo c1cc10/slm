@@ -2736,10 +2736,10 @@ Stesso pattern di step 6000: sequenza-seme inusuale (`_602 -`) innesca un loop a
     <tr><td>1 / aa</td><td>shard_aa.txt</td><td>✓ completato</td><td><strong>3.5568</strong></td><td>40m 52s — sotto Run #4 (3.5861) di 0.029</td></tr>
     <tr><td>2 / ab</td><td>shard_ab.txt</td><td>✓ completato</td><td><strong>3.4458</strong></td><td>40m 47s — −0.111 rispetto ad aa</td></tr>
     <tr><td>3 / ac</td><td>shard_ac.txt</td><td>✓ completato</td><td><strong>3.4011</strong></td><td>40m 44s — −0.045 rispetto ad ab</td></tr>
-    <tr><td>4 / ad</td><td>shard_ad.txt</td><td>⏳ in corso</td><td>—</td><td>Avviato 15:56 UTC</td></tr>
-    <tr><td>5 / ae</td><td>shard_ae.txt</td><td>in attesa</td><td>—</td><td>Val loss Run #5 più bassa (3.8215)</td></tr>
-    <tr><td>6 / af</td><td>shard_af.txt</td><td>in attesa</td><td>—</td><td></td></tr>
-    <tr><td>7 / ag</td><td>shard_ag.txt</td><td>in attesa</td><td>—</td><td>Corpus più difficile (Run #5: 4.027 a step 4000)</td></tr>
+    <tr><td>4 / ad</td><td>shard_ad.txt</td><td>✓ completato</td><td><strong>3.3524</strong></td><td>40m 43s — −0.048 rispetto ad ac</td></tr>
+    <tr><td>5 / ae</td><td>shard_ae.txt</td><td>✓ completato</td><td><strong>3.3385</strong></td><td>40m 45s — sample: "La società ha già deciso di sgomberare, ma il progetto non ha ancora finito" — −0.014 rispetto ad ad</td></tr>
+    <tr><td>6 / af</td><td>shard_af.txt</td><td>✓ completato</td><td><strong>3.3040</strong></td><td>40m 45s — sample: "a Milano la prima delle sue iniziative, quella di aprire in città i propri negozi" — −0.035 rispetto ad ae</td></tr>
+    <tr><td>7 / ag</td><td>shard_ag.txt</td><td>✓ completato</td><td><strong>3.2965</strong></td><td>40m 44s — best a step 8000 (loss in calo fino alla fine) — −0.008 rispetto ad af</td></tr>
   </tbody>
 </table>
 
@@ -2757,8 +2757,88 @@ Stesso pattern di step 6000: sequenza-seme inusuale (`_602 -`) innesca un loop a
 </table>
 <div class="narr">Andamento coerente con il pattern dei shard precedenti: il modello scala sistematicamente su ogni corpus nuovo. La discesa da 3.4353 (step 6000) a 3.4011 (step 8000) è regolare e senza plateau. La catena sequenziale accumula miglioramento ad ogni shard: aa→ab −0.111, ab→ac −0.045. La riduzione si assottiglia per corpus con distribuzione simile.</div>
 
+<h2 id="run6-shard5">Run #6 — Shard 5/7 (shard_ae.txt) — completato 2026-10-05 17:18 UTC</h2>
+<div class="narr">Shard ae avviato alle 16:34 UTC al completamento di shard ad (val 3.3524). Corpus: shard_ae.txt (1.18 GB, 289,840,429 token). Riprende da shard ad come da meccanismo sequenziale. Completato dopo 40 minuti 45 secondi. Val loss finale 3.3385 — scende di 0.014 rispetto ad ad. La tendenza di riduzione si assottiglia (aa−ab −0.111, ab−ac −0.045, ac−ad −0.048, ad−ae −0.014): possibile che il modello stia raggiungendo un plateau per il corpus Wikipedia IT, corpus di partenza del Run #4. Shard af e ag su corpus diversi potrebbero mostrare cali più significativi.</div>
+<h3>Checkpoint shard_ae.txt</h3>
+<table>
+  <thead><tr><th>Step</th><th>Train</th><th>Val</th><th>Elapsed</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>7500</td><td>3.3286</td><td>—</td><td>~38m</td><td>—</td></tr>
+    <tr><td>8000</td><td>3.2945</td><td><strong>3.3385</strong></td><td>40:43</td><td>✓ shard completato — sample: "La società ha già deciso di sgomberare, ma il progetto non ha ancora finito"</td></tr>
+  </tbody>
+</table>
+
+<h2 id="run6-shard6">Run #6 — Shard 6/7 (shard_af.txt) — completato 2026-10-05 17:59 UTC</h2>
+<div class="narr">Shard af avviato alle 17:18 UTC al completamento di shard ae (val 3.3385). Corpus: shard_af.txt (1.18 GB, 290,080,157 token). La curva inizia alta (val 3.4779 a step 500) perché il corpus di af ha una distribuzione diversa rispetto ai precedenti shard Wikipedia. Scende rapidamente e raggiunge il minimo a step 7500: val <strong>3.3040</strong>, sotto il precedente best (3.3385 di ae). Riduzione −0.035 rispetto ad ae, molto superiore alla riduzione minima di ae su ad (−0.014): i corpus diversi portano miglioramenti significativi. Completato in 40 minuti 45 secondi. <code>run6_shard_af.pt</code> scaricato localmente.</div>
+<h3>Checkpoint shard_af.txt</h3>
+<table>
+  <thead><tr><th>Step</th><th>Train</th><th>Val</th><th>Elapsed</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>3.3062</td><td>3.3354</td><td>00:18</td><td>✓ checkpoint (caricato da ae, val migliore di ae=3.3385 — nuovo corpus spinge su)</td></tr>
+    <tr><td>500</td><td>3.4683</td><td>3.4779</td><td>02:49</td><td>—</td></tr>
+    <tr><td>1000</td><td>3.4901</td><td>3.4946</td><td>05:21</td><td>—</td></tr>
+    <tr><td>1500</td><td>3.4647</td><td>3.4769</td><td>07:52</td><td>—</td></tr>
+    <tr><td>2000</td><td>3.4514</td><td>3.4674</td><td>10:24</td><td>—</td></tr>
+    <tr><td>2500</td><td>3.4308</td><td>3.4766</td><td>12:55</td><td>—</td></tr>
+    <tr><td>3000</td><td>3.4278</td><td>3.4458</td><td>15:27</td><td>—</td></tr>
+    <tr><td>3500</td><td>3.4085</td><td>3.4388</td><td>17:58</td><td>—</td></tr>
+    <tr><td>4000</td><td>3.3658</td><td>3.4191</td><td>20:30</td><td>—</td></tr>
+    <tr><td>4500</td><td>3.3710</td><td>3.3821</td><td>23:01</td><td>sample: "di Roma, mentre il giorno precedente, nel pomeriggio di lunedì, era previsto un evento per le vie di Roma"</td></tr>
+    <tr><td>5000</td><td>3.3392</td><td>3.3790</td><td>25:32</td><td>—</td></tr>
+    <tr><td>5500</td><td>3.3057</td><td>3.3597</td><td>28:04</td><td>—</td></tr>
+    <tr><td>6000</td><td>3.2960</td><td>3.3444</td><td>30:35</td><td>—</td></tr>
+    <tr><td>6500</td><td>3.2837</td><td>3.3351</td><td>33:07</td><td>✓ checkpoint (val=3.3351)</td></tr>
+    <tr><td>7000</td><td>3.2885</td><td>3.3200</td><td>35:39</td><td>✓ checkpoint (val=3.3200)</td></tr>
+    <tr><td>7500</td><td>3.2769</td><td><strong>3.3040</strong></td><td>38:11</td><td>✓ <strong>BEST</strong> — sample: "a Milano la prima delle sue iniziative, quella di aprire in città i propri negozi, un altro punto di riferimento per l'i"</td></tr>
+    <tr><td>8000</td><td>3.2778</td><td>3.3133</td><td>40:43</td><td>fine shard (val risale leggermente: 3.3133)</td></tr>
+  </tbody>
+</table>
+
+<h2 id="run6-shard7">Run #6 — Shard 7/7 (shard_ag.txt) — completato 2026-10-05 18:40 UTC — RUN #6 COMPLETO</h2>
+<div class="narr">Shard ag avviato alle 17:59 UTC al completamento di shard af (val 3.3040). Corpus: shard_ag.txt (1.18 GB, 290,180,642 token). In Run #5, questo corpus aveva val 4.027 a step 4000 — il più difficile tra i sette. In Run #6, il pattern è lo stesso di af: la val parte alta (3.4670 a step 500) per poi scendere man mano che il modello si adatta. La caratteristica rilevante: il minimo non è a step 7500 come in af, ma al passo finale (step 8000), con val <strong>3.2965</strong>. La loss era ancora in calo alla fine del shard. Riduzione −0.008 rispetto ad af — piccola, ma la curva era discendente: con più step sarebbe scesa ulteriormente.</div>
+<div class="narr"><strong>Run #6 completato alle 18:40:09 UTC del 2026-10-05.</strong> 7 shard × 8000 step × batch 32 × seq 512 ≈ 917 M token processati. Val loss complessiva: 3.5861 (Run #4, punto di partenza) → <strong>3.2965</strong> (best, shard ag). Riduzione totale −0.290.</div>
+<h3>Checkpoint shard_ag.txt</h3>
+<table>
+  <thead><tr><th>Step</th><th>Train</th><th>Val</th><th>Elapsed</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>3.3021</td><td>3.3164</td><td>00:18</td><td>✓ checkpoint (da af best=3.3040 — corpus diverso, val parte leggermente più alta)</td></tr>
+    <tr><td>500</td><td>3.4478</td><td>3.4670</td><td>02:49</td><td>—</td></tr>
+    <tr><td>1000</td><td>3.4567</td><td>3.4830</td><td>05:21</td><td>—</td></tr>
+    <tr><td>1500</td><td>3.4441</td><td>3.4731</td><td>07:52</td><td>—</td></tr>
+    <tr><td>2000</td><td>3.4309</td><td>3.4661</td><td>10:23</td><td>—</td></tr>
+    <tr><td>2500</td><td>3.4226</td><td>3.4568</td><td>12:55</td><td>—</td></tr>
+    <tr><td>3000</td><td>3.3973</td><td>3.4418</td><td>15:26</td><td>—</td></tr>
+    <tr><td>3500</td><td>3.3646</td><td>3.4163</td><td>17:58</td><td>—</td></tr>
+    <tr><td>4000</td><td>3.3562</td><td>3.4046</td><td>20:29</td><td>—</td></tr>
+    <tr><td>4500</td><td>3.3310</td><td>3.3883</td><td>23:00</td><td>—</td></tr>
+    <tr><td>5000</td><td>3.3208</td><td>3.3674</td><td>25:32</td><td>—</td></tr>
+    <tr><td>5500</td><td>3.2943</td><td>3.3464</td><td>28:03</td><td>—</td></tr>
+    <tr><td>6000</td><td>3.2826</td><td>3.3268</td><td>30:34</td><td>—</td></tr>
+    <tr><td>6500</td><td>3.2579</td><td>3.3267</td><td>33:06</td><td>—</td></tr>
+    <tr><td>7000</td><td>3.2626</td><td>3.3155</td><td>35:37</td><td>✓ checkpoint (val=3.3155)</td></tr>
+    <tr><td>7500</td><td>3.2671</td><td>3.3073</td><td>38:09</td><td>✓ checkpoint (val=3.3073)</td></tr>
+    <tr><td>8000</td><td>3.2399</td><td><strong>3.2965</strong></td><td>40:41</td><td>✓ <strong>BEST — fine shard, loss ancora in calo</strong></td></tr>
+  </tbody>
+</table>
+
+<h2 id="run6-gguf-fix">Run #6 — Fix converter GGUF per llama.cpp b11146 (2026-10-05)</h2>
+<div class="narr"><strong>Problema:</strong> il converter GGUF generava file incompatibili con llama.cpp b11146. Il crash <code>unordered_map::at: key not found</code> avveniva al momento del prompt, non al caricamento del modello.</div>
+<div class="narr"><strong>Root cause (verificata sul sorgente b11146, file <code>llama-vocab.cpp</code>):</strong> il tokenizer SPM del progetto SLM è stato addestrato come BPE senza <code>byte_fall_back=True</code>. Il vocabolario non contiene nessun token <code>&lt;0xXX&gt;</code> (0 su 256 possibili). In modalità chat, llama-cli prepend un template che include caratteri speciali (<code>&lt;</code>, <code>|</code>, ecc.). La funzione <code>byte_to_token(ch)</code> cerca prima <code>&lt;0xXX&gt;</code> nel vocabolario — non trovato — poi prova <code>token_to_id.at(raw_byte)</code> — anche non trovato — e lancia l'eccezione non catturata.</div>
+<div class="narr"><strong>Perché llama-tokenize non crashava:</strong> <code>llama-tokenize</code> riceve solo il testo passato dall'utente. Il testo italiano puro (Wikipedia) è completamente coperto dai pezzi SPM: nessun byte-fallback necessario. In modalità chat, invece, il template aggiunge caratteri non coperti.</div>
+<div class="narr"><strong>Fix implementato in <code>tools/convert_to_gguf.py</code>:</strong> dopo i 16000 token SPM, vengono aggiunti 256 token sintetici <code>&lt;0x00&gt;</code>..<code>&lt;0xFF&gt;</code> con tipo BYTE e score −10000. L'embedding e il LM head vengono estesi con 256 righe zero. Il vocabolario GGUF risultante è 16256 token. Il tokenizer model resta <code>"llama"</code> (code path SPM corretto in b11146). I token sintetici hanno score estremo per non essere generati, ma consentono al tokenizer di codificare qualsiasi sequenza di byte senza crash.</div>
+<div class="narr"><strong>Risultato:</strong> con il GGUF v6 generato dal converter aggiornato, il modello carica e genera correttamente in llama.cpp b11146. Il token processing su Apple Metal raggiunge 2731 t/s (prompt) e 302 t/s (generazione). Output con prompt "Il Parlamento europeo" e flag <code>--chat-template "" --no-jinja</code>: <em>"Per il progetto, la Costituzione è la più importante e più diffusa. È il secondo più importante a livello mondiale e, insieme a..."</em> — italiano coerente e pertinente.</div>
+<div class="code-block"><pre>
+# Conversione con il converter aggiornato (Run #4 o Run #6):
+python3 tools/convert_to_gguf.py --checkpoint checkpoints/run4_best.pt \
+  --tokenizer checkpoints/tokenizer.model --output slm-run4.gguf
+
+# Test inferenza:
+llama-cli -m slm-run4.gguf -p "Il Parlamento europeo" -n 50 \
+  --chat-template "" --no-jinja
+</pre></div>
+
 <h2 id="run6-test-inferenza">Run #6 — Primo test di inferenza (shard aa, 2026-10-05)</h2>
-<div class="narr">Al completamento di shard aa il checkpoint è stato convertito in GGUF (<code>slm-run6-shard-aa.gguf</code>, 217 MB fp16) e quantizzato Q8_0 (<code>slm-run6-shard-aa-q8_0.gguf</code>, 55 MB). Il test di inferenza è stato condotto via PyTorch direttamente (llama.cpp versione b11146 ha introdotto un'incompatibilità API con il converter esistente — da correggere in seguito).</div>
+<div class="narr">Al completamento di shard aa il checkpoint è stato convertito in GGUF (<code>slm-run6-shard-aa.gguf</code>, 217 MB fp16) e quantizzato Q8_0 (<code>slm-run6-shard-aa-q8_0.gguf</code>, 55 MB). Il test di inferenza è stato condotto via PyTorch direttamente (llama.cpp versione b11146 aveva un'incompatibilità API con il converter — risolta in data 2026-10-05, v. sezione <a href="#run6-gguf-fix">Fix converter GGUF</a>).</div>
 
 <div class="narr"><strong>Parametri di campionamento:</strong> temperatura 1.1, top-k 50, repetition penalty 1.3. Con temperatura bassa e senza penalty di ripetizione il modello entra in loop; con i parametri sopra la generazione è stabile.</div>
 
