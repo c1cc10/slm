@@ -2698,6 +2698,51 @@ Stesso pattern di step 6000: sequenza-seme inusuale (`_602 -`) innesca un loop a
 
 <div class="narr"><strong>Perché batch=8 non invalida Run #5:</strong> il batch size influenza il rumore dei gradienti e la velocità, non la direzione di convergenza. Un singolo update con batch=8 è meno stabile di uno con batch=32, ma su migliaia di step la media converge allo stesso punto. La val loss 3.942 a step 5000 (già sotto il best di Run #3 su Wikipedia) lo conferma empiricamente. Run #5 produce un checkpoint valido e utile — Run #6 non lo ri-addestra, lo estende.</div>
 
+<h2 id="run6-avvio">Run #6 — Avvio training sequenziale su Vast.ai (2026-10-05)</h2>
+<div class="narr">
+  <strong>Fix implementato:</strong> aggiunto flag <code>--reset-best</code> a <code>train.py</code>. Con questo flag, <code>--resume</code> carica i pesi da <code>best.pt</code> ma imposta <code>best_val_loss = float('inf')</code> invece di caricare la soglia storica. Il primo val checkpoint sovrascrive <code>best.pt</code> con i pesi dello shard corrente, propagando la catena sequenziale. Il bug di Run #5 è risolto definitivamente.
+</div>
+<div class="narr">
+  <strong>Infrastruttura:</strong> istanza Vast.ai ID 54321658, RTX 4090 (Norvegia, uptime 99.8%), PyTorch 2.5.1 + CUDA 12.4, 60 GB disco. $0.47/h — stima ~8 ore → ~$3.80 totali.
+</div>
+<div class="narr">
+  <strong>Setup:</strong> rsync di 4.4 GB completato (7 shard .pt pre-tokenizzati + <code>run4_best.pt</code> + sorgenti). Nessuna re-tokenizzazione necessaria.
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Parametro</th><th>Valore</th><th>Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Punto di partenza</td><td><code>run4_best.pt</code> (val 3.5861)</td><td>Pesi Run #4</td></tr>
+    <tr><td>Sequenza shard</td><td>aa → ab → ac → ad → ae → af → ag</td><td>Ordine originale del corpus</td></tr>
+    <tr><td>Steps × shard</td><td>8 000</td><td>56 000 step totali</td></tr>
+    <tr><td>Batch size</td><td>32</td><td>16 384 token/step (vs 4 096 su M2)</td></tr>
+    <tr><td>Token totali</td><td>~917 M</td><td>Chinchilla parity: 20 × 45.9 M param = 918 M</td></tr>
+    <tr><td>Meccanismo</td><td><code>--resume --reset-best</code></td><td>Pesi caricati, soglia azzerata</td></tr>
+    <tr><td>Script</td><td><code>run6_sequential.sh</code></td><td>Salva checkpoint intermedi per shard</td></tr>
+  </tbody>
+</table>
+
+<h3>Progressione Run #6</h3>
+<div class="narr">Tabella aggiornata al completamento di ogni shard.</div>
+<table id="run6-progress">
+  <thead>
+    <tr><th>Shard</th><th>File</th><th>Status</th><th>Val loss finale</th><th>Note</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1 / aa</td><td>shard_aa.txt</td><td>in attesa</td><td>—</td><td>Primo shard, parte da Run #4</td></tr>
+    <tr><td>2 / ab</td><td>shard_ab.txt</td><td>in attesa</td><td>—</td><td></td></tr>
+    <tr><td>3 / ac</td><td>shard_ac.txt</td><td>in attesa</td><td>—</td><td></td></tr>
+    <tr><td>4 / ad</td><td>shard_ad.txt</td><td>in attesa</td><td>—</td><td></td></tr>
+    <tr><td>5 / ae</td><td>shard_ae.txt</td><td>in attesa</td><td>—</td><td>Val loss Run #5 più bassa (3.8215)</td></tr>
+    <tr><td>6 / af</td><td>shard_af.txt</td><td>in attesa</td><td>—</td><td></td></tr>
+    <tr><td>7 / ag</td><td>shard_ag.txt</td><td>in attesa</td><td>—</td><td>Corpus più difficile (Run #5: 4.027 a step 4000)</td></tr>
+  </tbody>
+</table>
+
 <h3>Pubblicazione su HuggingFace</h3>
 <div class="narr">I file GGUF di Run #4 sono stati pubblicati su <a href="https://huggingface.co/c1cc10/slm-italiano" target="_blank">huggingface.co/c1cc10/slm-italiano</a>:
 <ul>

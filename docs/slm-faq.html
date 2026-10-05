@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLM — Domande e Risposte</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg:        #F7F9FC;
+  --surface:   #FFFFFF;
+  --surface2:  #F0F5FA;
+  --text:      #1C2333;
+  --text-sec:  #5A6478;
+  --accent:    #0A6E6E;
+  --border:    #DDE3EE;
+  --code-bg:   #111827;
+  --code-fg:   #A8C4D8;
+  --done-bg:   #ECFDF5; --done-text:#065F46; --done-br:#6EE7B7;
+  --info-bg:   #EFF6FF; --info-text:#1E40AF; --info-br:#BFDBFE;
+  --warn-bg:   #FFFBEB; --warn-text:#92400E; --warn-br:#FDE68A;
+  --narr-bg:   #F0F5FA;
+  --narr-br:   #0A6E6E;
+  --q-bg:      #F0F5FA;
+  --q-br:      #0A6E6E;
+  --a-bg:      #FFFFFF;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+    --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+    --code-bg:#0D1117; --code-fg:#79B8FF;
+    --done-bg:#0D2818; --done-text:#6EE7B7; --done-br:#1A4731;
+    --info-bg:#0D1F3E; --info-text:#93C5FD; --info-br:#1E3A6E;
+    --warn-bg:#2A1A0A; --warn-text:#FDE68A; --warn-br:#7A3A0A;
+    --narr-bg:#1A2634; --narr-br:#2BBFBF;
+    --q-bg:#1A2634; --q-br:#2BBFBF;
+    --a-bg:#161B22;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+  --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+  --code-bg:#0D1117; --code-fg:#79B8FF;
+  --done-bg:#0D2818; --done-text:#6EE7B7; --done-br:#1A4731;
+  --info-bg:#0D1F3E; --info-text:#93C5FD; --info-br:#1E3A6E;
+  --warn-bg:#2A1A0A; --warn-text:#FDE68A; --warn-br:#7A3A0A;
+  --narr-bg:#1A2634; --narr-br:#2BBFBF;
+  --q-bg:#1A2634; --q-br:#2BBFBF;
+  --a-bg:#161B22;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'IBM Plex Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  padding: 0 16px 80px;
+}
+.page { max-width: 780px; margin: 0 auto; }
+header { padding: 48px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+header h1 { font-size: 28px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+header p  { color: var(--text-sec); font-size: 15px; }
+.nav-strip { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px; font-size: 12px; }
+.nav-strip a { color: var(--text-sec); text-decoration: none; }
+.nav-strip a:hover { color: var(--accent); }
+
+nav.toc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 48px;
+}
+nav.toc h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--text-sec); margin-bottom: 12px; }
+nav.toc ol { padding-left: 20px; }
+nav.toc li { margin-bottom: 6px; font-size: 14px; }
+nav.toc a { color: var(--accent); text-decoration: none; }
+nav.toc a:hover { text-decoration: underline; }
+
+.qa-block {
+  margin-bottom: 56px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.qa-question {
+  background: var(--q-bg);
+  border-left: 4px solid var(--q-br);
+  padding: 20px 24px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.qa-q-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.qa-question p {
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.qa-answer {
+  background: var(--a-bg);
+  padding: 28px 24px;
+  border-top: 1px solid var(--border);
+}
+.qa-answer p { margin-bottom: 16px; font-size: 15px; }
+.qa-answer p:last-child { margin-bottom: 0; }
+.qa-answer h3 { font-size: 14px; font-weight: 600; color: var(--accent); margin: 24px 0 10px; }
+.qa-answer ul, .qa-answer ol { padding-left: 22px; margin-bottom: 16px; font-size: 15px; }
+.qa-answer li { margin-bottom: 6px; }
+
+table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
+th { background: var(--surface2); padding: 9px 12px; text-align: left; font-weight: 600; border: 1px solid var(--border); }
+td { padding: 8px 12px; border: 1px solid var(--border); }
+tr:nth-child(even) td { background: var(--surface2); }
+
+code { font-family: 'IBM Plex Mono', monospace; font-size: 13px; background: var(--code-bg); color: var(--code-fg); padding: 2px 6px; border-radius: 4px; }
+
+.callout {
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 20px 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.callout-info  { background: var(--info-bg); border-left: 3px solid var(--info-br); color: var(--info-text); }
+.callout-done  { background: var(--done-bg); border-left: 3px solid var(--done-br); color: var(--done-text); }
+.callout-warn  { background: var(--warn-bg); border-left: 3px solid var(--warn-br); color: var(--warn-text); }
+
+.section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-sec);
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+nav.foot-links {
+  display: flex; flex-wrap: wrap; gap: 12px 24px;
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+nav.foot-links a { color: var(--text-sec); text-decoration: none; }
+nav.foot-links a:hover { color: var(--accent); }
+</style>
+
+<div class="page">
+
+<header>
+  <h1>Domande e Risposte</h1>
+  <p>Questioni architetturali, strategiche e tecniche emerse durante lo sviluppo del progetto SLM.</p>
+  <nav class="nav-strip">
+    <a href="index.html">← Indice</a>
+    <a href="slm-docs.html">Documentazione completa</a>
+    <a href="slm-approfondimenti.html">Approfondimenti</a>
+    <a href="slm-glossario.html">Glossario</a>
+    <a href="slm-teoria.html">Teoria</a>
+    <a href="slm-modular-llm.html">Architetture Modulari</a>
+  </nav>
+</header>
+
+<nav class="toc">
+  <h2>Indice delle domande</h2>
+  <ol>
+    <li><a href="#depth-vs-width">Un modello più profondo con lo stesso numero di parametri farebbe più cose?</a></li>
+    <li><a href="#expand-params">È possibile aumentare i parametri senza ricostruire il modello?</a></li>
+  </ol>
+</nav>
+
+<!-- Q1 -->
+<div class="qa-block" id="depth-vs-width">
+  <div class="qa-question">
+    <span class="qa-q-label">Q</span>
+    <p>Un modello da 46 milioni di parametri ma con più layer (ad esempio 24 invece di 12) sarebbe in grado di fare più cose? E a quale costo computazionale?</p>
+  </div>
+  <div class="qa-answer">
+
+    <h3>Come sono distribuiti i parametri nell'architettura attuale</h3>
+    <p>Con <a href="slm-glossario.html#d_model">d_model</a>=512 e 12 <a href="slm-glossario.html#layer">layer</a>, ogni layer occupa circa 3,15 milioni di parametri: 1,05M per i meccanismi di <a href="slm-glossario.html#attenzione">attenzione</a> (quattro proiezioni Q, K, V, O di dimensione 512×512) e 2,10M per la rete <a href="slm-glossario.html#ffn">feed-forward</a> (due proiezioni da 512 a 2048 e viceversa). L'<a href="slm-glossario.html#embedding">embedding</a> occupa i restanti 8,19M.</p>
+
+    <h3>Cosa succede con più layer e meno d_model</h3>
+    <p>Se si vuole mantenere lo stesso budget di parametri aumentando la profondità, è necessario ridurre d_model. Tre configurazioni a confronto:</p>
+    <table>
+      <thead><tr><th>Configurazione</th><th>Layer</th><th>d_model</th><th>d_k per testa</th><th>Parametri totali</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Attuale</strong></td><td>12</td><td>512</td><td>64</td><td>~46M</td></tr>
+        <tr><td>Più profonda</td><td>24</td><td>384</td><td>48</td><td>~48M</td></tr>
+        <tr><td>Intermedia</td><td>18</td><td>448</td><td>56</td><td>~47M</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Cosa compra la profondità</h3>
+    <p>Il numero di layer determina quante volte il modello può rielaborare la rappresentazione di un token prima di produrre output. Più layer migliorano le dipendenze a lungo raggio, la coerenza sintattica su più frasi e la capacità di composizione gerarchica. Il numero di <a href="slm-glossario.html#parametri">parametri</a>, invece, determina la ricchezza di ogni singola rappresentazione: meno d_model significa vettori-token più poveri, con meno dimensioni disponibili per ogni testa di attenzione.</p>
+
+    <h3>Il problema a 46 milioni di parametri</h3>
+    <p>Le leggi di scaling empiriche (Kaplan et al. 2020, Chinchilla 2022) indicano che per un budget fisso di parametri esiste un rapporto ottimale tra profondità e larghezza, e quel rapporto è già vicino a quello della configurazione attuale (12 layer, d_model 512). Portare a 24 layer con d_model 384 significa ridurre le teste di attenzione a 48 dimensioni ciascuna, contro le 64 attuali: un calo che annulla il vantaggio della profondità.</p>
+
+    <div class="callout callout-info">
+      Il limite categoriale di questo modello non è la struttura, è il numero totale di parametri. Il salto da "non sa fare X" a "sa fare X" avviene aumentando il budget complessivo, non redistribuendolo in verticale.
+    </div>
+
+    <h3>Costo computazionale</h3>
+    <p>A parità di parametri totali, il costo di training e di inferenza è sostanzialmente identico: il numero di operazioni per forward pass è proporzionale ai parametri totali, non alla profondità isolata. La profondità è sequenziale (ogni layer dipende dall'output del precedente) ma il costo dominante rimane la moltiplicazione matriciale complessiva, che non cambia.</p>
+
+    <p><strong>Risposta sintetica:</strong> no, più layer con lo stesso budget non sblocca nuove categorie di capacità. Offre margini di qualità minimi (forse −0,1/−0,2 di val loss) a fronte di rappresentazioni per-token più povere. La configurazione attuale è già vicina all'ottimo per questo budget.</p>
+
+  </div>
+</div>
+
+<!-- Q2 -->
+<div class="qa-block" id="expand-params">
+  <div class="qa-question">
+    <span class="qa-q-label">Q</span>
+    <p>Sarà possibile in futuro aumentare il numero di parametri del modello senza doverlo ricostruire da zero?</p>
+  </div>
+  <div class="qa-answer">
+
+    <h3>Il caso diretto: no</h3>
+    <p>Caricare un checkpoint esistente (ad esempio <code>best.pt</code> con d_model=512 e 12 layer) in un'architettura più grande (ad esempio d_model=1024 e 24 layer) produce un errore immediato. Le matrici peso hanno dimensioni diverse: <code>W_Q</code> è 512×512 nel modello piccolo, 1024×1024 in quello grande. I dizionari dei parametri non sono compatibili e il caricamento fallisce.</p>
+
+    <h3>Ma esistono tecniche che sfumano la risposta</h3>
+    <p>La più rilevante si chiama <strong>Net2Net</strong> (Chen et al., 2015) ed è una trasformazione <em>function-preserving</em>: permette di espandere un modello senza perdere ciò che ha già imparato.</p>
+    <p>Per espandere la larghezza (d_model da 512 a 1024): ogni neurone viene duplicato e i pesi in uscita corrispondenti vengono dimezzati. La somma rimane invariata, quindi il modello espanso produce output matematicamente identici all'originale al momento dell'inizializzazione. Da quel punto si riprende il training: si parte già dalla qualità del modello piccolo, non da zero.</p>
+    <p>Per aggiungere layer: i nuovi layer vengono inseriti come funzioni identità, con i pesi della parte trainable inizializzati a zero. L'output del nuovo layer è uguale al suo input, e il training impara gradualmente a usarli.</p>
+
+    <table>
+      <thead><tr><th>Tecnica</th><th>Funziona?</th><th>Costo reale</th></tr></thead>
+      <tbody>
+        <tr><td>Net2Net width expansion</td><td>Sì, formalmente corretto</td><td>Implementazione non banale, poi servono molti token di fine-tuning</td></tr>
+        <tr><td>Identity layer insertion</td><td>Sì, semplice</td><td>Convergenza lenta: i nuovi layer partono senza conoscenza</td></tr>
+        <tr><td><a href="slm-modular-llm.html#lora">LoRA</a> su modello esistente</td><td>Sì, ma non è espansione</td><td>Aggiunge parametri trainabili senza modificare i pesi base</td></tr>
+        <tr><td>Caricamento diretto in architettura diversa</td><td>No</td><td>Errore di shape incompatibile</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Il risparmio è reale ma parziale</h3>
+    <p>Anche con Net2Net, il vantaggio è concreto ma non trasforma il problema. Per passare da 46M a 200M parametri, anche partendo dal checkpoint corrente, servono comunque centinaia di milioni di token aggiuntivi di training. Il risparmio stimato rispetto a una partenza da zero è del 20–40% di token, non una continuazione trasparente.</p>
+
+    <div class="callout callout-done">
+      <strong>Alternativa più pratica per questo progetto:</strong> se in futuro si vuole un modello più grande, la strada più diretta è usare il modello da 46M come <em>teacher</em> per generare dati di training sintetici per un'architettura più grande (knowledge distillation). È la tecnica usata da Microsoft per Phi-3: un modello grande che genera esempi, uno piccolo che impara da quegli esempi, ottenendo qualità sproporzionata rispetto alla dimensione.
+    </div>
+
+    <p><strong>Risposta sintetica:</strong> tecnicamente esistono percorsi (Net2Net) che evitano la ricostruzione completa, ma nella pratica il risparmio è parziale e l'implementazione ha un costo. Per un salto significativo di parametri, la knowledge distillation è più conveniente della re-inizializzazione progressiva.</p>
+
+  </div>
+</div>
+
+<nav class="foot-links">
+  <a href="index.html">Indice</a>
+  <a href="slm-docs.html">Documentazione completa</a>
+  <a href="slm-approfondimenti.html">Approfondimenti</a>
+  <a href="slm-modular-llm.html">Architetture Modulari</a>
+  <a href="slm-glossario.html">Glossario</a>
+  <a href="slm-teoria.html">Teoria</a>
+  <a href="slm-journal.html">Diario tecnico</a>
+  <a href="slm-roadmap.html">Roadmap</a>
+</nav>
+
+</div>
