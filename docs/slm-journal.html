@@ -2733,15 +2733,55 @@ Stesso pattern di step 6000: sequenza-seme inusuale (`_602 -`) innesca un loop a
     <tr><th>Shard</th><th>File</th><th>Status</th><th>Val loss finale</th><th>Note</th></tr>
   </thead>
   <tbody>
-    <tr><td>1 / aa</td><td>shard_aa.txt</td><td>in attesa</td><td>—</td><td>Primo shard, parte da Run #4</td></tr>
-    <tr><td>2 / ab</td><td>shard_ab.txt</td><td>in attesa</td><td>—</td><td></td></tr>
-    <tr><td>3 / ac</td><td>shard_ac.txt</td><td>in attesa</td><td>—</td><td></td></tr>
-    <tr><td>4 / ad</td><td>shard_ad.txt</td><td>in attesa</td><td>—</td><td></td></tr>
+    <tr><td>1 / aa</td><td>shard_aa.txt</td><td>✓ completato</td><td><strong>3.5568</strong></td><td>40m 52s — sotto Run #4 (3.5861) di 0.029</td></tr>
+    <tr><td>2 / ab</td><td>shard_ab.txt</td><td>✓ completato</td><td><strong>3.4458</strong></td><td>40m 47s — −0.111 rispetto ad aa</td></tr>
+    <tr><td>3 / ac</td><td>shard_ac.txt</td><td>✓ completato</td><td><strong>3.4011</strong></td><td>40m 44s — −0.045 rispetto ad ab</td></tr>
+    <tr><td>4 / ad</td><td>shard_ad.txt</td><td>⏳ in corso</td><td>—</td><td>Avviato 15:56 UTC</td></tr>
     <tr><td>5 / ae</td><td>shard_ae.txt</td><td>in attesa</td><td>—</td><td>Val loss Run #5 più bassa (3.8215)</td></tr>
     <tr><td>6 / af</td><td>shard_af.txt</td><td>in attesa</td><td>—</td><td></td></tr>
     <tr><td>7 / ag</td><td>shard_ag.txt</td><td>in attesa</td><td>—</td><td>Corpus più difficile (Run #5: 4.027 a step 4000)</td></tr>
   </tbody>
 </table>
+
+<h2 id="run6-shard3">Run #6 — Shard 3/7 (shard_ac.txt) — in corso</h2>
+<div class="narr">Shard ac avviato alle 15:16 UTC. Riprende da shard ab (val 3.4458). Già a step 6000/8000 il modello batte ab: val 3.4353 (checkpoint salvato). A step 6500 val 3.4120 — discesa continua e regolare.</div>
+<h3>Checkpoint parziali — shard_ac.txt</h3>
+<table>
+  <thead><tr><th>Step</th><th>Train</th><th>Val</th><th>Elapsed</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>6000</td><td>3.3958</td><td><strong>3.4353</strong></td><td>30:36</td><td>✓ checkpoint — val scende sotto ab; sample: "io, a fianco di un vecchio e ben più piccolo…"</td></tr>
+    <tr><td>6500</td><td>3.3711</td><td>3.4120</td><td>33:08</td><td>sample: "la sua carriera ha avuto inizio ad una nuova attività lavorativa…"</td></tr>
+    <tr><td>7500</td><td>3.3656</td><td>3.4061</td><td>38:12</td><td>—</td></tr>
+    <tr><td>8000</td><td>3.3342</td><td><strong>3.4011</strong></td><td>40:44</td><td>✓ shard completato — val finale</td></tr>
+  </tbody>
+</table>
+<div class="narr">Andamento coerente con il pattern dei shard precedenti: il modello scala sistematicamente su ogni corpus nuovo. La discesa da 3.4353 (step 6000) a 3.4011 (step 8000) è regolare e senza plateau. La catena sequenziale accumula miglioramento ad ogni shard: aa→ab −0.111, ab→ac −0.045. La riduzione si assottiglia per corpus con distribuzione simile.</div>
+
+<h2 id="run6-test-inferenza">Run #6 — Primo test di inferenza (shard aa, 2026-10-05)</h2>
+<div class="narr">Al completamento di shard aa il checkpoint è stato convertito in GGUF (<code>slm-run6-shard-aa.gguf</code>, 217 MB fp16) e quantizzato Q8_0 (<code>slm-run6-shard-aa-q8_0.gguf</code>, 55 MB). Il test di inferenza è stato condotto via PyTorch direttamente (llama.cpp versione b11146 ha introdotto un'incompatibilità API con il converter esistente — da correggere in seguito).</div>
+
+<div class="narr"><strong>Parametri di campionamento:</strong> temperatura 1.1, top-k 50, repetition penalty 1.3. Con temperatura bassa e senza penalty di ripetizione il modello entra in loop; con i parametri sopra la generazione è stabile.</div>
+
+<h3>Campioni di generazione — shard aa (val 3.5568)</h3>
+<table>
+  <thead><tr><th>Prompt</th><th>Generazione (150 token)</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>Il Parlamento europeo</code></td>
+      <td>«…ha annunciato un accordo con le organizzazioni più potenti per discutere di quanto sostenuto, ha approvato uno schema unitario delle leggi del paese europeo e si presenterà a un piano globale. E' la risposta ai tempi perugini e, dopo aver appreso tutti gli sforzi dei democratici politici, si potrà raggiungere gli obiettivi internazionali…»</td>
+    </tr>
+    <tr>
+      <td><code>La ricerca scientifica</code></td>
+      <td>«…dell'Università Statali di Roma ha dimostrato che le informazioni provenienti da varie discipline sono molto diffuse e che il numero di ricercatori coinvolti è un ottimo livello per determinare le loro statistiche. Le loro osservazioni non consentono di avere la certezza della presenza di eventuali effetti collaterali…»</td>
+    </tr>
+    <tr>
+      <td><code>Nel 1943 le truppe italiane</code></td>
+      <td>«…sbarcarono a Levanto nell'isola di Paulo e fecero parte della Brigata "Vieste". Durante la seconda guerra mondiale furono i soldati sovietici arrestati da reparti dell'11o reggimento di artiglieria corazzata Avio per resistenza contro la Libia. Un secondo bombardamento, avvenuto il 9 luglio 1944 con l'ausilio delle cannoniere sovietiche del tenente generale Makdukov…»</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="narr"><strong>Osservazioni qualitative:</strong> italiano grammaticalmente corretto, lessico appropriato al dominio del prompt, struttura sintattica con subordinate e incisi. Hallucination evidente (nomi e date inventati con sicurezza), coerenza semantica fragile oltre 100 token — entrambi attesi a questo stadio di training (2/7 shard completati, ~263M token totali su 917M target).</div>
 
 <h3>Pubblicazione su HuggingFace</h3>
 <div class="narr">I file GGUF di Run #4 sono stati pubblicati su <a href="https://huggingface.co/c1cc10/slm-italiano" target="_blank">huggingface.co/c1cc10/slm-italiano</a>:

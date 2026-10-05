@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLM — Catalogo dei file</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg:#F7F9FC; --surface:#FFFFFF; --surface2:#F0F5FA;
+  --text:#1C2333; --text-sec:#5A6478; --accent:#0A6E6E; --border:#DDE3EE;
+  --code-bg:#111827; --code-fg:#A8C4D8;
+  --done-bg:#ECFDF5; --done-text:#065F46; --done-br:#6EE7B7;
+  --info-bg:#EFF6FF; --info-text:#1E40AF; --info-br:#BFDBFE;
+  --warn-bg:#FFFBEB; --warn-text:#92400E; --warn-br:#FDE68A;
+  --tag-ckpt-bg:#F0FDF4; --tag-ckpt-text:#166534; --tag-ckpt-br:#BBF7D0;
+  --tag-gguf-bg:#FFF7ED; --tag-gguf-text:#9A3412; --tag-gguf-br:#FED7AA;
+  --tag-src-bg:#EFF6FF;  --tag-src-text:#1E40AF;  --tag-src-br:#BFDBFE;
+  --tag-data-bg:#FAF5FF; --tag-data-text:#6B21A8; --tag-data-br:#E9D5FF;
+  --tag-tool-bg:#F0F5FA; --tag-tool-text:#374151; --tag-tool-br:#D1D5DB;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+    --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+    --code-bg:#0D1117; --code-fg:#79B8FF;
+    --done-bg:#0D2818; --done-text:#6EE7B7; --done-br:#1A4731;
+    --info-bg:#0D1F3E; --info-text:#93C5FD; --info-br:#1E3A6E;
+    --warn-bg:#2A1A0A; --warn-text:#FDE68A; --warn-br:#7A3A0A;
+    --tag-ckpt-bg:#0D2818; --tag-ckpt-text:#6EE7B7; --tag-ckpt-br:#1A4731;
+    --tag-gguf-bg:#2A1200; --tag-gguf-text:#FCA987; --tag-gguf-br:#7C2D12;
+    --tag-src-bg:#0D1F3E;  --tag-src-text:#93C5FD;  --tag-src-br:#1E3A6E;
+    --tag-data-bg:#1A0A2E; --tag-data-text:#D8B4FE; --tag-data-br:#4C1D95;
+    --tag-tool-bg:#1C2128; --tag-tool-text:#9CA3AF; --tag-tool-br:#374151;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+  --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+  --code-bg:#0D1117; --code-fg:#79B8FF;
+  --done-bg:#0D2818; --done-text:#6EE7B7; --done-br:#1A4731;
+  --info-bg:#0D1F3E; --info-text:#93C5FD; --info-br:#1E3A6E;
+  --warn-bg:#2A1A0A; --warn-text:#FDE68A; --warn-br:#7A3A0A;
+  --tag-ckpt-bg:#0D2818; --tag-ckpt-text:#6EE7B7; --tag-ckpt-br:#1A4731;
+  --tag-gguf-bg:#2A1200; --tag-gguf-text:#FCA987; --tag-gguf-br:#7C2D12;
+  --tag-src-bg:#0D1F3E;  --tag-src-text:#93C5FD;  --tag-src-br:#1E3A6E;
+  --tag-data-bg:#1A0A2E; --tag-data-text:#D8B4FE; --tag-data-br:#4C1D95;
+  --tag-tool-bg:#1C2128; --tag-tool-text:#9CA3AF; --tag-tool-br:#374151;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; padding: 0 16px 80px; }
+.page { max-width: 820px; margin: 0 auto; }
+header { padding: 48px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+header h1 { font-size: 28px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+header p  { color: var(--text-sec); font-size: 15px; max-width: 560px; }
+.nav-strip { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px; font-size: 12px; }
+.nav-strip a { color: var(--text-sec); text-decoration: none; }
+.nav-strip a:hover { color: var(--accent); }
+
+nav.toc { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin-bottom: 48px; }
+nav.toc h2 { font-size: 13px; text-transform: uppercase; letter-spacing:.07em; color: var(--text-sec); margin-bottom: 12px; }
+nav.toc ul { padding-left: 18px; }
+nav.toc li { margin-bottom: 5px; font-size: 14px; }
+nav.toc a { color: var(--accent); text-decoration: none; }
+nav.toc a:hover { text-decoration: underline; }
+
+h2.section-head {
+  font-size: 18px; font-weight: 600; margin: 48px 0 20px;
+  padding-bottom: 10px; border-bottom: 2px solid var(--accent);
+  display: flex; align-items: center; gap: 10px;
+}
+.tag {
+  display: inline-block; font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px; letter-spacing:.04em;
+  border: 1px solid;
+}
+.tag-ckpt { background:var(--tag-ckpt-bg); color:var(--tag-ckpt-text); border-color:var(--tag-ckpt-br); }
+.tag-gguf { background:var(--tag-gguf-bg); color:var(--tag-gguf-text); border-color:var(--tag-gguf-br); }
+.tag-src  { background:var(--tag-src-bg);  color:var(--tag-src-text);  border-color:var(--tag-src-br);  }
+.tag-data { background:var(--tag-data-bg); color:var(--tag-data-text); border-color:var(--tag-data-br); }
+.tag-tool { background:var(--tag-tool-bg); color:var(--tag-tool-text); border-color:var(--tag-tool-br); }
+
+.file-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.file-card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+.file-name { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 500; color: var(--accent); flex: 1; min-width: 0; word-break: break-all; }
+.file-size { font-size: 12px; color: var(--text-sec); white-space: nowrap; margin-top: 2px; }
+.file-desc { font-size: 14px; color: var(--text); margin-bottom: 8px; }
+.file-use  { font-size: 13px; color: var(--text-sec); }
+.file-use code { font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--code-bg); color: var(--code-fg); padding: 2px 6px; border-radius: 3px; }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 20px 0; font-size: 14px; line-height: 1.6; }
+.callout-warn { background: var(--warn-bg); border-left: 3px solid var(--warn-br); color: var(--warn-text); }
+.callout-info { background: var(--info-bg); border-left: 3px solid var(--info-br); color: var(--info-text); }
+.callout-done { background: var(--done-bg); border-left: 3px solid var(--done-br); color: var(--done-text); }
+
+.cmd-block {
+  background: var(--code-bg); color: var(--code-fg);
+  font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+  border-radius: 8px; padding: 16px 20px; margin: 16px 0;
+  overflow-x: auto; line-height: 1.7;
+  white-space: pre;
+}
+.cmd-comment { color: #6B7280; }
+
+.naming-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+.naming-table th { background: var(--surface2); padding: 8px 12px; text-align: left; border: 1px solid var(--border); font-weight: 600; }
+.naming-table td { padding: 8px 12px; border: 1px solid var(--border); font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+.naming-table tr:nth-child(even) td { background: var(--surface2); }
+
+nav.foot-links { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 13px; }
+nav.foot-links a { color: var(--text-sec); text-decoration: none; }
+nav.foot-links a:hover { color: var(--accent); }
+</style>
+
+<div class="page">
+
+<header>
+  <h1>Catalogo dei file</h1>
+  <p>Elenco ragionato di tutti i file rilevanti del progetto: cosa sono, da cosa derivano e come si usano.</p>
+  <nav class="nav-strip">
+    <a href="index.html">← Indice</a>
+    <a href="slm-journal.html">Diario tecnico</a>
+    <a href="slm-docs.html">Documentazione completa</a>
+    <a href="slm-roadmap.html">Roadmap</a>
+  </nav>
+</header>
+
+<nav class="toc">
+  <h2>Sezioni</h2>
+  <ul>
+    <li><a href="#checkpoints">Checkpoint (.pt) — pesi del modello</a></li>
+    <li><a href="#gguf">File GGUF — inferenza con llama.cpp</a></li>
+    <li><a href="#sorgenti">Sorgenti Python — architettura e training</a></li>
+    <li><a href="#dati">Dati — corpus e shard pre-tokenizzati</a></li>
+    <li><a href="#strumenti">Strumenti — tools/</a></li>
+    <li><a href="#naming">Convenzione di naming per i run futuri</a></li>
+    <li><a href="#comandi">Comandi di conversione e inferenza</a></li>
+  </ul>
+</nav>
+
+
+<!-- ─── CHECKPOINTS ─────────────────────────────────────────────────────── -->
+<h2 class="section-head" id="checkpoints"><span class="tag tag-ckpt">CHECKPOINT</span> Pesi del modello (.pt)</h2>
+
+<p style="font-size:14px;color:var(--text-sec);margin-bottom:24px">
+  I file <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--code-bg);color:var(--code-fg);padding:2px 6px;border-radius:3px">.pt</code>
+  sono dizionari PyTorch che contengono i pesi del modello, la configurazione architetturale, lo stato dell'ottimizzatore e la val loss al momento del salvataggio.
+  Sono leggibili solo da <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--code-bg);color:var(--code-fg);padding:2px 6px;border-radius:3px">train.py</code> — per l'inferenza con llama.cpp servono i file GGUF.
+</p>
+
+<div class="callout callout-warn">
+  <strong>Regola fondamentale:</strong> <code>checkpoints/best.pt</code> viene sovrascritto da ogni run attivo. Non usarlo come backup permanente. I file con nome esplicito del run (<code>run4_best.pt</code>, <code>run6_shard_*.pt</code>) sono permanenti e non vengono mai toccati dal training.
+</div>
+
+<div class="file-card">
+  <div class="file-card-header">
+    <span class="file-name">checkpoints/best.pt</span>
+    <span class="tag tag-ckpt">VOLATILE</span>
+    <span class="file-size">530 MB (fp32)</span>
+  </div>
+  <div class="file-desc">Checkpoint corrente del training attivo. Viene sovrascritto ogni volta che la val loss scende sotto il minimo storico del run in corso. Durante Run #6 viene aggiornato automaticamente ad ogni shard migliore.</div>
+  <div class="file-use">Uso: <code>python3 train.py --resume</code> — carica automaticamente questo file. Non usare per archiviazione.</div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header">
+    <span class="file-name">checkpoints/run4_best.pt</span>
+    <span class="tag tag-ckpt">PERMANENTE</span>
+    <span class="file-size">530 MB (fp32)</span>
+  </div>
+  <div class="file-desc">Miglior checkpoint di Run #4 (RoPE, Wikipedia IT, 30 000 step, batch 8). Val loss 3.5861 a step 27 500. Baseline di riferimento per il progetto: è il punto di partenza di Run #6 e la fonte dei file GGUF pubblicati su HuggingFace.</div>
+  <div class="file-use">Uso: <code>python3 train.py --resume</code> dopo <code>cp checkpoints/run4_best.pt checkpoints/best.pt</code></div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header">
+    <span class="file-name">checkpoints/run6_best_latest.pt</span>
+    <span class="tag tag-ckpt">SINCRONIZZATO</span>
+    <span class="file-size">530 MB (fp32)</span>
+  </div>
+  <div class="file-desc">Snapshot di <code>best.pt</code> sul server Vast.ai, sincronizzato in locale ogni 5 minuti dal watcher automatico durante Run #6. Rappresenta il miglior punto raggiunto dall'addestramento in corso. Si aggiorna più volte per shard.</div>
+  <div class="file-use">Uso: base per conversione GGUF intermedia. Convertire con output distinto (<code>slm-run6-latest.gguf</code>) per non sovrascrivere i file Run #4.</div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header">
+    <span class="file-name">checkpoints/run6_shard_aa.pt</span>
+    <span class="tag tag-ckpt">PERMANENTE</span>
+    <span class="file-size">530 MB (fp32)</span>
+  </div>
+  <div class="file-desc">Miglior checkpoint al completamento di shard aa (primo shard di Run #6). Val loss 3.5568 — già sotto Run #4 (3.5861). Aggiornato a fine di ogni shard completato: run6_shard_ab.pt, run6_shard_ac.pt, ecc.</div>
+  <div class="file-use">Uso: ripristino in caso di crash di shard successivi, conversione GGUF per shard intermedi.</div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header">
+    <span class="file-name">checkpoints/tokenizer.model</span>
+    <span class="tag tag-ckpt">PERMANENTE</span>
+    <span class="file-size">497 KB</span>
+  </div>
+  <div class="file-desc">Modello SentencePiece BPE con vocabolario di 16 000 token, addestrato su Wikipedia IT + corpus letterario. È parte integrante del checkpoint: senza di esso il modello non può tokenizzare né generare testo.</div>
+  <div class="file-use">Uso: incluso automaticamente in ogni checkpoint <code>.pt</code> come byte serializzati. Richiesto esplicitamente da <code>convert_to_gguf.py</code> e da llama.cpp per l'inferenza.</div>
+</div>
+
+
+<!-- ─── GGUF ───────────────────────────────────────────────────────────── -->
+<h2 class="section-head" id="gguf"><span class="tag tag-gguf">GGUF</span> File per inferenza con llama.cpp</h2>
+
+<p style="font-size:14px;color:var(--text-sec);margin-bottom:24px">
+  I file GGUF sono il formato nativo di llama.cpp. Contengono i pesi in un formato ottimizzato per CPU/GPU, con metadati architetturali e vocabolario incorporati. Una volta generati non dipendono più da Python o PyTorch.
+</p>
+
+<div class="callout callout-done">
+  <strong>Non sovrascrivere mai i GGUF esistenti.</strong> Ogni run produce file con nome distinto. I file Run #4 (<code>slm-run4.gguf</code>, <code>slm-run4-q8_0.gguf</code>) sono il riferimento pubblico pubblicato su HuggingFace e devono restare intatti.
+</div>
+
+<div class="callout callout-warn">
+  <strong>Compatibilità llama.cpp:</strong> la versione b11146 (ottobre 2026) ha introdotto una modifica al path di tokenizzazione BPE che rompe il caricamento dei GGUF generati da <code>convert_to_gguf.py</code>. Errore: <code>unordered_map::at: key not found</code> al momento del prompt. Il converter va aggiornato prima di usare llama.cpp per l'inferenza. In alternativa, usare PyTorch direttamente (vedi sezione <a href="#comandi" style="color:var(--accent)">Comandi</a>).
+</div>
+
+<div class="file-card">
+  <div class="file-card-header">
+    <span class="file-name">slm-run4.gguf</span>
+    <span class="tag tag-gguf">RUN #4</span>
+    <span class="file-size">207 MB (fp16)</span>
+  </div>
+  <div class="file-desc">Modello Run #4 in formato GGUF, precisione fp16. Derivato da <code>run4_best.pt</code>. Pubblicato su HuggingFace (<code>c1cc10/slm-italiano</code>). Architettura mappata su GPT-NeoX per compatibilità con llama.cpp.</div>
+  <div class="file-use">Uso: <code>llama-cli -m slm-run4.gguf -p "Il Parlamento europeo" -n 100</code></div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header">
+    <span class="file-name">slm-run4-q8_0.gguf</span>
+    <span class="tag tag-gguf">RUN #4</span>
+    <span class="file-size">56 MB (Q8_0)</span>
+  </div>
+  <div class="file-desc">Versione quantizzata Q8_0 di <code>slm-run4.gguf</code>. Qualità praticamente identica all'fp16 a un terzo del peso. Formato consigliato per test di inferenza su Mac (MPS o CPU).</div>
+  <div class="file-use">Uso: <code>llama-cli -m slm-run4-q8_0.gguf -p "Il Parlamento europeo" -n 100</code></div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header">
+    <span class="file-name">slm-run6-shard-aa.gguf</span>
+    <span class="tag tag-gguf">RUN #6 — SHARD AA</span>
+    <span class="file-size">217 MB (fp16)</span>
+  </div>
+  <div class="file-desc">GGUF intermedio generato da <code>run6_shard_aa.pt</code> il 2026-10-05. Val loss 3.5568 — primo shard del training sequenziale Chinchilla. Architettura GPT-NeoX, 147 tensor scritti.</div>
+  <div class="file-use">Inferenza tramite PyTorch: <code>python3 /tmp/gen.py "prompt" 150 1.1 50 1.3</code> — llama.cpp b11146 ha un'incompatibilità API con questo formato (da correggere).</div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header">
+    <span class="file-name">slm-run6-shard-aa-q8_0.gguf</span>
+    <span class="tag tag-gguf">RUN #6 — SHARD AA</span>
+    <span class="file-size">55 MB (Q8_0)</span>
+  </div>
+  <div class="file-desc">Versione quantizzata Q8_0 di <code>slm-run6-shard-aa.gguf</code>. Generata con <code>llama-quantize</code> in 447ms. Stessa limitazione llama.cpp b11146.</div>
+  <div class="file-use">Test condotti via PyTorch direttamente. Generazione stabile con temp=1.1, top-k=50, rep_pen=1.3.</div>
+</div>
+
+<div class="file-card" style="border-style:dashed">
+  <div class="file-card-header">
+    <span class="file-name">slm-run6.gguf</span>
+    <span class="tag tag-gguf">PIANIFICATO</span>
+    <span class="file-size">~207 MB (fp16)</span>
+  </div>
+  <div class="file-desc">GGUF finale da generare al completamento di Run #6 (tutti e 7 gli shard). Sarà il modello Chinchilla-optimal del progetto.</div>
+  <div class="file-use">Da generare da <code>checkpoints/best.pt</code> a fine Run #6.</div>
+</div>
+
+
+<!-- ─── SORGENTI ────────────────────────────────────────────────────────── -->
+<h2 class="section-head" id="sorgenti"><span class="tag tag-src">SORGENTE</span> Architettura e training</h2>
+
+<div class="file-card">
+  <div class="file-card-header"><span class="file-name">train.py</span><span class="file-size">37 KB</span></div>
+  <div class="file-desc">Script principale di training. Gestisce tokenizer a 3 backend (char, tiktoken, bpe-spm), dataset con sliding window, AdamW con schedule LR, gradient clipping, checkpoint, <code>--resume</code>, <code>--reset-best</code> e generazione periodica. Punto di ingresso unico per tutti i run.</div>
+  <div class="file-use">Uso: <code>python3 train.py --help</code> per le opzioni. Flag chiave: <code>--resume --reset-best</code> per training sequenziale multi-shard.</div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header"><span class="file-name">attention.py</span><span class="file-size">7.4 KB</span></div>
+  <div class="file-desc">Implementazione di scaled dot-product attention, causal mask e MultiHeadAttention con RoPE (Rotary Position Embedding). Cuore architetturale del modello.</div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header"><span class="file-name">transformer.py</span><span class="file-size">6.9 KB</span></div>
+  <div class="file-desc">TransformerBlock (pre-norm, residual), FeedForward con GELU, LayerNorm. Ogni istanza di TransformerBlock corrisponde a un layer del modello.</div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header"><span class="file-name">model.py</span><span class="file-size">9.0 KB</span></div>
+  <div class="file-desc">GPTConfig (configurazione architetturale), GPT (forward pass, generazione, weight tying, conteggio parametri). Il modello competo è definito qui.</div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header"><span class="file-name">run6_sequential.sh</span><span class="file-size">2.6 KB</span></div>
+  <div class="file-desc">Script shell per Run #6 su Vast.ai. Loop su 7 shard (aa→ag), 8 000 step ciascuno, batch=32, <code>--resume --reset-best</code>, salvataggio checkpoint intermedio per shard. Attualmente in esecuzione sul server remoto.</div>
+  <div class="file-use">Uso remoto: <code>tmux new-session -d -s run6 'bash run6_sequential.sh'</code></div>
+</div>
+
+
+<!-- ─── DATI ────────────────────────────────────────────────────────────── -->
+<h2 class="section-head" id="dati"><span class="tag tag-data">DATI</span> Corpus e shard pre-tokenizzati</h2>
+
+<p style="font-size:14px;color:var(--text-sec);margin-bottom:24px">
+  I file <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--code-bg);color:var(--code-fg);padding:2px 6px;border-radius:3px">.bpe-spm.v16000.tokens.pt</code> sono shard del corpus già tokenizzati e salvati come tensori PyTorch int16. Vengono caricati da <code>train.py</code> all'avvio evitando la tokenizzazione (operazione lenta). Ogni shard copre circa 289-297 milioni di token.
+</p>
+
+<div class="file-card">
+  <div class="file-card-header">
+    <span class="file-name">data/shards/shard_{aa…ag}.txt.bpe-spm.v16000.tokens.pt</span>
+    <span class="tag tag-data">7 FILE</span>
+    <span class="file-size">~553 MB cad. · 3.9 GB totale</span>
+  </div>
+  <div class="file-desc">Sette shard del corpus CulturaX IT pre-tokenizzati con il tokenizer BPE-SPM a 16 000 vocaboli. Copertura totale: ~917 milioni di token (Chinchilla parity per un modello da 46M parametri). Generati in locale sull'M2 e caricati su Vast.ai per Run #6.</div>
+  <div class="file-use">Caricati automaticamente da <code>train.py --data data/shards/shard_aa.txt</code> se il file <code>.pt</code> corrispondente è presente e ha timestamp non più recente del tokenizer.</div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header">
+    <span class="file-name">data/shards/shard_{aa…ag}.txt</span>
+    <span class="tag tag-data">7 FILE</span>
+    <span class="file-size">~1.2 GB cad. · 8.4 GB totale</span>
+  </div>
+  <div class="file-desc">Testi grezzi in italiano da CulturaX IT, suddivisi in 7 segmenti da ~1.18 GB. Servono come riferimento per la validazione della cache: <code>train.py</code> confronta il timestamp del <code>.txt</code> con quello del <code>.pt</code> per decidere se la cache è valida.</div>
+</div>
+
+
+<!-- ─── STRUMENTI ───────────────────────────────────────────────────────── -->
+<h2 class="section-head" id="strumenti"><span class="tag tag-tool">TOOL</span> Script in tools/</h2>
+
+<div class="file-card">
+  <div class="file-card-header"><span class="file-name">tools/convert_to_gguf.py</span></div>
+  <div class="file-desc">Converte un checkpoint <code>.pt</code> SLM in formato GGUF (architettura GPT-NeoX), compatibile con llama.cpp. Gestisce il mapping dei pesi, la configurazione RoPE, il vocabolario SentencePiece. Produce un file fp16.</div>
+  <div class="file-use">Uso: <code>python3 tools/convert_to_gguf.py --checkpoint checkpoints/run6_shard_aa.pt --tokenizer checkpoints/tokenizer.model --output slm-run6-shard-aa.gguf</code></div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header"><span class="file-name">tools/quantize_q8.py</span></div>
+  <div class="file-desc">Quantizza un file GGUF fp16 in Q8_0 usando <code>llama-quantize</code>. Q8_0 riduce il peso a ~27% dell'fp16 con perdita di qualità trascurabile per questo modello.</div>
+  <div class="file-use">Uso: <code>python3 tools/quantize_q8.py slm-run6-shard-aa.gguf</code> — produce <code>slm-run6-shard-aa-q8_0.gguf</code></div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header"><span class="file-name">tools/eval_ppl.py</span></div>
+  <div class="file-desc">Valutazione di perplexity interattiva su testo libero. Carica un checkpoint <code>.pt</code> e calcola la PPL su qualunque testo passato via stdin o argomento. Utile per confrontare la qualità tra run senza riaddestrare.</div>
+  <div class="file-use">Uso: <code>echo "Il governo italiano" | python3 tools/eval_ppl.py</code></div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header"><span class="file-name">tools/epub_to_text.py</span></div>
+  <div class="file-desc">Estrae testo pulito da file EPUB (ebooklib + beautifulsoup4). Gestisce caratteri speciali tipografici (narrow no-break space, BOM, ellissi). Supporta directory intere e modalità append.</div>
+  <div class="file-use">Uso: <code>python3 tools/epub_to_text.py libro.epub --out data/corpus_letterario.txt --append</code></div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header"><span class="file-name">tools/fetch_hf_corpus.py</span></div>
+  <div class="file-desc">Streaming generico da HuggingFace: qualsiasi dataset, filtro lingua, campo annidato, limite per GB o numero di documenti. Non scarica il dataset completo — usa lo streaming incrementale.</div>
+  <div class="file-use">Uso: <code>python3 tools/fetch_hf_corpus.py --dataset uonlp/CulturaX --lang it --limit-gb 10</code></div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header"><span class="file-name">tools/filter_corpus.py</span></div>
+  <div class="file-desc">Pipeline di qualità a 4 stadi: euristico (lunghezza, ratio alfanumerici) → fastText lingua → deduplicazione MD5 → PPL scorer. Per il corpus CulturaX usato in Run #6 sono stati applicati solo euristico + dedup (senza PPL scorer, per evitare bias verso il registro enciclopedico di Run #4).</div>
+</div>
+
+<div class="file-card">
+  <div class="file-card-header"><span class="file-name">tools/convert_to_text.py</span></div>
+  <div class="file-desc">Converter universale da PDF, DOCX, PPTX, EPUB, HTML, ODT, TXT, MD a testo piano. Utile per arricchire il corpus con documenti di dominio.</div>
+</div>
+
+
+<!-- ─── NAMING ───────────────────────────────────────────────────────────── -->
+<h2 class="section-head" id="naming">Convenzione di naming per i run futuri</h2>
+
+<p style="font-size:14px;margin-bottom:16px">Ogni run e ogni shard produce file con nome che non può collidere con run precedenti. La struttura è:</p>
+
+<table class="naming-table">
+  <thead><tr><th>Tipo</th><th>Pattern</th><th>Esempio</th></tr></thead>
+  <tbody>
+    <tr><td>Checkpoint shard</td><td>run{N}_shard_{XX}.pt</td><td>run6_shard_ab.pt</td></tr>
+    <tr><td>Checkpoint run (best)</td><td>run{N}_best.pt</td><td>run6_best.pt</td></tr>
+    <tr><td>Snapshot live</td><td>run{N}_best_latest.pt</td><td>run6_best_latest.pt</td></tr>
+    <tr><td>GGUF fp16 shard</td><td>slm-run{N}-shard-{XX}.gguf</td><td>slm-run6-shard-aa.gguf</td></tr>
+    <tr><td>GGUF Q8 shard</td><td>slm-run{N}-shard-{XX}-q8_0.gguf</td><td>slm-run6-shard-aa-q8_0.gguf</td></tr>
+    <tr><td>GGUF fp16 finale</td><td>slm-run{N}.gguf</td><td>slm-run6.gguf</td></tr>
+    <tr><td>GGUF Q8 finale</td><td>slm-run{N}-q8_0.gguf</td><td>slm-run6-q8_0.gguf</td></tr>
+  </tbody>
+</table>
+
+<div class="callout callout-info">
+  Il pattern <code>slm-run{N}-latest.gguf</code> non va usato come nome permanente: il suffisso <em>latest</em> è riservato agli snapshot intermedi e verrebbe sovrascritto. Usarlo solo per test locali.
+</div>
+
+
+<!-- ─── COMANDI ──────────────────────────────────────────────────────────── -->
+<h2 class="section-head" id="comandi">Comandi di conversione e inferenza</h2>
+
+<p style="font-size:14px;margin-bottom:4px"><strong>Conversione GGUF da shard aa (Run #6 intermedio)</strong></p>
+<div class="cmd-block"><span class="cmd-comment"># Dal progetto root</span>
+python3 tools/convert_to_gguf.py \
+    --checkpoint checkpoints/run6_shard_aa.pt \
+    --tokenizer  checkpoints/tokenizer.model \
+    --output     slm-run6-shard-aa.gguf</div>
+
+<p style="font-size:14px;margin-bottom:4px"><strong>Quantizzazione Q8_0</strong></p>
+<div class="cmd-block">llama-quantize slm-run6-shard-aa.gguf slm-run6-shard-aa-q8_0.gguf Q8_0</div>
+
+<p style="font-size:14px;margin-bottom:4px"><strong>Inferenza con llama.cpp (interattiva)</strong></p>
+<div class="cmd-block">llama-cli -m slm-run6-shard-aa-q8_0.gguf \
+          -p "Il Parlamento europeo" \
+          -n 200 --temp 0.8 --top-k 40 --top-p 0.9</div>
+
+<p style="font-size:14px;margin-bottom:4px"><strong>Inferenza con llama.cpp (prompt da stdin)</strong></p>
+<div class="cmd-block">echo "La ricerca scientifica" | llama-cli -m slm-run6-shard-aa-q8_0.gguf \
+  -n 150 --temp 0.7 -f /dev/stdin</div>
+
+<p style="font-size:14px;margin-bottom:4px"><strong>Download checkpoint da Vast.ai (manuale)</strong></p>
+<div class="cmd-block">rsync -avz -e "ssh -i ~/.ssh/vastai_slm -p 13476" \
+  root@ssh2.vast.ai:/workspace/slm/checkpoints/best.pt \
+  checkpoints/run6_best_latest.pt</div>
+
+
+<nav class="foot-links">
+  <a href="index.html">Indice</a>
+  <a href="slm-docs.html">Documentazione completa</a>
+  <a href="slm-journal.html">Diario tecnico</a>
+  <a href="slm-roadmap.html">Roadmap</a>
+  <a href="slm-faq.html">Domande e Risposte</a>
+  <a href="slm-approfondimenti.html">Approfondimenti</a>
+  <a href="slm-glossario.html">Glossario</a>
+</nav>
+
+</div>
