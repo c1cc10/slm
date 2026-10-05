@@ -594,7 +594,8 @@ def train(cfg: TrainConfig):
             else:
                 model.load_state_dict(ckpt['model_state_dict'])
                 optimizer.load_state_dict(ckpt['optimizer_state_dict'])
-                best_val_loss    = ckpt['val_loss']
+                if not args.reset_best:
+                    best_val_loss = ckpt['val_loss']
                 resumed_step     = ckpt['step']
                 cfg.warmup_steps = min(100, cfg.max_steps // 20)
                 print(f"\n  Ripreso da step {resumed_step}  val_loss={best_val_loss:.4f}")
@@ -768,6 +769,8 @@ if __name__ == '__main__':
                         help='lunghezza sequenza in token (override preset)')
     parser.add_argument('--rope',        action='store_true',
                         help='usa Rotary Position Embedding invece di PE sinusoidale')
+    parser.add_argument('--reset-best',  action='store_true',
+                        help='resetta best_val_loss a inf anche con --resume (per training sequenziale multi-shard)')
     args = parser.parse_args()
 
     # ── Preset architettura ────────────────────────────────────────────────────
