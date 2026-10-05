@@ -98,16 +98,18 @@ python3 -u tools/filter_corpus.py \
 
 ## Provare il modello
 
-I file GGUF del Run #4 sono distribuiti come **GitHub Release** (non stanno nel repo perché superano il limite di 100 MB di GitHub).
+I file GGUF del Run #4 sono su **HuggingFace** (non stanno nel repo perché superano il limite di 100 MB di GitHub).
 
 **Scarica i file:**
 ```
-https://github.com/c1cc10/slm/releases/tag/v0.4
+https://huggingface.co/c1cc10/slm-italiano
 ```
 
-Oppure con `gh`:
+Oppure da terminale con `huggingface-cli`:
 ```bash
-gh release download v0.4 --repo c1cc10/slm
+pip install huggingface_hub
+huggingface-cli download c1cc10/slm-italiano slm-run4-q8_0.gguf
+huggingface-cli download c1cc10/slm-italiano slm-run4.gguf
 ```
 
 Ci sono due modi per usarli.

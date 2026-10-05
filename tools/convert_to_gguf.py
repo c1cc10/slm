@@ -104,8 +104,10 @@ def main():
     writer.add_rope_dimension_count(d_k)      # rotazione 100% di d_k
 
     # Tokenizer (SentencePiece BPE)
-    writer.add_tokenizer_model("llama")       # llama.cpp usa "llama" per SPM
-    writer.add_tokenizer_pre("spm")           # pre-tokenizer SentencePiece (▁ come marcatore spazio)
+    # "llama" = SPM path in llama.cpp. Non impostare tokenizer_pre: quel campo
+    # è riservato a varianti BPE e in b11146 fa entrare nel code path BPE (che
+    # cerca merge rules assenti → unordered_map::at crash).
+    writer.add_tokenizer_model("llama")
     writer.add_token_list(tokens)
     writer.add_token_scores(scores)
     writer.add_token_types(token_types)
