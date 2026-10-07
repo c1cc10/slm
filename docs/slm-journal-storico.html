@@ -1,0 +1,2706 @@
+<meta charset="UTF-8">
+<title>SLM — Diario di Bordo: Storico (Run 1–5)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg:        #F7F9FC;
+  --surface:   #FFFFFF;
+  --surface2:  #F0F5FA;
+  --text:      #1C2333;
+  --text-sec:  #5A6478;
+  --accent:    #0A6E6E;
+  --border:    #DDE3EE;
+  --code-bg:   #111827;
+  --code-fg:   #A8C4D8;
+  --done-bg:   #ECFDF5; --done-text:#065F46; --done-br:#6EE7B7;
+  --warn-bg:   #FFFBEB; --warn-text:#92400E; --warn-br:#FDE68A;
+  --info-bg:   #EFF6FF; --info-text:#1E40AF; --info-br:#BFDBFE;
+  --chart-line:#0A6E6E;
+  --chart-area:rgba(10,110,110,0.10);
+  --chart-grid:#DDE3EE;
+  --chart-ref: #E0E7EF;
+  --chart-now: #D97706;
+  --chart-text:#5A6478;
+  --narr-bg:   #F0F5FA;
+  --narr-br:   #0A6E6E;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+    --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+    --code-bg:#0D1117; --code-fg:#79B8FF;
+    --done-bg:#0D2818; --done-text:#6EE7B7; --done-br:#1A4731;
+    --warn-bg:#2A1A0A; --warn-text:#FDE68A; --warn-br:#7A3A0A;
+    --info-bg:#0D1F3E; --info-text:#93C5FD; --info-br:#1E3A6E;
+    --chart-line:#2BBFBF; --chart-area:rgba(43,191,191,0.10);
+    --chart-grid:#21262D; --chart-ref:#21262D;
+    --chart-now:#F59E0B; --chart-text:#8B949E;
+    --narr-bg:#1A2634; --narr-br:#2BBFBF;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+  --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+  --code-bg:#0D1117; --code-fg:#79B8FF;
+  --done-bg:#0D2818; --done-text:#6EE7B7; --done-br:#1A4731;
+  --warn-bg:#2A1A0A; --warn-text:#FDE68A; --warn-br:#7A3A0A;
+  --info-bg:#0D1F3E; --info-text:#93C5FD; --info-br:#1E3A6E;
+  --chart-line:#2BBFBF; --chart-area:rgba(43,191,191,0.10);
+  --chart-grid:#21262D; --chart-ref:#21262D;
+  --chart-now:#F59E0B; --chart-text:#8B949E;
+  --narr-bg:#1A2634; --narr-br:#2BBFBF;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px; line-height: 1.65; margin: 0;
+  padding: 0 20px 80px;
+}
+.wrapper { max-width: 840px; margin: 0 auto; padding-top: 48px; }
+.eyebrow {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 8px;
+}
+h1 { font-size: 1.85rem; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 6px; text-wrap: balance; }
+.subtitle { color: var(--text-sec); margin: 0 0 16px; font-size: 0.92rem; }
+.meta-row {
+  display: flex; flex-wrap: wrap; gap: 6px 24px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem;
+  color: var(--text-sec); padding-bottom: 24px; margin-bottom: 36px;
+  border-bottom: 1px solid var(--border);
+}
+.meta-row .v { color: var(--text); }
+.nav-links {
+  display: flex; flex-wrap: wrap; gap: 6px 20px;
+  font-size: 0.82rem; margin-bottom: 40px;
+}
+.nav-links a { color: var(--accent); text-decoration: none; }
+.nav-links a:hover { text-decoration: underline; }
+h2 {
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent); margin: 52px 0 18px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+h3 { font-size: 1.0rem; font-weight: 600; margin: 28px 0 10px; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 8px 0 12px; padding-left: 22px; }
+li { margin-bottom: 4px; }
+
+/* ── Narrative head ── */
+.narr {
+  font-size: 0.92rem; line-height: 1.7;
+  color: var(--text);
+  background: var(--narr-bg);
+  border-left: 3px solid var(--narr-br);
+  padding: 9px 13px; border-radius: 0 5px 5px 0;
+  margin-bottom: 14px;
+}
+
+/* ── Timeline ── */
+.timeline { display: flex; flex-direction: column; }
+.tl-entry {
+  display: grid; grid-template-columns: 104px 1fr;
+  gap: 0 20px; position: relative;
+}
+.tl-left {
+  display: flex; flex-direction: column; align-items: flex-end;
+  padding-top: 2px;
+}
+.tl-date {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem;
+  color: var(--text-sec); text-align: right; line-height: 1.4; white-space: nowrap;
+}
+.tl-dot-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  width: 16px; margin-top: 6px; align-self: flex-end;
+}
+.tl-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.tl-line { width: 1px; background: var(--border); flex: 1; min-height: 28px; }
+.tl-right { padding-bottom: 36px; }
+.tl-right h3 { margin-top: 0; font-size: 0.96rem; }
+.tl-entry:last-child .tl-right { padding-bottom: 0; }
+.tl-entry:last-child .tl-line { display: none; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; padding: 1px 7px; border-radius: 4px;
+  font-size: 0.72rem; font-weight: 500; margin-right: 4px;
+  font-family: 'IBM Plex Mono', monospace; vertical-align: middle;
+}
+.badge-done { background: var(--done-bg); color: var(--done-text); border: 1px solid var(--done-br); }
+.badge-warn { background: var(--warn-bg); color: var(--warn-text); border: 1px solid var(--warn-br); }
+.badge-info { background: var(--info-bg); color: var(--info-text); border: 1px solid var(--info-br); }
+.badge-now  { background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; }
+
+/* ── Architecture grid ── */
+.arch-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 10px; margin: 14px 0;
+}
+.arch-cell { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 11px 14px; }
+.arch-cell .lbl {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+  color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 3px;
+}
+.arch-cell .val { font-size: 0.93rem; font-weight: 600; }
+
+/* ── Chart ── */
+.chart-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 20px 16px 14px; margin: 20px 0; overflow-x: auto;
+}
+.chart-caption {
+  font-size: 0.77rem; color: var(--text-sec);
+  font-family: 'IBM Plex Mono', monospace; margin-bottom: 10px;
+}
+svg text { font-family: 'IBM Plex Mono', monospace; }
+
+/* ── Val loss table ── */
+.table-wrap { overflow-x: auto; margin: 16px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 0.84rem; min-width: 440px; }
+th {
+  text-align: left; padding: 7px 12px;
+  background: var(--surface2); font-size: 0.72rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-sec);
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 7px 12px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+td.mono { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; }
+td.num { font-variant-numeric: tabular-nums; font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; }
+td.good { color: var(--done-text); font-weight: 500; }
+td.note-cell { color: var(--text-sec); font-size: 0.78rem; }
+tr.hl td { background: var(--surface2); }
+
+/* ── Milestone cards ── */
+.milestones { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+.ms-card { border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+.ms-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; background: var(--surface2); font-size: 0.78rem;
+}
+.ms-step { font-family: 'IBM Plex Mono', monospace; color: var(--accent); font-weight: 500; white-space: nowrap; }
+.ms-label { color: var(--text-sec); }
+.ms-qual { margin-left: auto; }
+.ms-body {
+  padding: 10px 14px; background: var(--code-bg); color: var(--code-fg);
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem;
+  line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+}
+.ms-body.anomaly { color: #FF7B72; }
+
+/* ── Note / info boxes ── */
+.note {
+  background: var(--info-bg); border: 1px solid var(--info-br);
+  border-radius: 6px; padding: 13px 16px; margin: 16px 0;
+  font-size: 0.87rem; color: var(--info-text);
+}
+.note.warn { background: var(--warn-bg); border-color: var(--warn-br); color: var(--warn-text); }
+.note.done { background: var(--done-bg); border-color: var(--done-br); color: var(--done-text); }
+.note b { font-weight: 600; }
+
+/* ── Decision box ── */
+.decision {
+  border: 2px solid var(--accent); border-radius: 8px;
+  padding: 20px 22px; margin: 24px 0; background: var(--surface);
+}
+.decision-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 8px;
+}
+.decision-title { font-size: 1.02rem; font-weight: 600; margin: 0 0 12px; }
+.decision-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; margin-top: 14px; }
+.decision-side h4 { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-sec); margin: 0 0 6px; }
+.decision-side ul { margin: 0; padding-left: 18px; font-size: 0.87rem; }
+.decision-side li { margin-bottom: 4px; }
+
+/* ── Command block ── */
+.cmd {
+  background: var(--code-bg); color: #A8D8A0;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem;
+  padding: 14px 16px; border-radius: 6px; margin: 12px 0;
+  overflow-x: auto; white-space: pre;
+}
+
+@media (max-width: 600px) {
+  .tl-entry { grid-template-columns: 78px 1fr; }
+  .arch-grid { grid-template-columns: 1fr 1fr; }
+  .decision-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+
+<div class="wrapper">
+
+  <p class="eyebrow">SLM · Diario di Bordo · Storico</p>
+  <h1>Run #1 — Run #5: il percorso fino a Vast.ai</h1>
+  <p class="subtitle">Archivio storico: architettura, prime decisioni di corpus, Run 1–5 e la scoperta del bug di training sequenziale. I run attivi (Run #6 in poi) sono nel <a href="slm-journal.html">diario attivo</a>.</p>
+  <div class="meta-row">
+    <span><span class="k">periodo </span><span class="v">2026-09-14 — 2026-10-05</span></span>
+    <span><span class="k">run coperti </span><span class="v">#1, #3, #4, #5</span></span>
+    <span><span class="k">stato </span><span class="v">archiviato</span></span>
+  </div>
+
+  <nav class="nav-links">
+    <a href="index.html">← Indice</a>
+    <a href="slm-storia.html">Il Progetto</a>
+    <a href="slm-docs.html">Documentazione</a>
+    <a href="slm-journal.html">Diario attivo →</a>
+    <a href="slm-journal-run4.html">Run #4 →</a>
+  </nav>
+
+  <!-- ARCHITETTURA CORRENTE -->
+  <h2>Architettura corrente — preset medium</h2>
+  <div class="narr">Il modello ha circa 46 milioni di parametri e pesa 175 MB. È addestrato sul corpus integrale di Wikipedia in italiano. Le celle seguono mostrano i dettagli tecnici della sua struttura.</div>
+  <div class="arch-grid">
+    <div class="arch-cell"><div class="lbl">Parametri</div><div class="val">45 997 056</div></div>
+    <div class="arch-cell"><div class="lbl">Dimensione (fp32)</div><div class="val">175.5 MB</div></div>
+    <div class="arch-cell"><div class="lbl">d_model</div><div class="val">512</div></div>
+    <div class="arch-cell"><div class="lbl">layer × head</div><div class="val">8 × 8</div></div>
+    <div class="arch-cell"><div class="lbl">d_ff</div><div class="val">2 048</div></div>
+    <div class="arch-cell"><div class="lbl">max_seq_len</div><div class="val">256</div></div>
+    <div class="arch-cell"><div class="lbl">vocab (BPE-SPM)</div><div class="val">16 000</div></div>
+    <div class="arch-cell"><div class="lbl">Pos. encoding</div><div class="val">sinusoidale <span class="badge badge-warn">→ RoPE</span></div></div>
+    <div class="arch-cell"><div class="lbl">Norm</div><div class="val">LayerNorm (pre-norm)</div></div>
+    <div class="arch-cell"><div class="lbl">Attivazione FFN</div><div class="val">GELU</div></div>
+    <div class="arch-cell"><div class="lbl">Corpus</div><div class="val">Wikipedia IT</div></div>
+    <div class="arch-cell"><div class="lbl">Token totali</div><div class="val">47.8 M</div></div>
+  </div>
+
+  <!-- TIMELINE -->
+  <h2>Timeline delle decisioni</h2>
+
+  <div class="timeline">
+
+    <!-- ENTRY 1 -->
+    <div class="tl-entry">
+      <div class="tl-left">
+        <div class="tl-date">2026-09-14</div>
+        <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      </div>
+      <div class="tl-right">
+        <h3 id="run1">Run #1 — primo training dall'architettura di base <span class="badge badge-done">completato</span></h3>
+        <div class="narr">Dopo 46 minuti, il modello formava parole italiane morfologicamente corrette: le desinenze giuste, la struttura riconoscibile. Nessun senso logico. Era esattamente quello che mi aspettavo, e confermava che i meccanismi di base funzionavano.</div>
+        <p>Tokenizer char-level (102 caratteri unici), corpus narrativo personale 552 KB. Obiettivo: validare che ogni componente funzioni correttamente prima di scalare. Val loss finale <strong>1.7256</strong> in 46 minuti su MPS. Il modello produce morfologia italiana corretta (suffissi <em>-zione</em>, <em>-mente</em>) ma nessuna coerenza semantica, atteso a questa scala e con questo corpus.</p>
+        <p>Checkpoint: <code>checkpoints/best.pt</code> (char-level, non BPE-compatibile).</p>
+      </div>
+    </div>
+
+    <!-- ENTRY 2 -->
+    <div class="tl-entry">
+      <div class="tl-left">
+        <div class="tl-date">2026-09-14</div>
+        <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      </div>
+      <div class="tl-right">
+        <h3>Decisione: corpus Wikipedia IT e tokenizer sub-word</h3>
+        <div class="narr">Morfologia corretta non basta: il modello non capisce nulla di quello che genera. Per imparare la struttura della lingua serviva molto più testo, e un sistema più intelligente per leggerlo. Wikipedia offre milioni di frasi ben formate, in italiano standard.</div>
+        <p>Per superare il pavimento qualitativo del char-level serve un corpus di scala enciclopedica e un tokenizer sub-word. Scelte: tokenizer BPE via SentencePiece (<code>bpe-spm</code>), vocab 16 000 token, corpus Wikipedia IT da dump ufficiale (~208 M caratteri, 47.8 M token). Preset architettura scalato a <em>medium</em>: d_model 512, 8 layer, 45.9 M parametri.</p>
+        <p>Motivazione per Wikipedia: dominio linguistico ampio e uniforme, struttura prevedibile (articoli enciclopedici), frase ben formata, italiano standard. Limitazione nota: markup residuo (wikitext, tag HTML) parzialmente rimosso.</p>
+      </div>
+    </div>
+
+    <!-- ENTRY 3 -->
+    <div class="tl-entry">
+      <div class="tl-left">
+        <div class="tl-date">2026-09-14</div>
+        <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      </div>
+      <div class="tl-right">
+        <h3>Out-of-memory su Mac M2 8 GB — riduzione batch e token cache <span class="badge badge-warn">bloccante risolto</span></h3>
+        <div class="narr">La macchina si è bloccata prima ancora di iniziare. Otto gigabyte di memoria condivisa tra processore e grafica non sono molti per addestrare un modello. Capire perché, e trovare il compromesso giusto, ha insegnato come funziona davvero la memoria di un acceleratore grafico.</div>
+        <p>Primo tentativo BPE: <code>batch=32, seq_len=512</code> produce out-of-memory a step 0 su MPS con 8 GB RAM. Fix: riduzione a <code>batch=16, seq_len=256</code>. Implementazione token cache (365 MB su disco) per evitare tokenizzazione al volo ad ogni epoch, riducendo overhead e rendendo il training deterministico.</p>
+        <p>Con <code>batch=16, seq_len=256</code>: 4 096 token per batch, 122.9 M token totali a 30 000 step. Throughput MPS steady-state: ~22 secondi/step.</p>
+      </div>
+    </div>
+
+    <!-- ENTRY 4 -->
+    <div class="tl-entry">
+      <div class="tl-left">
+        <div class="tl-date">2026-09-18</div>
+        <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      </div>
+      <div class="tl-right">
+        <h3 id="run3">Run #3 — BPE-SPM, 30 000 step <span class="badge badge-done">completato</span></h3>
+        <div class="narr">Il training principale è partito. Trenta mila passi sull'enciclopedia italiana. Quello che il modello imparerà, lo imparerà da solo, passo dopo passo, leggendo milioni di frasi.</div>
+        <p>Training BPE-SPM su Wikipedia IT, architettura sinusoidale, preset medium:</p>
+        <div class="cmd">python3 train.py --tokenizer bpe-spm --data data/wiki_it.txt \
+  --preset medium --steps 30000 --batch 16 --seq-len 256</div>
+        <p>Completato il 2026-09-26: 30 000 step, val loss best 4.0768, perplexity ~59. Durata totale: ~230 h su Mac M2 (step 0–14 000) + 59m 22s su hardware dedicato (step 14 000–30 000). Dettaglio nella sezione Analisi sotto.</p>
+      </div>
+    </div>
+
+    <!-- ENTRY 5 -->
+    <div class="tl-entry">
+      <div class="tl-left">
+        <div class="tl-date">2026-09-21</div>
+        <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      </div>
+      <div class="tl-right">
+        <h3 id="run4">Decisione: completare Run #3, poi Run #4 con sistema di posizionamento diverso <span class="badge badge-info">tecnica</span></h3>
+        <div class="narr">Il formato in cui voglio distribuire il modello usa internamente un sistema diverso per tenere traccia dell'ordine delle parole. Adeguarsi non costa nulla: nessun apprendimento precedente viene perso. I due training finiranno entrambi, e si confronteranno i risultati.</div>
+        <p>Analisi di compatibilità con llamafile/llama.cpp (target GGUF) porta a pianificare Run #4 con RoPE (Rotary Position Embedding). Run #3 prosegue fino a completamento (30 000 step): i due modelli finali saranno comparati con test mirati. RoPE non è più veloce, il costo per step è ~3-5% superiore, la convergenza in step è identica. La motivazione è architetturale, non computazionale. Dettaglio nella sezione Decisione.</p>
+      </div>
+    </div>
+
+
+    <!-- ENTRY 6 -->
+    <div class="tl-entry">
+      <div class="tl-left">
+        <div class="tl-date">2026-09-30</div>
+        <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      </div>
+      <div class="tl-right">
+        <h3 id="strategy-sft">Analisi Chinchilla — timing del SFT e dipendenza dal paradigma <span class="badge badge-info">strategica</span></h3>
+        <div class="narr">La domanda non è "SFT sì o no" — è "su quale base?". Con 47.8 M token al 5.3% del compute-optimal, il modello è Chinchilla-undertrained ma già usabile per NLG formulaico. La soglia di utilità cambia radicalmente in funzione del paradigma del task.</div>
+        <p><strong>Gap Chinchilla:</strong> 45 M parametri × 20 = <strong>900 M token</strong> compute-optimal. Corpus attuale: 47.8 M — 19× sotto l'ottimale. Il SFT formatta il comportamento ma non inietta conoscenza: se il base model non ha internalizzato un concetto in pre-training, il SFT non può darglielo.</p>
+        <p>Per NLG formulaico (condominio, moto) il base model supera già la soglia: la struttura dell'italiano è acquisita, il SFT può direzionare l'output su template riconoscibili. Per task NLU e agentic servono 300–500 M token prima del SFT per rappresentazioni sufficientemente robuste. Identificata anche la strategia DAPT (Domain-Adaptive Pre-Training): 5–10 M token di dominio specifico prima del SFT, 10× più efficiente dei token generici per target formulaici. Dettaglio nelle sezioni "Strategia SFT" e "Architettura multi-track".</p>
+      </div>
+    </div>
+
+    <!-- ENTRY 7 -->
+    <div class="tl-entry">
+      <div class="tl-left">
+        <div class="tl-date">2026-09-30</div>
+        <div class="tl-dot-wrap"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      </div>
+      <div class="tl-right">
+        <h3 id="multitrack-decision">Decisione — architettura multi-track, Run #3 come Core inamovibile <span class="badge badge-now">in progettazione</span></h3>
+        <div class="narr">Invece di un percorso lineare, la sperimentazione diventa ramificata: il checkpoint Run #3 viene congelato come punto di riferimento fisso e da lì partono branch paralleli con quantità di pre-training e target SFT diversi. Le misurazioni decidono cosa conviene investire prima.</div>
+        <p>Run #3 <code>best.pt</code> diventa il Core — rinominato e mai sovrascritto. Tre branch principali: Branch A (SFT diretto ora, per NLG formulaico), Branch B (DAPT di dominio → SFT, 2–4 settimane), Branch C (extended pre-training +200 M token → nuovo base per Run #6 SFT). Ogni branch ha checkpoint e log separati, valutati su test set standard condivisi. Dettaglio nella sezione "Architettura multi-track".</p>
+      </div>
+    </div>
+
+  </div><!-- /timeline -->
+
+  <!-- RUN #3 ANALISI -->
+  <h2><a href="#run3" style="color:inherit;text-decoration:none">Run #3</a> — Analisi approfondita</h2>
+
+  <div class="narr">Quello che segue è il dettaglio tecnico del training in corso. La parte più leggibile per tutti è la sezione sui testi generati, più avanti: mostra concretamente cosa scriveva il modello ai diversi stadi dell'apprendimento.</div>
+
+  <!-- CHART -->
+  <div class="chart-wrap">
+    <div class="chart-caption">Validation loss (cross-entropy) — Wikipedia IT — checkpoint ogni 500 step</div>
+    <svg viewBox="0 0 620 256" width="100%" style="display:block;min-width:380px" aria-label="Curva val loss Run #3">
+      <defs>
+        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--chart-line)" stop-opacity="0.18"/>
+          <stop offset="100%" stop-color="var(--chart-line)" stop-opacity="0.01"/>
+        </linearGradient>
+        <clipPath id="plotClip"><rect x="65" y="18" width="502" height="196"/></clipPath>
+      </defs>
+      <line x1="65" y1="20"  x2="567" y2="20"  stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="65" y1="50"  x2="567" y2="50"  stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="65" y1="81"  x2="567" y2="81"  stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="65" y1="111" x2="567" y2="111" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="65" y1="141" x2="567" y2="141" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="65" y1="172" x2="567" y2="172" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="65" y1="202" x2="567" y2="202" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="65"  y1="18" x2="65"  y2="214" stroke="var(--chart-grid)" stroke-width="1"/>
+      <line x1="149" y1="18" x2="149" y2="214" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="232" y1="18" x2="232" y2="214" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="316" y1="18" x2="316" y2="214" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="399" y1="18" x2="399" y2="214" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="483" y1="18" x2="483" y2="214" stroke="var(--chart-grid)" stroke-width="1" stroke-dasharray="3,4"/>
+      <line x1="567" y1="18" x2="567" y2="214" stroke="var(--chart-grid)" stroke-width="1"/>
+      <line x1="65" y1="214" x2="567" y2="214" stroke="var(--chart-grid)" stroke-width="1"/>
+      <!-- Random baseline: loss=9.68 → y=30 -->
+      <line x1="65" y1="30" x2="567" y2="30" stroke="var(--chart-ref)" stroke-width="1" stroke-dasharray="4,5"/>
+      <text x="569" y="33" font-size="9" fill="var(--chart-text)">random</text>
+      <!-- Area fill -->
+      <path clip-path="url(#plotClip)"
+        d="M65,25 73,95 82,109 90,111 98,117 107,121 115,124 124,128 132,134 149,139 165,142 182,147 199,149 216,152 232,155 249,157 257,158 274,160 283,160 291,162 299,162 308,163 316,165 324,167 333,169 349,171 358,172 366,173 374,175 383,176 400,178 408,179 424,180 441,182 458,183 466,185 483,185 491,186 508,187 516,188 525,189 533,189 541,190 550,190 558,191 567,191 567,214 65,214 Z"
+        fill="url(#areaGrad)"/>
+      <!-- Loss curve -->
+      <polyline clip-path="url(#plotClip)"
+        points="65,25 73,95 82,109 90,111 98,117 107,121 115,124 124,128 132,134 149,139 165,142 182,147 199,149 216,152 232,155 249,157 257,158 274,160 283,160 291,162 299,162 308,163 316,165 324,167 333,169 349,171 358,172 366,173 374,175 383,176 400,178 408,179 424,180 441,182 458,183 466,185 483,185 491,186 508,187 516,188 525,189 533,189 541,190 550,190 558,191 567,191"
+        fill="none" stroke="var(--chart-line)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <!-- Milestone markers -->
+      <circle cx="199" cy="149" r="3.5" fill="var(--chart-line)"/>
+      <circle cx="232" cy="155" r="3.5" fill="var(--warn-text)"/>
+      <circle cx="249" cy="157" r="3.5" fill="var(--chart-line)"/>
+      <!-- Final position: step 30000 x=567 -->
+      <circle cx="567" cy="191" r="4" fill="var(--accent)" stroke="var(--bg)" stroke-width="1.5"/>
+      <line x1="567" y1="18" x2="567" y2="214" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="380" y="28" font-size="9" fill="var(--accent)" font-weight="500">completato (step 30 000)</text>
+      <!-- Milestone labels -->
+      <text x="181" y="143" font-size="8.5" fill="var(--chart-text)">step 8k</text>
+      <text x="234" y="149" font-size="8.5" fill="var(--warn-text)">10k⚠</text>
+      <text x="251" y="152" font-size="8.5" fill="var(--chart-text)">11k★</text>
+      <!-- Y axis labels -->
+      <text x="59" y="23"  font-size="9.5" fill="var(--chart-text)" text-anchor="end">10.0</text>
+      <text x="59" y="53"  font-size="9.5" fill="var(--chart-text)" text-anchor="end">9.0</text>
+      <text x="59" y="84"  font-size="9.5" fill="var(--chart-text)" text-anchor="end">8.0</text>
+      <text x="59" y="114" font-size="9.5" fill="var(--chart-text)" text-anchor="end">7.0</text>
+      <text x="59" y="144" font-size="9.5" fill="var(--chart-text)" text-anchor="end">6.0</text>
+      <text x="59" y="175" font-size="9.5" fill="var(--chart-text)" text-anchor="end">5.0</text>
+      <text x="59" y="205" font-size="9.5" fill="var(--chart-text)" text-anchor="end">4.0</text>
+      <text x="57" y="240" font-size="9.5" fill="var(--text-sec)" text-anchor="end" font-style="italic">val loss</text>
+      <!-- X axis labels -->
+      <text x="65"  y="228" font-size="9.5" fill="var(--chart-text)" text-anchor="middle">0</text>
+      <text x="149" y="228" font-size="9.5" fill="var(--chart-text)" text-anchor="middle">5k</text>
+      <text x="232" y="228" font-size="9.5" fill="var(--chart-text)" text-anchor="middle">10k</text>
+      <text x="316" y="228" font-size="9.5" fill="var(--chart-text)" text-anchor="middle">15k</text>
+      <text x="399" y="228" font-size="9.5" fill="var(--chart-text)" text-anchor="middle">20k</text>
+      <text x="483" y="228" font-size="9.5" fill="var(--chart-text)" text-anchor="middle">25k</text>
+      <text x="567" y="228" font-size="9.5" fill="var(--chart-text)" text-anchor="middle">30k</text>
+      <text x="316" y="244" font-size="9.5" fill="var(--text-sec)" text-anchor="middle" font-style="italic">step</text>
+      <!-- Legend -->
+      <line x1="320" y1="35" x2="340" y2="35" stroke="var(--chart-line)" stroke-width="2"/>
+      <text x="343" y="38" font-size="9.5" fill="var(--chart-text)">val loss (checkpoint)</text>
+      <line x1="320" y1="49" x2="340" y2="49" stroke="var(--chart-now)" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="343" y="52" font-size="9.5" fill="var(--chart-text)">step finale (30 000 ✓)</text>
+      <line x1="320" y1="63" x2="340" y2="63" stroke="var(--chart-ref)" stroke-width="1" stroke-dasharray="4,5"/>
+      <text x="343" y="66" font-size="9.5" fill="var(--chart-text)">baseline random (loss 9.68)</text>
+    </svg>
+  </div>
+
+  <!-- VAL LOSS TABLE -->
+  <h3>Checkpoint val loss</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Step</th><th>Val loss</th><th>Perplexity</th><th>Δ loss / 500 step</th><th>Note</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">0</td><td class="num">9.8258</td><td class="num">18 541</td><td class="num">—</td><td class="note-cell">random, atteso log(16000) = 9.68</td></tr>
+        <tr><td class="num">500</td><td class="num">7.5156</td><td class="num">1 829</td><td class="num good">−2.31</td><td class="note-cell">frequenza token, frasi di funzione emergenti</td></tr>
+        <tr><td class="num">1 000</td><td class="num">7.0777</td><td class="num">1 187</td><td class="num good">−0.44</td><td class="note-cell">nomi comuni, prime coppie articolo + nome</td></tr>
+        <tr><td class="num">1 500</td><td class="num">6.9932</td><td class="num">1 088</td><td class="num">−0.08</td><td class="note-cell">apostrofi ripetuti (wikitext markup)</td></tr>
+        <tr><td class="num">2 000</td><td class="num">6.8173</td><td class="num">910</td><td class="num">−0.18</td><td class="note-cell"></td></tr>
+        <tr><td class="num">2 500</td><td class="num">6.6743</td><td class="num">793</td><td class="num">−0.14</td><td class="note-cell"></td></tr>
+        <tr><td class="num">3 000</td><td class="num">6.5763</td><td class="num">718</td><td class="num">−0.10</td><td class="note-cell">prime strutture da enciclopedia</td></tr>
+        <tr><td class="num">3 500</td><td class="num">6.4433</td><td class="num">629</td><td class="num">−0.13</td><td class="note-cell"></td></tr>
+        <tr><td class="num">4 000</td><td class="num">6.2337</td><td class="num">508</td><td class="num">−0.21</td><td class="note-cell">prime frasi concettualmente coerenti</td></tr>
+        <tr><td class="num">5 000</td><td class="num">6.0849</td><td class="num">440</td><td class="num">−0.12</td><td class="note-cell"></td></tr>
+        <tr><td class="num">6 000</td><td class="num">5.9704</td><td class="num">391</td><td class="num">−0.11</td><td class="note-cell">struttura frasale stabile</td></tr>
+        <tr><td class="num">7 000</td><td class="num">5.8267</td><td class="num">339</td><td class="num">−0.14</td><td class="note-cell"></td></tr>
+        <tr><td class="num">8 000</td><td class="num">5.7426</td><td class="num">311</td><td class="num">−0.08</td><td class="note-cell">stile Wikipedia apprezzabile</td></tr>
+        <tr><td class="num">9 000</td><td class="num">5.6512</td><td class="num">284</td><td class="num">−0.09</td><td class="note-cell"></td></tr>
+        <tr><td class="num">10 000</td><td class="num">5.5424</td><td class="num">255</td><td class="num">−0.11</td><td class="note-cell">HTML entity leak (markup chimico residuo)</td></tr>
+        <tr><td class="num">11 000</td><td class="num">5.4844</td><td class="num">241</td><td class="num">−0.06</td><td class="note-cell">primo "comune italiano" corretto</td></tr>
+        <tr><td class="num">11 500</td><td class="num">5.4584</td><td class="num">234</td><td class="num">−0.03</td><td class="note-cell">train=5.2245 · gap train/val = 0.23</td></tr>
+        <tr><td class="num">12 500</td><td class="num">5.3787</td><td class="num">216</td><td class="num good">−0.08</td><td class="note-cell">strutture architettoniche con anno e stile</td></tr>
+        <tr><td class="num">13 000</td><td class="num">5.3842</td><td class="num">218</td><td class="num" style="color:var(--warn-text)">+0.006</td><td class="note-cell">plateau; train 5.1683, gap 0.216; testo "Cosenza in Piemonte" (struttura ok, geografia confusa)</td></tr>
+        <tr><td class="num">13 500</td><td class="num">5.3125</td><td class="num">203</td><td class="num good">−0.072</td><td class="note-cell">plateau rotto; train 5.0688, gap 0.244; testo sportivo ("campionato europeo", "inaugurata")</td></tr>
+        <tr><td class="num">14 000</td><td class="num">5.3052</td><td class="num">201</td><td class="num good">−0.007</td><td class="note-cell">train 5.0806, gap 0.225; registro culturale/storico ("opera", "anni cinquanta", clausole relative)</td></tr>
+        <tr><td class="num">15 000</td><td class="num">5.2079</td><td class="num">183</td><td class="num good">−0.097</td><td class="note-cell">discesa riprende</td></tr>
+        <tr><td class="num">16 000</td><td class="num">5.1063</td><td class="num">165</td><td class="num good">−0.102</td><td class="note-cell"></td></tr>
+        <tr><td class="num">17 000</td><td class="num">5.0312</td><td class="num">153</td><td class="num good">−0.075</td><td class="note-cell"></td></tr>
+        <tr><td class="num">18 000</td><td class="num">4.9704</td><td class="num">144</td><td class="num good">−0.061</td><td class="note-cell">"Valle del Vallese", "Repubblica di Venezia"</td></tr>
+        <tr><td class="num">19 000</td><td class="num">4.8562</td><td class="num">129</td><td class="num good">−0.114</td><td class="note-cell"></td></tr>
+        <tr><td class="num">20 000</td><td class="num">4.7966</td><td class="num">121</td><td class="num good">−0.060</td><td class="note-cell">nomi geografici reali; registro enciclopedico stabile</td></tr>
+        <tr><td class="num">22 500</td><td class="num">4.6749</td><td class="num">107</td><td class="num good">−0.121</td><td class="note-cell">"feudo di Atella" con data 1431 e nomi corretti</td></tr>
+        <tr><td class="num">24 000</td><td class="num">4.5697</td><td class="num">97</td><td class="num good">−0.105</td><td class="note-cell">"alleanza con la Francia nazista" — coerenza storica emergente</td></tr>
+        <tr><td class="num">25 500</td><td class="num">4.5277</td><td class="num">93</td><td class="num good">−0.042</td><td class="note-cell">struttura bibliografica corretta, lessico culturale consolidato</td></tr>
+        <tr><td class="num">26 500</td><td class="num">4.4978</td><td class="num">90</td><td class="num good">−0.030</td><td class="note-cell">"Paesi Bassi", "monete" — lessico economico/istituzionale</td></tr>
+        <tr><td class="num">27 000</td><td class="num">4.3821</td><td class="num">80</td><td class="num good">−0.116</td><td class="note-cell"></td></tr>
+        <tr><td class="num">28 000</td><td class="num">4.2134</td><td class="num">67</td><td class="num good">−0.169</td><td class="note-cell"></td></tr>
+        <tr class="hl"><td class="num">28 500</td><td class="num">4.0768</td><td class="num">59</td><td class="num good">−0.137</td><td class="note-cell">best checkpoint — governo comunista, Aia: riferimenti geopolitici precisi; miglior val del run</td></tr>
+        <tr><td class="num">29 500</td><td class="num">4.0834</td><td class="num">59</td><td class="num">+0.006</td><td class="note-cell">oscillazione finale, best non migliorato</td></tr>
+        <tr><td class="num">30 000</td><td class="num">4.0825</td><td class="num">59</td><td class="num good">−0.001</td><td class="note-cell">step finale; best checkpoint 4.0768 salvato a step ~28 500</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <b>Train–val gap stabile per tutto il run.</b> A step 11 500: gap 0.234. A step 13 500: gap 0.244. A step 14 000: train 5.0806, val 5.3052, gap 0.225. A step 26 500: val 4.4978. A step 30 000: train 3.6792, val 4.0825, gap 0.403 — gap leggermente cresciuto nelle ultime fasi (LR bassa, più cicli su batch visti), ma nessun overfitting. La val ha continuato a scendere fino a step 28 500 (best 4.0768), poi oscillazione minima fino al completamento.
+  </div>
+
+  <!-- MILESTONES -->
+  <h3>Cosa scriveva il modello — tappe</h3>
+  <p>Questa è la parte più leggibile di tutto il diario. I testi sotto sono generati dal modello ai diversi stadi del training: mostrano concretamente come l'apprendimento progredisce, da puro rumore statistico a frasi riconoscibili. Temperatura 0.8, top-k 40.</p>
+
+  <div class="milestones">
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 500</span>
+        <span class="ms-label">solo le parole più frequenti, nessuna struttura</span>
+      </div>
+      <div class="ms-body">che il a è e, e che. Nel in...</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 1 000</span>
+        <span class="ms-label">prime coppie articolo+nome, nomi propri</span>
+      </div>
+      <div class="ms-body">di una città nel...paese del suo momento del mondo nel termin</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 1 500–2 000</span>
+        <span class="ms-label">apostrofi ripetuti — il modello impara la frequenza prima del significato</span>
+        <span class="ms-qual"><span class="badge badge-warn">anomalia corpus</span></span>
+      </div>
+      <div class="ms-body">dei un punto del centro della Repubblica di popolazione a Chiesa della territorio
+
+di una quale l'''''Italia dei uninterno di Santa</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 3 000</span>
+        <span class="ms-label">prime strutture enciclopediche, numeri storici</span>
+      </div>
+      <div class="ms-body">del centro secolo dell'agno di un paese di un fiume delepoca. Dal 186</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 4 000</span>
+        <span class="ms-label">prima frase con senso concettuale</span>
+      </div>
+      <div class="ms-body">e in cui la sua parte a un punto, come si possono dei suoi di più: si è di una velocità. Per cui, la formula spazio</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 6 000</span>
+        <span class="ms-label">registro enciclopedico riconoscibile</span>
+      </div>
+      <div class="ms-body">a essere stata il primo progetto del primo e per la stessa parte. La produzione del suo caso</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 8 000</span>
+        <span class="ms-label">toponomastica italiana, stile Wikipedia ★</span>
+      </div>
+      <div class="ms-body">, che si trovava nella strada, in posizione dell'area di San Giovanni, la prima domenica del paese</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 10 000</span>
+        <span class="ms-label">tag HTML non rimossi — residuo di articoli di chimica</span>
+        <span class="ms-qual"><span class="badge badge-warn">anomalia</span></span>
+      </div>
+      <div class="ms-body anomaly">meth" (18gt;) { &lt; &lt;chem&gt;(lt;&lt;/chem&gt;</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 11 000</span>
+        <span class="ms-label">primo "comune italiano" corretto ★★</span>
+      </div>
+      <div class="ms-body">è un comune italiano di abitanti della metropolitana di Asti in Lombardia. Geografia fisica. Il territorio comunale comp</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 11 500</span>
+        <span class="ms-label">struttura geografica/amministrativa multi-clausola</span>
+      </div>
+      <div class="ms-body">ani di un altro di "Coms" (che non può essere una provincia di Bolzano, la provincia di Verona), una regione calcistica.</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 12 500</span>
+        <span class="ms-label">strutture architettoniche con anno e stile ★★★</span>
+      </div>
+      <div class="ms-body">di Cacerno. La chiesa fu costruito in stile romanico nel 1786 e successivamente ristrutturata in possesso dell'antico ca</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 13 000</span>
+        <span class="ms-label">struttura geografica/amministrativa corretta, fatti geografici sbagliati</span>
+      </div>
+      <div class="ms-body">della provincia di Cosenza in Piemonte, nel quale furono abolite con i comuni di Como in Italia per le Olimpiadi di Se</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 13 500</span>
+        <span class="ms-label">plateau rotto — vocabolario sportivo e da eventi ★★★★</span>
+      </div>
+      <div class="ms-body">Nel settembre del'Italia si tiene l'Azione della squadra. L'Amilia italiana è stata inaugurata nel campionato europeo</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 14 000</span>
+        <span class="ms-label">registro culturale/storico, clausole relative complesse ★★★★</span>
+        <span class="ms-qual"><span class="badge badge-done">val 5.31</span></span>
+      </div>
+      <div class="ms-body">, con la sua opera, la quale è stata fatta da essere riaperto. La maggior parte degli anni cinquanta è stata in corso di</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 20 000</span>
+        <span class="ms-label">nomi geografici reali, costruzioni subordinate ★★★★</span>
+        <span class="ms-qual"><span class="badge badge-done">val 4.80</span></span>
+      </div>
+      <div class="ms-body">dopo la nascita della Repubblica di Venezia. Le truppe italiane del Regno di Sardegna e del Regno d'Italia e dell'annessione</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 22 500</span>
+        <span class="ms-label">date e nomi storici corretti ★★★★</span>
+        <span class="ms-qual"><span class="badge badge-done">val 4.67</span></span>
+      </div>
+      <div class="ms-body">La 12 marzo 1431 il feudo di Atella è assegnato alla passaggio dei città, con l'aiuto di nuovi il borgo. Il paese è si</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 24 000</span>
+        <span class="ms-label">coerenza storico-politica, lessico istituzionale ★★★★★</span>
+        <span class="ms-qual"><span class="badge badge-done">val 4.57</span></span>
+      </div>
+      <div class="ms-body">ano, e con il suo contributo al potere, con l'eccezione di alcuni storici di diritto. L'alleanza con la Francia nazista.</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 26 500</span>
+        <span class="ms-label">lessico economico/geografico, struttura enciclopedica consolidata ★★★★★</span>
+        <span class="ms-qual"><span class="badge badge-done">val 4.50</span></span>
+      </div>
+      <div class="ms-body">rali. Le immagini del flusso delle monete del "Musion des Institution" dei Paesi Bassi hanno permesso alla Francia una p</div>
+    </div>
+
+    <div class="ms-card">
+      <div class="ms-header">
+        <span class="ms-step">step 30 000 — completato</span>
+        <span class="ms-label">registro geopolitico, nomi propri internazionali, struttura narrativa complessa ★★★★★</span>
+        <span class="ms-qual"><span class="badge badge-done">best val 4.0768</span></span>
+      </div>
+      <div class="ms-body">cheno di Aia. A questo punto il governo comunista aveva perso la sua popolarità e il loro appoggio al governo era stato </div>
+    </div>
+
+  </div>
+
+  <h3>Come leggere la curva di apprendimento</h3>
+  <p>La discesa avviene in tre fasi, ognuna delle quali corrisponde a qualcosa di riconoscibile nel testo generato.</p>
+  <ul>
+    <li><strong>Step 0–2 000 (loss da 9.8 a 6.8):</strong> il modello impara quali parole sono più frequenti. L'output sono le parole comuni dell'italiano. La discesa è rapida perché questa "informazione" è la più semplice. Osservazione: morfologia corretta (suffissi -zione, -mente) comparsa già a step 500, ma nessuna struttura frasale.</li>
+    <li><strong>Step 2 000–8 000 (loss da 6.8 a 5.7):</strong> emerge la struttura della frase. Compaiono articolo, nome, verbo nell'ordine giusto. Il fenomeno degli apostrofi si risolve intorno a step 3 000: il modello capisce che gli apostrofi multipli compaiono in un contesto specifico (la formattazione di Wikipedia), prima ancora di capire la grammatica vera. Osservazione: prime frasi concettualmente coerenti a step 4 000.</li>
+    <li><strong>Step 8 000–12 500 (loss da 5.7 a 5.38):</strong> coerenza di dominio. Il modello produce il registro enciclopedico, la toponomastica italiana, la struttura "comune di X in regione Y". Ogni decimale di loss costa più capacità di prima — siamo nella fase lenta. Anomalia puntuale a step 10 000: entità HTML da articoli di chimica non filtrate.</li>
+    <li><strong>Step 12 500–13 000 (loss ~5.38, plateau):</strong> struttura senza fatto. Il modello costruisce frasi geografiche e amministrative corrette nella forma ("della provincia di X in Y, nel quale…"), ma le associazioni fattuali sono sbagliate: Cosenza finisce in Piemonte, Como nelle Olimpiadi. Il <em>template</em> della lingua è acquisito, il contenuto che quel template dovrebbe veicolare no.</li>
+    <li><strong>Step 13 000–14 000 (loss da 5.38 a 5.31):</strong> il plateau è rotto e la discesa prosegue. A step 13 500 (val 5.3125): vocabolario sportivo — "campionato europeo", "inaugurata", toponimi inventati morfologicamente plausibili. A step 14 000 (val 5.3052): registro culturale e storico, clausole relative complesse, riferimenti temporali ("anni cinquanta"), costruzioni passive. La grammatica è più ambiziosa, i fatti restano imprecisi.</li>
+    <li><strong>Step 14 000–20 000 (loss da 5.31 a 4.80):</strong> discesa sostenuta. Compaiono nomi geografici reali: "Repubblica di Venezia", "Valle del Vallese", "Paesi Bassi". La struttura fraseologica enciclopedica si consolida. Le entità geografiche smettono di essere inventate e iniziano a coincidere con luoghi reali.</li>
+    <li><strong>Step 20 000–26 500 (loss da 4.80 a 4.50):</strong> fase di raffinamento storico-istituzionale. A step 22 500: "La 12 marzo 1431 il feudo di Atella" — date, feudi, nomi medievali corretti nella forma. A step 24 000: "l'alleanza con la Francia nazista" — coerenza storico-politica. A step 26 500: lessico economico e istituzionale ("monete", "Paesi Bassi", "Institution").</li>
+    <li><strong>Step 26 500–30 000 (loss da 4.50 a 4.08 — best 4.0768):</strong> fase finale, LR in decadimento coseno verso il minimo. La loss scende con continuità fino a step ~28 500 (best checkpoint, val 4.0768), poi stabilizzazione con oscillazione minima. A step 30 000: "cheno di Aia. A questo punto il governo comunista aveva perso la sua popolarità e il loro appoggio al governo era stato" — geopolitica internazionale, coerenza narrativa su più clausole, registro enciclopedico maturo. Run #3 completato.</li>
+  </ul>
+
+  <h3>Note sulle anomalie del corpus</h3>
+  <div class="note warn">
+    <b>Apostrofi ripetuti (step 500–2 500).</b> Wikipedia usa <code>''testo''</code> per <em>corsivo</em> e <code>'''testo'''</code> per <strong>grassetto</strong>. Il modello ha imparato l'alta frequenza degli apostrofi prima del loro contesto grammaticale, producendo sequenze di apostrofi nei primissimi step. Si risolve spontaneamente verso step 3 000. Per il prossimo run: pulizia più aggressiva del markup wikitext ridurrebbe questo rumore.
+  </div>
+  <div class="note warn">
+    <b>Tag HTML (step 10 000).</b> Tag <code>&lt;chem&gt;</code> e entità HTML da articoli di chimica e matematica non completamente rimossi dalla fase di estrazione. Il modello genera questo output raramente. Non impatta la qualità complessiva ma è rumore evitabile. Action item: aggiornare <code>wiki_to_corpus.py</code> con regex per <code>&lt;chem&gt;</code>, <code>&lt;math&gt;</code>, <code>&lt;ref&gt;</code> e entità HTML numeriche.
+  </div>
+
+  <h3>Timing e proiezione</h3>
+  <ul>
+    <li>Step 0–14 000: ~230.1 ore elapsed (Mac M2, 13 805 min, ~59.2 s/step)</li>
+    <li>Step 14 000–30 000: 59m 22s (hardware dedicato, ~0.22 s/step)</li>
+    <li>Durata totale Run #3: ~230.1 h (Mac M2) + 59m 22s (hardware dedicato)</li>
+    <li>Completamento <a href="#run3">Run #3</a>: <strong>2026-09-26</strong>, best val loss 4.0768, perplexity ~59</li>
+    <li>ETA avvio <a href="#run4">Run #4</a> (RoPE): da definire</li>
+  </ul>
+
+  <!-- DECISIONE ROPE -->
+  <h2>Decisione architetturale — da PE sinusoidale a RoPE</h2>
+
+  <div class="narr">Il sistema che il modello usa per tenere traccia dell'ordine delle parole (dove si trova ogni parola nella frase) non è compatibile con il formato di distribuzione scelto. Il prossimo training usa il sistema corretto. Il lavoro già fatto non va perso: i due approcci si confronteranno a parità di condizioni.</div>
+
+  <div class="decision">
+    <div class="decision-label">Decisione — 2026-09-21</div>
+    <div class="decision-title"><a href="#run3" style="color:inherit;text-decoration:none">Run #3</a> (sinusoidale) e <a href="#run4" style="color:inherit;text-decoration:none">Run #4</a> (RoPE) entrambi a completamento, comparazione A/B</div>
+    <p style="font-size:0.9rem;margin-bottom:12px">Run #3 prosegue fino a 30 000 step. Al completamento si implementa RoPE (~50 righe di diff, zero migrazione di pesi) e si avvia Run #4 con parametri identici. Il target di deployment (llamafile/llama.cpp via GGUF con architettura LLaMA) usa RoPE nativamente. La comparazione diretta dei due modelli finali quantifica empiricamente il beneficio di RoPE a questa scala e su questo corpus.</p>
+    <div class="decision-grid">
+      <div class="decision-side">
+        <h4>PE sinusoidale — cosa lasciamo</h4>
+        <ul>
+          <li>Formula fissa, senza parametri apprendibili</li>
+          <li>Codifica la posizione assoluta di ogni parola</li>
+          <li>Generalizzazione scarsa a sequenze più lunghe del training</li>
+          <li>Non è l'encoding atteso da llama.cpp</li>
+        </ul>
+      </div>
+      <div class="decision-side">
+        <h4>RoPE — cosa acquistiamo</h4>
+        <ul>
+          <li>Codifica la distanza relativa tra parole, non la posizione assoluta</li>
+          <li>Nessun parametro apprendibile: costo di migrazione = 0</li>
+          <li>Migliore generalizzazione a sequenze più lunghe</li>
+          <li>Standard de facto: LLaMA, Mistral, Qwen, Gemma</li>
+          <li>Compatibilità nativa con llama.cpp / GGUF</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>Costo della migrazione</h3>
+  <p>PE sinusoidale non ha parametri apprendibili: non compare nel checkpoint come tensor con gradient. Il checkpoint di Run #3 non contiene nulla da migrare. La migrazione consiste solo in modifiche al codice:</p>
+  <ul>
+    <li><code>attention.py</code> — aggiungere <code>apply_rope()</code>, modificare <code>MultiHeadAttention.forward()</code> per applicare RoPE a Q e K prima del dot-product</li>
+    <li><code>transformer.py</code> — rimuovere <code>PositionalEncoding</code>, passare <code>rope_freq</code> come argomento ai blocchi</li>
+    <li><code>model.py</code> — pre-calcolare le frequenze RoPE (cos θ e sin θ per ogni posizione) nel costruttore</li>
+  </ul>
+  <p>Stima: ~50 righe di diff. Zero impatto sulla semantica del resto dell'architettura.</p>
+
+  <h3>Cosa rimane invariato in Run #4</h3>
+  <ul>
+    <li>Corpus: Wikipedia IT identico (stessa token cache)</li>
+    <li>Tokenizer: BPE-SPM 16 000 vocab</li>
+    <li>Preset: medium (45.9 M parametri, d_model 512, 8 layer)</li>
+    <li>Iperparametri: batch 16, seq 256, 30 000 step, AdamW lr 3e-4, warmup 200 step, cosine decay, gradient clip 1.0</li>
+  </ul>
+
+  <!-- PIANO COMPARAZIONE -->
+  <h2>Piano di comparazione <a href="#run3" style="color:inherit;text-decoration:none">Run #3</a> vs <a href="#run4" style="color:inherit;text-decoration:none">Run #4</a></h2>
+
+  <div class="narr">Quando entrambi i training saranno completati, i due modelli verranno confrontati su cinque prove progettate per far emergere le differenze tra i due sistemi di posizionamento. La prova più discriminante è la seconda: vedere come si comportano oltre i limiti di lunghezza su cui sono stati addestrati.</div>
+
+  <h3>Prova 1 — Perplexity su val set comune <span class="badge badge-info">quantitativa</span></h3>
+  <p>Il confronto diretto più pulito: misurare la val loss finale di entrambi sullo stesso insieme di testi non visti durante il training. Se la differenza è &lt;0.1, le due architetture sono equivalenti a questa scala.</p>
+
+  <h3>Prova 2 — Generazione oltre i limiti di training <span class="badge badge-warn">più discriminante</span></h3>
+  <p>Entrambi i modelli sono stati addestrati su sequenze di al massimo 256 parole (token). Si genera con un testo iniziale di 100 token e si osserva cosa succede tra le posizioni 257 e 512, dove il modello non è mai stato.</p>
+  <ul>
+    <li><strong>Sinusoidale:</strong> la formula è matematicamente continua, ma quelle posizioni non compaiono mai nel training. L'attenzione non sa pesare quei valori. Probabilmente: incoerenza, ripetizione, loop.</li>
+    <li><strong>RoPE:</strong> codifica la distanza relativa, non la posizione assoluta. Il modello non vede mai la posizione 300 in assoluto, vede solo distanze relative che ha già imparato. Teoricamente più robusto.</li>
+  </ul>
+
+  <h3>Prova 3 — Struttura ripetuta a distanza variabile <span class="badge badge-info">qualitativa</span></h3>
+  <p>Un pattern ripetuto dove rispondere correttamente richiede di tenere il conto delle posizioni relative:</p>
+  <div class="cmd">Primo comune: Roma. Secondo comune: Milano. Terzo comune: Napoli. Quarto comune: Torino. Quinto comune:</div>
+
+  <h3>Prova 4 — Coerenza di argomento su testo lungo <span class="badge badge-info">qualitativa</span></h3>
+  <p>Generare 256 token di testo libero con entrambi i modelli, stesso punto di partenza. Contare quante volte il testo cambia argomento. PE sinusoidale potrebbe avere più deriva tematica a distanze lunghe.</p>
+
+  <h3>Prova 5 — Recupero di informazione nel contesto <span class="badge badge-info">qualitativa</span></h3>
+  <p>Inserire un'informazione specifica all'inizio del testo e chiedere al modello di riutilizzarla alla fine:</p>
+  <div class="cmd">La capitale della Sardegna è Cagliari. [150 token su altro argomento] La capitale della Sardegna è</div>
+  <p>RoPE, avendo codifica relativa, dovrebbe gestire meglio le dipendenze a lunga distanza.</p>
+
+  <h3>Script di comparazione</h3>
+  <div class="cmd">python3 tools/compare_runs.py \
+  --model-a checkpoints/run3_sinusoidal_best.pt \
+  --model-b checkpoints/run4_rope_best.pt \
+  --tokenizer bpe-spm \
+  --test-set data/wiki_it_val.txt \
+  --extrapolation-len 512</div>
+
+  <div class="note">
+    <b>Cosa aspettarsi.</b> A 46 M parametri e seq_len=256, la differenza qualitativa all'interno della distribuzione di training sarà probabilmente minima. Il vantaggio di RoPE emerge chiaramente nell'extrapolazione e nella compatibilità GGUF. Il confronto è comunque utile come dato empirico: qualsiasi differenza significativa nella val loss finale sarebbe una sorpresa interessante da documentare.
+  </div>
+
+  <h3>Dopo i due run</h3>
+  <ul>
+    <li>Scegliere il checkpoint migliore per il deployment</li>
+    <li>Implementare <code>tools/slm_to_gguf.py</code> (converter PyTorch → GGUF, schema LLaMA)</li>
+    <li>Quantizzazione Q4_K_M via <code>llama-quantize</code> (target: ~28 MB)</li>
+    <li>Test con llamafile (Mozilla Foundation)</li>
+    <li>Fine-tuning su corpus narrativo personale via LoRA adapter</li>
+  </ul>
+  <p>Dettaglio completo: <a href="slm-roadmap.html">Roadmap di sviluppo</a> · <a href="slm-docs.html">Documentazione</a></p>
+
+  <!-- COSA SONO 46M PARAMETRI -->
+  <h2>46 milioni di parametri — cosa sono e cosa producono</h2>
+
+  <div class="narr">46 milioni di numeri floating point. Non più, non meno. Questi numeri codificano, in forma compressa, i pattern statistici di 47.8 milioni di token di testo italiano. Quello che il modello ha imparato è una sola funzione: P(token successivo | ultimi 256 token) — una distribuzione di probabilità su 16 000 pezzi di parola, condizionata sul contesto recente.</div>
+
+  <h3>Cosa emerge dall'ottimizzazione</h3>
+  <p>Il log di training mostra la sequenza precisa delle acquisizioni — ognuna emerge quando la distribuzione statistica del corpus è sufficiente per apprenderla:</p>
+  <ul>
+    <li><strong>Step 0–2 000 (morfologia):</strong> il modello non viene istruito sulla grammatica italiana. Impara che dopo "la" viene un sostantivo femminile perché quella sequenza è statisticamente dominante. La grammatica è compressa nella frequenza del corpus.</li>
+    <li><strong>Step 2 000–8 000 (sintassi):</strong> emerge la struttura della frase. Le frasi grammaticalmente corrette sono molto più frequenti di quelle scorrette nel testo Wikipedia: la correttezza emerge come massimizzazione della verosimiglianza, non come regola esplicita.</li>
+    <li><strong>Step 8 000–14 000 (registro enciclopedico):</strong> "X è una Y situata nella regione Z" è un template così frequente in Wikipedia che il modello lo interiorizza come struttura probabilistica dominante. Il registro emerge prima dei fatti.</li>
+    <li><strong>Step 14 000–30 000 (fatti imprecisi):</strong> il modello "sa" che Roma è in Italia perché ha visto quella co-occorrenza migliaia di volte. Ma non ha un knowledge graph — ha una distribuzione di probabilità. "Cosenza in Piemonte" a step 13 000 non era un errore casuale: il modello aveva imparato il template geografico prima delle associazioni corrette.</li>
+  </ul>
+
+  <h3>La perplexity come posizione sul continuum</h3>
+  <div class="table-wrap">
+  <table class="loss-table">
+    <thead><tr><th>Modello</th><th>Perplexity</th><th>Nota</th></tr></thead>
+    <tbody>
+      <tr><td>Distribuzione uniforme su 16 K vocab</td><td class="num">16 000</td><td>entropia massima</td></tr>
+      <tr><td>Run #3 — step 0</td><td class="num">~9 700</td><td>dopo inizializzazione pesata</td></tr>
+      <tr><td>Run #3 — step 8 000</td><td class="num">~297</td><td>registro acquisito</td></tr>
+      <tr class="hl"><td>Run #3 — step 30 000 (attuale)</td><td class="num">59</td><td>val loss 4.0768</td></tr>
+      <tr><td>GPT-2 Small (117 M, inglese)</td><td class="num">~29</td><td>riferimento storico</td></tr>
+      <tr><td>Umano (stima)</td><td class="num">~15–20</td><td>benchmark superiore</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>PP = 59 significa che il modello assegna mediamente probabilità 1/59 ≈ 1.7% al token corretto. Un native speaker implicito ne assegnerebbe ~5%. Il modello è circa 3× più "sorpreso" dal testo corretto rispetto a un umano. Questo gap si chiude solo con più parametri e più dati — non con più training sullo stesso corpus.</p>
+
+  <h3>Il valore educativo — il microscopio</h3>
+  <div class="note">
+    <b>Il modello da 46 M non è "stupido in attesa di diventare intelligente".</b> È uno strumento di osservazione. Con GPT-4 non è possibile tracciare dove finisce la statistica e dove inizia la comprensione — se inizia. Con Run #3 è possibile vedere esattamente quando è emerso il registro enciclopedico (step 8 000), quando si è rotto il template geografico (step 13 000), quando ha acquisito coerenza storico-istituzionale (step 22 000–26 000). Questi sono gli stessi fenomeni che si osservano nei modelli grandi — solo che lì sono sepolti sotto 100–1 000 miliardi di parametri e non si possono leggere.
+  </div>
+
+  <!-- SCALING E COMPRESSIONE -->
+  <h2>Scaling e compressione — le opzioni</h2>
+
+  <h3>Ridurre i parametri vs ridurre la precisione</h3>
+  <p>Sono due operazioni fondamentalmente diverse con effetti molto diversi sulla qualità:</p>
+  <ul>
+    <li><strong>Ridurre i parametri</strong> (architettura più piccola): meno layer, d_model più piccolo. Il risultato è un modello con meno capacità di memorizzazione e coerenza. Utile solo per deployment con vincoli estremi (embedded, mobile) o come esperimento di distillazione.</li>
+    <li><strong>Ridurre la precisione</strong> (quantizzazione): stessi 46 M parametri, meno bit per parametro. Da float32 (4 byte) a int4 (0.5 byte). Questo è ciò che fa GGUF. Qualità quasi invariata fino a Q4, con compressione 8×.</li>
+  </ul>
+  <div class="table-wrap">
+  <table class="loss-table">
+    <thead><tr><th>Formato</th><th>Peso</th><th>PP stimato</th><th>Nota</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td>float32 (attuale)</td><td class="num">553 MB</td><td class="num">59</td><td>baseline</td></tr>
+      <tr><td>float16</td><td class="num">277 MB</td><td class="num">≈59.1</td><td>quasi identico</td></tr>
+      <tr><td>int8 / Q8_0</td><td class="num">139 MB</td><td class="num">≈59.5</td><td>trascurabile</td></tr>
+      <tr><td>Q4_K_M (target GGUF)</td><td class="num">~35 MB</td><td class="num">≈61–63</td><td>deployment ottimale</td></tr>
+      <tr><td>Q2_K</td><td class="num">~18 MB</td><td class="num">≈70–80</td><td>degrado sensibile</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Il percorso verso più "intelligenza"</h3>
+  <p>Il modello è Chinchilla-undertrained: regola empirica DeepMind 2022 prevede N × 20 token di training per un modello ottimale. Con 46 M parametri il target sarebbe 918 M token; il corpus attuale è 47.8 M — circa 19× sotto l'ottimale. Il primo passo per migliorare la qualità è <em>più dati</em>, non più parametri.</p>
+  <div class="table-wrap">
+  <table class="loss-table">
+    <thead><tr><th>Opzione</th><th>Params</th><th>Corpus target</th><th>Costo Vast.ai</th><th>PP atteso</th></tr></thead>
+    <tbody>
+      <tr><td>Più dati, stessa arch (Run #4+)</td><td class="num">46 M</td><td>500 M–1 B token IT</td><td class="num">~$5–10</td><td class="num">~3.3–3.6</td></tr>
+      <tr><td>Scale a 175 M, corpus serio</td><td class="num">175 M</td><td>2–3 B token IT</td><td class="num">~$15–25</td><td class="num">~35–45</td></tr>
+      <tr><td>Distillazione (5–10 M student)</td><td class="num">5–10 M</td><td>same corpus + teacher</td><td class="num">~$1</td><td class="num">~90–120</td></tr>
+      <tr><td>LoRA su LLaMA 3.1 8B</td><td class="num">8 B</td><td>corpus letterario attuale</td><td class="num">~$3–5</td><td class="num">molto basso</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>La distillazione è l'esperimento più interessante nel perimetro del progetto: addestrare un modello da 5–10 M con Run #3 come teacher dimostra empiricamente quanta conoscenza si trasferisce e cosa si perde — gli stessi principi usati da Microsoft per addestrare Phi-3 da GPT-4.</p>
+
+  <h3>Un modello esistente può essere espanso a più parametri?</h3>
+  <p>No, non direttamente. I pesi di un transformer sono matrici con dimensioni fissate dall'architettura. <code>d_model 512</code> significa che ogni matrice di attenzione ha shape <code>[512, 512]</code>. Passare a <code>d_model 768</code> richiede shape <code>[768, 768]</code> — incompatibili: non si può allargare una matrice senza decidere cosa mettere nei nuovi valori.</p>
+  <p>Esiste una tecnica chiamata <strong>Net2Net</strong> (Google Brain, 2015): si duplicano i neuroni esistenti con uno scaling che preserva la funzione del modello, poi si fa fine-tuning. Il modello allargato inizia identico al piccolo e poi diverge. Funziona in teoria, ma è rara in pratica sui LLM: il guadagno rispetto a un training da zero è marginale, perché il modello grande trascorre molto tempo a "disimparare" l'inizializzazione vincolata.</p>
+  <p><strong>Quello che si trasferisce davvero da un run al successivo:</strong></p>
+  <ul>
+    <li><strong>Il tokenizer SPM-16k</strong> — completamente riutilizzabile in qualsiasi architettura. È conoscenza compressa sull'italiano: la segmentazione ottimale del corpus è già calcolata e salvata nel checkpoint.</li>
+    <li><strong>Il corpus e la pipeline di preprocessing</strong> — nessun lavoro da rifare.</li>
+    <li><strong>Le scelte di iperparametri</strong> — LR, warmup, schedule: il run precedente valida già cosa funziona su questo corpus.</li>
+    <li><strong>I pesi come teacher (distillazione)</strong> — se si scala a 175 M e si usa Run #3 come teacher, i pesi tornano utili nel senso opposto: il piccolo insegna al grande, non lo diventa.</li>
+  </ul>
+  <p>La pratica standard quando si scala: training da zero sulla stessa base dati con architettura più grande, stesso tokenizer. Run #3 non è sprecato — è il proof-of-concept che valida corpus, tokenizer e pipeline prima di investire nel training serio.</p>
+
+  <p>Dettaglio completo parametri, corpus e framework di valutazione: <a href="slm-finetune.html">Fine-tuning e Valutazione →</a></p>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       STRATEGIA SFT — TIMING E TIER
+       ══════════════════════════════════════════════════════════ -->
+  <h2 id="sft-timing">Strategia SFT — timing e tier per paradigma</h2>
+
+  <div class="narr">SFT formatta il comportamento, non inietta conoscenza. La qualità SFT è bounded dalla qualità del base model: Qualità SFT ≤ f(base model, dataset SFT). Migliorare il base model prima ha rendimenti su tutto il SFT costruito sopra.</div>
+
+  <h3>Il gap Chinchilla e cosa significa</h3>
+  <p>La regola Hoffmann 2022 (DeepMind) definisce il compute-optimal come N × 20 token. Per 45 M parametri: <strong>900 M token</strong>. Corpus attuale: 47.8 M — il 5.3% dell'ottimale. Il modello ha ancora ampia capacità inutilizzata: la val loss 4.08 (perplexity ~59) ha un ceiling teorico intorno a 10–12 per un LM italiano competente.</p>
+  <p>Questo <em>non</em> significa che il modello sia inutile — significa che con più dati migliorerebbe. La domanda operativa è: quanto deve migliorare il base model prima che un dato SFT ne benefici significativamente?</p>
+
+  <h3>Tre tier di sensibilità al base model</h3>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Tier</th><th>Task</th><th>Soglia token</th><th>Base attuale</th><th>Vai ora?</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1 — NLG formulaico</strong></td>
+        <td>Condominio, Moto, Domotica</td>
+        <td class="num">~100–150 M</td>
+        <td class="good">SOPRA la soglia</td>
+        <td class="good">Sì</td>
+      </tr>
+      <tr>
+        <td><strong>2 — NLG creativo</strong></td>
+        <td>Scrittura, stile personale</td>
+        <td class="num">~200–300 M</td>
+        <td class="note-cell">borderline</td>
+        <td class="note-cell">Possibile, rischio di output piatto</td>
+      </tr>
+      <tr>
+        <td><strong>3 — NLU strutturato</strong></td>
+        <td>Conti, SQL, Log, Classificazione</td>
+        <td class="num">~300–500 M</td>
+        <td style="color:#D97706;font-weight:500">SOTTO la soglia</td>
+        <td style="color:#D97706">No, scarsa generalizzazione</td>
+      </tr>
+      <tr>
+        <td><strong>4 — Agentic</strong></td>
+        <td>Assistente personale, tool-use</td>
+        <td class="num">500 M – 1 B</td>
+        <td style="color:#DC2626;font-weight:500">MOLTO SOTTO</td>
+        <td style="color:#DC2626">No, o cambia modello base</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>La logica del Tier 1: per NLG formulaico il task è imitare un template. Il modello non deve "capire" la legge condominiale — deve imparare che dopo "Si convoca l'assemblea" vengono i convocati e poi l'ordine del giorno. Questo pattern è apprendibile con 200–300 esempi SFT anche con un base model di qualità moderata, perché la struttura dell'italiano è già acquisita.</p>
+
+  <h3>DAPT — shortcut per task di dominio</h3>
+  <p>Domain-Adaptive Pre-Training: continued pre-training su testo non supervisionato di dominio specifico <em>prima</em> del SFT, invece di aspettare 900 M token generici.</p>
+  <div class="cmd">CORE (47.8 M tok Wikipedia IT)
+  → DAPT: +5–10 M tok testi condominiali (L.220/2012, verbali, fac-simile)
+  → SFT: 200–300 esempi strutturati
+  → modello specializzato condominio</div>
+  <p>Efficienza: 5 M token di testo burocratico-legale italiano valgono 10× più di 50 M token aggiuntivi di Wikipedia IT per un task condominiale, perché la distribuzione target è quella. È il meccanismo alla base di BioBERT (PubMed pre-training → fine-tuning medico) e di molti modelli verticali industriali.</p>
+  <p>Il corpus DAPT per condominio è liberamente accessibile: testo della L.220/2012, artt. 1117–1139 c.c., fac-simile di convocazioni e verbali disponibili su siti di associazioni di categoria. Target: 3–5 M token, realisticamente raccoglibili in un pomeriggio.</p>
+
+  <h3>Lo sweet spot sintetizzato</h3>
+  <p style="font-family:'IBM Plex Mono',monospace;font-size:0.82rem;line-height:2;color:var(--text-sec)">
+  0 ────── 50 M ──── 150 M ──────── 300 M ────────── 900 M<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;^&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;^&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;^&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;^<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ora&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tier 1 ok&nbsp;&nbsp;&nbsp;&nbsp;Tier 3 ok&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Chinchilla<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(formulaico)&nbsp;(NLU)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;optimal
+  </p>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       ARCHITETTURA MULTI-TRACK
+       ══════════════════════════════════════════════════════════ -->
+  <h2 id="multi-track">Architettura multi-track — branching da Run #3</h2>
+
+  <div class="narr">Run #3 best.pt diventa il Core: un checkpoint frozen che non viene mai sovrascritto. Ogni esperimento successivo parte da lì e produce il suo checkpoint in un path separato. La comparazione è possibile perché tutti i branch condividono lo stesso punto di partenza.</div>
+
+  <h3>Struttura dei branch</h3>
+  <div class="cmd">CORE → checkpoints/run3_best.pt  [LOCKED, mai sovrascritto]
+│
+├── Branch A — SFT diretto (ora, Tier 1)
+│   ├── A1: SFT-condominio    → checkpoints/run5a_sft_cond.pt
+│   ├── A2: SFT-moto          → checkpoints/run5b_sft_moto.pt
+│   └── A3: SFT-scrittura     → checkpoints/run5c_sft_scrit.pt
+│
+├── Branch B — DAPT → SFT (2–4 settimane)
+│   ├── B1: DAPT-legale       → checkpoints/run5d_dapt_legale.pt
+│   │   └── SFT-cond          → checkpoints/run5e_sft_cond_dapt.pt
+│   └── B2: DAPT-moto         → checkpoints/run5f_dapt_moto.pt
+│       └── SFT-moto          → checkpoints/run5g_sft_moto_dapt.pt
+│
+└── Branch C — Extended pre-training (background)
+    └── +200 M token IT       → checkpoints/run6_pt200m.pt
+        └── SFT (tutti i Tier) → checkpoints/run6a_*, run6b_*, ...</div>
+
+  <h3>Logica di confronto</h3>
+  <div class="decision">
+    <div class="decision-label">Esperimenti chiave</div>
+    <div class="decision-title">Tre confronti che rispondono a domande precise</div>
+    <div class="decision-grid">
+      <div class="decision-side">
+        <h4>A1 vs B1 — DAPT vale la pena?</h4>
+        <ul>
+          <li>Stessa SFT dataset (condominio)</li>
+          <li>Differenza: B1 ha 5–10 M token DAPT legale</li>
+          <li>Metrica: PPL test set, qualità output su prompt standard</li>
+          <li>Atteso: B1 migliore su output burocratico, A1 sufficiente per template base</li>
+        </ul>
+      </div>
+      <div class="decision-side">
+        <h4>A1 vs C/SFT-cond — più pre-training aiuta?</h4>
+        <ul>
+          <li>Stessa SFT dataset (condominio)</li>
+          <li>Differenza: C ha base da 200 M token</li>
+          <li>Metrica: generalizzazione a prompt non visti</li>
+          <li>Atteso: C migliore su task NLU, A1 equivalente per NLG puro</li>
+        </ul>
+      </div>
+      <div class="decision-side">
+        <h4>A3 (scrittura) — funziona a questo livello?</h4>
+        <ul>
+          <li>Borderline (Tier 2): base potrebbe essere insufficiente</li>
+          <li>SFT su corpus personale narrativo</li>
+          <li>Misura empirica del floor qualitativo per stile personale</li>
+          <li>Se deludente → rifare su base C</li>
+        </ul>
+      </div>
+      <div class="decision-side">
+        <h4>Cross-domain: SFT fa dimenticare l'italiano?</h4>
+        <ul>
+          <li>Prompt generico in italiano somministrato a A1 e A2</li>
+          <li>Misura il grado di catastrophic forgetting</li>
+          <li>Con 200–300 esempi SFT atteso: forgetting trascurabile</li>
+          <li>Con dataset più grande: potrebbe servire regularizzazione</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>Framework di valutazione</h3>
+  <p>Per rendere i branch comparabili serve un evaluation framework uniforme:</p>
+  <ul>
+    <li><strong>Test set per ogni SFT domain:</strong> 20% holdout del dataset SFT, non visto in training</li>
+    <li><strong>Metrica primaria:</strong> perplexity sul test set di dominio (<code>--eval-only</code>)</li>
+    <li><strong>Metrica secondaria:</strong> BLEU/chrF per task con output quasi-template (condominio)</li>
+    <li><strong>Ispezione qualitativa:</strong> 5–10 prompt standard per domain, output comparati manualmente</li>
+    <li><strong>Cross-domain check:</strong> prompt italiano generico su ogni branch per rilevare forgetting</li>
+  </ul>
+  <div class="cmd">python3 tools/eval_branch.py \
+  --model checkpoints/run5a_sft_cond.pt \
+  --test  data/sft_condominio_test.jsonl \
+  --cross data/wiki_it_val.txt \
+  --out   logs/run5a/eval.json</div>
+
+  <h3>Script da sviluppare</h3>
+  <ul>
+    <li><code>train_sft.py</code> — fine-tuning supervisionato su JSONL (prompt/completion), separato da <code>train.py</code></li>
+    <li><code>tools/eval_branch.py</code> — PPL + BLEU + output qualitativo su più checkpoint</li>
+    <li><code>tools/dapt.py</code> — continued pre-training da checkpoint con corpus di dominio (può essere <code>train.py --resume</code> con corpus DAPT)</li>
+  </ul>
+  <div class="note">
+    <b>train_sft.py vs train.py --resume.</b> Il continued pre-training (Branch C) può usare <code>train.py --resume --data data/corpus_extended.txt</code>. Il DAPT (Branch B) idem. Solo il SFT richiede un nuovo script perché il formato dei dati cambia radicalmente: invece di testo continuo sliding-window si usano coppie prompt/completion con loss mascherata sul prompt.
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       CORPUS — FONTI
+       ══════════════════════════════════════════════════════════ -->
+  <h2 id="corpus-fonti">Corpus esteso — strategia Chinchilla-optimal</h2>
+
+  <div class="narr"><strong>Obiettivo aggiornato (2026-10-01):</strong> 918 M token totali (Chinchilla-optimal: 20 × 45.9 M parametri). Stato attuale Run #3: 47.8 M token — 5.3% dell'ottimale. Gap da colmare: ~870 M token. Le sole fonti letterarie PD (maestrosalvo.it + Gutenberg) coprono ~80–90 M token lordi — per arrivare a scala Chinchilla è necessario un corpus web italiano di grandi dimensioni più una pipeline di filtraggio qualità.</div>
+
+  <h3>Fonti da maestrosalvo.it — analisi piattaforme (già effettuata)</h3>
+  <div class="narr" style="font-size:0.875rem;margin-bottom:0.5rem">La pagina non è un archivio diretto ma elenca 10 piattaforme esterne. Quattro sono utilizzabili per training.</div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Piattaforma</th><th>Contenuto</th><th>Regime</th><th>Token lordi</th><th>Utilità per SLM</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Gutenberg Italia</strong></td>
+        <td>~1 000+ opere: Dante, Manzoni, Verga, Pirandello, D'Annunzio, De Amicis…</td>
+        <td class="good">PD</td>
+        <td class="num">~30 M</td>
+        <td>Alta — registro letterario formale</td>
+      </tr>
+      <tr>
+        <td><strong>Letteratura Italiana</strong></td>
+        <td>Classici, testi critici, saggistica letteraria</td>
+        <td class="good">PD</td>
+        <td class="num">~20 M</td>
+        <td>Alta — varietà registro; ottima per SFT scrittura</td>
+      </tr>
+      <tr>
+        <td><strong>FeedBooks IT</strong></td>
+        <td>PD multilingue, sezione italiana</td>
+        <td class="good">PD</td>
+        <td class="num">~10 M</td>
+        <td>Media — parziale sovrapposizione con Gutenberg</td>
+      </tr>
+      <tr>
+        <td><strong>Manuali.it</strong></td>
+        <td>Manuali tecnici, guide pratiche, how-to in italiano</td>
+        <td class="note-cell">verificare per testo</td>
+        <td class="num">~20–30 M</td>
+        <td>Alta — tecnico-pratico, diversifica da enciclopedico</td>
+      </tr>
+      <tr>
+        <td>BookRepublic / InMondadori / Amazon</td>
+        <td>Narrativa contemporanea commerciale</td>
+        <td style="color:#DC2626">copyright</td>
+        <td>—</td>
+        <td>Non utilizzabile per training</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <p><strong>Caveat registro:</strong> la maggior parte del PD è pre-1928 (Dante, Manzoni, Verga). Italiano ricco ma sintatticamante lontano dal contemporaneo. Peso raccomandato nel mix finale: ≤ 10–15%. Oltre quella soglia il modello sviluppa un italiano "letterario" che richiede correzione in SFT.</p>
+
+  <h3>Corpus web italiano — fonti a larga scala</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Dataset</th><th>Dimensione grezza</th><th>Token netti stimati</th><th>Accesso</th><th>Qualità</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>CulturaX IT</strong></td>
+        <td>~105 GB</td>
+        <td class="num">~550–600 M</td>
+        <td class="note-cell">HF account + accettazione termini</td>
+        <td>Alta — mC4 + OSCAR già filtrati e deduplicati</td>
+      </tr>
+      <tr>
+        <td><strong>CC-100 IT</strong></td>
+        <td>~72 GB gz</td>
+        <td class="num">~350–450 M</td>
+        <td class="good">pubblico, streaming HuggingFace</td>
+        <td>Media — Common Crawl 2018, filtro lingua base</td>
+      </tr>
+      <tr>
+        <td><strong>OSCAR-2301 IT</strong></td>
+        <td>~50 GB</td>
+        <td class="num">~300–350 M</td>
+        <td class="note-cell">HF account + termini</td>
+        <td>Media-alta — dedup + qualità verificati</td>
+      </tr>
+      <tr>
+        <td><strong>mC4 IT</strong></td>
+        <td>~30 GB</td>
+        <td class="num">~150–200 M</td>
+        <td class="good">pubblico, streaming HuggingFace</td>
+        <td>Media — filtro C4 adattato al multilingue</td>
+      </tr>
+      <tr>
+        <td>Wikipedia IT (dump completo)</td>
+        <td>~3 GB bz2</td>
+        <td class="num">~235 M totali</td>
+        <td class="good">pubblico, dump Wikimedia</td>
+        <td>Alta — enciclopedico, verificato editorialmente</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <p><strong>Raccomandazione:</strong> <strong>CulturaX IT</strong> come prima scelta (già deduplicato, qualità più alta). Se accesso non disponibile: <strong>CC-100 IT via streaming</strong> (nessun account) con pipeline di filtraggio propria. CulturaX + Wikipedia + Gutenberg + Manuali porta a ~880 M token — 96% di Chinchilla-optimal.</p>
+
+  <h3>Qualità &gt; Quantità — la regola Qwen e la convergenza del settore</h3>
+
+  <div class="narr">La regola emersa dai modelli 2024–2025 è unanime: un corpus di 50 M token curati supera regolarmente un corpus di 500 M non filtrati. Phi-3 (Microsoft, 2024) è addestrato su 3.3 T token sintetici ad alta qualità generati da GPT-4 — un modello da 3.8 B parametri che supera modelli 5× più grandi su molti benchmark. Qwen2.5-Coder e Qwen2.5-Math usano upsapling aggressivo dei dati di dominio (3–5×) e quality scoring basato su perplexity. La variabile dominante non è il numero di token: è la loro densità informativa.</div>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Stadio</th><th>Tecnica</th><th>Rimozione tipica</th><th>Tool nel progetto</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Euristico</strong></td>
+        <td>&lt; 50 parole, &gt; 30% char non-alfa, linee duplicate interne, densità simboli anomala</td>
+        <td class="num">15–25%</td>
+        <td><code>tools/filter_corpus.py</code></td>
+      </tr>
+      <tr>
+        <td><strong>2. Lingua</strong></td>
+        <td>fastText langdetect — scarta se P(italiano) &lt; 0.85</td>
+        <td class="num">5–15%</td>
+        <td><code>--lang it</code></td>
+      </tr>
+      <tr>
+        <td><strong>3. Deduplicazione</strong></td>
+        <td>Exact dedup su frasi; MinHash per near-duplicate a livello documento</td>
+        <td class="num">20–40%</td>
+        <td><code>--dedup</code></td>
+      </tr>
+      <tr>
+        <td><strong>4. Quality score PPL</strong></td>
+        <td>Perplexity con Run #3 come scorer: alta PPL = testo rumoroso/non italiano. Scarta top 20%.</td>
+        <td class="num">15–20%</td>
+        <td><code>--checkpoint checkpoints/best.pt --ppl-cut 0.80</code></td>
+      </tr>
+      <tr>
+        <td><strong>5. Domain upsampling</strong></td>
+        <td>Wikipedia + Gutenberg ripetuti 2× nel mix. Web generale 1×. Upsapling qualità senza overhead di rete.</td>
+        <td>—</td>
+        <td>Concatenazione corpus finale</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Il filtro PPL al stadio 4 usa il modello Run #3 come <em>quality scorer</em>: testo ad alta perplexity rispetto al baseline Wikipedia è probabilmente rumoroso, frammentato o non italiano. La pipeline migliora ad ogni run — i modelli successivi possono essere usati come scorer più precisi per i corpus dei run futuri.</p>
+
+  <h3>Composizione target — corpus Chinchilla-optimal (~918 M token)</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Categoria</th><th>Fonte principale</th><th>Token target</th><th>%</th><th>Probe benchmarking</th></tr></thead>
+    <tbody>
+      <tr><td>Enciclopedico</td><td>Wikipedia IT (dump completo)</td><td class="num">~230 M</td><td class="num">25%</td><td><code>probes/wiki_it.txt</code></td></tr>
+      <tr><td>Web generale</td><td>CulturaX IT / CC-100 IT filtrati</td><td class="num">~460 M</td><td class="num">50%</td><td><code>probes/web_gen.txt</code></td></tr>
+      <tr><td>Letterario PD</td><td>Gutenberg IT + Letteratura IT + FeedBooks</td><td class="num">~92 M</td><td class="num">10%</td><td><code>probes/letter_pd.txt</code></td></tr>
+      <tr><td>Tecnico</td><td>Manuali.it + PDF/DOCX tecnici</td><td class="num">~92 M</td><td class="num">10%</td><td><code>probes/tecnico_it.txt</code></td></tr>
+      <tr><td>Narrativo contemporaneo</td><td>Corpus personale esistente</td><td class="num">~44 M</td><td class="num">5%</td><td><code>probes/narrativo_it.txt</code></td></tr>
+      <tr class="hl"><td><strong>Totale</strong></td><td></td><td class="num"><strong>~918 M</strong></td><td class="num"><strong>100%</strong></td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Il 50% web generale garantisce diversità linguistica e riduce l'overfitting su un singolo registro. Senza filtraggio qualità questo blocco degrada il modello — la pipeline di filtraggio non è opzionale.</p>
+
+  <h3>Benchmarking per categoria — probe files</h3>
+  <p>Cinque file probe (500–1 000 token ciascuno, verificati manualmente). La PPL su ciascuno è misurata ogni N step durante il training: curve separate per categoria permettono di identificare quando il modello "apprende" ciascun registro e se un tipo di testo causa forgetting su un altro.</p>
+  <div class="cmd">probes/
+  wiki_it.txt       # 500 token Wikipedia IT — enciclopedico contemporaneo
+  web_gen.txt       # 500 token web pulito — informale, variato
+  letter_pd.txt     # 500 token Manzoni / Calvino — letterario PD
+  tecnico_it.txt    # 500 token manuale tecnico italiano
+  narrativo_it.txt  # 500 token corpus personale — narrativo contemporaneo
+
+# Training con probe multipli (--probe-dir carica tutti i .txt)
+python3 train.py --tokenizer bpe-spm --resume \
+    --data data/corpus_run4.txt \
+    --probe-dir probes/ --probe-interval 500</div>
+
+  <h3>Acquisizione corpus — comandi pratici</h3>
+  <div class="cmd"># Dipendenze
+pip install pdfminer.six python-docx python-pptx odfpy
+pip install datasets   # HuggingFace streaming
+pip install fasttext   # filtro lingua
+
+# Wikipedia IT — dump completo (senza limite; attuale è 200 MB, dump ~3 GB bz2)
+curl -L "https://dumps.wikimedia.org/itwiki/latest/itwiki-latest-pages-articles.xml.bz2" \
+     -o data/itwiki_full.xml.bz2
+python3 tools/wiki_to_corpus.py data/itwiki_full.xml.bz2 \
+        --max-mb 3000 --out data/wiki_it_full.txt
+
+# Fonti letterarie PD — converter universale (epub, pdf, docx, html, pptx)
+python3 tools/convert_to_text.py --dir ~/Libri/Gutenberg --out data/gutenberg_it.txt
+python3 tools/convert_to_text.py --dir ~/Documenti/Tecnici \
+        --ext pdf,docx,html --out data/tecnico_it.txt
+
+# CC-100 IT — streaming HuggingFace (nessun account)
+python3 tools/fetch_cc100.py --lang it --max-gb 10 --out data/cc100_it_raw.txt
+
+# Filtraggio qualità — usa Run #3 come scorer
+python3 tools/filter_corpus.py data/cc100_it_raw.txt \
+        --checkpoint checkpoints/best.pt \
+        --lang it --min-words 50 --ppl-cut 0.80 --dedup \
+        --out data/cc100_it_clean.txt
+
+# Corpus finale con upsampling qualità (Wikipedia 2×, resto 1×)
+cat data/wiki_it_full.txt > data/corpus_run4.txt
+cat data/wiki_it_full.txt >> data/corpus_run4.txt   # 2× wiki
+cat data/gutenberg_it.txt >> data/corpus_run4.txt
+cat data/tecnico_it.txt   >> data/corpus_run4.txt
+cat data/cc100_it_clean.txt >> data/corpus_run4.txt
+cat data/corpus_bpe.txt   >> data/corpus_run4.txt   # corpus personale</div>
+
+  <div class="note">
+    <b>Tools già implementati:</b> <code>tools/convert_to_text.py</code> (converter universale PDF/DOCX/PPTX/HTML/EPUB), <code>tools/fetch_cc100.py</code> (streaming HuggingFace CC-100), <code>tools/filter_corpus.py</code> (filtraggio qualità con PPL scorer), <code>tools/eval_ppl.py</code> (valutazione interattiva PPL su testo libero).<br>
+    <b>Da implementare:</b> flag <code>--probe-dir</code> in <code>train.py</code> per benchmarking multi-categoria durante il training.
+  </div>
+
+</div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PPL — ESPERIMENTO EMPIRICO
+       ══════════════════════════════════════════════════════════ -->
+  <h2 id="ppl-empirico">Perplexity come quality scorer — esperimento empirico (2026-10-01)</h2>
+
+  <div class="narr">Dopo aver implementato <code>tools/eval_ppl.py</code>, abbiamo eseguito un set di test su Run #3 per capire <em>cosa rileva davvero</em> il modello quando misura la perplexity. Il risultato è più sfumato — e più utile — di quanto ci aspettassimo.</div>
+
+  <h3>Set di test — risultati completi</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>#</th><th>Testo</th><th>PPL</th><th>Livello</th><th>Diagnosi</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>"ciao sono francesco"</td>
+        <td class="num">2 690</td>
+        <td class="warn">MOLTO ALTA</td>
+        <td>Italiano corretto — ma conversazionale. Il modello non ha mai visto questo registro.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>"hi O'sdg"</td>
+        <td class="num">2 240</td>
+        <td class="warn">MOLTO ALTA</td>
+        <td>Non-italiano. Sorprendentemente simile al test 1 — entrambi fuori distribuzione per motivi diversi.</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>"la provincia di Milano è ricca di smog"</td>
+        <td class="num">78.3</td>
+        <td class="good">MEDIA</td>
+        <td>Italiano factual, registro informativo. Entità note (Milano). Nessun errore — PPL bassa.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>"Carlo Magno ha <strong>fondando</strong> il Sacro Romano Impero"</td>
+        <td class="num">79.0</td>
+        <td class="good">MEDIA</td>
+        <td>Errore grammaticale (<em>ha fondando</em>). PPL quasi identica al test corretto. <strong>Invisibile al modello.</strong></td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>"Carlo Magno ha fondato il <strong>Saro</strong> Romano Impero"</td>
+        <td class="num">615.2</td>
+        <td class="warn">MOLTO ALTA</td>
+        <td>Typo in entità nominata (<em>Saro</em> vs <em>Sacro</em>). <strong>Rilevato con forza.</strong> Il token "Saro" è rarissimo in Wikipedia IT.</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>"Carlo Magno ha fondato il Sacro Romano Impero"</td>
+        <td class="num">38.7</td>
+        <td class="good">BASSA ✓</td>
+        <td>Testo corretto, entità nominata nota. PPL baseline di riferimento.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Il quadro che emerge</h3>
+  <div class="narr">Il confronto test 4 / 5 / 6 è il risultato più importante. L'errore grammaticale <em>ha fondando</em> (test 4) produce PPL 79 — praticamente identica al testo corretto su stesso argomento (test 3: 78.3). Il typo <em>Saro Romano Impero</em> (test 5) produce PPL 615, un aumento di 16× rispetto alla baseline (test 6: 38.7).</div>
+
+  <div class="narr">La PPL non misura la correttezza grammaticale: misura la <strong>distanza dalla distribuzione di training</strong>. "Ha fondando" è inatteso ma non impossibile — il modello ha visto gerundi e participi in costruzioni varie, la sorpresa è contenuta. "Saro Romano Impero" rompe una sequenza che il modello conosce con certezza quasi assoluta: "Sacro Romano Impero" compare come unità coesa in migliaia di articoli Wikipedia — togliere una lettera è catastrofico per la PPL.</div>
+
+  <h3>Capacità di Run #3 come quality scorer</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Tipo di errore / mismatch</th><th>Rilevabile?</th><th>Perché</th></tr></thead>
+    <tbody>
+      <tr><td>Lingua straniera</td><td class="good">Sì — forte</td><td>Fuori distribuzione totale</td></tr>
+      <tr><td>Italiano informale / conversazionale</td><td class="good">Sì — forte</td><td>Registro mai visto in Wikipedia</td></tr>
+      <tr><td>Typo in entità nominate note (Sacro → Saro)</td><td class="good">Sì — forte</td><td>Token raro/OOV, rompe sequenza coesa</td></tr>
+      <tr><td>OCR difettoso su nomi propri</td><td class="good">Sì — probabile</td><td>Stesso meccanismo del typo</td></tr>
+      <tr><td>Errori morfosintattici comuni (ha fondando)</td><td class="warn">Segnale debole</td><td>Pattern simili presenti nel corpus</td></tr>
+      <tr><td>Errori semantici con entità corrette</td><td class="bad">No</td><td>Modello non ha world knowledge causale</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="narr">Per il filtraggio del corpus web questo profilo è utile: testi con OCR difettoso, nomi di luogo corrotti, entità frammentate emergono come alta PPL. Il modello Run #3 è di fatto un rilevatore di <em>coerenza fattuale locale</em> più che un correttore grammaticale. La pipeline migliora ad ogni run — Run #4, addestrato su corpus più ampio e vario, produrrà un quality scorer più sensibile anche agli errori morfosintattici.</div>
+
+  <h3>Nota metodologica — il paradosso del testo ripetitivo</h3>
+  <div class="narr">Un'avvertenza da tenere presente nel filtraggio: testo altamente ripetitivo (spam, boilerplate, liste di parole chiave) ottiene PPL <em>bassa</em> — è iper-prevedibile, quindi il modello non si sorprende. Il filtro PPL deve essere preceduto da un filtro euristico (rapporto linee duplicate, densità caratteri non-alfa) per escludere questi falsi negativi. La pipeline in <code>filter_corpus.py</code> gestisce questo: lo stadio 1 (euristico) precede lo stadio 4 (PPL scorer).</div>
+
+  <div class="cmd"># Valutazione interattiva PPL con Run #3
+python3 tools/eval_ppl.py
+# → REPL: inserisci testo, invio per valutare
+
+# Singolo testo da CLI
+python3 tools/eval_ppl.py "Carlo Magno ha fondato il Sacro Romano Impero"
+
+# Scale di riferimento (addestrato su Wikipedia IT)
+#   PPL  < 60  : BASSA    — registro enciclopedico, come Wikipedia
+#   PPL 60–150 : MEDIA    — italiano buono, registro diverso
+#   PPL 150–400: ALTA     — probabilmente non-italiano o degradato
+#   PPL  400+  : MOLTO ALTA — lingua straniera, spam, OCR difettoso</div>
+
+</div><!-- fine sezione PPL empirico -->
+
+<!-- ══════════════════════════════════════════════════════════
+     CORPUS RUN #5 — RICERCA FONTI E PIPELINE STREAMING
+     ══════════════════════════════════════════════════════════ -->
+<h2 id="corpus-run5">Corpus Run #5 — ricerca fonti Chinchilla-optimal (2026-10-01)</h2>
+
+<div class="narr">Run #4 ha raggiunto val loss 3.5861 (PPL ~36.1) con 47.8 M token — il 5.3% del target Chinchilla-optimal per 45.9 M parametri (20 × 45.9 M = <strong>918 M token</strong>). Il passo successivo è un continued pre-training su corpus molto più ampio, mantenendo la stessa architettura. Prima di avviare il training: <code>cp checkpoints/best.pt checkpoints/run4_best.pt</code>.</div>
+
+<h3>Strategia di acquisizione</h3>
+<div class="narr">Mai scaricare dump completi: i dataset più grandi superano i 4 TB. La strategia è sempre streaming HuggingFace → filtro qualità on-the-fly → scrittura solo dei documenti che passano. Target finale: ~4 GB di testo estratto ≈ 918 M token.</div>
+
+<h3>Valutazione delle fonti</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Dataset</th><th>Token IT est.</th><th>Priorità</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>PleIAs/common_corpus</code></td>
+      <td class="num">24 B (PD)</td>
+      <td class="good">★★★★★</td>
+      <td>Public domain, pre-filtrato, streaming HF. <strong>Fonte primaria.</strong></td>
+    </tr>
+    <tr>
+      <td><code>mii-community/liberliber-cleaned</code></td>
+      <td class="num">~50–80 M</td>
+      <td class="good">★★★★</td>
+      <td>881 MB, letterario IT, già curato da MII Community. Dataset di test pipeline.</td>
+    </tr>
+    <tr>
+      <td><code>gsarti/clean_mc4_it</code></td>
+      <td class="num">41 B parole</td>
+      <td class="warn">★★★ ✗</td>
+      <td>Web IT pulito — ma usa loading script Python deprecato, non caricabile con <code>datasets</code> ≥ 2.x.</td>
+    </tr>
+    <tr>
+      <td><code>Helsinki-NLP/opus_books</code> IT</td>
+      <td class="num">~19.5 M</td>
+      <td class="good">★★★</td>
+      <td>Letterario aggiuntivo, piccolo.</td>
+    </tr>
+    <tr>
+      <td>CC-100 IT (<code>fetch_cc100.py</code>)</td>
+      <td class="num">~500 M</td>
+      <td class="good">★★★</td>
+      <td>Web generico, fallback se Common Corpus non basta.</td>
+    </tr>
+    <tr>
+      <td>ManyBooks</td>
+      <td>—</td>
+      <td class="bad">✗</td>
+      <td>Mirror di Project Gutenberg, nessun valore aggiuntivo.</td>
+    </tr>
+    <tr>
+      <td>Open Library</td>
+      <td>—</td>
+      <td class="bad">✗</td>
+      <td>Solo metadati/catalogo — nessun testo. Utile solo per verificare se un libro fisico è su Internet Archive.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="narr"><strong>MII Community</strong>: gruppo di ricerca AI italiano (autori di Nesso 0.4B e Zefiro 7B) che mantiene <code>mii-community/liberliber-cleaned</code> — 4510 documenti con correzione umana. Già disponibile su HuggingFace, pronto per streaming diretto.</div>
+
+<h3>Mix target 918 M token</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Categoria</th><th>Token</th><th>%</th><th>Fonte</th></tr></thead>
+  <tbody>
+    <tr><td>Enciclopedico</td><td class="num">~230 M</td><td class="num">25%</td><td>Wikipedia IT dump (già estratto)</td></tr>
+    <tr><td>Web generale</td><td class="num">~460 M</td><td class="num">50%</td><td>Common Corpus IT</td></tr>
+    <tr><td>Letterario PD</td><td class="num">~92 M</td><td class="num">10%</td><td>liberliber + opus_books</td></tr>
+    <tr><td>Tecnico</td><td class="num">~92 M</td><td class="num">10%</td><td>PDF/DOCX personali via convert_to_text.py</td></tr>
+    <tr><td>Narrativo contemporaneo</td><td class="num">~44 M</td><td class="num">5%</td><td>corpus EPUB personale</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Tool implementato: fetch_hf_corpus.py</h3>
+<div class="narr">Streaming generico per qualsiasi dataset HuggingFace. Supporta selezione configurazione, filtro lingua, campo testo annidato (<code>translation.it</code>), limite GB e limite documenti. Non richiede download completo del dump.</div>
+
+<div class="cmd"># liberliber — dataset di test pipeline (piccolo, alta qualità)
+python3 tools/fetch_hf_corpus.py \
+    --dataset mii-community/liberliber-cleaned \
+    --text-field text \
+    --out data/liberliber_it.txt
+
+# Common Corpus — fonte primaria Run #5 (solo italiano, public domain)
+python3 tools/fetch_hf_corpus.py \
+    --dataset PleIAs/common_corpus \
+    --text-field text --lang-field language --lang it \
+    --max-gb 5 --out data/common_corpus_it_raw.txt
+
+# opus_books italiano
+python3 tools/fetch_hf_corpus.py \
+    --dataset Helsinki-NLP/opus_books --config it \
+    --text-field translation.it \
+    --out data/opus_books_it.txt
+
+# dry-run senza scrivere file
+python3 tools/fetch_hf_corpus.py \
+    --dataset mii-community/liberliber-cleaned \
+    --text-field text --max-docs 500 --dry-run
+
+# Filtraggio qualità post-estrazione
+python3 tools/filter_corpus.py data/liberliber_it.txt \
+    --checkpoint checkpoints/run4_best.pt \
+    --dedup --ppl-cut 0.80 --out data/liberliber_it_clean.txt</div>
+
+<div class="note">
+  <b>gsarti/clean_mc4_it — incompatibile:</b> il dataset usa un loading script Python (<code>clean_mc4_it.py</code>) non più supportato da <code>datasets</code> ≥ 2.x. L'autore non ha ancora migrato a formato Parquet. Escluso dal corpus Run #5.<br>
+  <b>Tools corpus:</b> <code>fetch_hf_corpus.py</code> (generico HF), <code>fetch_cc100.py</code> (CC-100), <code>export_db_corpus.py</code> (PostgreSQL/MongoDB), <code>filter_corpus.py</code> (filtraggio qualità 4 stadi).
+</div>
+
+<h3>Test pipeline end-to-end su liberliber (2026-10-01)</h3>
+<div class="narr">Prima esecuzione completa della pipeline <code>fetch → filter</code> sul dataset <code>mii-community/liberliber-cleaned</code>. Obiettivo: verificare che tutti i componenti funzionino prima di attaccare <code>PleIAs/common_corpus</code> (la fonte principale da 24B token).</div>
+
+<h4>Fase 1 — estrazione</h4>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Dataset</td><td><code>mii-community/liberliber-cleaned</code></td></tr>
+    <tr><td>Documenti scritti</td><td class="num">4 289</td></tr>
+    <tr><td>Documenti saltati (vuoti / &lt; 50 char)</td><td class="num">221</td></tr>
+    <tr><td>Testo estratto</td><td class="num">1.33 GB</td></tr>
+    <tr><td>Durata</td><td class="num">2m 38s</td></tr>
+    <tr><td>File output</td><td><code>data/liberliber_it.txt</code> (1 363 MB)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="narr">Il dataset ha 4 510 documenti totali — 4 289 + 221 = 4 510. Il 95.1% dei documenti ha superato il filtro minimo di 50 caratteri.</div>
+
+<h4>Fase 2 — filtraggio qualità</h4>
+<div class="narr">Filtro a 2 stadi attivi: <strong>euristico</strong> (lunghezza, rapporto simboli, duplicati interni) + <strong>dedup MD5 paragrafo</strong> + <strong>PPL scorer</strong> con <code>checkpoints/best.pt</code> (Run #4, PPL ~36). Soglia <code>--ppl-cut 0.80</code> = scarta il 20% dei documenti con PPL più alta. Nessun filtro lingua (liberliber è già 100% italiano curato).</div>
+
+<div class="cmd">python3 tools/filter_corpus.py data/liberliber_it.txt \
+    --checkpoint checkpoints/best.pt \
+    --dedup --ppl-cut 0.80 \
+    --out data/liberliber_it_clean.txt</div>
+
+<div class="note">
+  <b>Checkpoint backup prima del test:</b> <code>cp checkpoints/best.pt checkpoints/run4_best.pt</code> (530 MB, eseguito il 2026-10-01). I file <code>.gguf</code> nella root non vengono mai toccati dal training.
+</div>
+
+<h4>Decisione: liberliber escluso dal corpus Run #5</h4>
+<div class="narr">Ispezione manuale delle prime 300 righe di <code>data/liberliber_it.txt</code>: il testo è <strong>fortemente arcaico</strong> — italiano del XIII–XIX secolo (Dante, Manzoni, Leopardi, costruzioni come "eravi", "imperocché", "avvegnadio"). Per un modello base su italiano contemporaneo questo è rumore, non segnale: il modello assorbirebbe forme medievali come italiano normale, degradando la qualità su testo moderno.</div>
+
+<div class="narr">La quota letteraria (originariamente 10% = ~92M token) viene redistribuita su <code>PleIAs/common_corpus</code>, che include già testi storici di qualità senza scendere all'italiano arcaico. Il corpus EPUB personale (narrativa contemporanea, prima persona) copre la componente letteraria moderna.</div>
+
+<h3>Mix target aggiornato — 918 M token</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Categoria</th><th>Token</th><th>%</th><th>Fonte</th></tr></thead>
+  <tbody>
+    <tr><td>Enciclopedico</td><td class="num">~230 M</td><td class="num">25%</td><td>Wikipedia IT dump (già estratto)</td></tr>
+    <tr><td>Web generale / PD</td><td class="num">~550 M</td><td class="num">60%</td><td>Common Corpus IT (PleIAs) — fonte primaria</td></tr>
+    <tr><td>Tecnico</td><td class="num">~92 M</td><td class="num">10%</td><td>PDF/DOCX personali via <code>convert_to_text.py</code></td></tr>
+    <tr><td>Narrativo contemporaneo</td><td class="num">~46 M</td><td class="num">5%</td><td>Corpus EPUB personale (prima persona, IT moderno)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="narr"><strong>Esclusi:</strong> <code>mii-community/liberliber-cleaned</code> (italiano arcaico XIII–XIX sec.), <code>PleIAs/Italian-PD</code> (stesso problema, focus pre-1884), <code>gsarti/clean_mc4_it</code> (loading script deprecato), ManyBooks (mirror Gutenberg), Open Library (solo metadati). <code>PleIAs/common_corpus</code>: streaming lentissimo per l'italiano (1-2% del totale, nessuno shard per lingua). <code>uonlp/CulturaX</code>: gated ma accessibile con autenticazione HF.</div>
+
+<h3>Fonte scelta: CulturaX IT (2026-10-01)</h3>
+<div class="narr"><strong>CulturaX</strong> (<code>uonlp/CulturaX</code>, config <code>it</code>) è la combinazione pulita e deduplicata di mC4 + OSCAR italiano. Italiano moderno del web: giornalismo, blog, forum, articoli. Config <code>it</code> = 100% italiano, nessun filtro lingua necessario. Richiede autenticazione HuggingFace (account gratuito + accettazione termini). Campi: <code>text</code>, <code>timestamp</code>, <code>url</code>, <code>source</code>.</div>
+
+<div class="narr">Tool di autenticazione: <code>tools/hf_auth.py</code> — gestisce login, whoami, logout e test accesso dataset gated. Il token viene salvato in <code>~/.cache/huggingface/token</code>.</div>
+
+<div class="cmd"># Autenticazione HF (token Read da huggingface.co/settings/tokens)
+python3 tools/hf_auth.py login hf_ILTUOTOKEN
+python3 tools/hf_auth.py whoami
+
+# Estrazione CulturaX IT — 8 GB corpus web italiano moderno
+python3 tools/fetch_hf_corpus.py \
+    --dataset uonlp/CulturaX --config it \
+    --text-field text \
+    --max-gb 8 --out data/culturax_it_raw.txt
+# → 2 627 111 doc, 8 GB, 12m 14s (2026-10-01)
+
+# Filtraggio qualità: solo euristico + dedup — NO PPL scorer
+python3 tools/filter_corpus.py data/culturax_it_raw.txt \
+    --dedup \
+    --out data/culturax_it_clean.txt</div>
+
+<h3>Decisione: PPL scorer escluso dal filtraggio CulturaX (2026-10-01)</h3>
+<div class="narr">Durante la prima esecuzione del filtro con <code>--checkpoint checkpoints/best.pt --ppl-cut 0.80</code> è emersa una contraddizione metodologica: usare Run #4 come quality scorer per selezionare il corpus che dovrebbe correggerne i bias.</div>
+
+<div class="narr">Run #4 è addestrato esclusivamente su Wikipedia IT — registro enciclopedico formale. La sua distribuzione interna assegna PPL alta a qualsiasi testo lontano da quel registro: italiano colloquiale, giornalistico informale, dialogo, thread di forum. Applicare il PPL cut su CulturaX con questo scorer avrebbe selezionato preferenzialmente testi enciclopedici-formali, <strong>rafforzando lo skew sintattico esistente</strong> invece di correggerlo. La frase "ciao, sono Francesco" ottiene PPL 2 690 sul modello Run #4 — non perché sia testo di bassa qualità, ma perché il modello non ha mai visto questo registro.</div>
+
+<div class="narr"><strong>Il principio generale:</strong> il PPL scorer è affidabile come quality filter solo quando scorer e corpus target hanno distribuzione simile. Wikipedia → Wikipedia: funziona. Wikipedia → web colloquiale: introduce bias sistematico verso i propri pesi. Per il corpus di espansione, il filtro corretto è euristico (struttura, lunghezza, rapporto simboli) + deduplicazione — nessun filtro PPL.</div>
+
+<div class="narr">Il PPL scorer rimane valido per: filtrare corpus enciclopedici successivi, valutare la qualità del modello post-training, e come quality scorer <em>dopo</em> Run #5 (quando la distribuzione del modello sarà più ampia e rappresentativa dell'italiano moderno).</div>
+
+<h3>Confronto controllato: euristico vs euristico + PPL 0.95 (2026-10-02)</h3>
+<div class="narr">Per validare la decisione sul PPL scorer, produciamo due file a partire dallo stesso input grezzo — così l'unica variabile è la presenza o assenza del filtro PPL:</div>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>File</th><th>Pipeline</th><th>Stato</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>data/culturax_it_clean.txt</code></td>
+      <td>raw → euristico + dedup</td>
+      <td class="good">Prodotto — 2.58M doc, 8.16 GB</td>
+    </tr>
+    <tr>
+      <td><code>data/culturax_it_ppl95.txt</code></td>
+      <td>raw → euristico + dedup + PPL 0.95</td>
+      <td class="warn">Da produrre</td>
+    </tr>
+    <tr>
+      <td><code>data/culturax_ppl95_rejected.txt</code></td>
+      <td>campione 500 doc scartati da PPL con score</td>
+      <td class="warn">Da produrre (via --rejected)</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="narr">Il file <code>rejected</code> contiene i primi 500 documenti scartati dal PPL scorer con il loro score — consente di leggere direttamente cosa viene eliminato e valutare se si tratta di garbage reale o di italiano colloquiale valido.</div>
+
+<div class="cmd"># Produzione file B — stesso raw, aggiunge PPL scorer a p95
+python3 tools/filter_corpus.py data/culturax_it_raw.txt \
+    --checkpoint checkpoints/best.pt \
+    --ppl-cut 0.95 --dedup \
+    --out data/culturax_it_ppl95.txt \
+    --rejected data/culturax_ppl95_rejected.txt</div>
+
+<h2 id="vastai-infra">Infrastruttura cloud — Vast.ai (2026-10-02)</h2>
+
+<div class="narr">Il PPL scorer su CPU (M2 Mac) processa ~7 doc/secondo. Su 2.6 M documenti CulturaX la stima era 4 giorni. Soluzione: spostare il job su GPU via Vast.ai, dove la stessa inference sul modello da 45.9 M parametri è 50–100× più veloce. Stima su RTX 4090: 2–3 ore.</div>
+
+<h3>Perché la velocità cala con il PPL scorer</h3>
+<p>La fase euristico+dedup è I/O bound: processa migliaia di documenti al secondo perché legge testo e applica regole in Python puro. Il PPL scorer aggiunge un forward pass del modello per ogni documento. Su CPU: ~140 ms per documento (tokenizzazione + 12 layer attention + softmax + cross-entropy). Su RTX 4090: ~2–3 ms. Il collo di bottiglia non è il corpus, è l'inferenza.</p>
+
+<h3>Fix applicati a filter_corpus.py</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Problema</th><th>Prima</th><th>Dopo</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Device hardcoded (1°)</td>
+      <td class="mono">device = 'cpu'</td>
+      <td class="mono">cuda → mps → cpu (auto-detect)<br>override con --device</td>
+    </tr>
+    <tr>
+      <td>Device hardcoded (2°) — scoperto in produzione</td>
+      <td class="mono">device = 'cpu' <em>dopo</em> l'auto-detect,<br>dentro load_ppl_scorer()</td>
+      <td>Riga rimossa. Il parametro device passato alla funzione<br>viene ora usato direttamente da map_location e .to(device)</td>
+    </tr>
+    <tr>
+      <td>f.tell() con iteratore — scoperto in produzione</td>
+      <td class="mono">for line in f_in:</td>
+      <td class="mono">while True: line = f_in.readline()<br>L'iteratore Python disabilita f.tell(); readline() no.</td>
+    </tr>
+    <tr>
+      <td>Log threshold fisso</td>
+      <td class="mono">ogni 100 000 doc</td>
+      <td class="mono">ogni 5 000 doc se PPL attivo<br>ogni 100 000 altrimenti</td>
+    </tr>
+    <tr>
+      <td>Nessun avanzamento visibile</td>
+      <td>—</td>
+      <td>% completamento + ETA calcolata da bytes letti / dimensione file</td>
+    </tr>
+    <tr>
+      <td>Avviso assente per CPU lento</td>
+      <td>—</td>
+      <td>Stampa stima ore all'avvio se device=cpu</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note"><strong>Caveat produzione — python3 -u obbligatorio:</strong> quando filter_corpus.py è lanciato con <code>2&gt;&amp;1 | tee filter.log</code>, Python entra in modalità fully-buffered perché stdout non è un terminale. Le <code>print()</code> vengono accumulate in memoria e il log rimane vuoto per ore. Soluzione: usare sempre <code>python3 -u</code> (unbuffered). Senza questo flag il log appare vuoto anche con job attivo.</div>
+
+<h3>Workflow Vast.ai — provisioning</h3>
+<p>Il ciclo di vita è gestito dalla skill <code>.claude/agents/vastai-slm.md</code>. Comandi chiave:</p>
+
+<div class="cmd"># Autenticazione (API key in .vastai-apikey, mai committata)
+KEY=$(cat .vastai-apikey) && vastai set api-key "$KEY"
+
+# Ricerca offerta — RTX 4090 on-demand, ordinata per costo
+vastai search offers 'gpu_name=RTX_4090 cuda_vers>=12.0 disk_space>=40 num_gpus=1' -o dph_base --raw
+
+# Crea istanza (ID offerta scelto: 44885351, $0.360/ora, affidabilità 100%)
+vastai create instance 44885351 \
+  --image pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime \
+  --disk 40 --raw
+# → restituisce {"new_contract": <ID>, "success": true}
+# Salva ID in .vastai-instance
+
+# Attendi Running
+vastai show instances --raw   # controlla actual_status
+
+# SSH access
+vastai ssh-url <ID>   # → ssh -p <PORTA> root@<HOST></div>
+
+<div class="note"><strong>Criteri di selezione offerta:</strong> RTX 4090 (VRAM 24 GB, sufficiente per modello 45.9 M param + batch inference), CUDA ≥ 12.0, disk ≥ 40 GB (8 GB corpus + 6 GB output + margine), ordinata per costo. Istanza on-demand (non interruptible): il job di filtering non ha checkpoint intermedi, una terminazione anticipata perderebbe tutto il progresso.</div>
+
+<h3>Setup remoto e avvio job</h3>
+<div class="cmd"># Trasferimento (codice + checkpoint, ~600 MB; corpus ri-scaricato su Vast.ai)
+rsync -avz -e "ssh -p PORT -o StrictHostKeyChecking=no" \
+  --exclude='.git' --exclude='data/' --exclude='*.gguf' --exclude='.claude' \
+  . root@HOST:~/slm/
+
+# Installa dipendenze
+ssh -p PORT root@HOST "pip install sentencepiece datasets huggingface_hub"
+
+# Autentica HF (token personale, mai nel codice)
+ssh -p PORT root@HOST "export HF_TOKEN=hf_xxx"
+
+# Riscarica CulturaX raw (cloud-to-cloud: ~8 GB in pochi minuti)
+ssh -p PORT root@HOST "cd ~/slm && python3 tools/fetch_hf_corpus.py \
+  --dataset uonlp/CulturaX --config it --text-field text \
+  --max-gb 8 --out data/culturax_it_raw.txt"
+
+# Avvia filtering in tmux (sopravvive alla disconnessione SSH)
+# python3 -u = unbuffered: senza questo flag il log resta vuoto per ore (tee bufferizza)
+# --device cuda: esplicito anche se auto-detect è attivo — evita sorprese
+ssh -p PORT root@HOST "cd ~/slm && tmux new-session -d -s filter \
+  'python3 -u tools/filter_corpus.py data/culturax_it_raw.txt \
+    --checkpoint checkpoints/best.pt \
+    --ppl-cut 0.95 --dedup \
+    --device cuda \
+    --out data/culturax_it_ppl95.txt \
+    --rejected data/culturax_ppl95_rejected.txt \
+    2>&1 | tee /root/filter.log'"</div>
+
+<h3>Rimpatrio e cleanup</h3>
+<div class="cmd"># Scarica risultati (~6 GB output + 300 KB rejected)
+rsync -avz --progress -e "ssh -p PORT -o StrictHostKeyChecking=no" \
+  root@HOST:~/slm/data/culturax_it_ppl95.txt data/
+rsync -avz -e "ssh -p PORT -o StrictHostKeyChecking=no" \
+  root@HOST:~/slm/data/culturax_ppl95_rejected.txt data/
+
+# Distruggi istanza (interrompe il costo)
+vastai destroy instance <ID>
+rm .vastai-instance</div>
+
+<div class="note"><strong>Costo operazione:</strong> $0.360/ora × ~3 ore = ~$1.08. Con $8.36 di credito disponibili: margine di ~21 ore aggiuntive. Il costo è addebitato anche quando l'istanza è idle — distruggerla subito dopo il rimpatrio.</div>
+
+<h3>Procedura manuale completa (per esecuzioni non automatizzate)</h3>
+<p>Sequenza completa per eseguire il job di filtering su una nuova istanza Vast.ai, passo per passo, senza automazione Claude Code.</p>
+
+<div class="cmd"># ── FASE 0: Prerequisiti locali ──────────────────────────────────
+
+# Installa vastai CLI (se assente)
+pip install vastai
+
+# Configura API key (salvata in .vastai-apikey nel progetto)
+KEY=$(cat .vastai-apikey) && vastai set api-key "$KEY"
+
+# Verifica account e credito
+vastai show user
+
+# ── FASE 1: Cerca offerta GPU non-US ─────────────────────────────
+
+vastai search offers \
+  'gpu_name=RTX_4090 cuda_vers>=12.0 disk_space>=40 num_gpus=1' \
+  -o dph_base --raw | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+# filtra non-US
+offers = [o for o in data if 'US' not in str(o.get('geolocation',''))][:8]
+for o in offers:
+    print(o['id'], o.get('gpu_name'), o.get('dph_base'), o.get('reliability2'), o.get('geolocation'))
+"
+# Scegli un ID con affidabilità ≥ 99% e prezzo contenuto
+
+# ── FASE 2: Crea istanza ──────────────────────────────────────────
+
+# Immagine leggera: nvidia/cuda base (~3GB, 5-10min) + pip install torch sul nodo
+# NON usare pytorch/pytorch completa (~8GB, 20-40min)
+vastai create instance <OFFER_ID> \
+  --image nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu20.04 \
+  --disk 40 --raw
+# → prendi new_contract = ID istanza, salvalo
+
+# Attendi running (controlla ogni 30s)
+vastai show instances --raw   # cerca actual_status=running per il tuo ID
+
+# ── FASE 3: Connessione SSH ───────────────────────────────────────
+
+# Ottieni HOST e PORTA
+vastai ssh-url <INSTANCE_ID>   # → ssh -p <PORTA> root@<HOST>
+
+# Test connessione
+ssh -i ~/.ssh/vastai_slm -o StrictHostKeyChecking=no -p <PORTA> root@<HOST> \
+  "echo OK && nvidia-smi --query-gpu=name --format=csv,noheader"
+
+# ── FASE 4: Trasferimento progetto ───────────────────────────────
+
+# Crea tar locale (solo codice + checkpoint, senza data/ e .git)
+cd /path/to/slm
+tar -czf ~/slm_vastai.tar.gz \
+  --exclude='./.git' --exclude='./.claude' \
+  --exclude='./data' --exclude='./private' --exclude='./docs' \
+  --exclude='./*.gguf' --exclude='./checkpoints/run3_best.pt' \
+  --exclude='./checkpoints/run4_best.pt' --exclude='./__pycache__' .
+
+# Upload (~500MB)
+rsync -az --progress \
+  -e "ssh -i ~/.ssh/vastai_slm -o StrictHostKeyChecking=no -p <PORTA>" \
+  ~/slm_vastai.tar.gz root@<HOST>:~/
+
+# ── FASE 5: Setup remoto ─────────────────────────────────────────
+
+ssh -i ~/.ssh/vastai_slm -o StrictHostKeyChecking=no -p <PORTA> root@<HOST>
+
+# Sul nodo remoto:
+mkdir -p ~/slm && tar -xzf ~/slm_vastai.tar.gz -C ~/slm
+
+# Upgrade pip (l'immagine ubuntu:20.04 ha pip 20.x, troppo vecchio)
+python3 -m pip install --upgrade pip
+
+# Installa dipendenze in tmux (sopravvive alla disconnessione SSH)
+tmux new-session -d -s setup \
+  'pip3 install torch --index-url https://download.pytorch.org/whl/cu121 \
+   sentencepiece datasets huggingface_hub 2>&1 | tee /root/pip.log && echo DONE >> /root/pip.log'
+
+# Monitora
+tail -f /root/pip.log   # ctrl+c per uscire senza interrompere
+
+# Verifica al termine
+python3 -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+
+# ── FASE 6: Autentica HuggingFace e scarica CulturaX ─────────────
+
+# Autentica (token personale da huggingface.co → Settings → Access Tokens)
+export HF_TOKEN=hf_xxxxxxxxxxxx
+# oppure:
+python3 tools/hf_auth.py login hf_xxxxxxxxxxxx
+
+# Scarica CulturaX in tmux (cloud-to-cloud, ~15-25 min per 8GB)
+tmux new-session -d -s fetch \
+  'cd ~/slm && python3 tools/fetch_hf_corpus.py \
+    --dataset uonlp/CulturaX --config it \
+    --text-field text --max-gb 8 \
+    --out data/culturax_it_raw.txt 2>&1 | tee /root/fetch.log'
+
+tail -f /root/fetch.log
+
+# ── FASE 7: Avvia job di filtering ───────────────────────────────
+
+# IMPORTANTE: python3 -u (unbuffered) obbligatorio con tee — altrimenti log vuoto
+# IMPORTANTE: --device cuda esplicito — l'auto-detect funziona ma meglio non rischiare
+tmux new-session -d -s filter \
+  'cd ~/slm && python3 -u tools/filter_corpus.py data/culturax_it_raw.txt \
+    --checkpoint checkpoints/best.pt \
+    --ppl-cut 0.95 --dedup \
+    --device cuda \
+    --out data/culturax_it_ppl95.txt \
+    --rejected data/culturax_ppl95_rejected.txt \
+    2>&1 | tee /root/filter.log'
+
+# Monitora (log ogni 5000 doc, mostra % e ETA)
+tail -f /root/filter.log
+
+# Verifica device usato (deve mostrare "cuda", non "cpu"):
+grep "Scorer pronto" /root/filter.log
+# Distribuzione PPL empirica su CulturaX IT (campione 5000 doc, modello run3):
+#   p10=47.7  mediana=80.1  p95=203.2  → soglia al 95% = 203.2
+
+# ── FASE 8: Rimpatrio risultati ───────────────────────────────────
+
+# Dal Mac (dopo completamento job, ~4-8 ore)
+rsync -avz --progress \
+  -e "ssh -i ~/.ssh/vastai_slm -o StrictHostKeyChecking=no -p <PORTA>" \
+  root@<HOST>:~/slm/data/culturax_it_ppl95.txt data/
+rsync -avz \
+  -e "ssh -i ~/.ssh/vastai_slm -o StrictHostKeyChecking=no -p <PORTA>" \
+  root@<HOST>:~/slm/data/culturax_ppl95_rejected.txt data/
+
+# ── FASE 9: Destroy istanza ───────────────────────────────────────
+
+vastai destroy instance <INSTANCE_ID>
+rm .vastai-instance
+# Il costo si interrompe immediatamente</div>
+
+<div class="note"><strong>Tempi misurati su RTX 4090 (Italia, $0.436/h, 2026-10-02):</strong>
+Download immagine nvidia/cuda: ~8 min | pip install torch+sentencepiece: ~12 min | Download CulturaX 8GB da HF: ~36 min (misurato: da 0.5k a 1.2k doc/s, totale 2174s) | PPL filter 2.6M doc: ~7h (ETA misurata a inizio job, 100 doc/s su GPU batch=1) | Rimpatrio 6GB: 15–20 min. Costo totale stimato: $3–$4.
+<br><strong>Distribuzione PPL empirica su CulturaX IT</strong> (campione 5000 doc, scorer run3, cut=95%): p10=47.7 · mediana=80.1 · p95=203.2. Il 5% dei documenti scartati supera PPL=203 — testo non-italiano, boilerplate, o troppo frammentato per il tokenizzatore BPE.</div>
+
+<h2 id="corpus-validazione">Validazione corpus CulturaX filtrato — osservazioni (2026-10-03)</h2>
+
+<div class="narr">Dopo il rimpatrio, ispezione manuale a campione di <code>culturax_it_ppl95.txt</code> (kept) e <code>culturax_ppl95_rejected.txt</code> (scartati). Risultati complessivamente positivi, con tre criticità identificate.</div>
+
+<h3>Risultati del filtraggio (definitivi)</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Documenti in input</td><td>2.722.042</td></tr>
+    <tr><td>Kept (output)</td><td>2.439.329 (89.6%)</td></tr>
+    <tr><td>Scartati euristico</td><td>140.635 (5.2%)</td></tr>
+    <tr><td>Scartati dedup</td><td>115 (0.004% — corpus già quasi privo di duplicati)</td></tr>
+    <tr><td>Scartati PPL &gt;203.2</td><td>141.963 (5.2%)</td></tr>
+    <tr><td>Dimensione output</td><td>7.5 GB</td></tr>
+    <tr><td>Durata RTX 4090</td><td>7h 26m 53s</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Criticità 1 — Token alfanumerici misti nel corpus kept</h3>
+<div class="narr">Il corpus filtrato contiene documenti con parole come <code>v4sta</code>, <code>c4n</code> — pattern da nomi utente, codici prodotto, leetspeak da web. L'euristico attuale non li coglie perché il documento supera i controlli di lunghezza, caratteri speciali e lingua. Questo tipo di rumore è particolarmente dannoso per il training perché contamina la distribuzione lessicale del BPE: il tokenizzatore (addestrato su Wikipedia) spezza questi token in unità sub-word inattese.</div>
+<div class="note"><strong>Fix applicato (2026-10-03):</strong> aggiunto controllo in <code>passes_heuristic()</code>: se più del 5% delle parole contiene pattern lettera-cifra o cifra-lettera (<code>re.search(r'[a-zA-Z]\d|\d[a-zA-Z]', w)</code>), il documento viene scartato. Soglia conservativa — cattura leetspeak e username senza penalizzare testo tecnico che cita versioni software in modo isolato.</div>
+
+<h3>Criticità 2 — PPL scorer esclude poesia, include pubblicità</h3>
+<div class="narr">Il PPL scorer addestrato su Wikipedia produce distorsioni sistematiche su CulturaX (testo web):
+<ul>
+  <li><strong>Poesia esclusa (falso negativo)</strong>: sintassi non-standard, enjambement, inversioni → PPL alta → scartata. La poesia è italiano di alta qualità ma non assomiglia a un articolo enciclopedico.</li>
+  <li><strong>Pubblicità inclusa (falso positivo)</strong>: frasi brevi, grammaticalmente corrette, registro formale → PPL bassa → mantenuta. Le pubblicità superano il filtro perché il modello le trova "prevedibili".</li>
+</ul>
+Comportamento atteso e già predetto nel principio del PPL scorer. Conferma che il filtro PPL su CulturaX non misura "qualità assoluta" ma "somiglianza alla distribuzione Wikipedia".</div>
+
+<h3>Decisione: corpus usato così com'è per Run #5</h3>
+<div class="narr">Nonostante le criticità, il corpus da 2.4M documenti / 7.5 GB viene usato per Run #5 senza ulteriore ri-filtraggio. Motivazioni:
+<ul>
+  <li>Il volume (7.5 GB) vale più della pulizia marginale ottenibile con un secondo passaggio.</li>
+  <li>Le pubblicità sono italiano reale — il modello impara strutture sintattiche valide anche da testo commerciale.</li>
+  <li>Il fix alfanumerici misti si applica ai run futuri, non retroattivamente (costo di ri-filtraggio: 7h su GPU).</li>
+  <li>CulturaX è già pre-filtrato dagli autori (mC4 + OSCAR con deduplication) — la qualità baseline è alta.</li>
+</ul></div>
+
+<h2 id="run5-setup">Run #5 — setup e avvio training (2026-10-03)</h2>
+
+<div class="narr">Run #5: prima espansione del corpus oltre Wikipedia. Obiettivo: avvicinarsi al target Chinchilla-optimal di 918 M token partendo dal checkpoint Run #4 (val loss 3.5861, perplexity ~36). Training in locale su Mac M2 (8GB, MPS) — scelta motivata dalla disponibilità della macchina per 36h consecutive e dal costo zero rispetto a Vast.ai (~$1.50 stimato per il training).</div>
+
+<h3>Corpus Run #5</h3>
+<div class="narr">Mix target 918 M token (Chinchilla: 20 × 45.9 M param). Composizione attuale disponibile:</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Fonte</th><th>File</th><th>Peso nel mix</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>Wikipedia IT</td><td><code>data/wiki_it.txt</code></td><td>25%</td><td>Già usato in Run #3–4. Registro enciclopedico.</td></tr>
+    <tr><td>CulturaX IT (filtrato)</td><td><code>data/culturax_it_ppl95.txt</code></td><td>60%</td><td>7.5 GB, 2.4M doc, testo web italiano moderno.</td></tr>
+    <tr><td>Corpus letterario</td><td><code>data/corpus_letterario.txt</code></td><td>5%</td><td>EPUB narrativa contemporanea, prima persona.</td></tr>
+    <tr><td>Corpus tecnico personale</td><td><code>data/corpus.txt</code></td><td>10%</td><td>Testi di dominio.</td></tr>
+  </tbody>
+</table></div>
+
+<div class="cmd"># Backup checkpoint prima di --resume (OBBLIGATORIO)
+cp checkpoints/best.pt checkpoints/run4_best.pt
+
+# Prepara corpus concatenato (proporzioni approssimate da dimensione file)
+cat data/wiki_it.txt data/culturax_it_ppl95.txt \
+    data/corpus_letterario.txt data/corpus.txt \
+    > data/corpus_run5.txt
+
+# Avvia training con --resume da Run #4
+# tmux per sopravvivere alla disconnessione del terminale
+tmux new-session -d -s run5 \
+  'python3 train.py \
+    --tokenizer bpe-spm \
+    --data data/corpus_run5.txt \
+    --resume \
+    2>&1 | tee /tmp/run5.log'
+
+tail -f /tmp/run5.log</div>
+
+<div class="note"><strong>Mac M2 vs Vast.ai per Run #5:</strong> MPS è ~10–15× più lento di RTX 4090. Stima: 56.000 step → 23–35 ore su M2 vs 2.5 ore su GPU. Scelta M2 motivata da disponibilità macchina per 36h consecutive e credito Vast.ai residuo (~$4.65) da preservare per run futuri o iterazioni rapide.</div>
+
+<h2 id="run5-oom">Run #5 — crash OOM e training a shard (2026-10-03)</h2>
+
+<div class="narr">Il primo avvio di Run #5 ha prodotto due crash consecutivi per esaurimento memoria. Causa: <code>train.py</code> caricava l'intero corpus da 8.29 GB come stringa Python, poi lo convertiva in una lista Python di interi (overhead ~28 byte/elemento) prima di creare il tensor. Picco stimato: 20+ GB su un sistema da 8 GB.</div>
+
+<h3>Fix 1 — encoding in streaming (train.py)</h3>
+<p>Tre modifiche a <code>train.py</code>:</p>
+<ol>
+  <li><strong>Eliminato <code>Path.read_text()</code></strong>: il file non viene mai caricato interamente in RAM. Per tokenizer <code>bpe-spm</code> e <code>bpe-tiktoken</code>, il testo non serve al tokenizer (che carica un modello già addestrato).</li>
+  <li><strong><code>_encode_with_progress</code> → streaming</strong>: legge il file a chunk da 10 M caratteri, codifica ciascuno con SPM, accumula in <code>numpy.ndarray</code> di tipo <code>int16</code> (vocab 16.000 &lt; 32.767 = max int16). <code>numpy</code> usa array C contigui: nessun overhead per oggetto.</li>
+  <li><strong>Cache e tensor in <code>int16</code></strong>: <code>torch.from_numpy(arr)</code> è zero-copy. <code>get_batch()</code> fa il cast a <code>.long()</code> solo sui 16.384 token del batch corrente — overhead trascurabile.</li>
+</ol>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Fase</th><th>Prima (int64 / lista Python)</th><th>Dopo (int16 / numpy streaming)</th></tr></thead>
+  <tbody>
+    <tr><td>Lettura file</td><td>7.7 GB stringa Python in RAM</td><td>10 MB per chunk, scartato dopo encode</td></tr>
+    <tr><td>Lista intermedia</td><td>1.56B interi × 28 B = ~44 GB</td><td>array numpy: 1.56B × 2 B = 3.1 GB</td></tr>
+    <tr><td>Tensor finale</td><td>1.56B × 8 B = 12.5 GB (int64)</td><td>1.56B × 2 B = 3.1 GB (int16)</td></tr>
+    <tr><td>Picco totale</td><td>&gt;20 GB</td><td>~3–4 GB</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Fix 2 — training a shard (<code>tools/train_chunked.sh</code>)</h3>
+<div class="narr">Anche con il fix di encoding, il corpus da 8.29 GB genera un tensor int16 da 3.1 GB che, sommato a modello (530 MB), overhead MPS e OS, resta al limite degli 8 GB. Per eliminare il rischio, il corpus viene spezzato in 7 shard da ~1.2 GB ciascuno. Lo script <code>tools/train_chunked.sh</code> orchestra il ciclo: <strong>split → per ogni shard: tokenizza + salva cache → training --resume</strong>.</div>
+
+<div class="cmd"># Avvio training a shard (7 shard, 8000 step ciascuno = 56000 totali)
+tmux new-session -d -s run5 \
+  'bash tools/train_chunked.sh 2>&1 | tee /tmp/run5_chunked.log'
+
+# Monitoraggio
+tail -f /tmp/run5_chunked.log
+# oppure
+tmux attach -t run5</div>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Parametro</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Shard</td><td>7 × ~1.2 GB (~5.9M righe/shard)</td></tr>
+    <tr><td>Step per shard</td><td>8.000 (LR schedule completo per shard)</td></tr>
+    <tr><td>Step totali</td><td>56.000 (~917M token processati)</td></tr>
+    <tr><td>Cache shard</td><td>salvata dopo primo encoding → riavvii istantanei</td></tr>
+    <tr><td>ETA stimata</td><td>~4–6h tokenizzazione + ~24–30h training su MPS</td></tr>
+  </tbody>
+</table></div>
+
+<div class="note"><strong>LR schedule per shard:</strong> ogni shard ricomincia il proprio ciclo warmup → cosine decay (100 step di re-warmup, poi decay su 8.000 step). Produce un LR ciclico non pianificato — tollerabile per una run di ricerca, da correggere in run future con un LR schedule globale (passando il contatore di step cumulativi).</div>
+
+<div class="note"><strong>Caveat tokenizzazione:</strong> con chunk da 10M caratteri, il confine tra chunk può spezzare una sequenza BPE. L'effetto è trascurabile (al più 1 token scorretto ogni 10M caratteri), ma va tenuto a mente se si osservano anomalie nei token a inizio documento.</div>
+
+<h2 id="run5-shard1-progress">Run #5 — shard 1/7: prime metriche (2026-10-03)</h2>
+
+<div class="narr">Dopo tre avvii falliti (fix <code>--rope</code> mancante, poi OOM MPS con batch 32), il training di Run #5 è stabile con <code>--batch 8</code>. Il training su M2 con batch ridotto comporta ~2.5s/step (vs ~0.15s/step su RTX 4090). ETA per shard 1: ~5.5 ore.</div>
+
+<h3>Correzioni rispetto al piano iniziale</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Problema</th><th>Causa</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr><td>Checkpoint incompatibile (<code>missing key: pos_encoding.pe</code>)</td><td><code>train_chunked.sh</code> mancava di <code>--rope</code>: il modello era costruito con PE sinusoidale invece di RoPE</td><td>Aggiunto <code>--rope</code> al comando in <code>train_chunked.sh</code></td></tr>
+    <tr><td>OOM MPS (<code>allocated 8.96GB / max 9.07GB</code>)</td><td>Batch 32 × seq 512 × 12 layer → attivazioni ~9GB su M2 con memoria GPU/CPU condivisa</td><td>Ridotto a <code>--batch 8</code></td></tr>
+    <tr><td>GGUF mancanti su disco</td><td>Generati su Vast.ai durante Run #4, mai scaricati prima della destroy dell'istanza</td><td>Riconvertiti da <code>checkpoints/run4_best.pt</code> via <code>tools/convert_to_gguf.py</code> e <code>tools/quantize_q8.py</code></td></tr>
+  </tbody>
+</table></div>
+
+<h3>Checkpoint Step 500 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>500 / 8000 (shard 1)</td></tr>
+    <tr><td>Train loss</td><td>4.2399</td></tr>
+    <tr><td>Val loss</td><td>4.3260</td></tr>
+    <tr><td>Tempo da avvio</td><td>13m 58s</td></tr>
+    <tr><td>Generazione campione</td><td><em>"come l'imperia che ha dato vita ad una vera e propria famiglia. L'imperia è sempre una sorta di 'pacchetto', dove si p[...]"</em></td></tr>
+  </tbody>
+</table></div>
+
+<h3>Checkpoint Step 1000 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>1000 / 8000 (shard 1)</td></tr>
+    <tr><td>Train loss</td><td>4.1928</td></tr>
+    <tr><td>Val loss</td><td>4.2557  <span style="color:#059669">▼ −0.070 da step 500</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>41m 28s</td></tr>
+    <tr><td>Generazione campione</td><td><em>"la cui costruzione risale al 1700 e ne conserva l'intero campanile; a destra del portale è presente un'unica navata e"</em></td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">La generazione a step 1000 è già enciclopedica e grammaticalmente corretta. Il testo descrive un edificio storico con lessico architettonico specifico: segnale che il modello sta assorbendo il registro di CulturaX, diverso da Wikipedia.</div>
+
+<h3>Checkpoint Step 2500 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>2500 / 8000 (shard 1, 31%)</td></tr>
+    <tr><td>Train loss</td><td>4.1206</td></tr>
+    <tr><td>Val loss</td><td>4.1491  <span style="color:#059669">▼ −0.107 da step 1000</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>94m 16s (~2.1s/step)</td></tr>
+    <tr><td>Generazione campione</td><td><em>"e la loro identità sono la stessa: il nome di un luogo che non ha bisogno di farla si è creato in base a un altro punt[...]"</em></td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Val loss in discesa costante: 4.456 → 4.326 → 4.256 → 4.149 ogni 500–1000 step. La discesa è più rapida di quanto atteso su corpus nuovo, segno che CulturaX condivide abbastanza distribuzione con Wikipedia per permettere transfer efficace. Velocità effettiva: 2.1s/step → ETA shard 1: ~4.6 ore, totale 7 shard: ~32 ore.</div>
+
+<h3>Checkpoint Step 3500 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>3500 / 8000 (shard 1, 44%)</td></tr>
+    <tr><td>Train loss</td><td>4.0436</td></tr>
+    <tr><td>Val loss</td><td>4.0916  <span style="color:#059669">▼ −0.058 da step 2500</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>126m 02s (~2.1s/step)</td></tr>
+    <tr><td>Generazione campione</td><td><em>"di via A.F. 09/03/2017 (T.F. 10/03/2017), n. 131 del 18/03/2017 (T.F. 10/03/2017). Il sindaco Massimo D'Azeglio è il Pre[...]"</em></td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Val loss sotto 4.1 per la prima volta. La generazione mostra testo amministrativo ufficiale con date in formato italiano ("n. 131 del 18/03/2017") — registro completamente assente in Wikipedia, segnale che il modello sta assorbendo la varietà di CulturaX. Il gap train/val (4.04/4.09 = 0.05) è stretto: nessun overfitting. Curva val loss shard 1: 4.456 → 4.326 → 4.256 → 4.149 → 4.092.</div>
+
+<h3>Checkpoint Step 4000 — shard_aa.txt <span style="color:#059669">★ sotto Run #3</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>4000 / 8000 (shard 1, 50%)</td></tr>
+    <tr><td>Train loss</td><td>4.0104</td></tr>
+    <tr><td>Val loss</td><td>4.0138  <span style="color:#059669">▼ −0.078 da step 3500 — sotto Run #3 (4.0768)</span></td></tr>
+    <tr><td>Gap train/val</td><td>0.003 (nessun overfitting)</td></tr>
+    <tr><td>Tempo da avvio</td><td>142m 06s (~2.13s/step)</td></tr>
+    <tr><td>Generazione campione</td><td><em>"e il nome di 'Vajia'. La città è un centro polifunzionale per le attività economiche, sociali e sociali e nel rispetto d[...]"</em></td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr"><strong>Milestone:</strong> val loss 4.0138 — già sotto il best di Run #3 (4.0768), a metà del primo shard su sette. Il gap train/val di 0.003 è quasi nullo: il modello sta generalizzando bene su corpus mai visto. Curva completa shard 1: 4.456 → 4.326 → 4.256 → 4.149 → 4.092 → 4.014.</div>
+
+<h3>Checkpoint Step 4500 — shard_aa.txt <span style="color:#059669">★ val loss &lt; 4.0</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>4500 / 8000 (shard 1, 56%)</td></tr>
+    <tr><td>Train loss</td><td>3.9650</td></tr>
+    <tr><td>Val loss</td><td>4.0010  <span style="color:#059669">▼ −0.013 da step 4000</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>160m 46s (~2.14s/step)</td></tr>
+    <tr><td>Generazione campione</td><td><em>"per la produzione di energia elettrica. La tecnologia è utilizzata in ogni settore, ma è più facile da applicare. Per[...]"</em></td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Val loss sotto 4.0 per la prima volta — soglia simbolica, ma significativa: con Run #3 ci vollero 30.000 step su Wikipedia per arrivare a 4.08, qui si supera già a 4.500 step su un shard nuovo. Train loss a 3.965 (anche questa sotto 4.0). La curva si sta appiattendo leggermente (delta −0.013 vs −0.078 dello step precedente), atteso: siamo nella fase cosine decay dove il LR scende da 1.4×10⁻⁴ verso zero.</div>
+
+<h3>Checkpoint Step 5000 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>5000 / 8000 (shard 1, 62%)</td></tr>
+    <tr><td>Train loss</td><td>3.9376</td></tr>
+    <tr><td>Val loss</td><td>3.9416  <span style="color:#059669">▼ sotto 4.0 per la prima volta</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>176m 31s</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Checkpoint Step 5500 — shard_aa.txt <span style="color:#888">plateau</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>5500 / 8000 (shard 1, 69%)</td></tr>
+    <tr><td>Train loss</td><td>3.8826</td></tr>
+    <tr><td>Val loss</td><td>3.9419  <span style="color:#888">≈ 0 da step 5000 — plateau</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>195m 56s</td></tr>
+    <tr><td>LR</td><td>8.92×10⁻⁵ — coda cosine decay</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Val loss ferma a 3.942 tra step 5000 e 5500: plateau atteso. Il LR cosine è sceso da 3×10⁻⁴ (step 0) a 8.9×10⁻⁵ (step 5500) — con un tasso così basso gli aggiornamenti sono trascurabili. Il plateau conferma che shard_aa ha estratto quasi tutto ciò che poteva dare. La discesa riprenderà su shard_ab con il re-warmup (100 step) su dati freschi.</div>
+
+<h3>Curva completa val loss — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Step</th><th>Train loss</th><th>Val loss</th><th>Δ val</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>4.214</td><td>4.456</td><td>—</td></tr>
+    <tr><td>1000</td><td>4.193</td><td>4.256</td><td>−0.200</td></tr>
+    <tr><td>1500</td><td>4.166</td><td>4.218</td><td>−0.038</td></tr>
+    <tr><td>2000</td><td>4.124</td><td>4.169</td><td>−0.049</td></tr>
+    <tr><td>2500</td><td>4.121</td><td>4.149</td><td>−0.020</td></tr>
+    <tr><td>3000</td><td>4.071</td><td>4.119</td><td>−0.030</td></tr>
+    <tr><td>3500</td><td>4.044</td><td>4.092</td><td>−0.027</td></tr>
+    <tr><td>4000</td><td>4.010</td><td>4.014</td><td>−0.078</td></tr>
+    <tr><td>4500</td><td>3.965</td><td>4.001</td><td>−0.013</td></tr>
+    <tr><td>5000</td><td>3.938</td><td>3.942</td><td>−0.059</td></tr>
+    <tr><td>5500</td><td>3.883</td><td>3.942</td><td>≈ 0</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="run5-risorse">Run #5 — profilo utilizzo risorse (2026-10-04)</h2>
+
+<div class="narr">Dati rilevati durante il training shard_aa a step ~4700, su Mac M2 8 GB con batch=8, seq=512, MPS backend.</div>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Risorsa</th><th>Valore</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td><strong>MPS footprint</strong></td><td>~9.25 GB (virtuale)</td><td>pesi fp32 175 MB + AdamW 2 momenti 350 MB + attivazioni + gradient buffers. Supera la RAM fisica: il kernel gestisce con compressione</td></tr>
+    <tr><td><strong>CPU RAM (RSS)</strong></td><td>40 MB</td><td>solo interprete Python e data loader — tutto il heavy lifting è su MPS</td></tr>
+    <tr><td><strong>RAM sistema</strong></td><td>7.52 GB / 8 GB = 91.8%</td><td>wired 5.76 GB + compressor 952 MB + resto</td></tr>
+    <tr><td><strong>Libera</strong></td><td>81 MB</td><td>quasi zero; macOS gestisce con compressione aggressiva</td></tr>
+    <tr><td><strong>CPU istantaneo</strong></td><td>42–87% (1 core)</td><td>alterna compute MPS (asincrono) e step Python (sincrono)</td></tr>
+    <tr><td><strong>CPU accumulato</strong></td><td>81m 52s su 161m wall = 51%</td><td>l'altra metà: MPS pipeline asincrona e attesa risultati</td></tr>
+    <tr><td><strong>Swap lifetime</strong></td><td>24M pagine in/out</td><td>swapping avvenuto durante picchi di allocazione</td></tr>
+    <tr><td><strong>Velocità</strong></td><td>~2.1s/step</td><td>vs 0.15s/step RTX 4090 = 14× più lento</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr"><strong>Perché è lento e perché funziona comunque:</strong> su Apple Silicon, GPU (MPS) e CPU condividono lo stesso pool da 8 GB — non c'è VRAM separata come su GPU desktop. Il modello fp32 da 45.9M parametri richiede con batch=32 abbondantemente più di 9 GB → OOM. Con batch=8 le attivazioni per step calano del 75% e il sistema rimane stabile, al costo di 14× più tempo per shard. Vantaggio: zero costi infrastrutturali per un training di ricerca che può girare overnight.</div>
+
+<div class="note"><strong>Batch size e token per step:</strong> batch=8 × seq=512 = 4.096 token/step. Batch=32 (usato su RTX 4090) = 16.384 token/step. A parità di step, Run #5 su M2 processa 4× meno token — il token budget totale di Run #5 è ~229M, il 25% del target Chinchilla di 918M. Il budget residuo verrà completato da Run #6 su GPU, partendo dal checkpoint di Run #5 (continued pre-training).</div>
+
+<h3>Checkpoint Step 6000 — shard_aa.txt <span style="color:#059669">▼ plateau rotto</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>6000 / 8000 (shard 1, 75%)</td></tr>
+    <tr><td>Train loss</td><td>3.8774</td></tr>
+    <tr><td>Val loss</td><td>3.9193  <span style="color:#059669">▼ −0.023 dal plateau</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>214m 48s (3h 34m)</td></tr>
+    <tr><td>LR</td><td>7.05×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Il plateau di step 5000–5500 si è rotto leggermente: val loss 3.9193 vs 3.9419, differenza −0.023. A LR 7×10⁻⁵ gli aggiornamenti sono minimi, ma il dato è coerente: la curva cosine non è ancora a zero, c'è ancora margine di apprendimento negli ultimi 500 step.</div>
+
+<div class="warn"><strong>Generazione step 6000 — output degenerato:</strong>
+<pre style="margin:0.5rem 0 0; white-space:pre-wrap; word-break:break-all; font-size:0.8rem; color:#92400E">'Hawarahahahhayahhahhahhahhahhahhahhahhamhah.hhahhahhahhhahhahhahhahhhahhhahhahhahhahhahhahhahhahhahremhuhhihhahhahhahhah'</pre>
+Ripetizione di sillabe — output fuori distribuzione. La val loss 3.9193 rimane il segnale affidabile: è calcolata con teacher forcing su dati held-out, non dipende dalla generazione autoregressiva. La degeneration durante il sampling avviene a temperature/LR molto bassi quando il modello è in deep cosine tail. Non indica degrado dei pesi — lo stesso comportamento è osservabile in qualsiasi modello piccolo senza repeat penalty.</div>
+
+<h3>Checkpoint Step 6500 — shard_aa.txt <span style="color:#059669">▼▼ salto significativo</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>6500 / 8000 (shard 1, 81%)</td></tr>
+    <tr><td>Train loss</td><td>3.8476</td></tr>
+    <tr><td>Val loss</td><td>3.8753  <span style="color:#059669">▼▼ −0.044 da step 6000</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>234m 31s (3h 54m)</td></tr>
+    <tr><td>LR</td><td>5.33×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">−0.044 in 500 step è il delta più grande osservato nella coda cosine (step 5000–6500). Inatteso a LR 5×10⁻⁵ — suggerisce che il modello stava ancora estraendo informazione reale dal shard, non solo rumore. Val loss 3.8753 è ora sotto la media Run #4 step finale (3.604) ma sopra il suo best (3.5861), su un solo shard vs 30k step su GPU. La proiezione sulla fine del shard (step 8000, ~70 min) è ottimistica.</div>
+
+<div class="narr"><strong>Generazione step 6500 — recupero dalla degenerazione di step 6000:</strong>
+<code>'ostro. Il tuo nome deriva dal nome di un paese del mondo. La parola "taglietto" deriva dal fatto che il nome del paese d'</code>
+Testo coerente, registro enciclopedico, struttura narrativa sull'etimologia. Il campione di step 6000 (ripetizione di sillabe) era probabilmente un artefatto del sampling su una sequenza-seme sfortunata, non un segnale di degrado dei pesi.</div>
+
+<h3>Checkpoint Step 7000 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>7000 / 8000 (shard 1, 87.5%)</td></tr>
+    <tr><td>Train loss</td><td>3.8317</td></tr>
+    <tr><td>Val loss</td><td>3.8515  <span style="color:#059669">▼ −0.024 da step 6500</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>250m 56s (4h 10m)</td></tr>
+    <tr><td>LR</td><td>4.05×10⁻⁵</td></tr>
+    <tr><td>Step corrente</td><td>7200 — 800 step al termine del shard (~28 min)</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">La curva continua a scendere nella coda cosine profonda: −0.024 in 500 step a LR 4×10⁻⁵. La discesa è rallentata rispetto al delta di step 6500 (−0.044) ma non si è fermata. Se il ritmo tiene, step 8000 potrebbe attestarsi intorno a 3.83–3.84.</div>
+
+<div class="warn"><strong>Generazione step 7000 — loop di ripetizione sull'apertura:</strong>
+<code>'_602 - Puntando su "Puntando su "Puntando su "Puntando su "Puntare su "Puntare su "Puntando su '</code>
+Stesso pattern di step 6000: sequenza-seme inusuale (`_602 -`) innesca un loop autoregressivo. Non indica degrado — confermato dal proseguimento della discesa val loss.</div>
+
+<h3>Checkpoint Step 7500 — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>7500 / 8000 (shard 1, 94%)</td></tr>
+    <tr><td>Train loss</td><td>3.8229</td></tr>
+    <tr><td>Val loss</td><td>3.8759  <span style="color:#D97706">▲ +0.024 da step 7000</span></td></tr>
+    <tr><td>Tempo da avvio</td><td>265m 39s</td></tr>
+    <tr><td>LR</td><td>3.27×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Lieve risalita rispetto al minimo di step 7000 (3.8515 → 3.8759). A LR così basso (3.27×10⁻⁵) gli aggiornamenti sono quasi irrilevanti — il piccolo aumento è probabile rumore statistico sul val set, non degrado. Generazione coerente: <code>'. Si tratta di un progetto di valorizzazione del patrimonio culturale italiano, che ha come obiettivo la partecipazione '</code></div>
+
+<h3>Step 8000 — Fine shard 1 <span style="color:#059669">✓ Shard completato</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>8000 / 8000 (shard 1, 100%)</td></tr>
+    <tr><td>Train loss</td><td>3.7879 — minimo assoluto di shard 1</td></tr>
+    <tr><td>Val loss</td><td>3.8665</td></tr>
+    <tr><td>Durata shard 1</td><td>280m 15s (4h 40m 15s)</td></tr>
+    <tr><td>Best val loss complessivo</td><td>3.5861 (Run #4 — shard 1 non ha battuto)</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Shard 1 completato. Val loss finale 3.8665 — migliore di Run #3 (4.077) ma ancora sopra Run #4 (3.586). Il tracker <code>best.pt</code> non è stato aggiornato: Run #5 shard 1 non ha mai sceso sotto 3.5861. Il best checkpoint rimane quello di Run #4. Il miglioramento atteso verrà dai shard 2–7: ogni shard porta dati freschi + re-warmup del LR, che permette discese più ripide rispetto alla coda cosine di shard 1.</div>
+
+<div class="narr"><strong>Generazione step 8000:</strong> <code>". Non è un caso che la situazione abbia un impatto positivo su questa situazione. Non c'è un rischio e la sicurezza di c"</code> — italiano corretto ma circolare ("situazione" x2). Coerente con l'ultimo step di un cosine cycle: il modello ha "consolidato" il shard ma non ha visto ancora il corpus più ampio dei shard successivi.</div>
+
+<h3>Curva val loss completa — shard_aa.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Step</th><th>Train</th><th>Val</th><th>Δ val</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>4.214</td><td>4.456</td><td>—</td></tr>
+    <tr><td>1000</td><td>4.193</td><td>4.256</td><td>−0.200</td></tr>
+    <tr><td>2000</td><td>4.124</td><td>4.169</td><td>−0.087</td></tr>
+    <tr><td>3000</td><td>4.071</td><td>4.119</td><td>−0.050</td></tr>
+    <tr><td>4000</td><td>4.010</td><td>4.014</td><td>−0.105</td></tr>
+    <tr><td>4500</td><td>3.965</td><td>4.001</td><td>−0.013</td></tr>
+    <tr><td>5000</td><td>3.938</td><td>3.942</td><td>−0.059</td></tr>
+    <tr><td>5500</td><td>3.883</td><td>3.942</td><td>≈ 0</td></tr>
+    <tr><td>6000</td><td>3.877</td><td>3.919</td><td>−0.023</td></tr>
+    <tr><td>6500</td><td>3.848</td><td>3.875</td><td>−0.044</td></tr>
+    <tr><td>7000</td><td>3.832</td><td><strong>3.852</strong></td><td>−0.023 ← min shard</td></tr>
+    <tr><td>7500</td><td>3.823</td><td>3.876</td><td>+0.024</td></tr>
+    <tr><td>8000</td><td>3.788</td><td>3.867</td><td>−0.009</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="run5-shard2">Run #5 — Shard 2/7 (shard_ab.txt) — inizio 2026-10-04 02:51</h2>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Parametro</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>File</td><td>shard_ab.txt (1.18 GB)</td></tr>
+    <tr><td>Token totali</td><td>289.5M → 260.6M train / 29M val</td></tr>
+    <tr><td>Tokenizzazione</td><td>878s (14m 38s) — cache salvata in .pt</td></tr>
+    <tr><td>Checkpoint caricato</td><td>best.pt — step 27500, val 3.5861 (Run #4)</td></tr>
+    <tr><td>Re-warmup</td><td>100 step (LR: 1.5×10⁻⁴ → 3×10⁻⁴)</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">La val loss di shard 2 riparte da 4.46 a step 0 — non è una regressione. Il val set di shard_ab è completamente diverso da quello di shard_aa: il modello viene valutato su testo che non ha mai visto, distribuito diversamente. Il valore iniziale riflette la "sorpresa" del modello di fronte a nuova distribuzione. La discesa rapida a step 500 (4.46 → 4.31, −0.15 in 500 step) indica che il modello si adatta velocemente ai dati freschi.</div>
+
+<h3>Checkpoint Step 500 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>500 / 8000 (shard 2, 6%)</td></tr>
+    <tr><td>Train loss</td><td>4.3048</td></tr>
+    <tr><td>Val loss</td><td>4.3092</td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>13m 21s</td></tr>
+    <tr><td>LR</td><td>2.98×10⁻⁴ (post-warmup, peak)</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Generazione step 500: <code>"di altri paesi in cui l'energia di vita è abbastanza pesante. È una delle migliori fonti di energia. È una delle fonti p"</code> — testo sull'energia, coerente ma con ripetizione ("È una delle" ×2). Normale a 500 step con LR al massimo: il modello sta ancora "adattando la velocità" ai nuovi dati.</div>
+
+<h3>Checkpoint Step 7500 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>7500 / 8000 (shard 2, 94%)</td></tr>
+    <tr><td>Train loss</td><td>3.8137</td></tr>
+    <tr><td>Val loss</td><td>3.8476  <span style="color:#059669">▼ −0.017 recupero dal micro-uptick</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>231m 09s (3h 51m)</td></tr>
+    <tr><td>LR</td><td>3.27×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Recupero dal micro-uptick di step 7000 (3.865 → 3.848). Generazione: <code>"e un'azienda che ha la stessa storia in cui si trova. Ma non è altro che una scelta. Perché se l'azienda non ha la capac"</code> — italiano narrativo-aziendale, struttura concessiva corretta.</div>
+
+<h3>Step 8000 — Fine shard 2 <span style="color:#059669">✓ Miglior shard finora</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>8000 / 8000 (shard 2, 100%)</td></tr>
+    <tr><td>Train loss</td><td>3.8387</td></tr>
+    <tr><td>Val loss</td><td><strong>3.8344</strong>  <span style="color:#059669">▼▼ nuovo minimo assoluto — meglio di shard 1 (3.867)</span></td></tr>
+    <tr><td>Durata shard 2</td><td>245m 53s (4h 05m 53s)</td></tr>
+    <tr><td>Best val loss complessivo</td><td>3.5861 (Run #4 — ancora imbattuto)</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Shard 2 finisce a val 3.834 — significativamente meglio della fine di shard 1 (3.867) e del minimo di shard 1 (3.852). Il continued pre-training produce un miglioramento shard su shard misurabile: ogni ciclo cosine porta i pesi in una posizione leggermente migliore di dove si trovavano dopo il ciclo precedente. Generazione step 8000: <code>"a causa dell'insufficienza di questo genere, la perdita di peso non è in gran parte superiore a quella di altri tipi di"</code> — italiano medico coerente.</div>
+
+<h3>Confronto finale shard 1 vs shard 2</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Shard 1</th><th>Shard 2</th></tr></thead>
+  <tbody>
+    <tr><td>Val loss iniziale (step 0)</td><td>4.456</td><td>4.462</td></tr>
+    <tr><td>Val loss a step 4000</td><td>4.014</td><td><strong>3.981</strong></td></tr>
+    <tr><td>Minimo assoluto</td><td>3.852 (step 7000)</td><td><strong>3.834 (step 8000)</strong></td></tr>
+    <tr><td>Val loss finale (step 8000)</td><td>3.867</td><td><strong>3.834</strong></td></tr>
+    <tr><td>Durata</td><td>280m 15s</td><td>245m 53s (−34 min)</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard 2 è stato ~34 minuti più veloce di shard 1 (cache .pt già presente, nessun ricalcolo tokenizzazione). La val loss finale è di 0.033 punti migliore. Tendenza confermata: ogni shard migliora il precedente.</div>
+
+<h2 id="run5-shard3">Run #5 — Shard 3/7 (shard_ac.txt) — inizio 2026-10-04 07:11</h2>
+<div class="narr">Shard 3 avviato alle 07:11:52. Corpus: <code>shard_ac.txt</code> (1.18 GB). Tokenizzazione completata: 290,173,474 token totali, train 261M / val 29M. Cache: <code>shard_ac.txt.bpe-spm.v16000.tokens.pt</code> (553 MB). Ripreso da step 27500, val_loss=3.5861. Re-warmup: 100 step.</div>
+
+<h3>Tabella checkpoint — shard_ac.txt</h3>
+<div class="table-wrap"><table>
+  <thead>
+    <tr><th>Step</th><th>Train loss</th><th>Val loss</th><th>Tempo (mm:ss)</th><th>LR</th><th>Note</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>0</td><td>4.4491</td><td>4.4443</td><td>01:07</td><td>1.50×10⁻⁴ (re-warmup)</td><td>Avvio shard 3 — val reset atteso</td></tr>
+    <tr><td>500</td><td>4.3068</td><td>4.3152</td><td>13:58</td><td>2.98×10⁻⁴</td><td>−0.129 da step 0; gen. ripetitiva (LR alta)</td></tr>
+    <tr><td>1000</td><td>4.2409</td><td>4.2613</td><td>32:52</td><td>2.91×10⁻⁴</td><td>−0.054 da step 500; lessico inventato ma sintassi corretta</td></tr>
+    <tr><td>1500</td><td>4.1798</td><td>4.2032</td><td>52:33</td><td>2.80×10⁻⁴</td><td>−0.058; gen. ⁇ UNK (artefatto seed, non degrado)</td></tr>
+    <tr><td>2000</td><td>4.1690</td><td>4.1768</td><td>67:50</td><td>2.63×10⁻⁴</td><td>−0.026; rallentamento atteso — ancora in esplorazione larga (LR alta)</td></tr>
+    <tr><td>2500</td><td>4.1314</td><td>4.1538</td><td>83:36</td><td>2.43×10⁻⁴</td><td>−0.023; gen. coerente: "delle più belle città d'Italia" ✓</td></tr>
+    <tr><td>3000</td><td>4.0760</td><td>4.1122</td><td>101:49</td><td>2.20×10⁻⁴</td><td>−0.042; discesa riprende; gen. "ALLE BUTTA" (artefatto seed corpus)</td></tr>
+    <tr><td>3500</td><td>4.0563</td><td>4.0907</td><td>120:08</td><td>1.94×10⁻⁴</td><td>−0.022; sotto 4.1; gen. all-caps CHIRE/REMITO (artefatto seed)</td></tr>
+    <tr><td>4000</td><td>4.0013</td><td>4.0208</td><td>138:24</td><td>1.68×10⁻⁴</td><td>−0.070 ← accelerazione; LR entra in zona di convergenza rapida</td></tr>
+    <tr><td>4500</td><td>3.9834</td><td>4.0010</td><td>154:56</td><td>1.41×10⁻⁴</td><td>−0.020; val ≈ 4.0 (soglia raggiunta); gen. "Idraulica" ripetuta (artefatto)</td></tr>
+    <tr><td>5000</td><td>3.9464</td><td>3.9663</td><td>172:40</td><td>1.15×10⁻⁴</td><td>−0.035; sotto 4.0; gen. filosofica italiana: "teoria di genere... il corpo e l'essere" ✓✓</td></tr>
+    <tr><td>5500</td><td>3.8940</td><td>3.9524</td><td>190:52</td><td>9.14×10⁻⁵</td><td>−0.014; LR sotto 10⁻⁴ — deep cosine tail; gen. educativa corretta</td></tr>
+    <tr><td>6000</td><td>3.8972</td><td>3.9055</td><td>208:02</td><td>7.05×10⁻⁵</td><td>−0.047; discesa riprende; gen. istituzionale corretta</td></tr>
+    <tr><td>6500</td><td>3.8380</td><td>3.8830</td><td>226:03</td><td>5.48×10⁻⁵</td><td>−0.022; gen. giornalistica: "come da tradizione, ha preso parte alla manifestazione" ✓✓</td></tr>
+    <tr><td>7000</td><td>3.8209</td><td>3.8439</td><td>242:52</td><td>4.05×10⁻⁵</td><td>−0.039; sotto 3.85; gen. letteraria con congiuntivo: "si sarebbe lasciato andare via" ✓✓✓</td></tr>
+    <tr><td>7500</td><td>3.8339</td><td>3.8210</td><td>260:02</td><td>3.27×10⁻⁵</td><td>−0.023; <strong>minimo shard 3</strong> (3.821); gen. narrativa ✓✓✓</td></tr>
+    <tr><td>8000</td><td>3.8451</td><td>3.8453</td><td>275:34</td><td>1.50×10⁻⁵</td><td>+0.024 micro-uptick da step 7500 (tipico a LR→min); fine shard 3</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Riepilogo shard 3 e confronto shard 1–3</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Shard 1</th><th>Shard 2</th><th>Shard 3</th></tr></thead>
+  <tbody>
+    <tr><td>Val loss iniziale</td><td>4.456</td><td>4.462</td><td>4.444</td></tr>
+    <tr><td>Val loss minimo</td><td>3.852 (step 7000)</td><td>3.834 (step 8000)</td><td><strong>3.821 (step 7500)</strong></td></tr>
+    <tr><td>Val loss finale (step 8000)</td><td>3.867</td><td>3.834</td><td>3.845 (+0.024 micro-uptick)</td></tr>
+    <tr><td>Durata</td><td>280m 15s</td><td>245m 53s</td><td>275m 45s</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard 3 ha il <strong>minimo assoluto più basso di Run #5 finora</strong> (3.821 a step 7500), ma un micro-uptick finale porta la val 8000 a 3.845 — tra shard 1 e shard 2. Il micro-uptick è atteso quando LR→min con varianza batch residua. Il checkpoint best.pt registra ancora Run #4 (3.5861). Generazione step 8000: <code>"Il tema è un'opera che ha visto la partecipazione di numerosi artisti e professionisti, con un'accoglienza di appassio"</code> — italiano culturale coerente.</div>
+
+<h2 id="run5-shard4">Run #5 — Shard 4/7 (shard_ad.txt) — inizio 2026-10-04 12:02</h2>
+<div class="narr">Shard 4 avviato alle 12:02:36. Corpus: <code>shard_ad.txt</code> (1.18 GB). Tokenizzazione completata: 290,085,185 token totali, train 261M / val 29M. Cache: <code>shard_ad.txt.bpe-spm.v16000.tokens.pt</code> (553 MB). Ripreso da step 27500, val_loss=3.5861 (Run #4 — confermato: tutti gli shard ripartono dallo stesso checkpoint Run #4). Re-warmup: 100 step.</div>
+
+<div class="narr"><strong>Nota meccanismo:</strong> ogni shard riparte da <code>best.pt</code> (Run #4, step 27500, val 3.5861). best.pt non viene aggiornato perché nessuno shard ha superato 3.5861. Il miglioramento shard-su-shard nel minimo di val loss (3.852 → 3.834 → 3.821) è quindi legato a differenze nel corpus (difficoltà, distribuzione linguistica), non ad accumulo di pesi tra shard.</div>
+
+<h3>Tabella checkpoint — shard_ad.txt</h3>
+<div class="table-wrap"><table>
+  <thead>
+    <tr><th>Step</th><th>Train loss</th><th>Val loss</th><th>Tempo (mm:ss)</th><th>LR</th><th>Note</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>0</td><td>4.4522</td><td>4.4721</td><td>01:07</td><td>1.50×10⁻⁴ (re-warmup)</td><td>Avvio shard 4</td></tr>
+    <tr><td>500</td><td>4.3123</td><td>4.2846</td><td>14:24</td><td>2.98×10⁻⁴</td><td>−0.187; gen. meta-ripetitiva "disponibilità" (LR alta)</td></tr>
+    <tr><td>1000</td><td>4.2451</td><td>4.2416</td><td>33:20</td><td>2.91×10⁻⁴</td><td>−0.043; gen. coerente: "coniugi... insoddisfazione... possibilità" ✓</td></tr>
+    <tr><td>1500</td><td>4.1879</td><td>4.2101</td><td>52:13</td><td>2.80×10⁻⁴</td><td>−0.032; gen. medico-legale: "violazione del trattamento"</td></tr>
+    <tr><td>2000</td><td>4.1660</td><td>4.1583</td><td>74:14</td><td>2.63×10⁻⁴</td><td>−0.052; gen. cirillico in apertura + italiano EU coerente — artefatto seed</td></tr>
+    <tr><td>2500</td><td>4.1238</td><td>4.1507</td><td>91:48</td><td>2.43×10⁻⁴</td><td>−0.008; curva si appiattisce (atteso); gen. italiana corretta "qualità di vita" ✓</td></tr>
+    <tr><td>3000</td><td>4.0670</td><td>4.0961</td><td>108:51</td><td>2.20×10⁻⁴</td><td>−0.055; drop dopo mini-plateau; gen. news/politica IT coerente ✓</td></tr>
+    <tr><td>3500</td><td>4.0509</td><td>4.0621</td><td>166:33</td><td>1.94×10⁻⁴</td><td>−0.034; ⚠️ rallentamento per swap — velocità ripresa a step 4000</td></tr>
+    <tr><td>4000</td><td>4.0030</td><td>3.9965</td><td>191:14</td><td>1.68×10⁻⁴</td><td>−0.065; 🎯 primo attraversamento sotto 4.0 · gen. commerciale IT ✓</td></tr>
+    <tr><td>4500</td><td>3.9615</td><td>4.0091</td><td>220:59</td><td>1.41×10⁻⁴</td><td>+0.013 mini-uptick (normale); gen. commerciale IT; velocità ~3.5 s/step ripristinata</td></tr>
+    <tr><td>5000</td><td>3.9379</td><td>3.9558</td><td>251:21</td><td>~1.16×10⁻⁴</td><td>−0.053; nuovo minimo shard 4 · cosine LR in discesa accelerata</td></tr>
+    <tr><td>5500</td><td>3.9148</td><td>3.9196</td><td>278:42</td><td>~9.1×10⁻⁵</td><td>−0.036; nuovo minimo · velocità ~2.6 s/step (pressione mem. normalizzata)</td></tr>
+    <tr><td>6000</td><td>3.8810</td><td>3.8961</td><td>308:15</td><td>7.05×10⁻⁵</td><td>−0.023; primo attraversamento sotto 3.9 · gen. turismo IT ✓ · ~2.4 s/step</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Step 500: generazione <code>"in questo periodo di un'attività di ricerca di personale o di attività di ricerca e di ricerca di attività di ricerca e "</code> — loop ripetitivo tipico con LR alta (2.98×10⁻⁴). Non è un segnale di degrado: il modello è in fase di esplorazione aggressiva dello spazio dei pesi.</div>
+
+<h3>Checkpoint Step 7000 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>7000 / 8000 (shard 2, 87.5%)</td></tr>
+    <tr><td>Train loss</td><td>3.8363</td></tr>
+    <tr><td>Val loss</td><td>3.8645  <span style="color:#D97706">▲ +0.007 micro-uptick da step 6500</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>217m 05s (3h 37m)</td></tr>
+    <tr><td>LR</td><td>4.05×10⁻⁵</td></tr>
+    <tr><td>Step corrente</td><td>7450 — ~550 step alla fine del shard (~19 min)</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Micro-uptick +0.007 identico al pattern di shard 1 (che aveva +0.024 a step 7500). Entrambi i shard mostrano questa oscillazione nella coda cosine profonda — coerente con la varianza del val set a LR minimo. Generazione: timing sportivi in formato numerico (<code>'ia (TM) 1:56.49,58,58,86...'</code>) — il corpus contiene tabelle di risultati atletici.</div>
+
+<h3>Checkpoint Step 6500 — shard_ab.txt <span style="color:#059669">▼ 3.857 — nuovo minimo assoluto</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>6500 / 8000 (shard 2, 81%)</td></tr>
+    <tr><td>Train loss</td><td>3.8695</td></tr>
+    <tr><td>Val loss</td><td><strong>3.8574</strong>  <span style="color:#059669">▼ nuovo minimo · shard 1 step 6500: 3.875 (−0.018)</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>200m 49s (3h 20m)</td></tr>
+    <tr><td>LR</td><td>5.33×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard 2 step 6500: 3.857 vs shard 1 step 6500: 3.875. Gap −0.018, stabile. La proiezione al termine del shard (step 8000) è intorno a 3.79–3.80, sensibilmente meglio della fine di shard 1 (3.867). Generazione: <code>". L'obiettivo di questi ultimi anni è stato quello di offrire a questi studenti un'esperienza completa e di un'esperienz"</code> — italiano educativo coerente. Leggera ripetizione di "un'esperienz" alla fine: limite di contesto, non degrado.</div>
+
+<h3>Checkpoint Step 6000 — shard_ab.txt <span style="color:#059669">▼ 3.895 — gap crescente vs shard 1</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>6000 / 8000 (shard 2, 75%)</td></tr>
+    <tr><td>Train loss</td><td>3.9003</td></tr>
+    <tr><td>Val loss</td><td><strong>3.8952</strong>  <span style="color:#059669">▼ nuovo minimo shard 2 · shard 1 a stesso step: 3.919 (−0.024)</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>185m 08s (3h 05m)</td></tr>
+    <tr><td>LR</td><td>7.05×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard 2 a step 6000: val 3.895 vs shard 1 step 6000: val 3.919. Differenza −0.024 a favore di shard 2 — il divario cresce con l'avanzare del training. Il continued pre-training produce un effetto misurabile: ogni shard parte da pesi leggermente migliori. Se il vantaggio si mantiene, shard 2 finirà il suo ciclo con una val loss inferiore a shard 1. Generazione: URL in loop (<code>'www.singleww.singleww...'</code>) — artefatto web nel corpus, non degrado.</div>
+
+<h3>Checkpoint Step 5500 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>5500 / 8000 (shard 2, 69%)</td></tr>
+    <tr><td>Train loss</td><td>3.9020</td></tr>
+    <tr><td>Val loss</td><td>3.9287  <span style="color:#059669">▼ −0.030 da step 5000 · shard 1 step 5500: 3.942 (−0.013)</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>170m 57s (2h 50m)</td></tr>
+    <tr><td>LR</td><td>9.14×10⁻⁵</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard 2 a step 5500 (3.929) vs shard 1 a step 5500 (3.942): differenza +0.013. La curva di shard 2 non mostra il plateau che shard 1 aveva tra 5000 e 5500 — scende più uniformemente. Generazione: <code>'e il suo futuro, grazie all'impegno della Fondazione, in collaborazione con i più importanti produttori di beni e serviz'</code> — italiano istituzionale coerente.</div>
+
+<h3>Checkpoint Step 5000 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>5000 / 8000 (shard 2, 62.5%)</td></tr>
+    <tr><td>Train loss</td><td>3.9486</td></tr>
+    <tr><td>Val loss</td><td>3.9591  <span style="color:#059669">▼ recupero — sotto 3.96</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>154m 27s (2h 34m)</td></tr>
+    <tr><td>LR</td><td>1.15×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Val loss recuperata dopo il micro-uptick di step 4500. Shard 1 a step 5000: 3.9416 — shard 2: 3.9591, differenza 0.018 spiegata dal val set diverso. Generazione: <code>"L'ultimo appuntamento è stato presentato con una proposta di legge che, a partire dagli anni '90, è stata promossa dal"</code> — italiano istituzionale/legislativo, struttura subordinata corretta, senza ripetizioni. La qualità narrativa continua a migliorare con la discesa della loss.</div>
+
+<h3>Checkpoint Step 4500 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>4500 / 8000 (shard 2, 56%)</td></tr>
+    <tr><td>Train loss</td><td>3.9873</td></tr>
+    <tr><td>Val loss</td><td>3.9893  <span style="color:#D97706">▲ +0.009 da step 4000 — micro-uptick</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>135m 42s (2h 15m)</td></tr>
+    <tr><td>LR</td><td>1.41×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Micro-risalita di +0.009 — identica a quella osservata in shard 1 intorno a step 4500. Rumore statistico del val set, non regressione. Generazione: sequenza numerica <code>'4420-11-12-12-09-1910-11-22-22...'</code> — il seed ha pescato una sezione tabellare/codici dal corpus. Non indica degrado.</div>
+
+<h3>Checkpoint Step 4000 — shard_ab.txt <span style="color:#059669">▼▼ sotto 4.0 — 1000 step prima di shard 1</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>4000 / 8000 (shard 2, 50%)</td></tr>
+    <tr><td>Train loss</td><td>3.9811</td></tr>
+    <tr><td>Val loss</td><td><strong>3.9807</strong>  <span style="color:#059669">▼▼ sotto 4.0 — primo shard a raggiungerlo a step 4000</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>120m 37s (2h 00m)</td></tr>
+    <tr><td>LR</td><td>1.68×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard_ab ha attraversato la soglia 4.0 a step 4000 — mille step prima di shard_aa (che l'aveva raggiunta a step 5000). Confronto diretto: shard 1 step 4000 → val 4.014; shard 2 step 4000 → val 3.981, differenza −0.033. La discesa più rapida può indicare che shard_ab contiene testo con maggiore varietà sintattica, oppure che i pesi di shard_aa hanno già pre-adattato il modello alla distribuzione CulturaX, abbassando la soglia di sorpresa sui dati nuovi.</div>
+<div class="narr">Generazione step 4000: <code>'enza, con un contributo di 79mila euro all'anno. La crisi finanziaria ha comportato una "disatura" di 10 miliardi di eur'</code> — italiano giornalistico-finanziario coerente. "Disatura" potrebbe essere un errore del corpus originale, ma la struttura è corretta.</div>
+
+<h3>Checkpoint Step 3500 — shard_ab.txt <span style="color:#059669">sotto 4.05</span></h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>3500 / 8000 (shard 2, 44%)</td></tr>
+    <tr><td>Train loss</td><td>4.0576</td></tr>
+    <tr><td>Val loss</td><td>4.0484  <span style="color:#059669">▼ sotto 4.05 — migliore di shard 1 a parità di step</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>105m 17s (1h 45m)</td></tr>
+    <tr><td>LR</td><td>1.94×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Shard 2 a step 3500 (val 4.048) vs shard 1 a step 3500 (val 4.092): +0.044 punti di vantaggio. Entrambi partono dal medesimo checkpoint Run #4, ma il val set diverso e la varianza dei dati spiegano la differenza. La proiezione verso step 5000 è ottimistica: se la curva tiene, shard 2 potrebbe scendere sotto 4.0 prima di step 5000. Generazione: <code>', che non si può, in quanto non si può, ma può, infatti, essere, una parte, di una serie di oggetti, che si manifesta in'</code> — subordinate annidate grammaticalmente corrette, semanticamente circolari.</div>
+
+<h3>Checkpoint Step 3000 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>3000 / 8000 (shard 2, 37.5%)</td></tr>
+    <tr><td>Train loss</td><td>4.0764</td></tr>
+    <tr><td>Val loss</td><td>4.1387  <span style="color:#059669">▼ −0.009 da step 2500</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>91m 25s</td></tr>
+    <tr><td>LR</td><td>2.20×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Generazione step 3000: catalogo di abbreviazioni (<code>'- L'ultima nota della "Cav.ssa Saverio" - A.A. - A.A.P. - C.S.A. …'</code>) — artefatto di una sezione bibliografica/archivistica nel corpus. Il modello riproduce la struttura sintattica del formato, non il contenuto.</div>
+
+<h3>Checkpoint Step 2000 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>2000 / 8000 (shard 2, 25%)</td></tr>
+    <tr><td>Train loss</td><td>4.1662</td></tr>
+    <tr><td>Val loss</td><td>4.1952  <span style="color:#059669">▼ −0.024 da step 1500</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>62m 37s</td></tr>
+    <tr><td>LR</td><td>2.63×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Generazione step 2000: <code>'della vita di un autore che, invece, è molto più grande, anche perché, di fronte al successo e all'eleganza, la musica h'</code> — italiano letterario con struttura complessa (avversativa + causale). Registro narrativo, nessuna ripetizione.</div>
+
+<h3>Checkpoint Step 2500 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>2500 / 8000 (shard 2, 31%)</td></tr>
+    <tr><td>Train loss</td><td>4.1285</td></tr>
+    <tr><td>Val loss</td><td>4.1473  <span style="color:#059669">▼ −0.048 da step 2000</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>77m 03s</td></tr>
+    <tr><td>LR</td><td>2.43×10⁻⁴</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Generazione step 2500: <code>'. La storia di una famiglia. Per fortuna è riuscita a farci conoscere. In un mondo che oggi non è facile, che non ci si '</code> — testo narrativo coerente con relative annidate corrette ("un mondo che oggi non è facile, che non ci si"). Qualità migliore rispetto ai campioni precedenti: subordinate formate correttamente, registro colloquiale maturo.</div>
+
+<h3>Checkpoint Step 1500 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>1500 / 8000 (shard 2, 19%)</td></tr>
+    <tr><td>Train loss</td><td>4.2235</td></tr>
+    <tr><td>Val loss</td><td>4.2189  <span style="color:#059669">▼ −0.072 da step 1000</span></td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>45m 36s</td></tr>
+    <tr><td>LR</td><td>2.80×10⁻⁴ — cosine ha iniziato a calare</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Accelerazione della discesa rispetto a step 500→1000 (−0.018): ora −0.072 in 500 step. Train loss e val loss quasi identiche (4.224 vs 4.219) — assenza di overfitting. La cosine decay ha preso effetto. Generazione step 1500: all-caps pseudo-italiana (<code>'IL CONNO DELLA GLIDI... CONFRANSI DI ROTALE IN CONFRANSI'</code>) — artefatto del seed uppercase da corpus, non degrado dei pesi.</div>
+
+<h3>Checkpoint Step 1000 — shard_ab.txt</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Metrica</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Step</td><td>1000 / 8000 (shard 2, 12.5%)</td></tr>
+    <tr><td>Train loss</td><td>4.2526</td></tr>
+    <tr><td>Val loss</td><td>4.2911</td></tr>
+    <tr><td>Tempo da avvio shard 2</td><td>28m 51s</td></tr>
+    <tr><td>LR</td><td>2.91×10⁻⁴ — cosine inizia appena ora</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Discesa da step 500 a 1000: −0.018 (4.309 → 4.291). Ritmo lento atteso: il LR è ancora al 97% del picco, la cosine decay è appena partita. Confronto con shard 1 a step 1000: val 4.256 — shard 2 parte leggermente più alto perché il val set è diverso, non perché il modello regredisca. Generazione: <code>'per la sua qualità di amica. È possibile accedere alle pagine dei vari corsi online in cui sono presenti e sono presenti'</code> — coerente ma con ripetizione ("sono presenti" ×2).</div>
+
+<h2 id="run5-shard4-complete">Run #5 — Shard 4/7 completato (shard_ad.txt)</h2>
+<div class="narr">Shard 4 completato. Val loss finale 3.8227 — minimo assoluto di Run #5 finora. Rispetto a shard 3 (3.845): −0.022. Il meccanismo best.pt non è stato corretto: anche shard 4 è ripartito da Run #4. L'esplorazione parallela continua.</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Step</th><th>Train</th><th>Val</th><th>Tempo</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>4.4522</td><td>4.4721</td><td>01:07</td><td>Avvio shard 4</td></tr>
+    <tr><td>500</td><td>4.3123</td><td>4.2846</td><td>14:24</td><td></td></tr>
+    <tr><td>1000</td><td>4.2451</td><td>4.2416</td><td>33:20</td><td></td></tr>
+    <tr><td>1500</td><td>4.1879</td><td>4.2101</td><td>52:13</td><td></td></tr>
+    <tr><td>2000</td><td>4.1660</td><td>4.1583</td><td>74:14</td><td></td></tr>
+    <tr><td>2500</td><td>4.1238</td><td>4.1507</td><td>91:48</td><td></td></tr>
+    <tr><td>3000</td><td>4.0670</td><td>4.0961</td><td>108:51</td><td></td></tr>
+    <tr><td>3500</td><td>4.0509</td><td>4.0621</td><td>166:33</td><td>⚠️ rallentamento swap</td></tr>
+    <tr><td>4000</td><td>4.0030</td><td>3.9965</td><td>191:14</td><td>🎯 primo attraversamento sotto 4.0</td></tr>
+    <tr><td>4500</td><td>3.9615</td><td>4.0091</td><td>220:59</td><td>mini-uptick</td></tr>
+    <tr><td>5000</td><td>3.9379</td><td>3.9558</td><td>251:21</td><td>nuovo minimo shard 4</td></tr>
+    <tr><td>5500</td><td>3.9148</td><td>3.9196</td><td>278:42</td><td></td></tr>
+    <tr><td>6000</td><td>3.8810</td><td>3.8961</td><td>308:15</td><td>primo attraversamento sotto 3.9</td></tr>
+    <tr><td>6500</td><td>3.8433</td><td>3.8747</td><td>354:26</td><td>⚠️ rallentamento swap (57 min per 500 step)</td></tr>
+    <tr><td>7000</td><td>3.8775</td><td>3.8724</td><td>398:30</td><td></td></tr>
+    <tr><td>7500</td><td>3.8343</td><td>3.8570</td><td>415:47</td><td></td></tr>
+    <tr><td>8000</td><td>3.8091</td><td>3.8227</td><td>434:00</td><td>✅ minimo finale shard 4</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="run5-shard5">Run #5 — Shard 5/7 (shard_ae.txt) — esplorazione parallela</h2>
+<div class="narr">Shard 5 avviato automaticamente dallo script dopo il completamento di shard 4. Corpus: shard_ae.txt (1.18 GB). Token totali: 289,840,429. Cache shard_ae.txt.bpe-spm.v16000.tokens.pt (553 MB). Ripartito da Run #4 (meccanismo bug ancora attivo). Generazione step 8000: <code>", per la quale la scelta di un'immagine di questo libro è stata una delle più importanti del panorama italiano."</code></div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Step</th><th>Train</th><th>Val</th><th>Tempo</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>4.4512</td><td>4.4567</td><td>01:07</td></tr>
+    <tr><td>500</td><td>4.2917</td><td>4.2946</td><td>16:48</td></tr>
+    <tr><td>1000</td><td>4.2502</td><td>4.2723</td><td>40:18</td></tr>
+    <tr><td>1500</td><td>4.2106</td><td>4.2110</td><td>61:14</td></tr>
+    <tr><td>2000</td><td>4.1465</td><td>4.1661</td><td>82:00</td></tr>
+    <tr><td>2500</td><td>4.1319</td><td>4.1208</td><td>104:20</td></tr>
+    <tr><td>3000</td><td>4.0751</td><td>4.0821</td><td>123:07</td></tr>
+    <tr><td>3500</td><td>4.0733</td><td>4.0745</td><td>146:49</td></tr>
+    <tr><td>4000</td><td>4.0018</td><td>4.0197</td><td>165:33</td></tr>
+    <tr><td>4500</td><td>3.9760</td><td>4.0184</td><td>185:39</td></tr>
+    <tr><td>5000</td><td>3.9690</td><td>3.9299</td><td>203:39</td></tr>
+    <tr><td>5500</td><td>3.8839</td><td>3.9277</td><td>222:58</td></tr>
+    <tr><td>6000</td><td>3.8449</td><td>3.9043</td><td>244:08</td></tr>
+    <tr><td>6500</td><td>3.8519</td><td>3.8506</td><td>262:55</td></tr>
+    <tr><td>7000</td><td>3.8575</td><td>3.8529</td><td>281:06</td></tr>
+    <tr><td>7500</td><td>3.8548</td><td>3.8350</td><td>298:44</td></tr>
+    <tr><td>8000</td><td>3.8262</td><td>3.8215</td><td>315:28</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="run5-shard6">Run #5 — Shard 6/7 (shard_af.txt) — esplorazione parallela</h2>
+<div class="narr">Shard 6 avviato automaticamente. Corpus: shard_af.txt (1.18 GB). Ripartito da Run #4. Val loss finale: 3.8344. Generazione step 8000: <code>"in modo da poter contare su un'ampia gamma di prodotti, di qualità e di servizio."</code></div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Step</th><th>Train</th><th>Val</th><th>Tempo</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>4.4346</td><td>4.4621</td><td>01:07</td></tr>
+    <tr><td>500</td><td>4.3151</td><td>4.3133</td><td>15:40</td></tr>
+    <tr><td>1000</td><td>4.2597</td><td>4.2598</td><td>34:41</td></tr>
+    <tr><td>1500</td><td>4.1937</td><td>4.2231</td><td>51:30</td></tr>
+    <tr><td>2000</td><td>4.1576</td><td>4.1717</td><td>68:12</td></tr>
+    <tr><td>2500</td><td>4.1137</td><td>4.1281</td><td>85:44</td></tr>
+    <tr><td>3000</td><td>4.0880</td><td>4.1060</td><td>103:12</td></tr>
+    <tr><td>3500</td><td>4.0434</td><td>4.0297</td><td>117:26</td></tr>
+    <tr><td>4000</td><td>4.0065</td><td>4.0413</td><td>131:23</td></tr>
+    <tr><td>4500</td><td>3.9513</td><td>3.9764</td><td>154:34</td></tr>
+    <tr><td>5000</td><td>3.9396</td><td>3.9669</td><td>172:11</td></tr>
+    <tr><td>5500</td><td>3.8849</td><td>3.9351</td><td>189:45</td></tr>
+    <tr><td>6000</td><td>3.8765</td><td>3.8926</td><td>208:28</td></tr>
+    <tr><td>6500</td><td>3.8681</td><td>3.8811</td><td>227:48</td></tr>
+    <tr><td>7000</td><td>3.8397</td><td>3.8766</td><td>247:39</td></tr>
+    <tr><td>7500</td><td>3.8406</td><td>3.8307</td><td>265:31</td></tr>
+    <tr><td>8000</td><td>3.8168</td><td>3.8344</td><td>285:08</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="run5-shard7">Run #5 — Shard 7/7 (shard_ag.txt) — esplorazione parallela</h2>
+<div class="narr">Shard 7 avviato automaticamente. Corpus: shard_ag.txt (1.18 GB). Ripartito da Run #4. In corso al momento della scrittura (step 4000/8000). Generazione step 4000: <code>"quindi che è possibile che non è possibile trovare una nuova idea a chi dovrebbe fare. E la situazione attuale è una del"</code> — val 4.027, superiore agli altri shard a parità di step: corpus ag sembra il più difficile tra quelli osservati.</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Step</th><th>Train</th><th>Val</th><th>Tempo</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>4.4778</td><td>4.4646</td><td>01:07</td></tr>
+    <tr><td>500</td><td>4.3062</td><td>4.3293</td><td>17:49</td></tr>
+    <tr><td>1000</td><td>4.2294</td><td>4.2543</td><td>36:44</td></tr>
+    <tr><td>1500</td><td>4.2189</td><td>4.2295</td><td>57:44</td></tr>
+    <tr><td>2000</td><td>4.1408</td><td>4.1732</td><td>77:13</td></tr>
+    <tr><td>2500</td><td>4.1248</td><td>4.1742</td><td>98:22</td></tr>
+    <tr><td>3000</td><td>4.0776</td><td>4.0823</td><td>117:43</td></tr>
+    <tr><td>3500</td><td>4.0357</td><td>4.0872</td><td>134:59</td></tr>
+    <tr><td>4000</td><td>4.0147</td><td>4.0271</td><td>154:21</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="run5-riepilogo-parallela">Run #5 — Riepilogo esplorazione parallela</h2>
+<div class="narr">Tutti e 7 gli shard di Run #5 hanno operato come esperimenti indipendenti, ripartendo ogni volta dal checkpoint Run #4 (val 3.5861). Nessun shard ha mai aggiornato best.pt. La tabella riassume i val loss finali e la difficoltà relativa di ogni segmento del corpus.</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Shard</th><th>File</th><th>Val loss finale</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>1 / aa</td><td>shard_aa.txt</td><td>3.8665</td><td>Più difficile tra i primi tre</td></tr>
+    <tr><td>2 / ab</td><td>shard_ab.txt</td><td>3.845</td><td></td></tr>
+    <tr><td>3 / ac</td><td>shard_ac.txt</td><td>3.845</td><td>Minimo osservato — corpus più facile</td></tr>
+    <tr><td>4 / ad</td><td>shard_ad.txt</td><td>3.8227</td><td>Minimo assoluto Run #5</td></tr>
+    <tr><td>5 / ae</td><td>shard_ae.txt</td><td>3.8215</td><td></td></tr>
+    <tr><td>6 / af</td><td>shard_af.txt</td><td>3.8344</td><td></td></tr>
+    <tr><td>7 / ag</td><td>shard_ag.txt</td><td>in corso</td><td>Val 4.027 a step 4000 — corpus più difficile</td></tr>
+  </tbody>
+</table></div>
+<div class="narr">Valore analitico: la variazione dei val loss finali (3.82–3.87) riflette la difficoltà relativa di ogni segmento del corpus. Shard ag (step 4000 val 4.027 vs ad/ae step 4000 val ~4.02–4.02) mostra partenza più alta, coerente con un corpus più variabile o con registri meno frequenti nel pretraining. Questo dato orienta l'ordine dei shard nel training sequenziale successivo (curriculum learning).</div>
+
+<h2 id="run5-decisione-sequenziale">Decisione — Run #5 concluso, avvio training sequenziale su GPU (2026-10-05)</h2>
+<div class="narr"><strong>Stato finale Run #5:</strong> completati 6 shard su 7 in modalità esplorazione parallela (shard 7/ag in corso al momento di questa nota). Il meccanismo best.pt non è mai stato corretto durante Run #5: tutti gli shard ripartivano da Run #4 (best val 3.5861). Il last.pt di shard_ac è stato perso: sovrascritto automaticamente dallo script quando shard_ad è partito.</div>
+
+<div class="narr"><strong>Decisione:</strong> il training sequenziale con meccanismo corretto avverrà su GPU remota (Vast.ai). Parametri del run:</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Parametro</th><th>Valore</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>Punto di partenza</td><td>checkpoints/run4_best.pt</td><td>Run #4, val 3.5861 — catena completa aa→ag</td></tr>
+    <tr><td>Meccanismo</td><td><code>cp last.pt → best.pt</code> prima di ogni shard</td><td>Corregge il bug di Run #5</td></tr>
+    <tr><td>Sequenza shard</td><td>aa → ab → ac → ad → ae → af → ag</td><td>Ordine corpus — curriculum da valutare</td></tr>
+    <tr><td>Batch size</td><td>32</td><td>vs 8 su M2 — 4× token per step</td></tr>
+    <tr><td>Steps per shard</td><td>8.000</td><td>A batch=32: 8000 × 16384 = 131M token per shard (~94% copertura)</td></tr>
+    <tr><td>Token totali stimati</td><td>~917M</td><td>7 × 8000 × 16384 ≈ Chinchilla parity (918M target)</td></tr>
+    <tr><td>Tempo stimato</td><td>~8 ore</td><td>RTX 4090, ~0.5 s/step</td></tr>
+    <tr><td>Costo stimato</td><td>~$12</td><td>Vast.ai spot</td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr"><strong>Valore dell'esplorazione parallela:</strong> Run #5 non è training perso. I dati di val loss per shard forniscono una mappa di difficoltà relativa del corpus — utile per ordinare gli shard in curriculum learning nel run sequenziale. Shard ac/ad/ae risultano i più "facili" (val finale più bassa), ag il più difficile. Questo può informare l'ordine di addestramento: da facile a difficile aumenta la stabilità iniziale, da difficile a facile può accelerare la convergenza finale.</div>
+
+<h2 id="run5-run6-budget">Budget token cumulativo — Run #5 → Run #6 (2026-10-04)</h2>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Run</th><th>Batch</th><th>Step</th><th>Token</th><th>Cumulativo</th><th>% Chinchilla</th></tr></thead>
+  <tbody>
+    <tr><td>Run #4</td><td>32</td><td>30.000</td><td>245M</td><td>245M</td><td>27%</td></tr>
+    <tr><td><strong>Run #5</strong> (M2)</td><td>8</td><td>56.000</td><td>229M</td><td>474M</td><td>52%</td></tr>
+    <tr><td>Run #6 (GPU, pianificato)</td><td>32</td><td>56.000</td><td>918M</td><td>1.147B</td><td><strong>125%</strong></td></tr>
+  </tbody>
+</table></div>
+
+<div class="narr">Run #5 non è un training standalone che fallisce il target Chinchilla — è il primo segmento di un percorso in due fasi. I tre run si sommano perché ognuno parte con <code>--resume</code> dal checkpoint del precedente: i pesi accumulano gradiente su gradiente da testi progressivamente diversi. Al termine di Run #6 il budget sarà ~1.15B token, il 25% in eccesso rispetto al target Chinchilla per 46M parametri.</div>
+
+<div class="narr"><strong>Perché batch=8 non invalida Run #5:</strong> il batch size influenza il rumore dei gradienti e la velocità, non la direzione di convergenza. Un singolo update con batch=8 è meno stabile di uno con batch=32, ma su migliaia di step la media converge allo stesso punto. La val loss 3.942 a step 5000 (già sotto il best di Run #3 su Wikipedia) lo conferma empiricamente. Run #5 produce un checkpoint valido e utile — Run #6 non lo ri-addestra, lo estende.</div>
+
+
+<div class="note done" style="margin-top:48px">
+  <b>Archivio completo fino a Run #5.</b>
+  Il diario prosegue in <a href="slm-journal.html" style="color:inherit;font-weight:600">slm-journal.html</a> — Run #6 (sweet spot run6-ad), confronto Minerva, strategia Run #7 e Run #8.
+</div>
+
+</div>

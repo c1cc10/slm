@@ -37,13 +37,20 @@ Opzioni
 
 --max-mb 200    Dimensione massima output (default 200 MB)
                 Per un modello da 50M parametri, 200 MB sono sufficienti.
-                Aumenta a 500+ per modelli più grandi.
+                Aumenta a 1100 per shard da ~70 M token.
+
+--skip-mb 0     Salta i primi N MB di output prima di scrivere.
+                Usare per creare shard sequenziali dallo stesso dump:
+                  Shard 1: --skip-mb 200  --max-mb 1100 --out wiki_s1.txt
+                  Shard 2: --skip-mb 1300 --max-mb 1100 --out wiki_s2.txt
+                  Shard 3: --skip-mb 2400 --max-mb 1100 --out wiki_s3.txt
+                Il dump viene estratto ogni volta: ~5–15 min overhead per shard.
 
 --min-len 500   Filtra articoli più corti di N caratteri.
                 Rimuove stub, liste di nomi, disambiguazioni brevi.
 
 --processes 4   Processi paralleli per wikiextractor.
-                Su M2 puoi alzare a 8 senza problemi.
+                Su M5 puoi alzare a 8 senza problemi.
 """
 
 import sys, os, re, unicodedata, argparse, shutil, tempfile, subprocess
@@ -132,6 +139,8 @@ def main():
         help='File di output (default: data/wiki_it.txt)')
     parser.add_argument('--max-mb', type=int, default=200,
         help='Dimensione massima output in MB (default: 200)')
+    parser.add_argument('--skip-mb', type=int, default=0,
+        help='Salta i primi N MB di articoli prima di scrivere (default: 0)')
     parser.add_argument('--min-len', type=int, default=500,
         help='Lunghezza minima articolo in caratteri (default: 500)')
     parser.add_argument('--processes', type=int, default=4,
@@ -151,19 +160,32 @@ def main():
 
     os.makedirs(os.path.dirname(args.out) or '.', exist_ok=True)
 
+    skip_bytes    = args.skip_mb * 1024 * 1024
     max_bytes     = args.max_mb * 1024 * 1024
     tmp_dir       = tempfile.mkdtemp(prefix='slm_wiki_')
+    skipped_bytes = 0
     written_bytes = 0
     article_count = 0
 
     try:
         run_extractor(args.dump, tmp_dir, args.processes)
 
+        if skip_bytes:
+            print(f"Skip fase: salto i primi {args.skip_mb} MB di articoli...")
         print(f"Scrittura corpus → {args.out}  (limite: {args.max_mb} MB)")
         with open(args.out, 'w', encoding='utf-8') as f:
             for text in iter_articles(tmp_dir, args.min_len):
                 chunk        = text + '\n\n'
                 chunk_bytes  = len(chunk.encode('utf-8'))
+
+                if skipped_bytes < skip_bytes:
+                    skipped_bytes += chunk_bytes
+                    prev_pct = (skipped_bytes - chunk_bytes) * 100 // skip_bytes
+                    curr_pct = skipped_bytes * 100 // skip_bytes
+                    if curr_pct // 10 > prev_pct // 10:
+                        print(f"  Skip: {skipped_bytes/1024/1024:.0f} MB / {args.skip_mb} MB")
+                    continue
+
                 if written_bytes + chunk_bytes > max_bytes:
                     break
                 f.write(chunk)

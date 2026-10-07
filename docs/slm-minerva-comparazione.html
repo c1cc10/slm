@@ -1,0 +1,1086 @@
+<title>SLM vs Minerva — Comparazione</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --bg:       #F3F2F7;
+  --surface:  #FFFFFF;
+  --surface2: #ECEAF2;
+  --text:     #1A1826;
+  --text-sec: #5E5B70;
+  --accent:   #2A1A4A;
+  --accent-l: #5B4A90;
+  --border:   #D5D3E0;
+  --mono:     'IBM Plex Mono', monospace;
+
+  --risk-bg:  #FEF2F2; --risk-br: #FCA5A5; --risk-tx: #991B1B;
+  --ok-bg:    #F0FDF4; --ok-br:   #86EFAC; --ok-tx:   #15803D;
+  --info-bg:  #EFF6FF; --info-br: #93C5FD; --info-tx: #1D4ED8;
+  --warn-bg:  #FFFBEB; --warn-br: #FDE68A; --warn-tx: #92400E;
+  --pur-bg:   #F5F3FF; --pur-br:  #A78BFA; --pur-tx:  #4C1D95;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0E0C14; --surface:#18152A; --surface2:#221E34;
+    --text:#E4E0F0; --text-sec:#8C88A4; --accent:#9580D0; --accent-l:#B8A8E8;
+    --border:#302A4A;
+    --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+    --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+    --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+    --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+    --pur-bg:#1E183A;  --pur-br:#4C3A8A;  --pur-tx:#C4B5FD;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0E0C14; --surface:#18152A; --surface2:#221E34;
+  --text:#E4E0F0; --text-sec:#8C88A4; --accent:#9580D0; --accent-l:#B8A8E8;
+  --border:#302A4A;
+  --risk-bg:#2D0A0A; --risk-br:#7F1D1D; --risk-tx:#FCA5A5;
+  --ok-bg:#0D2818;   --ok-br:#1A4731;   --ok-tx:#6EE7B7;
+  --info-bg:#0D1F3E; --info-br:#1E3A6E; --info-tx:#93C5FD;
+  --warn-bg:#2A1A0A; --warn-br:#7A3A0A; --warn-tx:#FDE68A;
+  --pur-bg:#1E183A;  --pur-br:#4C3A8A;  --pur-tx:#C4B5FD;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px; line-height: 1.72;
+  background: var(--bg); color: var(--text);
+  padding: 0 20px 80px;
+}
+.page { max-width: 760px; margin: 0 auto; padding-top: 52px; }
+
+.eyebrow {
+  font-family: var(--mono); font-size: 0.68rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent-l); margin-bottom: 8px;
+}
+h1 {
+  font-size: 1.7rem; font-weight: 600; letter-spacing: -0.02em;
+  color: var(--text); margin: 0 0 10px; text-wrap: balance;
+}
+.subtitle {
+  color: var(--text-sec); font-size: 0.92rem; line-height: 1.6; margin: 0 0 8px;
+}
+.meta {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--text-sec);
+  margin-bottom: 44px; padding-bottom: 20px; border-bottom: 2px solid var(--accent);
+}
+h2 {
+  font-size: 1.0rem; font-weight: 600; color: var(--accent-l);
+  margin: 52px 0 14px; padding-top: 36px; border-top: 1px solid var(--border);
+  letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 10px;
+}
+.sec-num { font-family: var(--mono); font-size: 0.7rem; color: var(--text-sec); letter-spacing: 0.05em; }
+h3 { font-size: 0.92rem; font-weight: 600; color: var(--text); margin: 28px 0 10px; }
+p { margin: 0 0 14px; }
+
+.callout {
+  padding: 14px 16px; border-radius: 6px; border-left: 3px solid;
+  font-size: 0.88rem; line-height: 1.6; margin: 18px 0;
+}
+.callout strong { display: block; margin-bottom: 4px; font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.callout.ok    { background: var(--ok-bg);   border-color: var(--ok-br);   color: var(--ok-tx); }
+.callout.info  { background: var(--info-bg); border-color: var(--info-br); color: var(--info-tx); }
+.callout.warn  { background: var(--warn-bg); border-color: var(--warn-br); color: var(--warn-tx); }
+.callout.pur   { background: var(--pur-bg);  border-color: var(--pur-br);  color: var(--pur-tx); }
+
+/* Big compare grid */
+.cmp-grid {
+  display: grid;
+  grid-template-columns: 160px 1fr 1fr 1fr;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.84rem;
+  margin: 20px 0;
+}
+.cmp-head {
+  padding: 10px 14px;
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.06em;
+  text-transform: uppercase; font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+.cmp-head.label { background: var(--surface2); color: var(--text-sec); }
+.cmp-head.slm   { background: var(--pur-bg); color: var(--pur-tx); }
+.cmp-head.m350  { background: var(--info-bg); color: var(--info-tx); }
+.cmp-head.m3b   { background: var(--ok-bg); color: var(--ok-tx); }
+
+.cmp-row { display: contents; }
+.cmp-row:last-child > div { border-bottom: none; }
+
+.cmp-cell {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.5;
+  vertical-align: top;
+}
+.cmp-cell.label {
+  background: var(--surface2);
+  font-family: var(--mono); font-size: 0.75rem;
+  color: var(--text-sec); font-weight: 500;
+  letter-spacing: 0.03em;
+}
+.cmp-cell.slm   { background: var(--surface); border-left: 2px solid var(--pur-br); }
+.cmp-cell.m350  { background: var(--surface); border-left: 2px solid var(--info-br); }
+.cmp-cell.m3b   { background: var(--surface); border-left: 2px solid var(--ok-br); }
+
+/* Scale bar */
+.scale-bar {
+  display: flex; align-items: center; gap: 8px;
+  margin: 4px 0;
+}
+.scale-track { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.scale-fill  { height: 100%; border-radius: 3px; }
+.fill-slm  { background: var(--pur-br); }
+.fill-m350 { background: var(--info-br); }
+.fill-m3b  { background: var(--ok-br); }
+.scale-val { font-family: var(--mono); font-size: 0.72rem; color: var(--text-sec); white-space: nowrap; }
+
+.data-table {
+  width: 100%; border-collapse: collapse; font-size: 0.88rem;
+  margin: 16px 0;
+}
+.data-table th {
+  text-align: left; font-family: var(--mono);
+  font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-sec); padding: 8px 12px; border-bottom: 2px solid var(--border);
+}
+.data-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table td:first-child { font-family: var(--mono); font-size: 0.78rem; color: var(--text-sec); white-space: nowrap; }
+
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 500;
+}
+.badge.slm  { background: var(--pur-bg); color: var(--pur-tx); border: 1px solid var(--pur-br); }
+.badge.m350 { background: var(--info-bg); color: var(--info-tx); border: 1px solid var(--info-br); }
+.badge.m3b  { background: var(--ok-bg); color: var(--ok-tx); border: 1px solid var(--ok-br); }
+
+pre {
+  background: #111827; color: #A8C4D8;
+  font-family: var(--mono); font-size: 0.79rem;
+  padding: 16px 18px; border-radius: 8px;
+  overflow-x: auto; line-height: 1.55; margin: 12px 0;
+}
+code {
+  font-family: var(--mono); font-size: 0.85em;
+  background: var(--surface2); padding: 1px 5px;
+  border-radius: 3px; color: var(--accent-l);
+}
+
+.tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 14px; }
+.tag { font-family: var(--mono); font-size: 0.72rem; padding: 2px 8px; border-radius: 4px;
+  background: var(--surface2); color: var(--text-sec); border: 1px solid var(--border); }
+</style>
+
+<div class="page">
+
+<div class="eyebrow">SLM · Comparazione · 2026-10-07</div>
+<h1>SLM vs Minerva</h1>
+<p class="subtitle">Confronto tecnico tra il modello italiano addestrato da zero in questo progetto e la famiglia Minerva di Sapienza NLP — architettura, training, corpus, compute.</p>
+<div class="meta">Aggiornato: 2026-10-07 &nbsp;·&nbsp; Modelli: SLM run6-ad (sweet spot), Minerva-350M-base-v1.0, Minerva-3B-instruct-v1.0</div>
+
+<!-- ── 1. CONTESTO ──────────────────────────────────────────── -->
+<h2><span class="sec-num">01</span> Contesto dei due progetti</h2>
+
+<p>
+  Il progetto SLM è un percorso di studio: costruire un LM italiano da zero, capire ogni componente,
+  documentare il processo. Minerva è un progetto di ricerca accademica finanziato dal PNRR nell'ambito
+  di FAIR (Future Artificial Intelligence Research), realizzato da Sapienza NLP in collaborazione con
+  CINECA sul supercomputer Leonardo.
+</p>
+<p>
+  I due progetti condividono lo stesso obiettivo fondamentale — un LM italiano addestrato da zero,
+  non fine-tuning di un modello esistente — ma partono da scale di risorse radicalmente diverse.
+  Il confronto non è una gara: è uno strumento per capire cosa cambia al variare di parametri,
+  token e compute.
+</p>
+
+<div class="callout info">
+  <strong>Nota sulla comparazione</strong>
+  Il SLM run6-ad e Minerva-350M sono entrambi modelli <em>base</em> (solo pre-training, nessun SFT).
+  Minerva-3B-instruct ha ricevuto instruction tuning su 21.000 istruzioni italiane — non è
+  comparabile direttamente con i due base per generazione libera, ma è rilevante per capire
+  dove porta il passo successivo.
+</div>
+
+<!-- ── 2. SCHEDA COMPARATIVA ────────────────────────────────── -->
+<h2><span class="sec-num">02</span> Scheda comparativa</h2>
+
+<div class="cmp-grid">
+  <div class="cmp-head label"></div>
+  <div class="cmp-head slm">SLM run6-ad</div>
+  <div class="cmp-head m350">Minerva 350M base</div>
+  <div class="cmp-head m3b">Minerva 3B instruct</div>
+
+  <div class="cmp-cell label">Parametri</div>
+  <div class="cmp-cell slm">45.9M</div>
+  <div class="cmp-cell m350">350M <span style="color:var(--text-sec);font-size:0.78rem">(7.6×)</span></div>
+  <div class="cmp-cell m3b">2.9B <span style="color:var(--text-sec);font-size:0.78rem">(63×)</span></div>
+
+  <div class="cmp-cell label">Architettura</div>
+  <div class="cmp-cell slm">Decoder-only, pre-norm<br>RoPE, weight tying</div>
+  <div class="cmp-cell m350">Mistral-based<br>GQA, Sliding Window Attn</div>
+  <div class="cmp-cell m3b">Mistral-based<br>GQA, Sliding Window Attn</div>
+
+  <div class="cmp-cell label">Layer / d_model / teste</div>
+  <div class="cmp-cell slm">12L · 512 · 8h (d_k=64)</div>
+  <div class="cmp-cell m350">16L · 1152 · 16h (4 KV)</div>
+  <div class="cmp-cell m3b">32L · 2560 · 32h (8 KV)</div>
+
+  <div class="cmp-cell label">Vocabolario</div>
+  <div class="cmp-cell slm">16 000 token<br><span style="color:var(--text-sec);font-size:0.78rem">BPE-SPM, addestrato su Wikipedia IT</span></div>
+  <div class="cmp-cell m350">51 200 token<br><span style="color:var(--text-sec);font-size:0.78rem">Tokenizer dedicato IT/EN</span></div>
+  <div class="cmp-cell m3b">51 200 token<br><span style="color:var(--text-sec);font-size:0.78rem">Stesso tokenizer</span></div>
+
+  <div class="cmp-cell label">Contesto max</div>
+  <div class="cmp-cell slm">512 token</div>
+  <div class="cmp-cell m350">16 384 token<br><span style="color:var(--text-sec);font-size:0.78rem">sliding window 2048</span></div>
+  <div class="cmp-cell m3b">16 384 token<br><span style="color:var(--text-sec);font-size:0.78rem">sliding window 2048</span></div>
+
+  <div class="cmp-cell label">Token di training</div>
+  <div class="cmp-cell slm">
+    ~572M unici<br>
+    <span style="color:var(--text-sec);font-size:0.78rem">47.8M Wikipedia + 524M CulturaX (shard 1–4)</span>
+  </div>
+  <div class="cmp-cell m350">
+    70B<br>
+    <span style="color:var(--text-sec);font-size:0.78rem">10× Chinchilla (target = 7B)</span>
+  </div>
+  <div class="cmp-cell m3b">
+    660B + SFT 21K<br>
+    <span style="color:var(--text-sec);font-size:0.78rem">11× Chinchilla (target = 60B)</span>
+  </div>
+
+  <div class="cmp-cell label">Chinchilla ratio</div>
+  <div class="cmp-cell slm" style="color:var(--warn-tx)">0.62× <span style="font-size:0.78rem">(918M target)</span></div>
+  <div class="cmp-cell m350" style="color:var(--ok-tx)">10× </div>
+  <div class="cmp-cell m3b" style="color:var(--ok-tx)">11×</div>
+
+  <div class="cmp-cell label">Corpus IT</div>
+  <div class="cmp-cell slm">Wikipedia IT + CulturaX IT (web)</div>
+  <div class="cmp-cell m350">Web IT curato (OSCAR/mC4) + EN + codice</div>
+  <div class="cmp-cell m3b">Stesso + 21K istruzioni IT</div>
+
+  <div class="cmp-cell label">Compute</div>
+  <div class="cmp-cell slm">RTX 4090 Vast.ai (~8h, ~$12)<br>Mac M2 (Run #3-4, ~8h)</div>
+  <div class="cmp-cell m350">CINECA Leonardo, N GPU</div>
+  <div class="cmp-cell m3b">CINECA Leonardo, N GPU<br>+ SFT su GPU</div>
+
+  <div class="cmp-cell label">Stato</div>
+  <div class="cmp-cell slm">Pre-training only<br><span style="color:var(--text-sec);font-size:0.78rem">nessun SFT</span></div>
+  <div class="cmp-cell m350">Pre-training only (base)</div>
+  <div class="cmp-cell m3b">Pre-training + SFT</div>
+
+  <div class="cmp-cell label">Licenza</div>
+  <div class="cmp-cell slm">Personale / studio</div>
+  <div class="cmp-cell m350">Apache 2.0</div>
+  <div class="cmp-cell m3b">Apache 2.0</div>
+
+  <div class="cmp-cell label">GGUF disponibile</div>
+  <div class="cmp-cell slm">fp32 (208MB), Q8_0 (55MB)<br><span style="color:var(--text-sec);font-size:0.78rem">conversione manuale</span></div>
+  <div class="cmp-cell m350">Q5_0 (~250MB)<br><span style="color:var(--text-sec);font-size:0.78rem">mudler/HF community</span></div>
+  <div class="cmp-cell m3b">Q5_K_M (~2GB)<br><span style="color:var(--text-sec);font-size:0.78rem">NikolayKozloff/HF community</span></div>
+</div>
+
+<!-- ── 3. ARCHITETTURA: COSA CAMBIA ─────────────────────────── -->
+<h2><span class="sec-num">03</span> Differenze architetturali significative</h2>
+
+<h3>Grouped-Query Attention (GQA)</h3>
+<p>
+  Minerva usa GQA: le teste di query sono più numerose delle teste di key/value.
+  Nel 350M ci sono 16 query heads e 4 KV heads — un rapporto 4:1. Le KV head
+  vengono condivise tra gruppi di 4 query head. Effetto: la KV-cache in memoria
+  si riduce di 4×, rendendo il modello più efficiente a contesti lunghi.
+  Il SLM ha 8 query e 8 KV head (rapporto 1:1, architettura Multi-Head Attention standard).
+</p>
+
+<h3>Sliding Window Attention (SWA)</h3>
+<p>
+  Nei modelli Minerva 350M e 3B, ogni token può attendere solo ai <em>2048 token precedenti</em>
+  (finestra scorrevole), non all'intero contesto. Questo permette contesti nominalmente lunghi
+  (16K token) con costo computazionale lineare invece che quadratico. Il SLM usa full attention
+  su 512 token — finestra corta, ma ogni token vede ogni altro token nel contesto.
+</p>
+
+<h3>Vocabolario</h3>
+<p>
+  Il SLM ha 16 000 token BPE-SPM addestrato su Wikipedia IT. Minerva ha 51 200 token addestrati
+  su corpus misto italiano-inglese-codice. Un vocabolario più grande riduce la lunghezza media
+  delle sequenze (più token per parola rara → meno token totali → contesto più efficiente),
+  ma costa più RAM per la embedding table. A 45.9M parametri il SLM ha già una embedding table
+  da 16 000 × 512 = 8.2M parametri — il 18% del totale.
+</p>
+
+<h3>Il problema dei byte-fallback token</h3>
+<p>
+  La conversione GGUF del SLM ha introdotto 256 token sintetici (indici 16 000–16 255)
+  per coprire ogni possibile byte 0x00–0xFF. Il corpus CulturaX conteneva artefatti di encoding
+  che hanno reso questi token competitivi in contesti di alta incertezza. Fix a inference time:
+  <code>logit_bias[i] = -100</code> per i in range(16000, 16256). Minerva usa un tokenizer
+  con vocabolario nativo più ampio — questo problema non si pone.
+</p>
+
+<!-- ── 4. CORPUS E TRAINING ─────────────────────────────────── -->
+<h2><span class="sec-num">04</span> Corpus e strategia di training</h2>
+
+<h3>SLM: Wikipedia + CulturaX in sequenza</h3>
+<p>
+  Il SLM è stato pre-addestrato prima su Wikipedia IT (47.8M token, ~9 epoche in Run #4),
+  poi su CulturaX IT in shard sequenziali (Run #6: 7 shard × ~131M token ciascuno).
+  CulturaX è un dataset web "filtrato" (mC4 + OSCAR deduplicated) ma non privo di artefatti —
+  menu di navigazione, URL, cookie banner, frammenti HTML mal decodificati.
+</p>
+<p>
+  La scoperta principale di Run #6: il <strong>sweet spot è al 4° shard</strong> (run6-ad).
+  Dopo quel punto il rumore del web inizia a prevalere, la val loss scende ma la qualità
+  di generazione peggiora. Il val loss paradox — loss bassa ≠ qualità alta — è documentato
+  con 48 output su 8 domini semantici.
+</p>
+
+<h3>Minerva: corpus curato multi-sorgente</h3>
+<p>
+  Minerva è stato addestrato su ~2.5T token: metà italiano, metà inglese più 200B token di codice.
+  L'italiano proviene da fonti web curate (OSCAR, mC4 filtrato), non da un singolo dataset.
+  La presenza dell'inglese non è un compromesso — è una scelta deliberata: i modelli addestrati
+  solo su una lingua tendono a essere meno stabili su ragionamento e formati strutturati,
+  perché il corpus monolinguistico italiano disponibile è più limitato in qualità e varietà
+  rispetto all'inglese.
+</p>
+<p>
+  La quantità di token di training rispetto al target Chinchilla è molto diversa: Minerva 350M
+  ha usato 70B token contro un ottimale di 7B (10× sovraaddestramento). Il SLM ha usato ~572M
+  token contro un ottimale di 918M (62% del target). Questo gap spiega in parte la differenza
+  di qualità attesa.
+</p>
+
+<div class="callout pur">
+  <strong>Cosa impara di diverso un modello sovraaddestrato</strong>
+  Addestrare 10× Chinchilla non produce solo un modello "più bravo" — produce un modello
+  dove le rappresentazioni interne sono più stabili, le distribuzioni meno rumorose, e il
+  comportamento a input rari è più prevedibile. È una delle ragioni per cui i modelli
+  piccoli con molti token (come Minerva 350M) competono spesso con modelli più grandi
+  addestrati alla parity.
+</div>
+
+<h3>Tecnica di training: confronto</h3>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Aspetto</th>
+      <th>SLM</th>
+      <th>Minerva</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Ottimizzatore</td>
+      <td>AdamW (β1=0.9, β2=0.999, eps=1e-8)</td>
+      <td>AdamW (β1=0.9, β2=0.95, eps=1e-8 / 1e-5 per 7B)</td>
+    </tr>
+    <tr>
+      <td>LR schedule</td>
+      <td>Warmup + cosine decay</td>
+      <td>Warmup + cosine decay</td>
+    </tr>
+    <tr>
+      <td>Gradient clipping</td>
+      <td>Sì</td>
+      <td>Sì</td>
+    </tr>
+    <tr>
+      <td>Positional encoding</td>
+      <td>RoPE (da Run #4)</td>
+      <td>RoPE</td>
+    </tr>
+    <tr>
+      <td>Normalizzazione</td>
+      <td>LayerNorm pre-norm</td>
+      <td>RMSNorm (Mistral-style)</td>
+    </tr>
+    <tr>
+      <td>Attivazione FFN</td>
+      <td>GELU</td>
+      <td>SwiGLU (Mistral-style)</td>
+    </tr>
+    <tr>
+      <td>Distribuzione training</td>
+      <td>Singola GPU (RTX 4090)</td>
+      <td>128 GPU parallele (7B)</td>
+    </tr>
+    <tr>
+      <td>Framework</td>
+      <td>PyTorch custom (codice da zero)</td>
+      <td>llm-foundry (MosaicML)</td>
+    </tr>
+    <tr>
+      <td>SFT</td>
+      <td>Non eseguito (train_sft.py disponibile)</td>
+      <td>21 000 istruzioni IT (versione instruct)</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ── 5. CONFRONTO SCALA ───────────────────────────────────── -->
+<h2><span class="sec-num">05</span> Visualizzazione della scala</h2>
+
+<p>I numeri assoluti rendono difficile intuire la differenza effettiva. Alcune proporzioni:</p>
+
+<h3>Parametri</h3>
+<div class="scale-bar">
+  <div class="scale-val" style="width:120px">SLM 45M</div>
+  <div class="scale-track"><div class="scale-fill fill-slm" style="width:1.6%"></div></div>
+</div>
+<div class="scale-bar">
+  <div class="scale-val" style="width:120px">Minerva 350M</div>
+  <div class="scale-track"><div class="scale-fill fill-m350" style="width:12%"></div></div>
+</div>
+<div class="scale-bar">
+  <div class="scale-val" style="width:120px">Minerva 3B</div>
+  <div class="scale-track"><div class="scale-fill fill-m3b" style="width:100%"></div></div>
+</div>
+
+<h3>Token di training (unici)</h3>
+<div class="scale-bar">
+  <div class="scale-val" style="width:120px">SLM 572M</div>
+  <div class="scale-track"><div class="scale-fill fill-slm" style="width:0.09%"></div></div>
+</div>
+<div class="scale-bar">
+  <div class="scale-val" style="width:120px">Minerva 350M 70B</div>
+  <div class="scale-track"><div class="scale-fill fill-m350" style="width:10.6%"></div></div>
+</div>
+<div class="scale-bar">
+  <div class="scale-val" style="width:120px">Minerva 3B 660B</div>
+  <div class="scale-track"><div class="scale-fill fill-m3b" style="width:100%"></div></div>
+</div>
+
+<p style="font-size:0.82rem;color:var(--text-sec);margin-top:8px">
+  Il SLM ha visto 572M token unici. Minerva 350M ne ha visti 122× di più.
+  Minerva 3B ne ha visti 1 155× di più.
+</p>
+
+<!-- ── 6. RISULTATI TEST ──────────────────────────────────────── -->
+<h2><span class="sec-num">06</span> Risultati — benchmark 10 prompt (2026-10-07)</h2>
+
+<p>
+  Test eseguito con gli stessi 10 prompt usati per l'analisi shard-by-shard di Run #6.
+  Parametri uniformi: <code>n_predict=100, temperature=0.8, top_k=40, top_p=0.9,
+  repeat_penalty=1.3, seed=42</code>. SLM: <code>logit_bias</code> attivo sui 256 byte token.
+  Minerva: nessun logit_bias (vocabolario nativo, nessun byte fallback).
+  Classifica per qualità e pertinenza dell'output, indipendentemente dai prerequisiti tecnici.
+</p>
+
+<table class="data-table" style="font-size:0.82rem">
+  <thead>
+    <tr>
+      <th>Prompt</th>
+      <th>1°</th>
+      <th>2°</th>
+      <th>3°</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Dante Alighieri nacque</td>
+      <td><span class="badge m3b">3B</span> — 1265 ✓, Firenze ✓, morte Ravenna ✓</td>
+      <td><span class="badge m350">350M</span> — città giusta, anno sbagliato (1280), poi inventa opere</td>
+      <td><span class="badge slm">SLM</span> — date 1550, conventi: conoscenza sovrascritta</td>
+    </tr>
+    <tr>
+      <td>compilazione del kernel</td>
+      <td><span class="badge m3b">3B</span> — gcc, GNU Compiler, compilazione C ✓</td>
+      <td><span class="badge m350">350M</span> — Windows 7/WinXP: tecnico ma contesto sbagliato</td>
+      <td><span class="badge slm">SLM</span> — diritto costituzionale art. 48: fuori dominio</td>
+    </tr>
+    <tr>
+      <td>un tramonto splendido</td>
+      <td><span class="badge slm">SLM</span> — "la luna piena di luce": poetico ✓</td>
+      <td><span class="badge m3b">3B</span> — costa siciliana, Cefalù: cita tramonti ma testo turistico</td>
+      <td><span class="badge m350">350M</span> — evento al Palazzo Ducale: fuori topic</td>
+    </tr>
+    <tr>
+      <td>Le poesie di Ungaretti</td>
+      <td><span class="badge m3b">3B</span> — Alessandria d'Egitto 1896 ✓, poeta Novecento ✓</td>
+      <td><span class="badge slm">SLM</span> — scarsa resa ma non inventa dati strambi</td>
+      <td><span class="badge m350">350M</span> — inventa attributore e titoli assurdi</td>
+    </tr>
+    <tr>
+      <td>La crisi del 1929</td>
+      <td><span class="badge m3b">3B</span> — Grande Depressione, crollo mercato azionario ✓</td>
+      <td><span class="badge slm">SLM</span> — analisi economica strutturata</td>
+      <td><span class="badge m350">350M</span> — URSS, Hiroshima: confonde con WWII ✗</td>
+    </tr>
+    <tr>
+      <td>Il jazz nasce</td>
+      <td><span class="badge m3b">3B</span> — Gillespie, Blakey, Roach, bebop, dixieland ✓</td>
+      <td><span class="badge slm">SLM</span> — musicisti specifici</td>
+      <td><span class="badge m350">350M</span> — "in Italia nel 1960", Beatles ✗</td>
+    </tr>
+    <tr>
+      <td>La fotosintesi è</td>
+      <td><span class="badge m3b">3B</span> — "processo che trasforma la luce del sole in ossigeno" ✓</td>
+      <td><span class="badge m350">350M</span> — vago ma non sbagliato</td>
+      <td><span class="badge slm">SLM</span> — terapia muscolare: contaminazione corpus ✗</td>
+    </tr>
+    <tr>
+      <td>Prepara una pasta</td>
+      <td><span class="badge slm">SLM</span> — parmigiano, cottura in padella, procedura ✓</td>
+      <td><span class="badge m350">350M</span> — riso e farina, olio, salvia: plausibile</td>
+      <td><span class="badge m3b">3B</span> — "pasta di sale" (impasto artigianale) ✗</td>
+    </tr>
+    <tr>
+      <td>La regione Puglia è</td>
+      <td><span class="badge m350">350M</span> — Salento, Adriatico, Isole Tremiti, San Foca ✓</td>
+      <td><span class="badge slm">SLM</span> — "Lecce, Regione Puglia ha voluto fare un passo avanti"</td>
+      <td><span class="badge m3b">3B</span> — lavoro giovanile → Samsung Galaxy S7 ✗</td>
+    </tr>
+    <tr>
+      <td>Francesco Benigni</td>
+      <td><span class="badge slm">SLM</span> — regista con filmografia plausibile, intervistato da Baglioni ✓</td>
+      <td><span class="badge m350">350M</span> — "studioso tradizioni popolari": plausibile ma scivola</td>
+      <td><span class="badge m3b">3B</span> — post social media management: fuori topic ✗</td>
+    </tr>
+  </tbody>
+</table>
+
+<div style="display:flex;gap:16px;margin:14px 0;flex-wrap:wrap;font-size:0.84rem;align-items:center">
+  <span style="color:var(--text-sec)">1° posto:</span>
+  <span class="badge m3b">3B ×6</span>
+  <span class="badge slm">SLM ×3</span>
+  <span class="badge m350">350M ×1</span>
+  <span style="color:var(--text-sec);margin-left:8px">2° posto:</span>
+  <span class="badge slm">SLM ×4</span>
+  <span class="badge m350">350M ×4</span>
+  <span class="badge m3b">3B ×2</span>
+</div>
+
+<div class="callout pur">
+  <strong>La scala risolve la conoscenza strutturata</strong>
+  Minerva 3B vince su tutti i domini che richiedono conoscenza organizzata: storia, scienza, tecnica, letteratura.
+  63× i parametri e 1155× i token producono un salto di categoria, non una progressione lineare.
+</div>
+
+<div class="callout ok">
+  <strong>Il SLM vince su 3 domini e arriva secondo su 4</strong>
+  Tramonto, pasta, Francesco Benigni: il corpus web italiano (CulturaX) dà un vantaggio reale sui
+  domini pratici e narrativi. Il SLM è competitivo in seconda posizione anche su Ungaretti, 1929, Jazz e Puglia.
+</div>
+
+<div class="callout info">
+  <strong>Minerva 350M su Puglia è il migliore del test — ma ultimo su 1929</strong>
+  Il 350M produce la descrizione geografica più precisa (Salento, Isole Tremiti, San Foca) ma il peggior
+  output storico (confonde il 1929 con la WWII: URSS, Hiroshima). Questo suggerisce una distribuzione
+  disomogenea del corpus: ricco di testi geografici italiani, povero di testi storici strutturati.
+</div>
+
+<div class="callout warn">
+  <strong>Minerva 3B disambigua male "pasta"</strong>
+  Interpreta "Prepara una pasta" come pasta di sale (impasto artigianale), probabilmente per saturazione
+  del corpus SFT con tutorial creativi. È un esempio di come l'instruction tuning non elimina i bias
+  di distribuzione del corpus — li ridistribuisce.
+</div>
+
+<!-- ── 7. COME GIRARE I MODELLI ────────────────────────────── -->
+<h2><span class="sec-num">07</span> Avvio su Mac M2 (8GB) con llama-server</h2>
+
+<p>Tutti e tre i modelli girano comodamente su 8GB di RAM unificata.</p>
+
+<h3>SLM run6-ad (sweet spot)</h3>
+<pre>llama-server \
+  --model slm-run6-shard-ad-q8_0.gguf \
+  --port 8080 --ctx-size 512 --seed 42</pre>
+
+<h3>Minerva 350M base</h3>
+<pre>llama-server \
+  --model minerva-350m-base-v1.0.Q5_0.gguf \
+  --port 8081 --ctx-size 2048 --seed 42</pre>
+
+<h3>Minerva 3B instruct</h3>
+<pre>llama-server \
+  --model minerva-3b-instruct-v1.0.Q5_K_M.gguf \
+  --port 8082 --ctx-size 4096 --seed 42</pre>
+
+<div class="callout warn">
+  <strong>Minerva 3B: usa il chat template</strong>
+  Essendo un modello instruct, Minerva 3B risponde meglio con il formato chat di Mistral.
+  Usa <code>/chat/completions</code> invece di <code>/completion</code>, oppure passa
+  il prompt nel formato <code>[INST] ... [/INST]</code> direttamente al completions endpoint.
+</div>
+
+<h3>Test rapido comparativo (stesso prompt, tre modelli)</h3>
+<pre>for PORT in 8080 8081 8082; do
+  echo "=== Port $PORT ==="
+  curl -s http://localhost:$PORT/completion \
+    -H "Content-Type: application/json" \
+    -d '{
+      "prompt": "La regione Puglia è",
+      "n_predict": 80,
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "seed": 42,
+      "logit_bias": [[16000,-100],[16001,-100],[16255,-100]]
+    }' | python3 -c "import sys,json; print(json.load(sys.stdin)['content'])"
+done</pre>
+
+<!-- ── 8. COSA IMPARIAMO DAL CONFRONTO ──────────────────────── -->
+<h2><span class="sec-num">08</span> Cosa impariamo dal confronto</h2>
+
+<p>
+  La comparazione tra SLM e Minerva 350M è particolarmente interessante perché isola
+  l'effetto della scala mantenendo costante l'obiettivo (LM italiano da zero):
+</p>
+
+<ul style="line-height:2;color:var(--text-sec);font-size:0.9rem;">
+  <li><strong style="color:var(--text)">Token vs parametri:</strong> Minerva 350M ha 7.6× più parametri ma 122× più token di training. Quale dei due spiega la differenza di qualità?</li>
+  <li><strong style="color:var(--text)">GQA + SWA vs MHA:</strong> tecniche architetturali che rendono i modelli più efficienti a parità di parametri — visibili o no sull'output?</li>
+  <li><strong style="color:var(--text)">Vocabolario:</strong> 51K token vs 16K — effetto sulla fluenza e sulla frammentazione di parole rare italiane.</li>
+  <li><strong style="color:var(--text)">Corpus bilingue:</strong> Minerva è addestrato su IT+EN+codice. Il SLM è solo italiano. Questo cambia il comportamento su testi tecnici o su strutture logiche?</li>
+  <li><strong style="color:var(--text)">Sweet spot e Chinchilla:</strong> run6-ad a 62% Chinchilla vs Minerva 350M a 10× Chinchilla. Il sovraaddestramento produce stabilità misurabile?</li>
+</ul>
+
+<div class="callout ok">
+  <strong>Prospettiva per il progetto</strong>
+  Il percorso verso Run #7 parte da run6-ad e aggiunge ~2 shard di corpus pulito (~262M token)
+  per avvicinarsi alla Chinchilla parity. Testare Minerva 350M con gli stessi prompt usati
+  nei test shard-by-shard (Run #6) permette di calibrare dove si posizionerà il SLM una volta
+  completato il training.
+</div>
+
+
+<!-- ── 10. OUTPUT RAW ──────────────────────────────────────── -->
+<h2><span class="sec-num">09</span> Output verbatim — benchmark 10 prompt</h2>
+
+<p>
+  Output verbatim dei due modelli Minerva durante il benchmark comparativo.<br>
+  Parametri uniformi: <code>n_predict=100, temperature=0.8, top_k=40, top_p=0.9,
+  repeat_penalty=1.3, seed=42</code>, endpoint <code>/completion</code> senza chat template.
+  Il testo mostrato inizia dove finisce il prompt, senza alcuna modifica.
+</p>
+
+<style>
+.raw-block {
+  border: 1px solid var(--border); border-radius: 8px; margin: 18px 0; overflow: hidden;
+}
+.raw-header {
+  display: flex; align-items: baseline; gap: 10px; padding: 8px 14px;
+  background: var(--surface2); border-bottom: 1px solid var(--border);
+}
+.raw-prompt-label { font-family: var(--mono); font-size: 0.68rem; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.08em; }
+.raw-prompt-text  { font-family: var(--mono); font-size: 0.82rem; color: var(--accent-l); font-weight: 500; }
+.raw-domain-tag   { font-size: 0.7rem; color: var(--text-sec); margin-left: auto; }
+.raw-outputs      { display: grid; grid-template-columns: 1fr 1fr; }
+@media (max-width: 600px) { .raw-outputs { grid-template-columns: 1fr; } }
+.raw-col { padding: 12px 14px; border-right: 1px solid var(--border); }
+.raw-col:last-child { border-right: none; }
+.raw-col-label { font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+.raw-col-label.m350 { color: #3B82F6; }
+.raw-col-label.m3b  { color: #10B981; }
+.raw-text { white-space: pre-wrap; word-break: break-word; color: var(--text-sec); font-family: var(--mono); font-size: 0.75rem; line-height: 1.55; }
+.raw-rank { font-family: var(--mono); font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; display: inline-block; margin-top: 8px; }
+.rank-1 { background: var(--ok-bg);   color: var(--ok-tx);   border: 1px solid var(--ok-br); }
+.rank-2 { background: var(--info-bg); color: var(--info-tx); border: 1px solid var(--info-br); }
+.rank-3 { background: var(--surface2); color: var(--text-sec); border: 1px solid var(--border); }
+</style>
+
+<!-- 1 -->
+<div class="raw-block">
+  <div class="raw-header">
+    <span class="raw-prompt-label">1</span>
+    <span class="raw-prompt-text">Dante Alighieri nacque</span>
+    <span class="raw-domain-tag">enciclopedico/letterario</span>
+  </div>
+  <div class="raw-outputs">
+    <div class="raw-col">
+      <div class="raw-col-label m350">Minerva 350M</div>
+      <div class="raw-text"> nel 1280 a Firenze. I suoi scritti di argomento mitologico, religioso e profano sono i più noti del suo vasto repertorio, tra cui il "Cantico dei Cantici" (opera in tre libri) ed altri capolavori dell'arte barocca come la Commedia della Sera, La Sacra Famiglia, Il Pollaiolo o l'"Antico Testamento", dove si narra di una grande passione per i segreti divini e le profezie apoc</div>
+      <span class="raw-rank rank-3">3° — data sbagliata (1280), opera mescolata con altro</span>
+    </div>
+    <div class="raw-col">
+      <div class="raw-col-label m3b">Minerva 3B</div>
+      <div class="raw-text"> a Firenze nel 1265 e morì a Ravenna, come ci tramanda la Commedia. A lui si deve il titolo di "divina commedia".
+Il suo capolavoro è una rappresentazione della vita umana nella sua complessità attraverso un percorso che parte da peccati ed errori umani fino al raggiungimento del paradiso cristiano: l'Inferno dantesco appunto; nel quale vengono raccontate le pene e i tormenti dei dannati per non aver voluto seguire il bene.</div>
+      <span class="raw-rank rank-1">1° — 1265/Ravenna corretti, struttura Commedia spiegata</span>
+    </div>
+  </div>
+</div>
+
+<!-- 2 -->
+<div class="raw-block">
+  <div class="raw-header">
+    <span class="raw-prompt-label">2</span>
+    <span class="raw-prompt-text">compilazione del kernel</span>
+    <span class="raw-domain-tag">tecnico/informatico</span>
+  </div>
+  <div class="raw-outputs">
+    <div class="raw-col">
+      <div class="raw-col-label m350">Minerva 350M</div>
+      <div class="raw-text">, che verrà quindi utilizzata per il sistema operativo Windows 7 (WinXP).
+L'installazione dell'applicazione sarà eseguita esclusivamente in presenza di un utente Win98. L'utilizzo delle impostazioni predefinite è stato eseguito con la versione a 64 bit della precedente release installata; pertanto si raccomanda l'uso del kernel per il sistema operativo Windows 2016 (WinXP).
+Il programma permette quindi una gestione più semplice dei file di configurazione</div>
+      <span class="raw-rank rank-3">3° — Windows XP/98/2016: nessun gcc, documentazione tecnica corrotta</span>
+    </div>
+    <div class="raw-col">
+      <div class="raw-col-label m3b">Minerva 3B</div>
+      <div class="raw-text"> con il compilatore gcc
+Il Kernel del comando è necessario per compilare un programma C utilizzando GNU Compiler. Il programma viene utilizzato in genere al posto di make, ma può anche essere usato per creare uno script che esegua i comandi necessari quando si compila un dato codice sorgente.
+La compilazione del kernel con GNU Compiler richiede l'uso della c</div>
+      <span class="raw-rank rank-1">1° — gcc, make, GNU Compiler: terminologia corretta</span>
+    </div>
+  </div>
+</div>
+
+<!-- 3 -->
+<div class="raw-block">
+  <div class="raw-header">
+    <span class="raw-prompt-label">3</span>
+    <span class="raw-prompt-text">un tramonto splendido</span>
+    <span class="raw-domain-tag">poetico/descrittivo</span>
+  </div>
+  <div class="raw-outputs">
+    <div class="raw-col">
+      <div class="raw-col-label m350">Minerva 350M</div>
+      <div class="raw-text">
+
+Il mio giorno fortunato è stato il 28 di aprile al Palazzo Ducale, la prima volta da quando sono nata. Si tratta della festa più importante d'Italia per me e l'associazione "I Borghi più belli del Lazio", che si occupa delle bellezze paesaggistiche regionali attraverso iniziative culturali a partecipazione gratuita ed aperta alla cittadinanza: eventi, concerti, spettacoli musicali...</div>
+      <span class="raw-rank rank-3">3° — blog di eventi culturali, nessun tramonto</span>
+    </div>
+    <div class="raw-col">
+      <div class="raw-col-label m3b">Minerva 3B</div>
+      <div class="raw-text">.
+Vista dal mare, la costa della Sicilia è come una finestra aperta sull'orizzonte e offre viste indimenticabili su alcune delle più belle spiagge dorate di Italia: Cefalù (con le sue acque cristalline), San Vito lo Capo con i suoi tramonti mozzafiato in riva al Mar Mediterraneo o Taormina.
+Lungo la costa si possono trovare numerosi piccoli porti che offrono una vista panoramica sulla Sicilia e sul suo spettacolare litorale, come quello del porto di</div>
+      <span class="raw-rank rank-2">2° — paesaggio visivo coerente, ma tono da guida turistica</span>
+    </div>
+  </div>
+</div>
+
+<!-- 4 -->
+<div class="raw-block">
+  <div class="raw-header">
+    <span class="raw-prompt-label">4</span>
+    <span class="raw-prompt-text">Le poesie di Ungaretti</span>
+    <span class="raw-domain-tag">letterario</span>
+  </div>
+  <div class="raw-outputs">
+    <div class="raw-col">
+      <div class="raw-col-label m350">Minerva 350M</div>
+      <div class="raw-text"> a cura del poeta Giuseppe Cederna
+Home » Autori » Autore » L.C., M.I, S.Poli e U.Vaio » 1973 - BURLESQUE DE ROCCA / NOME E COGNOM: LA DONNA DURO DI UNO SPETTACOLO PER IL SOCIALE
+(da « Il Piccolo» del 25/06)
+Titolo originale: Ungaretti</div>
+      <span class="raw-rank rank-3">3° — struttura HTML/navigazione web, nessuna analisi poetica</span>
+    </div>
+    <div class="raw-col">
+      <div class="raw-col-label m3b">Minerva 3B</div>
+      <div class="raw-text"> - StudentVille.it
+Approfondimento su: Giuseppe Antonio Giovanni D'Ungheria, noto anche come Jasmin (Alessandria d'Egitto 1896 - Roma), è stato uno dei più importanti poeti italiani del Novecento e con la sua opera ha contribuito a rinnovare il linguaggio della poesia moderna.
+Il padre Giuseppe Antonio Giovanni D'Ungheria, generale dell'esercito imperiale ottomano che aveva</div>
+      <span class="raw-rank rank-2">2° — dati biografici corretti, stile enciclopedico; nome spurio nel testo</span>
+    </div>
+  </div>
+</div>
+
+<!-- 5 -->
+<div class="raw-block">
+  <div class="raw-header">
+    <span class="raw-prompt-label">5</span>
+    <span class="raw-prompt-text">La crisi del 1929</span>
+    <span class="raw-domain-tag">storico/economico</span>
+  </div>
+  <div class="raw-outputs">
+    <div class="raw-col">
+      <div class="raw-col-label m350">Minerva 350M</div>
+      <div class="raw-text">
+
+La caduta dell'URSS e la sua successiva instaurazione, sono le principali cause della prima guerra mondiale. L'instabilità politica internazionale si è manifestata con una serie di eventi catastrofici: l'invasione sovietica da parte delle truppe anglo-americane dei Soviet Socialist Administration; i bombardamenti aerei su Hiroshima e Nagasaki e il successivo trasferimento dell'URSS al regime comunista. Ma gli effetti della crisi si sono fatti sentire anche</div>
+      <span class="raw-rank rank-3">3° — PEGGIORE DEL TEST: confonde 1929 con WWII, Hiroshima, URSS</span>
+    </div>
+    <div class="raw-col">
+      <div class="raw-col-label m3b">Minerva 3B</div>
+      <div class="raw-text"> fu un periodo di grande depressione economica che interessò l'intero sistema industriale statunitense.
+La Grande Depressione cominciata nel marzo-maggio '30 e la successiva recessione, provocarono una serie interminabile di fallimenti aziendali in tutti i settori produttivi dell'economia USA (contadini prima della crisi; industriali poi). Il crollo del mercato azionario è il principale evento economico che ha determinato le difficoltà economiche degli anni '29-'45.</div>
+      <span class="raw-rank rank-1">1° — Grande Depressione, USA, crollo azionario: storicamente corretto</span>
+    </div>
+  </div>
+</div>
+
+<!-- 6 -->
+<div class="raw-block">
+  <div class="raw-header">
+    <span class="raw-prompt-label">6</span>
+    <span class="raw-prompt-text">Il jazz nasce</span>
+    <span class="raw-domain-tag">musicale/culturale</span>
+  </div>
+  <div class="raw-outputs">
+    <div class="raw-col">
+      <div class="raw-col-label m350">Minerva 350M</div>
+      <div class="raw-text"> per la prima volta in Italia nel 1960 quando il "Club dei Pomeriggi musicali" di Milano, a cui era succeduto l'amico Carlo Rambaldi.
+Un gruppo che si ispirava alla musica italiana e alle avanguardie del movimento americano, come quella delle Beatles o degli anni '70-80 ed oggi si distingue per le sue caratteristiche peculiari: una miscela esplosiva di sonorità jazzistiche; un sound ricerc</div>
+      <span class="raw-rank rank-3">3° — lo situa in Italia nel 1960, confonde con Beatles</span>
+    </div>
+    <div class="raw-col">
+      <div class="raw-col-label m3b">Minerva 3B</div>
+      <div class="raw-text"> nei primi del '90 come evoluzione della musica afro-americana. I suoi fondatori furono i fratelli Dizzy Gillespie, Art Blakey e Max Roach che nel '16 si riunirono in un gruppo dixieland per poi arrivare al free style ed esplorare l'improvvisazione libera con il jazz modale o bebop; quest'ultimo periodo fu particolarmente creativo.
+Il genere musicale Jazz è caratterizzato da sonorità morbide, melodiche ma anche rit</div>
+      <span class="raw-rank rank-2">2° — Gillespie, Blakey, Roach reali; evoluzione stilistica corretta; datazione sbagliata ("anni '90")</span>
+    </div>
+  </div>
+</div>
+
+<!-- 7 -->
+<div class="raw-block">
+  <div class="raw-header">
+    <span class="raw-prompt-label">7</span>
+    <span class="raw-prompt-text">La fotosintesi è</span>
+    <span class="raw-domain-tag">scientifico/biologico</span>
+  </div>
+  <div class="raw-outputs">
+    <div class="raw-col">
+      <div class="raw-col-label m350">Minerva 350M</div>
+      <div class="raw-text"> fondamentale per il nostro benessere e la nostra salute.
+Credo che anche le aziende più piccole siano molto sensibili ad un aspetto così importante ed essenziale dell'ambiente in cui viviamo, come l'aria: lo sanno bene i ricercatori del MIT di Cambridge…
+Come possiamo migliorare gli ambienti indoor?
+Lavorare a contatto con acqua e suolo significa avere una maggiore sensibilità ai segnali che arrivano dall'esterno. Il nostro cervello riconosce le sostanze presenti</div>
+      <span class="raw-rank rank-3">3° — blog wellness/indoor, nessun processo botanico</span>
+    </div>
+    <div class="raw-col">
+      <div class="raw-col-label m3b">Minerva 3B</div>
+      <div class="raw-text"> il processo che trasforma la luce del sole in ossigeno e nutrienti per le piante.
+La respirazione cellulare prevede due fasi distinte, una durante l'assimilazione di anidride carbonica dall'aria ed acqua attraverso i mitocondri cellulari della cellula vegetale; l'altra fase avviene a livello dei polmoni dove viene rilasciato il gas prodotto dai carboidrati che è necessario per mantenere la vita delle cellule vegetali.
+L'acqua si trasforma in vapore e, quando raggiunge l</div>
+      <span class="raw-rank rank-1">1° — definizione corretta, confonde mitocondrì/cloroplasti ma inizia bene</span>
+    </div>
+  </div>
+</div>
+
+<!-- 8 -->
+<div class="raw-block">
+  <div class="raw-header">
+    <span class="raw-prompt-label">8</span>
+    <span class="raw-prompt-text">Prepara una pasta</span>
+    <span class="raw-domain-tag">pratico/ricette</span>
+  </div>
+  <div class="raw-outputs">
+    <div class="raw-col">
+      <div class="raw-col-label m350">Minerva 350M</div>
+      <div class="raw-text"> a base di riso e farina, condisci con olio extra vergine o salvia.
+La ricetta della bagna al latte è veramente semplice ma soprattutto molto gustosa: un mix saporito ed estremamente versatile che si adatta perfettamente ad ogni tipo di palato; anche il ripieno è arricchito da qualche decorazione per rendere ancora più golosa la vostra cena!
+Scopri qui gli altri piatti e le ricette delle nostre cuoche, consulta i nostri consigli su come prepararli in modo</div>
+      <span class="raw-rank rank-2">2° — pasta culinaria, ingredienti plausibili sebbene non ordinari</span>
+    </div>
+    <div class="raw-col">
+      <div class="raw-col-label m3b">Minerva 3B</div>
+      <div class="raw-text"> di sale
+Procurati della farina, del bicarbonato e un pizzico abbondante d'acqua. Metti tutti gli ingredienti in ciotola o contenitore graduale per ottenere la giusta consistenza della vostra ricetta; se necessario aggiungete altra acqua durante il processo fino a che non avrete ottenuto l'impasto perfetto (se siete alle prime armi con le paste di sale vi consiglio prima una pasta grezza).
+Lasciate asciugare bene e poi lavoratelo per formare delle</div>
+      <span class="raw-rank rank-3">3° — disambigua come pasta di sale (artigianato), non cucina: saturazione SFT</span>
+    </div>
+  </div>
+</div>
+
+<!-- 9 -->
+<div class="raw-block">
+  <div class="raw-header">
+    <span class="raw-prompt-label">9</span>
+    <span class="raw-prompt-text">La regione Puglia è</span>
+    <span class="raw-domain-tag">geografico/regionale</span>
+  </div>
+  <div class="raw-outputs">
+    <div class="raw-col">
+      <div class="raw-col-label m350">Minerva 350M</div>
+      <div class="raw-text"> uno dei luoghi più affascinanti del Salento, ricca di spiagge da sogno ed una cucina che non ha nulla a fare concorrenza al capoluogo. E' famosa per le sue dolci colline e la sua spiaggia sabbiosa con sabbia finissima dove si possono ammirare il bellissimo mare blu dell'Adriatico ed i meravigliosi Faraglioni delle Isole Tremiti.
+A San Foca è possibile passeggiare tra gli ulivi secolari, ammirarli nel loro splendore naturale in un luogo che</div>
+      <span class="raw-rank rank-1">1° — Salento, Adriatico, Isole Tremiti, San Foca, ulivi: il più preciso geograficamente</span>
+    </div>
+    <div class="raw-col">
+      <div class="raw-col-label m3b">Minerva 3B</div>
+      <div class="raw-text"> un'altra delle regioni italiane che ha adottato una politica di incentivo ai propri giovani.
+Lavoro giovanile in Italia: le statistiche aggiornate del 2021 - Il lavoro dei nostri connazionali, nel corso degli ultimi anni e specialmente durante la pandemia da Covid - ... Vedi articolo In occasione dell'uscita della nuova versione dello smartphone Samsung Galaxy S7 ed è tempo di iniziare a fare qualche considerazione sul dispositivo.
+Lanciato alla fine febbraio del 2</div>
+      <span class="raw-rank rank-3">3° — giovani/Covid/Samsung Galaxy S7: news aggregator, nessuna geografia</span>
+    </div>
+  </div>
+</div>
+
+<!-- 10 -->
+<div class="raw-block">
+  <div class="raw-header">
+    <span class="raw-prompt-label">10</span>
+    <span class="raw-prompt-text">Francesco Benigni</span>
+    <span class="raw-domain-tag">nome raro — test byte-fallback token</span>
+  </div>
+  <div class="raw-outputs">
+    <div class="raw-col">
+      <div class="raw-col-label m350">Minerva 350M</div>
+      <div class="raw-text"> (1857–2006), studioso delle tradizioni popolari e dei riti della Settimana Santa.
+Mentre si è sparsa la notizia, l'opinione pubblica italiana ha immediatamente reagito con preoccupazione all'evento che oggi sta facendo da sfondo a questa festività, che cade proprio in un momento di grande fermento culturale per il nostro Paese: una data molto significativa perché segnava le origini e lo sviluppo della nostra identità nazionale.</div>
+      <span class="raw-rank rank-3">3° — personaggio inventato (1857–2006), tono da comunicato stampa</span>
+    </div>
+    <div class="raw-col">
+      <div class="raw-col-label m3b">Minerva 3B</div>
+      <div class="raw-text"> - 17 Luglio, ore:20.49
+Rimane sempre un mistero come si riesca a creare una struttura che soddisfi le necessità di tutti i suoi componenti in maniera tale da non essere né troppo grande e nemmeno piccola; la scelta dell'organizzazione dei post sui social network è importante per raggiungere il proprio obiettivo nel modo più efficace possibile, anche se molti sono gli errori commessi.
+Un errore comune quando si usano questi strumenti consiste nell'"abbondanza"</div>
+      <span class="raw-rank rank-2">2° — devia su social media marketing, ma testo italiano leggibile senza logit_bias</span>
+    </div>
+  </div>
+</div>
+
+<div class="callout warn">
+  <strong>Nota: output SLM run6-ad</strong>
+  Gli output del SLM run6-ad sugli stessi 10 prompt sono documentati nella sezione
+  "Confronto shard Run #6" del <a href="slm-journal.html#minerva-confronto">journal</a>.
+  La classifica a 3 posizioni (sezione 06 sopra) include il SLM per tutti i prompt.
+  Output verbatim SLM disponibili: tramonto ("la luna piena di luce. Il cielo si fa sentire da una persona"),
+  Puglia ("Lecce, Regione Puglia ha voluto fare un passo avanti").
+</div>
+
+<!-- ── 11. FASI DI TRAINING MINERVA ───────────────────────── -->
+<h2><span class="sec-num">10</span> Fasi di training Minerva — corpus e metodo</h2>
+
+<h3>Architettura base e scelte progettuali</h3>
+
+<p>
+  Minerva è costruita sull'architettura <strong>Mistral</strong> (variante LLaMA con GQA e SWA).
+  Tutti i modelli della famiglia (350M, 3B, 7B) usano lo stesso tokenizer addestrato da zero
+  su testo italiano + inglese: vocab 51.200 token, <code>SentencePiece BPE</code>.
+  Il tokenizer è ottimizzato per italiano moderno, riducendo la frammentazione di parole
+  con accenti e morfologia flessiva rispetto a tokenizer addestrati su corpus anglofono.
+</p>
+
+<h3>Corpus di pre-training</h3>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Sorgente</th><th>Lingua</th><th>Token (stima)</th><th>Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>OSCAR + mC4 (IT)</td><td>Italiano</td><td>~1.14T</td>
+      <td>Web crawl filtrato e deduplicato. Principale sorgente IT.</td>
+    </tr>
+    <tr>
+      <td>Web crawl EN (CC derivati)</td><td>Inglese</td><td>~1.14T</td>
+      <td>Bilanciato 1:1 con italiano per il corpus complessivo.</td>
+    </tr>
+    <tr>
+      <td>Codice sorgente (GitHub)</td><td>Varie</td><td>~200B</td>
+      <td>Python, C, Java, SQL. Migliora il ragionamento strutturato.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Totale pre-training: <strong>~2.5T token</strong> (1.14T IT + 1.14T EN + ~200B code).
+  La scelta di bilanciare IT e EN 1:1 è deliberata: il ragionamento logico/matematico
+  è meglio rappresentato in inglese nel web corpus, mentre l'italiano porta morfologia,
+  sintassi e lessico specifici. Il codice aggiunge struttura formale e pattern logici.
+</p>
+
+<div class="callout info">
+  <strong>Chinchilla ratio per modello</strong>
+  <table class="data-table" style="margin-top:8px;">
+    <thead><tr><th>Modello</th><th>Parametri</th><th>Token training</th><th>Ratio (T/P)</th><th>Chinchilla ottimale</th></tr></thead>
+    <tbody>
+      <tr><td>Minerva 350M</td><td>350M</td><td>70B</td><td><strong>200×</strong></td><td>7B (20×P)</td></tr>
+      <tr><td>Minerva 3B</td><td>2.9B</td><td>300B (pre-train)</td><td><strong>103×</strong></td><td>58B (20×P)</td></tr>
+      <tr><td>Minerva 7B</td><td>7B</td><td>470B</td><td><strong>67×</strong></td><td>140B (20×P)</td></tr>
+      <tr><td>SLM run6-ad</td><td>45.9M</td><td>~572M</td><td><strong>12.5×</strong></td><td>918M (20×P)</td></tr>
+    </tbody>
+  </table>
+  Tutti i Minerva sono fortemente sovra-addestrati rispetto a Chinchilla — intenzionalmente,
+  perché l'obiettivo è massimizzare la qualità a inferenza fissa (non il costo di training ottimale).
+  Il SLM è a 62% della parity Chinchilla (572M su 918M token target).
+</div>
+
+<h3>Fase 1 — Pre-training da zero</h3>
+
+<p>
+  Training eseguito su <strong>CINECA Leonardo</strong>, il supercomputer italiano (256+ A100 80GB per il 7B,
+  128 GPU per i modelli minori). Framework: <strong>llm-foundry</strong> (MosaicML),
+  che gestisce training distribuito su cluster SLURM con sharding del modello e del dataset.
+</p>
+
+<table class="data-table">
+  <thead><tr><th>Iperparametro</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Ottimizzatore</td><td>AdamW, &#946;&#8321;=0.9, &#946;&#8322;=0.95, &#949;=10&#8315;&#8313;</td></tr>
+    <tr><td>LR massimo</td><td>3e-4 (350M/3B), 2e-4 (7B)</td></tr>
+    <tr><td>LR schedule</td><td>cosine decay con warmup lineare</td></tr>
+    <tr><td>Weight decay</td><td>0.1</td></tr>
+    <tr><td>Gradient clipping</td><td>1.0</td></tr>
+    <tr><td>Batch size effettivo</td><td>~2M token (gradient accumulation)</td></tr>
+    <tr><td>Context length</td><td>4096 token (pre-train), 16384 (fine-tune)</td></tr>
+    <tr><td>Normalizzazione</td><td>RMSNorm (non LayerNorm)</td></tr>
+    <tr><td>Attivazione FFN</td><td>SwiGLU (non GELU)</td></tr>
+  </tbody>
+</table>
+
+<h3>Fase 2 — Supervised Fine-Tuning (solo modelli instruct)</h3>
+
+<p>
+  I modelli <em>instruct</em> (3B e 7B) ricevono un secondo stage di training su
+  <strong>21.000 esempi di istruzioni italiane</strong> curati manualmente dal team Sapienza NLP.
+  Framework: <strong>Llama-Factory</strong> (più leggero per SFT single-node).
+  Il formato è instruction-following standard Mistral: <code>[INST] istruzione [/INST] risposta</code>.
+</p>
+
+<p>
+  Il modello <strong>350M base</strong> NON ha ricevuto SFT — è un puro language model.
+  Questo lo rende comparabile con il SLM run6-ad (anche lui puro pre-training senza istruzioni).
+  I loro output sono continuazioni di testo, non risposte a domande.
+</p>
+
+<div class="callout ok">
+  <strong>Implicazione per il confronto</strong>
+  Minerva 350M base e SLM run6-ad sono entrambi modelli base senza instruction tuning.
+  Le differenze di output riflettono esclusivamente la distribuzione del corpus e la scala.
+  Minerva 3B instruct è un modello diverso per natura: l'SFT cambia il comportamento
+  anche su prompt senza chat template (bias verso tono didattico/enciclopedico,
+  tendenza alla disambiguazione esplicita come "pasta di sale").
+</div>
+
+<h3>Differenze rispetto al training SLM</h3>
+
+<table class="data-table">
+  <thead>
+    <tr><th>Aspetto</th><th>SLM run6-ad</th><th>Minerva 350M</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Hardware</td><td>RTX 4090 Vast.ai (singola GPU)</td><td>CINECA Leonardo (128 GPU)</td></tr>
+    <tr><td>Framework</td><td>PyTorch custom (scratch)</td><td>llm-foundry (distributed)</td></tr>
+    <tr><td>Corpus lingua</td><td>Solo italiano</td><td>IT + EN + codice</td></tr>
+    <tr><td>Normalizzazione</td><td>LayerNorm</td><td>RMSNorm</td></tr>
+    <tr><td>Attivazione FFN</td><td>GELU</td><td>SwiGLU</td></tr>
+    <tr><td>Attention</td><td>MHA standard, ctx 512</td><td>GQA + SWA, ctx 16384</td></tr>
+    <tr><td>Tokenizer</td><td>BPE-SPM 16K addestrato su Wikipedia IT</td><td>BPE-SPM 51.2K addestrato su IT+EN</td></tr>
+    <tr><td>Durata training</td><td>~8 ore totali (Run4 + Run6)</td><td>Settimane su cluster HPC</td></tr>
+    <tr><td>Obiettivo</td><td>Comprensione interna + voce scritta</td><td>LM italiano SOTA open source</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ── 9. FONTI ─────────────────────────────────────────────── -->
+<h2><span class="sec-num">11</span> Fonti e riferimenti</h2>
+
+<table class="data-table">
+  <thead><tr><th>Risorsa</th><th>URL</th></tr></thead>
+  <tbody>
+    <tr><td>Minerva paper (CLiC-IT 2024)</td><td><a href="https://ceur-ws.org/Vol-3878/76_main_long.pdf">ceur-ws.org/Vol-3878/76_main_long.pdf</a></td></tr>
+    <tr><td>HF collection Minerva</td><td><a href="https://huggingface.co/collections/sapienzanlp/minerva-llms">huggingface.co/collections/sapienzanlp/minerva-llms</a></td></tr>
+    <tr><td>Minerva 7B instruct (GGUF ufficiale)</td><td><a href="https://huggingface.co/sapienzanlp/Minerva-7B-instruct-v1.0-GGUF">sapienzanlp/Minerva-7B-instruct-v1.0-GGUF</a></td></tr>
+    <tr><td>Minerva 350M GGUF (community)</td><td><a href="https://huggingface.co/mudler/Minerva-350M-base-v1.0-Q5_0-GGUF">mudler/Minerva-350M-base-v1.0-Q5_0-GGUF</a></td></tr>
+    <tr><td>Minerva 3B instruct GGUF (community)</td><td><a href="https://huggingface.co/NikolayKozloff/Minerva-3B-Instruct-v1.0-Q5_K_M-GGUF">NikolayKozloff/Minerva-3B-Instruct-v1.0-Q5_K_M-GGUF</a></td></tr>
+    <tr><td>Sapienza NLP</td><td><a href="https://nlp.uniroma1.it">nlp.uniroma1.it</a></td></tr>
+    <tr><td>SLM Journal</td><td><a href="slm-journal.html">slm-journal.html</a></td></tr>
+  </tbody>
+</table>
+
+</div>
