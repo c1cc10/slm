@@ -2872,4 +2872,268 @@ llama-cli -m slm-run4.gguf -p "Il Parlamento europeo" -n 50 \
 Uso con llama.cpp: <code>llama-cli -hf c1cc10/slm-italiano --hf-file slm-run4-q8_0.gguf -p "Il Parlamento europeo" -n 100</code>
 </div>
 
+<h2 id="run6-confronto-modelli">Run #6 — Confronto output tra 3 modelli (2026-10-05)</h2>
+<div class="narr">Confronto sistematico tra i tre migliori checkpoint disponibili dopo Run #6, usando llama-server con endpoint <code>/completion</code> (nessun template di chat applicato). Prompt fisso: <em>"La regione Puglia è"</em>, tre semi diversi per campionare la variabilità della distribuzione. Parametri uniformi: <code>n_predict=150, temperature=0.8, top_k=40, top_p=0.95, repeat_penalty=1.3, repeat_last_n=64</code>.</div>
+
+<h3>Modelli testati</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Modello</th>
+      <th>File</th>
+      <th>Val loss</th>
+      <th>Corpus</th>
+      <th>Dimensione</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>A</strong> — run4-v6</td>
+      <td><code>slm-run4-v6.gguf</code></td>
+      <td>3.5861</td>
+      <td>Wikipedia IT (47.8M token, 30k step)</td>
+      <td>218 MB fp32</td>
+    </tr>
+    <tr>
+      <td><strong>B</strong> — run6-ae</td>
+      <td><code>slm-run6-ae.gguf</code></td>
+      <td>3.3385</td>
+      <td>Wikipedia IT shard aa–ae (5×8k step sequenziale)</td>
+      <td>218 MB fp32</td>
+    </tr>
+    <tr>
+      <td><strong>C</strong> — run6-ag-q8_0</td>
+      <td><code>slm-run6-ag-q8_0.gguf</code></td>
+      <td>3.2965</td>
+      <td>Wikipedia IT aa–ae + CulturaX web af–ag (7×8k step sequenziale)</td>
+      <td>55 MB Q8_0</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Output — Modello A: run4-v6 (val 3.5861)</h3>
+<table>
+  <thead>
+    <tr><th>Seed</th><th>Output generato</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>42</td>
+      <td>«…costituita da una zona di pianura che si estende in direzione sud-sud dal golfo del Tigullio fino alle coste meridionali del mar Mediterraneo. Clima. Il clima dell'area è caratterizzato dalla presenza della zona climatica, con estati calde e inverni miti ed estati calde (afose, medie letitudini, nevicate) e nevosi, mentre d'inverno l'altitudine scende ai 35 °C. Le precipitazioni sono presenti durante tutto il mese di novembre…»</td>
+    </tr>
+    <tr>
+      <td>123</td>
+      <td>«…uno dei due Stati federati. L'area geografica della provincia, a ovest di Reggio Emilia e Reggio Calabria, si estende su una superficie che va da un minimo di circa 800.000 ettari (dati del 2000), mentre a sud confina con la Provincia di Palermo. Il territorio provinciale, nel quale è divisa la Regione, comprende anche l'exclave di Giberti…»</td>
+    </tr>
+    <tr>
+      <td>777</td>
+      <td>«…stata la più grande della provincia. Per quanto riguarda il territorio, lo stemma è un antico simbolo dell'antica città di Popoli Terme. Dal punto di vista culturale l'area della penisola balcanica si affaccia sulla costa occidentale dei Picentini; in particolare nella parte ovest del comune vi sono alcune aree boschive che testimoniano la presenza di insediamenti umani fin dall'epoca preromana…»</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Output — Modello B: run6-ae (val 3.3385)</h3>
+<table>
+  <thead>
+    <tr><th>Seed</th><th>Output generato</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>42</td>
+      <td>«…quella che per i più giovani è stata la più grande tra tutte le Regioni del Sud Italia. Per questo Regione Puglia ha deciso di puntare sul turismo, tutela e valorizzazione delle strutture ricettive locali e regionali. "Il nostro obiettivo - conclude la deputata della Lega - è quello di rendere trasparente l'offerta turistica, con un occhio all'Italia…"»</td>
+    </tr>
+    <tr>
+      <td>123</td>
+      <td>«…un'isola a vocazione turistica, in cui la tradizione vuole essere la terra del turismo. Nel suo territorio sono presenti le località balneari del litorale campano e della provincia di Taranto con i suoi 98 chilometri di superficie. Itinerari, attività turistiche, escursioni nelle acque libere, passeggiate lungo il mare, percorsi guidate per bambini e percorsi sul Lago di Garda…»</td>
+    </tr>
+    <tr>
+      <td>777</td>
+      <td>«…un'isola che, pur avendo i suoi abitanti in particolare, fa parte della comunità regionale. Si può anche dire che la sua storia ha preso il sopravvento in questi giorni: scoperta di un luogo ancora sconosciuto è stato lasciato alla memoria dalle autorità locali, come Parco Archeologico del Cilento e quello dei Sassi di Acireale. Le radici storiche dell'isola risalgono al VI secolo a.C.…»</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Output — Modello C: run6-ag-q8_0 (val 3.2965)</h3>
+<table>
+  <thead>
+    <tr><th>Seed</th><th>Output generato</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>42</td>
+      <td>«…caratterizzata da un'area di circa 6.000 mq con piscina termale e campi da tennis. <strong>LE ARTI E SEGUITO : ALBERGHA - ROMANIA</strong> - "La Calabria ha bisogno dell'aiuto del governo della Regione che possa intervenire sui settori più colpiti dal terremoto". Lo afferma il consigliere regionale Antonio Pappalardo, in una nota…»</td>
+    </tr>
+    <tr>
+      <td>123</td>
+      <td>«…il territorio di maggior interesse naturalistico, per la sua storia e per i suoi colori. Il comune di L'Aquila è una provincia del Molise di origine italiana, con un patrimonio artistico straordinario: è uno dei più belli d'Italia ed è una delle zone preferite dai turisti italiani e stranieri. In questo comune si trova la città che ha sede a Leuca…»</td>
+    </tr>
+    <tr>
+      <td>777</td>
+      <td>«…un territorio molto ricco di testimonianze e testimonianza del lavoro svolto dalla Regione che, nel suo complesso, ha ottenuto il riconoscimento di "Casa dei Medici". Scienziato è voce della Campania in Italia Napoli#coscienza  Il Giornale Digitale -% <strong>di di di di di di di di di di di di di di di di di di di di di di di di di di di di…</strong>»</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Analisi comparativa</h3>
+<div class="narr">
+<strong>Hallucination geografica sistematica (tutti i modelli).</strong> Nessun modello produce descrizioni accurate della Puglia. Golfo del Tigullio (Liguria), Popoli Terme (Abruzzo), L'Aquila/Molise: tutte regioni sbagliate. Questo è atteso e spiegabile: a 46M parametri il modello non ha sufficiente capacità per memorizzare conoscenze fattuali specifiche. Apprende la struttura sintattica dell'italiano enciclopedico, non i contenuti. La conoscenza fattuale affidabile emerge intorno a 1–3B parametri.
+</div>
+<div class="narr">
+<strong>Il paradosso del val loss più basso.</strong> Il modello C (run6-ag-q8_0) ha il val loss più basso (3.2965) ma produce l'output qualitativamente peggiore: frammenti di spam marketing ("LE ARTI E SEGUITO: ALBERGHA - ROMANIA"), testo istituzionale sconnesso, e un loop di ripetizione ("di di di di…") che resiste al repeat_penalty. Questo conferma quanto osservato durante i test su corpus af/ag: il training sui shard CulturaX (web) ha effettivamente ridotto la val loss — ma perché il modello ha imparato i pattern del corpus web, inclusi gli artefatti. Un val loss misurato su dati contaminati non è un indicatore affidabile della qualità generativa.
+</div>
+<div class="narr">
+<strong>Modello B (run6-ae) è il migliore per qualità generativa.</strong> Con val loss 3.3385, produce testo italiano fluente e formalmente corretto. Il seed 42 è il più rivelatore: il modello nomina esplicitamente "Regione Puglia" e costruisce un discorso in stile giornalistico coerente — errato nei contenuti, ma grammaticalmente solido e senza artefatti. I shard aa–ae erano tutti Wikipedia IT, che ha preservato la distribuzione del corpus di pre-training senza inquinamento da web.
+</div>
+<div class="narr">
+<strong>Modello A (run4-v6) è intermedio.</strong> Val loss più alta (3.5861), stile enciclopedico più "puro" (nessuna contaminazione da web), ma output meno fluente rispetto al modello B. Il gap tra A e B riflette il vantaggio di 280M token aggiuntivi di Wikipedia pulita.
+</div>
+
+<h3>Conclusione operativa</h3>
+<table>
+  <thead>
+    <tr><th>Uso</th><th>Modello raccomandato</th><th>Motivo</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Inferenza qualità italiana</td>
+      <td><strong>run6-ae</strong> (B)</td>
+      <td>Corpus pulito, output più fluente e coerente</td>
+    </tr>
+    <tr>
+      <td>Inferenza veloce (RAM limitata)</td>
+      <td><strong>run6-ag-q8_0</strong> (C)</td>
+      <td>55 MB vs 218 MB, ma qualità degradata da web corpus</td>
+    </tr>
+    <tr>
+      <td>PPL scorer per filtro corpus</td>
+      <td><strong>run4-v6</strong> (A)</td>
+      <td>Distribuzione Wikipedia pura, scorer non distorto da web spam</td>
+    </tr>
+    <tr>
+      <td>Prossimo training (base)</td>
+      <td><strong>run6-ad</strong> weights</td>
+      <td>Sweet spot qualitativo: bilanciamento migliore tra conoscenza enciclopedica e capacità contemporanea, senza la contaminazione visibile di run6-ae (vedi analisi semantica sotto)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="run6-byte-token">Run #6 — Byte-fallback token e logit_bias (2026-10-06)</h2>
+<div class="narr">Durante i test di inferenza su <code>slm-run6-ae.gguf</code> con il prompt <code>"Francesco Benigni"</code> (nome raro, bassa frequenza nel corpus), l'output è risultato composto interamente da caratteri di controllo Unicode: <code>\u0000</code>, <code>\u0003</code>, <code>\u000f</code> e simili — nessuna parola italiana. La stessa anomalia si è ripresentata con varianti dello stesso prompt.</div>
+
+<h3>Causa: token di fallback byte nel vocabolario GGUF</h3>
+<div class="narr">Il vocabolario BPE-SPM addestrato sul corpus italiano contiene 16.000 token. La specifica GGUF (llama.cpp) richiede che il tokenizer possa codificare qualsiasi sequenza di byte, anche quelle non presenti nel vocabolario BPE. Per questo motivo, durante la conversione GGUF, sono stati aggiunti 256 token sintetici di fallback — uno per ogni byte possibile (0x00–0xFF) — agli indici 16000–16255. Questi token vengono usati dal tokenizer come "ultima risorsa" per byte non altrimenti rappresentabili.</div>
+<div class="narr">Il corpus CulturaX, non perfettamente pulito, contiene caratteri di controllo (tab, carriage return, byte non-printable da HTML mal decodificato). Il modello ha quindi appreso che in certi contesti questi byte token compaiono dopo sequenze specifiche di testo. Quando il contesto è insolito (nome proprio raro → alta incertezza → distribuzione piatta), i token byte diventano competitivi. Con temperature=0.8 e top_p=0.9 il campionatore li pesca; una volta selezionato un byte token, il contesto successivo si sposta verso "sequenza binaria", il che rinforza la selezione di ulteriori byte token: loop.</div>
+
+<h3>Fix: logit_bias sui 256 token di fallback</h3>
+<div class="narr">Il parametro <code>logit_bias</code> dell'API <code>/completion</code> di llama-server permette di sommare un valore arbitrario al logit di un token specifico prima del calcolo del softmax. Passando <code>[id, -100]</code> per ogni byte token, il loro logit viene abbassato di 100 unità — equivalente a probabilità zero pratico. Il vocabolario operativo scende da 16.256 a 16.000 token.</div>
+<pre>python3 -c "import json; print(json.dumps([[i,-100] for i in range(16000,16256)]))"</pre>
+<div class="narr">Il valore prodotto va passato nel campo <code>"logit_bias"</code> di ogni richiesta al server. Con il fix attivo, tutti i prompt precedentemente problematici producono testo italiano coerente.</div>
+
+<h3>Nota sul corpus</h3>
+<div class="narr">I caratteri di controllo nell'output non sono solo un problema di inferenza: sono la firma visibile della qualità del corpus. La loro presenza nelle sequenze generate conferma che CulturaX, anche nei shard "puliti" (aa–ae), contiene artefatti di encoding web che il filtro euristico non ha eliminato. Il logit_bias a inference time è una correzione chirurgica, non una soluzione al problema corpus.</div>
+
+<h2 id="run6-analisi-semantica">Run #6 — Analisi semantica shard-by-shard (2026-10-06)</h2>
+<div class="narr">Test sistematico di 8 prompt su 6 modelli (run4-v6 + run6-aa/ab/ac/ad/ae), seed fisso 42, logit_bias attivo su tutti i 256 byte token, <code>n_predict=100</code>, <code>temperature=0.8</code>, <code>top_p=0.9</code>, <code>repeat_penalty=1.3</code>. Obiettivo: mappare il cambiamento qualitativo shard per shard e identificare il miglior punto di partenza per i 2 shard mancanti al Chinchilla parity.</div>
+
+<h3>Prompt e risultati sintetici</h3>
+<table>
+  <thead>
+    <tr><th>Prompt</th><th>run4-v6</th><th>run6-aa</th><th>run6-ab</th><th>run6-ac</th><th>run6-ad</th><th>run6-ae</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><em>compilazione del kernel</em></td>
+      <td>Off-topic (editore software)</td>
+      <td>✓ GNU, versioni kernel</td>
+      <td>½ Windows/Linux</td>
+      <td>½ support page</td>
+      <td>½ backup/online</td>
+      <td>✗✗ testo legale/costituzionale</td>
+    </tr>
+    <tr>
+      <td><em>un tramonto splendido</em></td>
+      <td>✗ biografia pittore</td>
+      <td>½ emozionale/blog</td>
+      <td>✓ risposta diretta al prompt</td>
+      <td>½ itinerario turistico</td>
+      <td>✓ "la luna piena di luce" (poetico)</td>
+      <td>✗ hotel/turismo</td>
+    </tr>
+    <tr>
+      <td><em>Le poesie di Ungaretti</em></td>
+      <td>✓ "testi poetici" corretto</td>
+      <td>✗ moda/musica</td>
+      <td>✗ Marco Polo</td>
+      <td>✗ evento istituzionale</td>
+      <td>✗ accademico</td>
+      <td>½ letterario ma confonde Goldoni</td>
+    </tr>
+    <tr>
+      <td><em>La crisi del 1929</em></td>
+      <td>✓ economia storica</td>
+      <td>✓ politica economica Italia</td>
+      <td>½ analisi moderna</td>
+      <td>✗ notizia corrente</td>
+      <td>½ analisi economica strutturata</td>
+      <td>✗✗ Di Maio, Mattarella</td>
+    </tr>
+    <tr>
+      <td><em>Il jazz nasce</em></td>
+      <td>✓ vocabolario musicale</td>
+      <td>½ generico</td>
+      <td>½ "primi anni dell'Ottocento"</td>
+      <td>½ "luogo di confine"</td>
+      <td>✓ musicisti con nomi specifici</td>
+      <td>✓ culturale-poetico</td>
+    </tr>
+    <tr>
+      <td><em>Dante Alighieri nacque</em></td>
+      <td>✓✓ Firenze, Commedia, Virgilio</td>
+      <td>✗ 1443, guardia costiera</td>
+      <td>½ Firenze corretto, 1787</td>
+      <td>½ Firenze corretto, 1782</td>
+      <td>✗ 1368, confusione Papa</td>
+      <td>✗ 1550, convento</td>
+    </tr>
+    <tr>
+      <td><em>La fotosintesi è</em></td>
+      <td>✓ spettroscopia, luce solare</td>
+      <td>✗ Soprintendenza Salute RC</td>
+      <td>✗ terminologia medica</td>
+      <td>✗ genitori/bambini</td>
+      <td>✗ terapia muscolare</td>
+      <td>✗ fotoblog stradale</td>
+    </tr>
+    <tr>
+      <td><em>Prepara una pasta</em></td>
+      <td>½ cibo + storia</td>
+      <td>✓ ricetta con istruzioni</td>
+      <td>✓✓ parmigiano, sequenza precisa</td>
+      <td>✓ consigli cottura</td>
+      <td>✓ ricetta con ingredienti specifici</td>
+      <td>✓ ricetta (pasta+cioccolato, insolito)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Finding 1 — Wikipedia domina conoscenza enciclopedica e scientifica</h3>
+<div class="narr">run4-v6 è il migliore su Dante (Firenze, Divina Commedia, Virgilio), fotosintesi (spettroscopia, radiazione elettromagnetica), crisi del 1929 (contesto storico corretto). I modelli CulturaX degradano sulla scienza in modo rivelatore: "La fotosintesi è" diventa una terapia muscolare (run6-ad), una foto di strada (run6-ae), un programma per famiglie (run6-ac). Il corpus web non ha articoli scientifici: ha articoli di divulgazione medica e blog fotografici che condividono gli stessi token iniziali. Il modello non distingue il concetto, vede solo la co-occorrenza statistica.</div>
+
+<h3>Finding 2 — CulturaX porta conoscenza pratica e contemporanea</h3>
+<div class="narr">Le ricette sono eccellenti da run6-aa in poi: ingredienti reali (parmigiano reggiano, pomodori), istruzioni sequenziali, formato procedurale. La geografia pugliese migliora con ogni shard (da Golfo del Tigullio in run4-v6 a Bari + Lecce in run6-ae). Il jazz viene descritto con musicisti specifici (run6-ad) invece di circonlocuzioni enciclopediche. Il web corpus è denso di siti di ricette, news regionali e blog musicali: il modello apprende questi pattern pragmatici.</div>
+
+<h3>Finding 3 — La degradazione comincia a run6-ae, non ad run6-af</h3>
+<div class="narr">Questo è il dato più critico. "La crisi del 1929" in run6-ae produce Luigi Di Maio e Sergio Mattarella. "Compilazione del kernel" produce diritto costituzionale (art. 48, comma 1). "La fotosintesi è" produce un fotoblog con "LEGGI ANCHE". Il modello ha iniziato ad assorbire i pattern più superficiali del corpus — titoli, categorie, menu, riferimenti politici correnti — già al quinto shard CulturaX, non solo agli ultimi due (af, ag). La pendenza di degradazione comincia tra run6-ac/ad e run6-ae, non al confine tra Wikipedia e CulturaX come si ipotizzava.</div>
+
+<h3>Finding 4 — run6-ad è il sweet spot qualitativo</h3>
+<div class="narr">run6-ad produce: "la luna piena di luce. Il cielo si fa sentire da una persona" (tramonto), "Lecce, Regione Puglia ha voluto fare un passo avanti" (Puglia), un regista intervistato da Claudio Baglioni con filmografia plausibile (Francesco Benigni), un'analisi economica strutturata (1929). È il modello con il miglior bilanciamento tra conoscenza enciclopedica residua da Run #4 e arricchimento contemporaneo da CulturaX, senza la contaminazione visibile di run6-ae.</div>
+
+<h3>Implicazione per i 2 shard mancanti</h3>
+<div class="narr">Partire da run6-ae come base significherebbe aggiungere shard su un modello già degradato. La base corretta è <strong>run6-ad</strong>. I 2 shard sostitutivi devono essere ortogonali rispetto a CulturaX: il corpus web ha già dato quello che poteva dare (e anche di più). Quello che manca al modello è:
+<ul>
+  <li>Scienza e tecnica strutturata (fotosintesi → run4-v6 era migliore)</li>
+  <li>Letteratura italiana lunga (Ungaretti è mancante in tutti i modelli CulturaX)</li>
+  <li>Testi narrativi lunghi (ogni modello CulturaX produce frammenti tipici del web)</li>
+</ul>
+Fonti candidate per i 2 shard sostitutivi: Wikipedia dump più completo (estratti 200MB da dump 4GB), Wikisource italiano (letteratura pubblica dominio, testi lunghi), corpus letterario personale (EPUB).</div>
 

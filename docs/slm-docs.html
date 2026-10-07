@@ -1106,6 +1106,68 @@ ix = torch.randint(n, (batch_size,))
   </p>
 </section>
 
+<!-- ─────────────────────────────────────── INFERENZA AVANZATA -->
+<section id="inferenza-avanzata">
+  <h2>Controllo dell'inferenza: logit bias e token di fallback</h2>
+
+  <h3>Il vettore dei logit</h3>
+  <p>Ad ogni passo di generazione il modello produce un vettore di <strong>16.256 valori reali</strong> — uno per ogni token del vocabolario. Questi valori si chiamano <em>logit</em>: score grezzi, non normalizzati. Il softmax li trasforma in una distribuzione di probabilità; il campionatore (top-k, top-p, temperature) estrae il token successivo da quella distribuzione.</p>
+
+  <h3>Logit bias</h3>
+  <p>Il parametro <code>logit_bias</code> dell'endpoint <code>/completion</code> di llama-server accetta una lista di coppie <code>[token_id, valore]</code>. Immediatamente prima del softmax, il valore specificato viene sommato al logit del token corrispondente. L'operazione è:</p>
+  <pre>logit_modificato[id] = logit_originale[id] + valore</pre>
+  <p>Con <code>valore = -100</code>, il logit scende così in basso che dopo il softmax la probabilità del token è praticamente zero — non viene mai selezionato. Con <code>valore = +10</code> si può invece favorire un token specifico.</p>
+  <p>Il logit bias agisce <em>solo a inference time</em>, senza modificare i pesi del modello. È reversibile: basta non passarlo nella richiesta successiva.</p>
+
+  <h3>Token di fallback byte (indici 16000–16255)</h3>
+  <p>Il vocabolario BPE-SPM addestrato sul corpus italiano contiene <strong>16.000 token</strong>. La specifica GGUF richiede che il tokenizer sia in grado di codificare qualsiasi sequenza di byte, anche quelle non presenti nel vocabolario BPE. Per questo, durante la conversione, vengono aggiunti 256 token sintetici — uno per ogni byte possibile (0x00–0xFF) — agli indici 16000–16255. Ogni token corrisponde esattamente a un byte: <code>&lt;0x00&gt;</code>, <code>&lt;0x01&gt;</code>, …, <code>&lt;0xFF&gt;</code>.</p>
+  <p>Questi token di fallback sono <em>token di emergenza</em>: il tokenizer li usa solo per byte che non possono essere rappresentati altrimenti. In condizioni normali non dovrebbero mai comparire nell'output generato.</p>
+
+  <h3>Perché i byte token diventano competitivi</h3>
+  <p>Il corpus CulturaX contiene artefatti di encoding web: caratteri di controllo ASCII (tab, carriage return, form feed), byte non-printable da HTML mal decodificato, sequenze binarie in mezzo al testo. Il modello ha appreso che questi byte token compaiono in certi contesti — spesso dopo nomi propri rari, titoli di pagina, o intestazioni di sito.</p>
+  <p>Quando il modello incontra un contesto a <strong>alta incertezza</strong> (prompt insolito, nome proprio a bassa frequenza nel corpus), la distribuzione di probabilità si appiattisce: nessun token ha un vantaggio netto. In questo stato, i byte token — pur con probabilità individuale bassa — diventano competitivi rispetto ai token di testo. Con temperature=0.8 e top_p=0.9 il campionatore può selezionarli. Una volta generato un byte token, il contesto successivo spinge verso altri byte token: il loop si autoalimenta, l'output degenera in caratteri illeggibili.</p>
+
+  <h3>Fix operativo</h3>
+  <p>Generare l'array di bias per tutti i 256 byte token e passarlo ad ogni richiesta:</p>
+  <pre>BIAS=$(python3 -c "import json; print(json.dumps([[i,-100] for i in range(16000,16256)]))")
+
+curl http://localhost:8080/completion \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"prompt\": \"Il tuo prompt\",
+    \"n_predict\": 150,
+    \"temperature\": 0.8,
+    \"top_p\": 0.9,
+    \"repeat_penalty\": 1.3,
+    \"logit_bias\": $BIAS
+  }"</pre>
+  <p>Con questo fix il vocabolario operativo scende a 16.000 token. Il modello non può più generare byte token, indipendentemente da quanto sia alta la loro probabilità nei pesi.</p>
+
+  <div class="notice">
+    La presenza di byte token nell'output è anche un indicatore di qualità del corpus. La loro comparsa conferma che il corpus di training conteneva artefatti di encoding non filtrati. Il logit bias è una correzione a inference time, non una soluzione al problema corpus.
+  </div>
+
+  <h3>Corpus e conoscenza di dominio: analisi shard-by-shard</h3>
+  <p>Un test sistematico su 8 prompt semantici (tecnico, estetico, letterario, storico, scientifico, procedurale) condotto su 6 modelli (run4-v6 + shard run6-aa/ab/ac/ad/ae) ha rivelato il cambio di distribuzione dovuto al passaggio da Wikipedia a CulturaX:</p>
+
+  <table>
+    <thead>
+      <tr><th>Dominio</th><th>run4-v6 (Wikipedia)</th><th>run6-aa–ac (CulturaX early)</th><th>run6-ad (sweet spot)</th><th>run6-ae (CulturaX late)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Enciclopedico (Dante, storia)</td><td>✓✓ Firenze, Commedia, date plausibili</td><td>✗ date inventate, off-topic</td><td>✗ date inventate</td><td>✗ date inventate</td></tr>
+      <tr><td>Scientifico (fotosintesi)</td><td>✓ spettroscopia, radiazione</td><td>✗ fotografia, medicina</td><td>✗ terapia muscolare</td><td>✗ fotoblog</td></tr>
+      <tr><td>Geografico (Puglia)</td><td>✗ Liguria</td><td>½ Puglia + Campania</td><td>✓ Lecce, Regione Puglia</td><td>✓ Bari + Lecce</td></tr>
+      <tr><td>Tecnico IT (kernel)</td><td>✗ off-topic</td><td>✓ GNU, versioni kernel</td><td>½ backup</td><td>✗✗ testo legale</td></tr>
+      <tr><td>Procedurale (ricetta)</td><td>½ cibo + storia</td><td>✓ ricetta con istruzioni</td><td>✓ ingredienti specifici</td><td>✓ ricetta dettagliata</td></tr>
+      <tr><td>Creativo/estetico</td><td>✗ Wikipedia bio</td><td>½ blog emozionale</td><td>✓ poetico ("la luna piena di luce")</td><td>✗ hotel/turismo</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Interpretazione:</strong> Wikipedia fornisce conoscenza enciclopedica e scientifica strutturata. CulturaX aggiunge conoscenza geografica locale, contenuto pratico-procedurale e stili giornalistici. Ma da run6-ae in poi il corpus web superficiale (menu di navigazione, cookie banner, riferimenti politici correnti) inizia a prevalere sui contenuti sostanziali. run6-ad è il punto in cui il bilanciamento è migliore.</p>
+  <p>Per completare il Chinchilla parity (2 shard mancanti, ~262M token) partendo da run6-ad, il corpus sostitutivo deve essere ortogonale a CulturaX: Wikipedia dump più completo, Wikisource IT, corpus letterario.</p>
+</section>
+
 <!-- ─────────────────────────────────────── GLOSSARIO -->
 <section id="glossario">
   <h2>Glossario</h2>

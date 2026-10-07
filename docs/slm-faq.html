@@ -172,6 +172,8 @@ nav.foot-links a:hover { color: var(--accent); }
   <ol>
     <li><a href="#depth-vs-width">Un modello più profondo con lo stesso numero di parametri farebbe più cose?</a></li>
     <li><a href="#expand-params">È possibile aumentare i parametri senza ricostruire il modello?</a></li>
+    <li><a href="#lower-perplexity">Si potrebbe abbassare ancora la perplexity del modello attuale?</a></li>
+    <li><a href="#quantization-inference">Per l'inferenza è necessario usare il modello quantizzato?</a></li>
   </ol>
 </nav>
 
@@ -249,6 +251,86 @@ nav.foot-links a:hover { color: var(--accent); }
     </div>
 
     <p><strong>Risposta sintetica:</strong> tecnicamente esistono percorsi (Net2Net) che evitano la ricostruzione completa, ma nella pratica il risparmio è parziale e l'implementazione ha un costo. Per un salto significativo di parametri, la knowledge distillation è più conveniente della re-inizializzazione progressiva.</p>
+
+  </div>
+</div>
+
+<div class="qa-block" id="lower-perplexity">
+  <div class="qa-question">
+    <span class="qa-q-label">Q</span>
+    <p>Si potrebbe abbassare ancora la perplexity del modello attuale?</p>
+  </div>
+  <div class="qa-answer">
+
+    <p>Al termine di Run #6 il modello ha val loss 3.2965, perplexity ~27. La curva di apprendimento non era piatta: l'ultimo shard (ag) aveva il minimo a step 8000, l'ultimo disponibile, con la loss ancora in discesa. Esistono almeno tre leve distinte per ridurla ulteriormente, con costi e ritorni diversi.</p>
+
+    <h3>Leva 1 — Più dati</h3>
+
+    <p>Run #6 ha processato circa 917 milioni di token, raggiungendo la parità Chinchilla per un modello da 46 milioni di parametri (la legge Chinchilla indica 20 token per parametro come ottimo di efficienza). Tuttavia la parità Chinchilla è un ottimo di <em>efficienza</em>, non un limite assoluto: continuare ad addestrare oltre quel punto ha rendimenti decrescenti, ma non nulli.</p>
+
+    <p>Il corpus italiano più ricco disponibile senza licenze restrittive è CulturaX IT, che contiene circa 60 miliardi di token dopo filtraggio. Usarne anche solo una frazione significativa, 3–5 miliardi di token in un Run #7, porterebbe la val loss probabilmente sotto 3.1, con perplexity ~22–24. Il costo stimato su RTX 4090: 3–4 ore, circa 5 euro.</p>
+
+    <p>Il limite di questa leva: oltre una certa quantità di dati, il modello da 46M parametri non ha la capacità di memorizzare ulteriori pattern. La curva si appiattisce e continuare non porta vantaggi misurabili.</p>
+
+    <h3>Leva 2 — Architettura più grande</h3>
+
+    <p>Ogni architettura ha un pavimento di perplexity che non può superare indipendentemente da quanti dati riceve. Per il modello attuale (d_model=512, 12 layer, 46M param) quel pavimento è probabilmente intorno a 3.0–3.1 sul corpus italiano corrente.</p>
+
+    <p>Passare a 125M parametri (d_model=768, 12–16 layer) abbassa strutturalmente quel pavimento. Non è un miglioramento marginale: è un cambio di categoria. Con lo stesso volume di training data, un modello da 125M raggiunge perplexity intorno a 18–20 sullo stesso corpus. Con il corpus Chinchilla-ottimale per 125M (2.5 miliardi di token), si scende ulteriormente.</p>
+
+    <p>Il costo è significativo: ricostruzione completa del modello, nuovo training da zero, 10–15 ore su RTX 4090 per il solo pre-training Chinchilla. È la leva più potente ma anche la più costosa.</p>
+
+    <h3>Leva 3 — Qualità e mix del corpus</h3>
+
+    <p>Il corpus di Run #6 mescola Wikipedia italiana e testi web generici (CulturaX). La qualità non è uniforme: i testi web includono contenuti ridondanti, errori grammaticali, formati strutturati (tabelle HTML, codice, metadati) che il modello deve "imparare a ignorare".</p>
+
+    <p>Sostituire una frazione del corpus web con testi più curati, saggistica, giornalismo di qualità, narrativa contemporanea, migliora la perplexity su testo italiano standard anche senza aumentare il volume totale. La stima è un guadagno di 0.1–0.2 di val loss rispetto al corpus attuale, a parità di step.</p>
+
+    <p>Questa leva è anche la più rilevante per applicazioni specifiche: un modello addestrato su testi giornalistici ha perplexity più bassa su articoli di giornale, anche se la perplexity complessiva su Wikipedia non cambia. La qualità del corpus definisce il dominio dove il modello è più fluente.</p>
+
+    <h3>Quale percorso è più conveniente</h3>
+
+    <p>Dipende dall'obiettivo. Se si vuole abbassare la perplexity con il minimo sforzo sul modello da 46M: Run #7 con 2–3 miliardi di token di CulturaX IT filtrato è il passo più diretto. Se si vuole un salto qualitativo vero, con un modello capace di rispondere a domande semplici anche senza fine-tuning, la strada è scala a 125M parametri. Le due leve non si escludono: si può fare Run #7 ora e scala in un momento successivo.</p>
+
+    <p><strong>Risposta sintetica:</strong> sì, la perplexity può scendere ulteriormente. Le tre leve sono più dati (Run #7, ~5 euro, perplexity ~22–24), architettura più grande (125M param, costo maggiore, perplexity ~18–20) e corpus di qualità superiore (guadagno marginale di 0.1–0.2 senza costi di compute aggiuntivi). La leva più conveniente nell'immediato è il corpus: costa zero in compute e migliora la qualità del testo generato anche se la val loss scende poco.</p>
+
+  </div>
+</div>
+
+<div class="qa-block" id="quantization-inference">
+  <div class="qa-question">
+    <span class="qa-q-label">Q</span>
+    <p>Per l'inferenza è necessario usare il modello quantizzato?</p>
+  </div>
+  <div class="qa-answer">
+
+    <p>No, non è necessario. Il modello fp32 da 218 MB è perfettamente usabile per l'inferenza, anche su hardware consumer. La domanda più utile non è "devo quantizzare?" ma "quale formato conviene in questo contesto?"</p>
+
+    <h3>Cosa cambia tra fp32 e Q8_0</h3>
+
+    <p>Il formato fp32 (virgola mobile a 32 bit) è quello prodotto direttamente dalla conversione del checkpoint PyTorch. Ogni peso occupa 4 byte. Il formato Q8_0 quantizza ogni peso a 8 bit con un fattore di scala per blocco, riducendo la dimensione a circa un quarto.</p>
+
+    <p>Per un modello da 46 milioni di parametri la differenza in megabyte è limitata: 218 MB fp32 contro 55 MB Q8_0. Entrambi entrano interamente nella RAM unificata di un M2, anche nei tagli base.</p>
+
+    <h3>Perché Q8_0 è preferibile per l'inferenza su Apple Silicon</h3>
+
+    <p>Il collo di bottiglia dell'inferenza su Metal non è la capacità di calcolo della GPU ma la banda memoria: quanto velocemente si riesce a spostare i pesi dalla RAM alle unità di calcolo per ogni token generato. Un modello più compatto occupa meno spazio in cache e richiede meno trasferimenti per token.</p>
+
+    <p>Il risultato è controintuitivo: Q8_0 è più veloce di fp32 anche quando la RAM è abbondante, perché riduce la pressione sulla banda memoria. La differenza è misurabile: nell'ordine del 20–40% di token al secondo in più.</p>
+
+    <h3>La perdita di qualità con Q8_0 è trascurabile a questa scala</h3>
+
+    <p>La quantizzazione a 8 bit introduce un errore di approssimazione sui pesi. Su modelli grandi (7B+) questo errore può essere misurabile sulla perplexity. Su un modello da 46M parametri l'errore è sotto la soglia percepibile: la perplexity varia di meno di 0.01, una differenza invisibile nell'output generato.</p>
+
+    <p>Questo perché i modelli piccoli hanno pesi con range di valori più regolari e distribuzioni più strette: il quantizzatore a 8 bit li rappresenta con alta fedeltà. La perdita di precisione diventa rilevante solo su modelli con distribuzioni di pesi irregolari o outlier estremi, caratteristica dei modelli molto grandi.</p>
+
+    <h3>Quando usare il fp32</h3>
+
+    <p>Il fp32 è necessario in tre casi: fine-tuning e calcolo di gradienti (la backpropagation richiede precisione piena), export verso formati che non supportano la dequantizzazione (alcuni framework di deployment), e debug di anomalie nell'output dove si vuole escludere artefatti di quantizzazione come causa.</p>
+
+    <p>Per tutti gli altri usi — inferenza locale, server API, test, dimostrazione — Q8_0 è il formato corretto.</p>
+
+    <p><strong>Risposta sintetica:</strong> no, non è obbligatorio, ma Q8_0 è la scelta migliore per l'inferenza su Apple Silicon: più veloce del fp32 per la minore pressione sulla banda memoria, e senza perdita di qualità misurabile su un modello da 46M parametri. Il fp32 serve solo per fine-tuning o operazioni che richiedono precisione piena sui pesi.</p>
 
   </div>
 </div>
