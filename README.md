@@ -12,12 +12,11 @@ Ogni componente scritto e compreso prima di passare al successivo: architettura 
 | | |
 |---|---|
 | Architettura | Decoder-only Transformer (pre-norm, RoPE) |
-| Parametri | 45.9M (~175 MB fp32) |
+| Parametri | 45,997,056 (~175 MB fp32) |
 | Tokenizer | BPE-SPM, 16 000 token |
-| Miglior checkpoint | Run #4 — val loss **3.5861** (perplexity ~36) |
-| Run in corso | #5 — shard 3/7 completato · val loss min Run #5: **3.821** · shard 4/7 in training |
-| Target Chinchilla | 918M token (20 × 45.9M param) — Run #5 ne processa ~917M |
-| Deployment | `slm-run4.gguf` (fp16) · `slm-run4-q8_0.gguf` (Q8_0) |
+| Miglior checkpoint | Run #7 shard 3 — val loss **2.8165** (perplexity ~16.7) |
+| Corpus totale | Wikipedia IT 3 shard (~210M token) su base CulturaX IT sweet spot |
+| Deployment | `slm-run7-s3-q8_0.gguf` (56 MB Q8_0) |
 
 ---
 
@@ -98,7 +97,7 @@ python3 -u tools/filter_corpus.py \
 
 ## Provare il modello
 
-I file GGUF del Run #4 sono su **HuggingFace** (non stanno nel repo perché superano il limite di 100 MB di GitHub).
+I file GGUF sono su **HuggingFace** (non stanno nel repo perché superano il limite di 100 MB di GitHub).
 
 **Scarica i file:**
 ```
@@ -108,8 +107,7 @@ https://huggingface.co/c1cc10/slm-italiano
 Oppure da terminale con `huggingface-cli`:
 ```bash
 pip install huggingface_hub
-huggingface-cli download c1cc10/slm-italiano slm-run4-q8_0.gguf
-huggingface-cli download c1cc10/slm-italiano slm-run4.gguf
+huggingface-cli download c1cc10/slm-italiano slm-run7-s3-q8_0.gguf
 ```
 
 Ci sono due modi per usarli.
@@ -130,7 +128,7 @@ llama.cpp è un runtime C++ che gira su qualsiasi macchina, anche senza GPU.
 4. Apri PowerShell o il Prompt dei comandi nella stessa cartella e lancia:
 
 ```
-llama-cli.exe -m C:\percorso\slm\slm-run4-q8_0.gguf -p "La capitale d'Italia è" --temp 0.8 -n 200
+llama-cli.exe -m C:\percorso\slm-run7-s3-q8_0.gguf -p "La capitale d'Italia è" --temp 0.8 -n 200
 ```
 
 **macOS / Linux**
@@ -138,15 +136,14 @@ llama-cli.exe -m C:\percorso\slm\slm-run4-q8_0.gguf -p "La capitale d'Italia è"
 ```bash
 git clone https://github.com/ggerganov/llama.cpp && cd llama.cpp
 cmake -B build && cmake --build build --config Release -j
-./build/bin/llama-cli -m /percorso/slm/slm-run4-q8_0.gguf -p "La capitale d'Italia è" --temp 0.8 -n 200
+./build/bin/llama-cli -m /percorso/slm-run7-s3-q8_0.gguf -p "La capitale d'Italia è" --temp 0.8 -n 200
 ```
 
-**Quale GGUF scegliere:**
+**File disponibili:**
 
 | File | Dimensione | Quando usarlo |
 |------|-----------|---------------|
-| `slm-run4-q8_0.gguf` | ~46 MB | uso normale — qualità quasi identica al fp16 |
-| `slm-run4.gguf` | ~88 MB | se vuoi la precisione completa fp16 |
+| `slm-run7-s3-q8_0.gguf` | 56 MB | uso normale — checkpoint più recente (Run #7) |
 
 ---
 
@@ -185,15 +182,15 @@ Il checkpoint `checkpoints/best.pt` e il tokenizer `checkpoints/tokenizer.model`
 Se hai il checkpoint `checkpoints/best.pt` e llama.cpp clonato localmente, puoi convertirlo tu stesso:
 ```bash
 # dalla directory llama.cpp
-python3 convert_hf_to_gguf.py /percorso/slm --outtype f16 --outfile slm-run4.gguf
-./build/bin/llama-quantize slm-run4.gguf slm-run4-q8_0.gguf Q8_0
+python3 convert_hf_to_gguf.py /percorso/slm --outtype f16 --outfile slm-run7-s3.gguf
+./build/bin/llama-quantize slm-run7-s3.gguf slm-run7-s3-q8_0.gguf Q8_0
 ```
 
 > **Nota**: questo è un modello di ricerca (45.9M parametri, solo pre-training). Genera testo in italiano ma non segue istruzioni — è un completion model, non un assistente conversazionale.
 
 ---
 
-## Architettura — preset medium (Run #4)
+## Architettura
 
 | Iperparametro | Valore |
 |---|---|
@@ -203,7 +200,48 @@ python3 convert_hf_to_gguf.py /percorso/slm --outtype f16 --outfile slm-run4.ggu
 | d_ff | 2 048 |
 | max_seq_len | 512 |
 | dropout | 0.1 |
-| Parametri totali | 45 997 056 |
+| Parametri totali | **45 997 056** |
+
+**Conto esatto dei parametri** (per chiarezza, perché il GGUF usa il namespace `gptneox.*`):
+
+Il modello non è GPT-NeoX. L'FFN è standard a due matrici lineari, non gated:
+
+| Componente | Per blocco | Note |
+|---|---|---|
+| Attention (W_q, W_k, W_v, W_o) | 4 × 512² = 1 048 576 | `bias=False` su tutte le proiezioni |
+| LN1 + LN2 | 2 × 2 × 512 = 2 048 | weight + bias per ciascuna |
+| FFN fc1 (d→d_ff) | 512 × 2048 + 2048 = 1 050 624 | bias=True (default PyTorch) |
+| FFN fc2 (d_ff→d) | 2048 × 512 + 512 = 1 049 088 | bias=True |
+| **Per blocco** | **3 150 336** | |
+
+12 blocchi: 37 804 032  
+Token embedding (tied con lm_head): 16 000 × 512 = 8 192 000  
+LayerNorm finale: 1 024  
+lm_head: 0 (pesi condivisi con l'embedding)  
+**Totale: 45 997 056**
+
+Il namespace `gptneox.*` nelle GGUF metadata riflette il tipo architetturale più vicino supportato da llama.cpp al momento della conversione, non indica GPT-NeoX con FFN gated (gate × up × down). `use_parallel_residual = false` è corretto.
+
+---
+
+## Benchmark — Run #7 shard 3 vs Minerva 350M
+
+Benchmark su 10 prompt in italiano (stesso set per entrambi i modelli, temperatura 0.8, n_predict 300).
+
+| Prompt | SLM s3 | Minerva 350M | Vantaggio |
+|--------|--------|--------------|-----------|
+| Dante Alighieri nacque | narrativa storica, nessun loop | date inventate, deriva blog | SLM |
+| compilazione del kernel | loop ridotto | lista estensioni file | pari (entrambi inutili) |
+| un tramonto splendido | palazzo ottomano, visivo | risacca, nuvole, sensoriale | Minerva |
+| Le poesie di Ungaretti | prosa critico-letteraria fluente | blog evento, autori inventati | SLM |
+| La crisi del 1929 | anno riconosciuto, contesto europeo | confonde WWI con crisi '29 | SLM |
+| Il jazz nasce | jazz = K-pop anni '90 | festival jazz blog | pari |
+| La fotosintesi è | geologia giapponese | lampade solari | pari |
+| Prepara una pasta | loop "pourfail" | ricetta reale (spinaci, panna) | Minerva |
+| La regione Puglia è | loop "Foggia" ×20 | Vieste, dettagli reali | Minerva |
+| Francesco Benigni | narrativa risorgimentale, zero loop | blog fondazione parrocchiale | SLM |
+
+**Sintesi:** SLM vince su 4 prompt (registro storico-enciclopedico e letterario), Minerva vince su 3 (registro pratico-sensoriale), 3 pari. I domini sono complementari: SLM non ha corpus culinario o turistico moderno, Minerva non ha corpus enciclopedico. Minerva 3B instruct non è utilizzabile in raw completion (il wrapper `[INST]` attiva pattern web dal corpus).
 
 ---
 
@@ -214,10 +252,11 @@ python3 convert_hf_to_gguf.py /percorso/slm --outtype f16 --outfile slm-run4.ggu
 | 1 | Architettura from scratch, char-level | ✅ val loss 1.73 |
 | 2 | BPE-SPM tokenizer, Wikipedia IT | ✅ completata |
 | 3 | Pre-training medium (Run #3) | ✅ val loss 4.08 — scorer PPL |
-| 4 | RoPE, Run #4, export GGUF | ✅ val loss 3.59 — best checkpoint |
-| 5 | Corpus espansione + Run #5 (Chinchilla-optimal) | 🔄 in corso — shard 3/7 ✓ · val min 3.821 · ~16h rimanenti |
-| 6 | Run #6 su GPU, corpus mix finale | ⏳ dopo valutazione Run #5 |
-| 7 | SFT su dataset istruzione-seguente italiano | ⏳ pianificata |
-| 8 | LoRA adapter per dominio applicativo | ⏳ pianificata |
-| 9 | Quantizzazione Q4_K_M + inferenza locale | ⏳ pianificata |
-| 10 | Multimodale: YOLO v3 + LM | ⏳ pianificata |
+| 4 | RoPE, Run #4, export GGUF | ✅ val loss 3.59 |
+| 5 | Corpus espansione CulturaX IT, 7 shard | ✅ sweet spot a shard 4 (val 3.35), degradazione da shard 5 |
+| 6 | Run #6 — CulturaX sweet spot come base | ✅ val loss 3.3524 (shard 4, run6-ad) |
+| 7 | Run #7 — Wikipedia IT 3 shard su base run6-ad | ✅ val loss **2.8165** · GGUF 56 MB |
+| 8 | Run #8 — corpus dominio specifico | 🔄 in design |
+| 9 | SFT su dataset istruzione-seguente italiano | ⏳ pianificata |
+| 10 | LoRA adapter per dominio applicativo | ⏳ pianificata |
+| 11 | Multimodale: YOLO v3 + LM | ⏳ pianificata |

@@ -894,3 +894,343 @@ Poi tokenizzare ogni shard con il tokenizer esistente (<code>--tokenizer bpe-spm
 
 </div>
 
+<h2 id="run7-esecuzione">Run #7 — Esecuzione su Vast.ai (2026-10-07/08)</h2>
+
+<div class="narr">Run #7 avviato su Vast.ai (RTX 4090, istanza 54681871) il 2026-10-07 alle 19:19 UTC. 3 shard × 20 000 step × batch 32 × seq 512 = ~983 M token, Chinchilla-optimal per 45.9 M parametri. Script: <code>run7_train_only.sh</code>. Punto di partenza: <code>run6_shard_ad.pt</code> (val 3.3524, CulturaX sweet spot). Completato il 2026-10-08 alle 01:01 UTC.</div>
+
+<h3>Parametri training</h3>
+<table class="ck-table">
+  <thead><tr><th>Parametro</th><th>Valore</th></tr></thead>
+  <tbody>
+    <tr><td>Punto di partenza</td><td><code>run6_shard_ad.pt</code> — val 3.3524</td></tr>
+    <tr><td>Corpus</td><td>Wikipedia IT dump, shard 1–3 × 1.1 GB (~70 M token/shard)</td></tr>
+    <tr><td>Step per shard</td><td>20 000 (Chinchilla parity)</td></tr>
+    <tr><td>Batch × seq</td><td>32 × 512</td></tr>
+    <tr><td>Meccanismo</td><td><code>--resume --reset-best</code> sequenziale</td></tr>
+    <tr><td>Hardware</td><td>RTX 4090 (Vast.ai, istanza 54681871)</td></tr>
+    <tr><td>Durata totale</td><td>~5.5 ore (19:19 UTC 7/10 → 01:01 UTC 8/10)</td></tr>
+  </tbody>
+</table>
+
+<h3>Progressione val loss</h3>
+<table class="ck-table">
+  <thead><tr><th>Fase</th><th>Val loss</th><th>Δ</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>CulturaX baseline (run6-ad)</td><td>3.3524</td><td>—</td><td>Punto di partenza</td></tr>
+    <tr><td>Shard 1 (wiki s1, step 20 000)</td><td>3.0917</td><td>−0.261</td><td>Completato 21:36 UTC</td></tr>
+    <tr><td>Shard 2 (wiki s2, step 20 000)</td><td>2.9083</td><td>−0.183</td><td>Completato 23:19 UTC</td></tr>
+    <tr><td><strong>Shard 3 (wiki s3, step 20 000)</strong></td><td><strong>2.8165</strong></td><td><strong>−0.092</strong></td><td><strong>Completato 01:01 UTC — best assoluto</strong></td></tr>
+  </tbody>
+</table>
+
+<div class="callout info">
+  <strong>Miglioramento totale Run #7: −0.536 (−16% da CulturaX)</strong><br>
+  Il minimo a step 20 000 con curva ancora in discesa suggerisce che ulteriore training su Wikipedia porterebbe ulteriore miglioramento.
+</div>
+
+<h3>Dinamica shard 3 — val loss dettagliata</h3>
+<table class="ck-table">
+  <thead><tr><th>Step</th><th>Val</th><th>Nota</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>2.9400</td><td>baseline reset-best</td></tr>
+    <tr><td>1 500</td><td>3.0888</td><td>peak adattamento</td></tr>
+    <tr><td>7 000</td><td>2.9911</td><td>sotto 3.0</td></tr>
+    <tr><td>10 000</td><td>2.9319</td><td>crossing baseline</td></tr>
+    <tr><td>11 500</td><td>2.8910</td><td>salto −0.032, supera shard 2</td></tr>
+    <tr><td>14 500</td><td>2.8582</td><td>salto −0.026</td></tr>
+    <tr><td>16 000</td><td>2.8368</td><td>salto −0.033</td></tr>
+    <tr><td>18 000</td><td>2.8237</td><td>salto −0.006</td></tr>
+    <tr><td><strong>20 000</strong></td><td><strong>2.8165</strong></td><td><strong>minimo finale</strong></td></tr>
+  </tbody>
+</table>
+
+<h2 id="run7-benchmark">Run #7 — Benchmark locale (2026-10-08)</h2>
+
+<div class="narr">Benchmark eseguito su M5 MPS dopo download checkpoint. 4 versioni × 10 prompt = 40 generazioni. Stesso set di prompt del confronto Minerva. Completato in ~12 minuti. Log: <code>logs/run7/benchmark_local.log</code>.</div>
+
+<table class="ck-table">
+  <thead><tr><th>Versione</th><th>Val</th><th>Corpus</th></tr></thead>
+  <tbody>
+    <tr><td>baseline (run6-ad)</td><td>3.3524</td><td>CulturaX sweet spot</td></tr>
+    <tr><td>shard 1</td><td>3.0917</td><td>+ Wikipedia s1 (~70 M tok)</td></tr>
+    <tr><td>shard 2</td><td>2.9083</td><td>+ Wikipedia s1+s2 (~140 M tok)</td></tr>
+    <tr><td><strong>shard 3</strong></td><td><strong>2.8165</strong></td><td><strong>+ Wikipedia s1+s2+s3 (~210 M tok)</strong></td></tr>
+  </tbody>
+</table>
+
+<h3>Risultati per prompt</h3>
+<table class="ck-table">
+  <thead>
+    <tr><th>Prompt</th><th>Baseline</th><th>Shard 1</th><th>Shard 2</th><th>Shard 3</th><th>Tendenza</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Dante Alighieri nacque</strong></td>
+      <td>Loop "romanzo/storia d'amore", nessun fatto</td>
+      <td>Struttura biografica, nomi plausibili</td>
+      <td>Anno sbagliato (1524), ma enciclopedico</td>
+      <td>Anno sbagliato (1885), narrativa lineare senza loop</td>
+      <td>Struttura ↑↑, fatti ≈</td>
+    </tr>
+    <tr>
+      <td><strong>compilazione del kernel</strong></td>
+      <td>Loop "aggiornamento Windows" ×20</td>
+      <td>Loop "configurazione Linux" ×15</td>
+      <td>Loop "dispositivo di controllo" ×12</td>
+      <td>Loop ridotto, confonde kernel con linguaggio programmazione</td>
+      <td>Loop ↓, dominio assente in tutte</td>
+    </tr>
+    <tr>
+      <td><strong>un tramonto splendido</strong></td>
+      <td>Deriva YouTube/rapper</td>
+      <td>Narrativa marina fuori tema</td>
+      <td>Film "Charlie", loop nome</td>
+      <td><strong>Descrizione palazzo ottomano evocativa, atmosfera visiva</strong></td>
+      <td>Qualità narrativa ↑↑↑</td>
+    </tr>
+    <tr>
+      <td><strong>Le poesie di Ungaretti</strong></td>
+      <td>Loop "Il Sole 24 Ore" ×20+</td>
+      <td>Titoli inventati, struttura biobibliografica</td>
+      <td>Nomi inventati, struttura Wikipedia</td>
+      <td><strong>Prosa critico-letteraria fluente, argomentazione corretta</strong></td>
+      <td>Registro letterario ↑↑↑</td>
+    </tr>
+    <tr>
+      <td><strong>La crisi del 1929</strong></td>
+      <td>Deriva sociologica, nessun riferimento economico</td>
+      <td>Contesto bellico, nomi inventati</td>
+      <td>Toponomastica inventata (Durrell)</td>
+      <td><strong>Anno riconosciuto (1929), contesto europeo, Ungheria plausibile</strong></td>
+      <td>Contestualizzazione storica ↑↑↑</td>
+    </tr>
+    <tr>
+      <td><strong>Il jazz nasce</strong></td>
+      <td>Loop titoli inventati</td>
+      <td>Epoche sbagliate, struttura discografica</td>
+      <td>Beatles decontestualizzati</td>
+      <td>Fluente ma sbagliato (jazz = K-pop, Corea anni '90)</td>
+      <td>Fluenza ↑, dominio assente</td>
+    </tr>
+    <tr>
+      <td><strong>La fotosintesi è</strong></td>
+      <td>Fotosintesi come concetto fotografico</td>
+      <td>Loop "cloruro di calcio" ×15</td>
+      <td>Processi scientifici inventati</td>
+      <td>Geologia giapponese, loop residuo "fango di fango"</td>
+      <td>Conoscenza scientifica assente in tutte</td>
+    </tr>
+    <tr>
+      <td><strong>Prepara una pasta</strong></td>
+      <td>Loop + token ⁇ catastrofici</td>
+      <td>Ingredienti plausibili, deriva cucina asiatica</td>
+      <td>Ingredienti plausibili, "tasat" inventato</td>
+      <td>Ingredienti strani, loop "pourfail" inventato</td>
+      <td><strong>Regressione in shard 3</strong></td>
+    </tr>
+    <tr>
+      <td><strong>La regione Puglia è</strong></td>
+      <td>Turismo/hotel, tono pubblicitario</td>
+      <td>Storia antica confusa</td>
+      <td>Loop toponimi</td>
+      <td><strong>Loop "Foggia" ×20+ — peggiore di tutte</strong></td>
+      <td><strong>Regressione grave in shard 3</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Francesco Benigni</strong></td>
+      <td>Loop "Regione Campania" ×5</td>
+      <td>Descrizione chiesa barocca, precisa</td>
+      <td>Pagina Wikipedia comune, coerente</td>
+      <td><strong>Narrativa storica risorgimentale, nomi reali, zero loop</strong></td>
+      <td>Qualità enciclopedica ↑↑↑</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout warning">
+  <strong>Pattern diagnostico — regressioni toponomastiche in shard 3:</strong>
+  "Foggia" e "pourfail" mostrano che il corpus Wikipedia ha creato attrazione gravitazionale su certi token toponomastici/lessicali. Il modello si è agganciato a token frequenti nel corpus specifico di shard 3 invece di generalizzare. Questo è il catastrophic forgetting parziale atteso.
+</div>
+
+<h3>GGUF Run #7 — shard 3</h3>
+<table class="ck-table">
+  <thead><tr><th>File</th><th>Dimensione</th><th>Uso</th></tr></thead>
+  <tbody>
+    <tr><td><code>slm-run7-s3.gguf</code></td><td>208 MB (fp32)</td><td>Test e conversione</td></tr>
+    <tr><td><code>slm-run7-s3-q8_0.gguf</code></td><td><strong>56 MB</strong></td><td>Inferenza normale</td></tr>
+  </tbody>
+</table>
+
+<h2 id="run7-minerva">Run #7 — Confronto con Minerva (2026-10-08)</h2>
+
+<div class="narr">Benchmark comparativo eseguito lo stesso giorno del benchmark locale. Modelli: Minerva-350M-base (Q5_0, 268 MB) e Minerva-3B-instruct (Q5_K_M). Stesso set di 10 prompt, stessa temperatura 0.8, n_predict 300. Script: <code>run7_benchmark_minerva_server.sh</code>. Log: <code>logs/run7/benchmark_minerva.log</code>.</div>
+
+<h3>Minerva 350M base — risultati per prompt</h3>
+
+<table class="ck-table">
+  <thead>
+    <tr><th>Prompt</th><th>Output</th><th>Diagnosi</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Dante Alighieri nacque</strong></td>
+      <td>Date inventate (1578, 1620), narrativa incoerente, poi deriva verso blog letterario ("Lo scriba dei fratelli Grimm", "Winnie the Pooh")</td>
+      <td>Conoscenza enciclopedica assente, deriva web pesante</td>
+    </tr>
+    <tr>
+      <td><strong>compilazione del kernel</strong></td>
+      <td>Lista di estensioni file: <code>f.bat, f.cpp, grep, h.sys, txtp, txttcg…</code> — 40 righe di varianti</td>
+      <td>Dominio tecnico completamente assente</td>
+    </tr>
+    <tr>
+      <td><strong>un tramonto splendido</strong></td>
+      <td><strong>Migliore output:</strong> "risacca sulla riva", "nuvole che diventano blu-scuro", paesaggio marino sensoriale. Poi deriva verso newsletter meteo</td>
+      <td>Registro sensoriale/naturalistico presente</td>
+    </tr>
+    <tr>
+      <td><strong>Le poesie di Ungaretti</strong></td>
+      <td>Formato blog/evento culturale ("Libreria Feltrinelli, 25 novembre"), autori inventati (Calzolari, Pappano). Riferimento a Ungaretti corretto ma contesto inventato</td>
+      <td>Schema testuale (evento letterario) senza conoscenza reale</td>
+    </tr>
+    <tr>
+      <td><strong>La crisi del 1929</strong></td>
+      <td>Confonde la crisi del '29 con la Prima/Seconda guerra mondiale. "Truppe italiane", "operazione Regno di Sardegna". Nessun riferimento a economia, Wall Street, deflazione</td>
+      <td>Associazione temporale assente, dominio economico mancante</td>
+    </tr>
+    <tr>
+      <td><strong>Il jazz nasce</strong></td>
+      <td>Festival jazz su terrazza panoramica "The Yacht Club", "Global Music Competition 2019". Blog promozionale, nessuna origine storica</td>
+      <td>Contesto storico musicale assente</td>
+    </tr>
+    <tr>
+      <td><strong>La fotosintesi è</strong></td>
+      <td>Confonde fotosintesi con emissione di luce da lampadine solari. "Spettro di assorbimento 3000 W/m²K". Apparenza tecnica ma contenuto sbagliato</td>
+      <td>Dominio scientifico: forma senza sostanza</td>
+    </tr>
+    <tr>
+      <td><strong>Prepara una pasta</strong></td>
+      <td><strong>Migliore output:</strong> ricetta reale. Spinaci, aglio, pomodorini, panna, ingredienti plausibili, procedura coerente. Unico modello a generare una ricetta utilizzabile</td>
+      <td>Corpus web/cucina presente e funzionale</td>
+    </tr>
+    <tr>
+      <td><strong>La regione Puglia è</strong></td>
+      <td><strong>Migliore output:</strong> Vieste con dettagli geografici e storici corretti, nessun loop, tono turistico senza spam. "Altopiano a 406 m s.l.m.", "castello Svevo"</td>
+      <td>Corpus turistico/geografico presente, nessuna attrazione su un singolo token</td>
+    </tr>
+    <tr>
+      <td><strong>Francesco Benigni</strong></td>
+      <td>Blog eventi parrocchiali ("Fondazione Amici di San Lorenzo"), "mons. Benigni" come personaggio reale. Nessuna relazione con il soggetto richiesto</td>
+      <td>Omonimia non risolta, deriva ecclesiastica</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Minerva 3B instruct — inutilizzabile</h3>
+
+<div class="narr">Tutti e 10 i prompt producono output inutilizzabili. Il wrapper <code>[INST] Continua questo testo in italiano: … [/INST]</code> attiva pattern da corpus web in cui <code>[INST]</code> appariva come marcatore HTML-like. Il modello non ha sviluppato la capacità di seguire istruzioni: ha imparato a completare sequenze che cominciano con <code>[INST]</code> replicando il rumore che circondava quel tag nei dati di addestramento.</div>
+
+<table class="ck-table">
+  <thead>
+    <tr><th>Prompt</th><th>Pattern attivato</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Dante</td><td><code>[TUTTODANTE][QUIZ DANTESCO]</code> poi eco <code>[INST]</code>, poi articoli di import/export</td></tr>
+    <tr><td>Kernel</td><td><code>[GUIDE][INTL]</code> forum Intel Atom, loop "Krystal_Fanatic 2018-3" ×5</td></tr>
+    <tr><td>Tramonto</td><td><code>[INSTAGRAM - #WHYI'MMAFREAKING]</code> loop ×5 identico</td></tr>
+    <tr><td>Crisi 1929</td><td><code>[COVID-XI874.035][INTL_VirusTestingPatientName].zip</code>, archivio download loop</td></tr>
+    <tr><td>Jazz</td><td><code>[AUDIO IN ITALIANO - ENGLISH VERSION]</code>, eco <code>[INST]</code>, loop musicale</td></tr>
+    <tr><td>Fotosintesi</td><td><code>[ENG][ITA][DEU][DEU][ENG]</code> tag linguistici, definizione parzialmente corretta ma non accessibile</td></tr>
+    <tr><td>Pasta</td><td><code>[SUBJECT_MENU = "Pasta"]</code> loop clic UI ×8 identico</td></tr>
+    <tr><td>Puglia</td><td>Primo paragrafo plausibile, poi eco <code>[INST]</code> loop identico ×4</td></tr>
+    <tr><td>Benigni</td><td><code>&lt;iframe src="https://open.spotify.com/?uri=3"&gt;</code>, HTML object tag loop</td></tr>
+    <tr><td>Ungaretti</td><td>Parzialmente leggibile (parafrasi "Soldati"), ma testo inventato e citazioni false</td></tr>
+  </tbody>
+</table>
+
+<div class="callout warning">
+  <strong>Diagnosi Minerva 3B instruct:</strong> il modello 3B è stato addestrato con istruzioni su corpus web che conteneva <code>[INST]</code> come tag HTML, non come separatore conversazionale. Il formato instruct non è stato appreso come comportamento ma come pattern testuale. Ogni prompt innesca una catena associativa verso il tipo di testo che nel corpus seguiva <code>[INST]</code>: forum, social, archivi download, codice HTML. Il modello è inutilizzabile per raw completion con wrapper istruzione.
+</div>
+
+<h3>Tabella comparativa: SLM s3 vs Minerva 350M</h3>
+
+<table class="ck-table">
+  <thead>
+    <tr><th>Prompt</th><th>SLM s3</th><th>Minerva 350M</th><th>Vantaggio</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Dante</strong></td>
+      <td>Anno sbagliato, narrativa storica lineare, nessun loop</td>
+      <td>Date inventate, deriva blog/favole</td>
+      <td>SLM s3</td>
+    </tr>
+    <tr>
+      <td><strong>Kernel</strong></td>
+      <td>Loop ridotto, confonde kernel con linguaggio di programmazione</td>
+      <td>Lista estensioni file, completamente fuori dominio</td>
+      <td>Pari (entrambi inutili)</td>
+    </tr>
+    <tr>
+      <td><strong>Tramonto</strong></td>
+      <td>Palazzo ottomano, atmosfera visiva indiretta</td>
+      <td><strong>Risacca, nuvole, blu-scuro, sensoriale diretto</strong></td>
+      <td>Minerva 350M</td>
+    </tr>
+    <tr>
+      <td><strong>Ungaretti</strong></td>
+      <td><strong>Prosa critico-letteraria fluente, argomento corretto</strong></td>
+      <td>Blog evento, autori inventati</td>
+      <td>SLM s3</td>
+    </tr>
+    <tr>
+      <td><strong>Crisi 1929</strong></td>
+      <td><strong>Anno riconosciuto, contesto europeo plausibile</strong></td>
+      <td>Confonde WWI con crisi economica</td>
+      <td>SLM s3</td>
+    </tr>
+    <tr>
+      <td><strong>Jazz</strong></td>
+      <td>Jazz = K-pop coreano anni '90 (sbagliato)</td>
+      <td>Festival jazz blog (sbagliato, ma jazz riconosciuto)</td>
+      <td>Pari</td>
+    </tr>
+    <tr>
+      <td><strong>Fotosintesi</strong></td>
+      <td>Geologia giapponese, loop residuo "fango di fango"</td>
+      <td>Lampade solari, apparenza tecnica</td>
+      <td>Pari (entrambi sbagliati)</td>
+    </tr>
+    <tr>
+      <td><strong>Pasta</strong></td>
+      <td>Loop "pourfail", ingredienti strani</td>
+      <td><strong>Ricetta reale: spinaci, aglio, pomodorini, panna</strong></td>
+      <td>Minerva 350M</td>
+    </tr>
+    <tr>
+      <td><strong>Puglia</strong></td>
+      <td>Loop "Foggia" ×20+, peggiore della serie</td>
+      <td><strong>Vieste, dettagli geografici reali, nessun loop</strong></td>
+      <td>Minerva 350M</td>
+    </tr>
+    <tr>
+      <td><strong>Benigni</strong></td>
+      <td><strong>Narrativa risorgimentale, nomi storici reali, zero loop</strong></td>
+      <td>Blog fondazione parrocchiale, omonimia</td>
+      <td>SLM s3</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout info">
+  <strong>Punteggio: SLM s3 vince su 4 prompt, Minerva 350M su 3, pareggio su 3.</strong>
+  I domini sono complementari, non sovrapposti. SLM s3 domina il registro storico-enciclopedico e letterario (Dante, Ungaretti, Crisi 1929, Benigni). Minerva 350M domina il registro pratico-sensoriale (tramonto, pasta, turismo Puglia). Nessuno dei due ha conoscenza scientifica o tecnica.
+</div>
+
+<div class="callout warning">
+  <strong>Attrazione gravitazionale toponomastica in SLM s3:</strong> i loop su "Foggia" (prompt Puglia) e "pourfail" (prompt pasta) non sono segnale di overtraining generale. Sono attrazione su token toponomastici/lessicali iperfrequenti in shard 3 di Wikipedia. Il corpus shard 3 conteneva molti articoli geografici pugliesi dove "Foggia" appariva ripetutamente come capoluogo di provincia. "pourfail" è un token inventato che il modello ha agganciato per pattern fonottattico. Questo conferma che shard 2 (val 2.9083) è lo sweet spot operativo: i loop sono meno gravi e la qualità enciclopedica è già presente.
+</div>
+
+<div class="callout">
+  <strong>Implicazione per architetture multi-modello:</strong> SLM s3 e Minerva 350M si completano senza sovrapporsi. Un router che seleziona il modello in base alla classe del prompt (enciclopedico vs pratico/sensoriale) otterrebbe qualità superiore a entrambi presi singolarmente. Questo è il design ipotetico per il sistema di gestione calendari (Run #8), dove la disambiguazione semantica è più importante della generazione fluente.
+</div>
+

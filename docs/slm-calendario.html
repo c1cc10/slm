@@ -1,0 +1,275 @@
+<meta charset="UTF-8">
+<title>SLM — Gestione Calendari</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg:       #F7F9FC;
+  --surface:  #FFFFFF;
+  --surface2: #F0F5FA;
+  --text:     #1C2333;
+  --text-sec: #5A6478;
+  --accent:   #0A6E6E;
+  --border:   #DDE3EE;
+  --code-bg:  #111827;
+  --code-fg:  #A8C4D8;
+  --done-bg:  #ECFDF5; --done-text:#065F46; --done-br:#6EE7B7;
+  --warn-bg:  #FFFBEB; --warn-text:#92400E; --warn-br:#FDE68A;
+  --info-bg:  #EFF6FF; --info-text:#1E40AF; --info-br:#BFDBFE;
+  --narr-bg:  #F0F5FA; --narr-br:  #0A6E6E;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+    --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+    --code-bg:#010409; --code-fg:#79C0FF;
+    --done-bg:#0D2818; --done-text:#3FB950; --done-br:#238636;
+    --warn-bg:#271700; --warn-text:#E3B341; --warn-br:#9E6A03;
+    --info-bg:#051D40; --info-text:#79C0FF; --info-br:#1F6FEB;
+    --narr-bg:#1C2128; --narr-br:#2BBFBF;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+  --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+  --code-bg:#010409; --code-fg:#79C0FF;
+  --done-bg:#0D2818; --done-text:#3FB950; --done-br:#238636;
+  --warn-bg:#271700; --warn-text:#E3B341; --warn-br:#9E6A03;
+  --info-bg:#051D40; --info-text:#79C0FF; --info-br:#1F6FEB;
+  --narr-bg:#1C2128; --narr-br:#2BBFBF;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0; padding: 0 0 4rem;
+  background: var(--bg); color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 16px; line-height: 1.7;
+}
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 2rem 1.2rem;
+}
+header nav { font-size: .85rem; color: var(--text-sec); margin-bottom: .6rem; }
+header nav a { color: var(--accent); text-decoration: none; }
+header nav a:hover { text-decoration: underline; }
+header h1 { margin: 0; font-size: 1.6rem; font-weight: 600; color: var(--text); }
+header p.sub { margin: .3rem 0 0; color: var(--text-sec); font-size: .95rem; }
+main { max-width: 860px; margin: 0 auto; padding: 2rem 2rem 0; }
+h2 { font-size: 1.2rem; font-weight: 600; color: var(--text);
+     border-bottom: 2px solid var(--accent); padding-bottom: .35rem;
+     margin: 2.5rem 0 1rem; }
+h3 { font-size: 1rem; font-weight: 600; color: var(--accent); margin: 1.8rem 0 .6rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--accent); }
+.narr {
+  background: var(--narr-bg);
+  border-left: 3px solid var(--narr-br);
+  padding: .75rem 1rem; border-radius: 0 6px 6px 0;
+  margin: 1.2rem 0; font-size: .95rem;
+}
+.callout {
+  border: 1px solid var(--info-br); background: var(--info-bg); color: var(--info-text);
+  border-radius: 6px; padding: .75rem 1rem; margin: 1.2rem 0; font-size: .93rem;
+}
+.callout.done { border-color: var(--done-br); background: var(--done-bg); color: var(--done-text); }
+.callout.warn { border-color: var(--warn-br); background: var(--warn-bg); color: var(--warn-text); }
+pre, code {
+  font-family: 'IBM Plex Mono', monospace;
+}
+pre {
+  background: var(--code-bg); color: var(--code-fg);
+  border-radius: 6px; padding: 1rem 1.2rem;
+  font-size: .85rem; line-height: 1.6;
+  overflow-x: auto; margin: 1rem 0;
+}
+code { background: var(--surface2); color: var(--accent);
+       padding: .1em .35em; border-radius: 3px; font-size: .88em; }
+pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .92rem; }
+th { background: var(--surface2); color: var(--text); font-weight: 600;
+     text-align: left; padding: .6rem .9rem; border: 1px solid var(--border); }
+td { padding: .55rem .9rem; border: 1px solid var(--border); vertical-align: top; }
+tr:nth-child(even) td { background: var(--surface2); }
+.badge {
+  display: inline-block; font-size: .75rem; font-weight: 600;
+  padding: .15rem .55rem; border-radius: 99px; letter-spacing: .03em;
+}
+.badge-done { background: var(--done-bg); color: var(--done-text); }
+.badge-wip  { background: var(--warn-bg); color: var(--warn-text); }
+.badge-open { background: var(--info-bg); color: var(--info-text); }
+.stack-diagram {
+  font-family: 'IBM Plex Mono', monospace;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  font-size: .85rem; line-height: 1.9; margin: 1rem 0;
+  white-space: pre;
+}
+.glossary-link {
+  font-size: .82rem; color: var(--text-sec);
+  margin-left: .4rem; font-style: italic;
+}
+.glossary-link a { color: var(--text-sec); }
+.glossary-link a:hover { color: var(--accent); }
+.term {
+  font-weight: 600; color: var(--accent);
+}
+</style>
+
+<header>
+  <nav>
+    <a href="index.html">SLM</a> /
+    <a href="slm-journal.html">Journal</a> /
+    Gestione Calendari
+    <span style="float:right">
+      <a href="slm-calendario-glossario.html">Glossario specifico →</a>
+    </span>
+  </nav>
+  <h1>SLM — Gestione Calendari</h1>
+  <p class="sub">Stack di language model per unificazione e gestione intelligente di calendari multipli</p>
+</header>
+
+<main>
+
+<div class="narr">
+  Questo documento descrive la motivazione, il design architetturale e il percorso di sviluppo del progetto di gestione calendari basato su un insieme di language model addestrati in proprio. Il progetto è sia operativo (un sistema funzionante) sia educativo (ogni componente costruito insegna un concetto specifico dell'apprendimento automatico applicato al linguaggio). Il <a href="slm-calendario-glossario.html">glossario specifico</a> raccoglie tutti i termini tecnici introdotti nel percorso.
+</div>
+
+<h2 id="perche">Perché costruire invece di integrare</h2>
+
+<p>Esistono soluzioni mature per la gestione di calendari con linguaggio naturale — Google Assistant, Siri, Cortana — e librerie specializzate per l'estrazione di date e appuntamenti da testo italiano (Duckling, dateutil). La scelta di costruire uno stack di modelli propri non è una decisione di prodotto: è una decisione di comprensione.</p>
+
+<p>Il progetto SLM nasce con l'obiettivo di capire ogni componente dall'interno, non di replicare soluzioni esistenti. Il calendario è il caso d'uso che meglio mette in evidenza la tensione tra ciò che un parser deterministico fa bene (normalizzare "giovedì alle 15" in un datetime assoluto) e ciò che richiede comprensione del linguaggio naturale (capire "al solito orario" o "quando torna dalla trasferta").</p>
+
+<div class="callout">
+  <strong>Principio guida:</strong> ogni modello nello stack deve insegnare qualcosa di specifico. Un componente che si potrebbe sostituire con una regex non vale la complessità di un LM. Un LM si giustifica esattamente dove il deterministico si ferma.
+</div>
+
+<h2 id="architettura">Architettura dello stack</h2>
+
+<p>Lo stack è composto da tre livelli funzionali distinti. Il confine tra LM e deterministico è esplicito e motivato, non frutto di comodità implementativa.</p>
+
+<div class="stack-diagram">
+[input verbale / testuale in italiano]
+        |
+        v
+  ┌─────────────────────────────────────────┐
+  │  SLM-intent  (Run #8-cal)               │  LM
+  │  Classifica tipo azione:                │
+  │    CREA / MODIFICA / ELIMINA /          │
+  │    QUERY / DECISION-ALERT               │
+  │  Estrae slot: chi, quando, dove,        │
+  │    cosa, durata, canale                 │
+  └─────────────────────────────────────────┘
+        |
+        v  struttura intermedia (JSON)
+  ┌─────────────────────────────────────────┐
+  │  Layer deterministico                   │  Parser classico
+  │  Normalizza datetime                    │
+  │  Chiama API calendario (lettura/write)  │
+  │  Recupera stato: conflitti,             │
+  │    disponibilità, sovrapposizioni       │
+  └─────────────────────────────────────────┘
+        |
+        v  stato calendari + evento
+  ┌─────────────────────────────────────────┐
+  │  SLM-compose  (stesso modello o         │  LM
+  │  fine-tuning distinto)                  │
+  │  Compone messaggio di notifica          │
+  │  adattato al canale:                    │
+  │    SMS = breve · chat = conversaz.      │
+  │    email = formale con contesto         │
+  └─────────────────────────────────────────┘
+        |
+        v
+  [dispatch multi-canale: SMS / chat / email]</div>
+
+<h3>Le tre funzioni di SLM</h3>
+
+<table>
+  <thead>
+    <tr><th>Funzione</th><th>Input</th><th>Output</th><th>Dove il deterministico si ferma</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Parse intent + slot</strong></td>
+      <td>Testo verbale libero</td>
+      <td>JSON strutturato (intent + campi)</td>
+      <td>Slot impliciti, riferimenti contestuali, ambiguità temporale</td>
+    </tr>
+    <tr>
+      <td><strong>Valutazione contenuto</strong></td>
+      <td>Descrizione evento + stato calendari</td>
+      <td>Priorità, tipo di azione di alert</td>
+      <td>Comparazione tra appuntamenti di natura diversa, inferenza di urgenza</td>
+    </tr>
+    <tr>
+      <td><strong>Composizione alert</strong></td>
+      <td>Tipo evento + canale + urgenza</td>
+      <td>Testo messaggio di notifica</td>
+      <td>Adattamento di registro al canale e al destinatario</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="nlu">Il problema NLU come fondamento</h2>
+
+<p>La funzione di parse intent è un problema di <span class="term">Natural Language Understanding</span> <a href="slm-calendario-glossario.html#nlu" class="glossary-link">[glossario]</a>: mappare un enunciato in linguaggio libero su una struttura formale che il sistema può eseguire. Questo problema ha due componenti separate.</p>
+
+<p>La prima è la <strong>classificazione dell'intent</strong>: capire quale azione l'utente vuole compiere (creare, modificare, eliminare, interrogare, decidere un alert). È un problema di classificazione multiclasse sull'enunciato intero.</p>
+
+<p>La seconda è il <strong>slot filling</strong> <a href="slm-calendario-glossario.html#slot" class="glossary-link">[glossario]</a>: estrarre i parametri dell'azione dal testo. Non basta sapere che l'utente vuole creare un evento — bisogna sapere con chi, quando, dove e per quanto. Questo è un problema di <em>sequence labeling</em>: ogni token dell'enunciato riceve un'etichetta che dice se fa parte di uno slot, quale, e in quale posizione.</p>
+
+<div class="narr">
+  La teoria degli <strong>atti linguistici</strong> <a href="slm-calendario-glossario.html#speech-acts" class="glossary-link">[glossario]</a> (Austin, 1955; Searle, 1969) fornisce il fondamento concettuale: parlare non è solo descrivere — è compiere un'azione. L'intent è la formalizzazione dell'atto illocutorio, i slot sono il contenuto proposizionale dell'atto.
+</div>
+
+<p>La documentazione tecnica approfondita del percorso di studio — BIO tagging, CRF, modelli joint, approccio generativo con decoder-only — è in sviluppo e verrà aggiunta progressivamente a questa sezione man mano che i concetti vengono esplorati.</p>
+
+<h2 id="corpus">Corpus e addestramento — Run #8-cal</h2>
+
+<p>Il corpus di Wikipedia usato in Run #7 non contiene quasi nulla del dominio calendario/scheduling. Run #8-cal deve costruire un corpus da zero con caratteristiche molto diverse:</p>
+
+<table>
+  <thead><tr><th>Tipo di testo</th><th>Contenuto</th><th>Disponibilità</th></tr></thead>
+  <tbody>
+    <tr><td>Testi normativi con date</td><td>Decreti, scadenze fiscali, calendari scolastici italiani</td><td>Pubblici</td></tr>
+    <tr><td>Email business con appuntamenti</td><td>Conferme, disdette, richieste di slot</td><td>Da ricercare / anonimizzare</td></tr>
+    <tr><td>Testo imperativo/comando in italiano</td><td>"Crea", "sposta", "ricordami", "cancella"</td><td>Da costruire o sintetizzare</td></tr>
+    <tr><td>Descrizioni di eventi con contesto implicito</td><td>Riferimenti temporali ambigui, pronomi, ellissi</td><td>Da costruire</td></tr>
+  </tbody>
+</table>
+
+<p>Stima volume: 5–15 M token. Piccolo rispetto ai corpus di pre-training (Run #7 aveva ~210 M token), sufficiente per spostare la distribuzione del modello sul dominio senza rischio di saturazione o catastrophic forgetting del modello base.</p>
+
+<h2 id="educativo">Valore educativo per componente</h2>
+
+<table>
+  <thead><tr><th>Componente</th><th>Concetto insegnato</th></tr></thead>
+  <tbody>
+    <tr><td>Run #8-cal (fine-tuning)</td><td>Adattamento di dominio: come un corpus specializzato modifica la distribuzione di un modello pre-addestrato</td></tr>
+    <tr><td>Funzione parse intent</td><td>Fine-tuning per estrazione strutturata (classificazione + slot filling), differenza con generazione libera</td></tr>
+    <tr><td>Funzione composizione alert</td><td>Generazione condizionale breve: come vincolare la generazione a un registro e a un formato</td></tr>
+    <tr><td>LoRA adapter personale (fase futura)</td><td>Personalizzazione senza full fine-tuning, low-rank decomposition applicata al comportamento</td></tr>
+    <tr><td>Stack completo</td><td>Architettura multi-modello: routing, confine LM/deterministico, composizione di capacità diverse</td></tr>
+  </tbody>
+</table>
+
+<h2 id="roadmap">Stato e prossimi passi</h2>
+
+<table>
+  <thead><tr><th>Fase</th><th>Contenuto</th><th>Stato</th></tr></thead>
+  <tbody>
+    <tr><td>Studio NLU</td><td>Teoria degli intent, BIO tagging, CRF, modelli joint, approccio generativo</td><td><span class="badge badge-wip">in corso</span></td></tr>
+    <tr><td>Corpus Run #8-cal</td><td>Raccolta e costruzione corpus temporale/scheduling italiano</td><td><span class="badge badge-open">aperto</span></td></tr>
+    <tr><td>Run #8-cal training</td><td>Fine-tuning SLM s3 su corpus calendario</td><td><span class="badge badge-open">aperto</span></td></tr>
+    <tr><td>Prototipo parse intent</td><td>Prima implementazione funzione 1: utterance → JSON evento</td><td><span class="badge badge-open">aperto</span></td></tr>
+    <tr><td>Integrazione calendario</td><td>Layer deterministico + API call + dispatch multi-canale</td><td><span class="badge badge-open">aperto</span></td></tr>
+    <tr><td>LoRA personalizzazione</td><td>Adapter per pattern dell'utente</td><td><span class="badge badge-open">aperto</span></td></tr>
+  </tbody>
+</table>
+
+<div class="callout done">
+  <strong>Decisioni di design già assunte:</strong> indipendenza da Run #8-ins (stream assicurativo), partenza da Run #7 s3 come base, architettura a tre livelli (SLM-intent / deterministico / SLM-compose), granularità per-enunciato per il parse intent.
+</div>
+
+</main>
