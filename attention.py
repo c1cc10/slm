@@ -129,10 +129,20 @@ class MultiHeadAttention(nn.Module):
         x = x.transpose(1, 2).contiguous()
         return x.view(batch_size, -1, self.d_model)
 
-    def forward(self, Q, K, V, mask=None):
+    def forward(self, Q, K, V, mask=None, past_kv=None):
         """
         In self-attention (il caso più comune) Q=K=V=x:
         ogni token si interroga su tutti gli altri token della stessa sequenza.
+
+        Args:
+            past_kv: tupla (K_cache, V_cache) dalla generazione precedente, o None.
+                     Quando presente: K e V del token corrente vengono concatenati
+                     con la cache prima dell'attention. La posizione RoPE viene
+                     calcolata a partire da cache_len anziché da 0.
+
+        Returns:
+            (output, weights, (K, V))
+            K e V sono il nuovo stato della cache (cache + token corrente).
         """
         batch_size = Q.size(0)
         seq_len    = Q.size(1)
@@ -143,12 +153,17 @@ class MultiHeadAttention(nn.Module):
         V = self._split_heads(self.W_v(V), batch_size)
 
         if self.use_rope:
-            # Applica rotary embedding a Q e K (non a V).
-            # cos/sin: (1, 1, seq_len, d_k) per broadcast su (batch, heads, seq, d_k)
-            cos = self.rope_cos[:seq_len].unsqueeze(0).unsqueeze(0)
-            sin = self.rope_sin[:seq_len].unsqueeze(0).unsqueeze(0)
+            # Con cache: il token corrente ha posizione cache_len, non 0.
+            offset = past_kv[0].size(-2) if past_kv is not None else 0
+            cos = self.rope_cos[offset:offset + seq_len].unsqueeze(0).unsqueeze(0)
+            sin = self.rope_sin[offset:offset + seq_len].unsqueeze(0).unsqueeze(0)
             Q = Q * cos + _rotate_half(Q) * sin
             K = K * cos + _rotate_half(K) * sin
+
+        # Concatena con la cache se presente
+        if past_kv is not None:
+            K = torch.cat([past_kv[0], K], dim=-2)
+            V = torch.cat([past_kv[1], V], dim=-2)
 
         # Attention su ogni testa in parallelo
         x, weights = scaled_dot_product_attention(Q, K, V, mask)
@@ -157,7 +172,7 @@ class MultiHeadAttention(nn.Module):
         x = self._merge_heads(x, batch_size)
         output = self.W_o(x)
 
-        return output, weights
+        return output, weights, (K, V)
 
 
 # ---------------------------------------------------------------------------
@@ -176,11 +191,11 @@ if __name__ == "__main__":
     x = torch.randn(batch, seq_len, d_model)
 
     # Senza mask: ogni token vede tutti gli altri
-    out_no_mask, w_no_mask = mha(x, x, x)
+    out_no_mask, w_no_mask, _ = mha(x, x, x)
 
     # Con causal mask: ogni token vede solo sé stesso e i precedenti
     mask = create_causal_mask(seq_len, device=x.device)
-    out_masked, w_masked = mha(x, x, x, mask=mask)
+    out_masked, w_masked, _ = mha(x, x, x, mask=mask)
 
     print("=== Shape check ===")
     print(f"Input:   {x.shape}")

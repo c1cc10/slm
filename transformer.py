@@ -112,22 +112,27 @@ class TransformerBlock(nn.Module):
         self.norm2     = nn.LayerNorm(d_model)
         self.dropout   = nn.Dropout(dropout)
 
-    def forward(self, x):
+    def forward(self, x, past_kv=None):
         seq_len = x.size(1)
-        mask = create_causal_mask(seq_len, device=x.device)
+
+        if past_kv is not None:
+            # Inference con cache: il token corrente può vedere tutto il passato.
+            # Non serve la causal mask: la query è un solo token, non c'è futuro.
+            mask = None
+        else:
+            mask = create_causal_mask(seq_len, device=x.device)
 
         # --- Self-attention con pre-norm e residual ---
-        # x + Attention(LN(x))
-        attn_out, weights = self.attention(
-            self.norm1(x), self.norm1(x), self.norm1(x), mask=mask
+        normed = self.norm1(x)
+        attn_out, weights, present_kv = self.attention(
+            normed, normed, normed, mask=mask, past_kv=past_kv
         )
         x = x + self.dropout(attn_out)
 
         # --- Feed-forward con pre-norm e residual ---
-        # x + FFN(LN(x))
         x = x + self.dropout(self.ff(self.norm2(x)))
 
-        return x, weights
+        return x, weights, present_kv
 
 
 # ---------------------------------------------------------------------------
@@ -165,7 +170,7 @@ if __name__ == "__main__":
     # --- TransformerBlock ---
     block = TransformerBlock(d_model=d_model, num_heads=num_heads, d_ff=d_ff)
     x_rand = torch.randn(batch, seq_len, d_model)
-    out_block, attn_weights = block(x_rand)
+    out_block, attn_weights, _ = block(x_rand)
 
     print("\n=== TransformerBlock ===")
     print(f"Input:          {x_rand.shape}")
@@ -189,7 +194,7 @@ if __name__ == "__main__":
     ])
     x_stack = x_rand.clone()
     for i, b in enumerate(blocks):
-        x_stack, _ = b(x_stack)
+        x_stack, _, _ = b(x_stack)
         print(f"  dopo blocco {i+1}: shape {x_stack.shape}, media={x_stack.mean().item():.4f}")
 
     total_params = sum(p.numel() for b in blocks for p in b.parameters())

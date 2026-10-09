@@ -289,6 +289,13 @@ def train_sft(args):
         print(f"\n  ERRORE: checkpoint non trovato: {args.checkpoint}")
         sys.exit(1)
 
+    # Registra TrainConfig in __main__ per la deserializzazione pickle del checkpoint.
+    import importlib as _il, __main__ as _m
+    _tr = _il.import_module('train')
+    for _n in ('TrainConfig', 'GPTConfig'):
+        if hasattr(_tr, _n) and not hasattr(_m, _n):
+            setattr(_m, _n, getattr(_tr, _n))
+
     print(f"\n  Caricamento checkpoint...", end='', flush=True)
     ckpt = torch.load(args.checkpoint, map_location='cpu', weights_only=False)
     tok  = load_tokenizer(_get_tok_state(ckpt))

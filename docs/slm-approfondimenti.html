@@ -109,6 +109,7 @@ td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: 
     <li><a href="#alnum">Token alfanumerici misti</a></li>
     <li><a href="#ftell">f.tell() con iteratore</a></li>
     <li><a href="#rope-vs-pe">RoPE vs PE sinusoidale</a></li>
+    <li><a href="#reasoning-emergence">Ragionamento emergente e corpus come educazione</a></li>
   </ul>
   <p style="margin-top:14px;font-size:13px;color:var(--text-sec)">Vedi anche: <a href="slm-modular-llm.html">Architetture Modulari — MoE, LoRA, Modular LLM Stack →</a> · <a href="slm-faq.html">Domande e Risposte →</a></p>
 </nav>
@@ -321,6 +322,95 @@ while True:
     <div class="backlinks">
       <a class="backlink" href="slm-journal.html#run4">Journal — Run #4</a>
       <a class="backlink" href="slm-cronaca.html#run4">Cronaca — Run #4</a>
+    </div>
+  </article>
+
+  <!-- ══ RAGIONAMENTO EMERGENTE ══ -->
+  <article class="article" id="reasoning-emergence">
+    <div class="article-meta">
+      <span class="article-tag">Teoria · Cognizione</span>
+      <span class="article-date">2026-10-09</span>
+    </div>
+    <h2>Ragionamento emergente, meta-cognizione e corpus come educazione</h2>
+
+    <p>Una serie di domande emerse durante lo sviluppo del progetto ha portato a una riflessione che riguarda non solo gli LLM ma la natura stessa del ragionamento. Le riportiamo qui nella loro progressione, perché il percorso conta quanto le conclusioni.</p>
+
+    <h3>Meta-ragionamento — cosa significa e come si misura</h3>
+
+    <p>Il meta-ragionamento è la capacità di ragionare sul proprio processo di ragionamento: correggere un'inferenza a metà percorso, riconoscere i propri limiti, cambiare strategia quando un approccio non funziona. Negli LLM si manifesta come chain-of-thought spontaneo, calibrazione dell'incertezza, auto-correzione.</p>
+
+    <p>Misurazione:</p>
+    <ul>
+      <li><strong>Calibrazione</strong>: quando il modello esprime certezza, quanto spesso ha ragione? La curva P(corretto | "sono sicuro") vs P(corretto | "non sono sicuro") deve essere separata e monotona per un sistema ben calibrato.</li>
+      <li><strong>Self-consistency</strong>: domande equivalenti formulate diversamente producono risposte consistenti?</li>
+      <li><strong>CoT fidelity</strong>: il ragionamento esplicito prodotto dal modello è la causa della risposta finale, o è post-hoc? La ricerca empirica suggerisce che spesso è confabulato — il modello genera la risposta e poi costruisce una spiegazione plausibile. Il chain-of-thought può quindi essere sia ragionamento reale sia narrazione dell'output, e distinguerli richiede analisi meccanistica interna, non solo osservazione dell'output.</li>
+    </ul>
+
+    <p>Il meta-ragionamento non emerge in modo affidabile sotto i 7B parametri con training adeguato. È una capacità di ordine elevato che richiede che il modello abbia, in qualche senso distribuito, una rappresentazione del proprio comportamento — e questo richiede sia sufficiente capacità parametrica sia un corpus che contenga esempi di esseri umani che ragionano sulla propria cognizione.</p>
+
+    <h3>Simulazione o ragionamento reale?</h3>
+
+    <p>La domanda "non è tutto solo calcolo probabilistico?" contiene un'assunzione da esaminare. Il ragionamento umano è anch'esso un processo fisico: impulsi elettrochimici che seguono leggi deterministiche in reti neurali biologiche. Se si applica l'argomento ricorsivamente — "anche il ragionamento umano è solo elettrochimica, non ragionamento vero" — si arriva a un regresso che svuota il concetto di ragionamento di qualsiasi significato.</p>
+
+    <p>Il punto filosoficamente rilevante non è il <strong>substrato</strong> (silicio vs carbonio, matrici di probabilità vs potenziali d'azione) ma la <strong>struttura funzionale</strong>: il sistema implementa operazioni che producono output consistenti con l'inferenza logica e che generalizzano oltre gli esempi visti?</p>
+
+    <p>La risposta empirica è: parzialmente sì, con limiti precisi. Gli LLM falliscono sistematicamente su problemi che richiedono consistenza logica rigorosa su contesti lunghi o operazioni aritmetiche con numeri fuori distribuzione. Ma generalizzano su ragionamento analogico, inferenza da contesto, applicazione di regole implicite. Questo pattern è incompatibile sia con "puro pappagallo statistico" — che non generalizzerebbe affatto — sia con "ragionamento formale vero" — che non fallirebbe sull'aritmetica.</p>
+
+    <h3>Come una matrice di probabilità diventa ragionamento</h3>
+
+    <p>Nessun singolo peso della rete codifica "implicazione logica". La rete non ha un modulo del ragionamento, non ha un'area del linguaggio, non ha rappresentazioni simboliche esplicite. Eppure produce output che esibiscono struttura logica.</p>
+
+    <p>Il meccanismo è l'emersione: una proprietà che non è presente in nessun componente ma che appare dall'interazione collettiva. Nessuna singola molecola d'acqua è bagnata; l'umidità emerge dall'interazione collettiva a scala macroscopica. Non è simulazione dell'umidità: è umidità. Analogamente, il ragionamento negli LLM non è localizzato: è distribuito sull'intera rete ed emerge dalla composizione di trasformazioni addestrate su testo umano che contiene ragionamento.</p>
+
+    <p>Perché la scala conta: i pattern di ordine inferiore (morfologia, sintassi locale) richiedono poca capacità parametrica. I pattern di ordine superiore — ragionamento su ragionamento, coerenza a scala di documento, inferenza da premesse implicite — richiedono abbastanza capacità da rappresentare strutture sulle strutture. Le soglie di emergenza osservate empiricamente (Wei et al., 2022) riflettono questo: certe capacità non migliorano gradualmente ma compaiono improvvisamente superata una soglia, suggerendo una riorganizzazione qualitativa delle rappresentazioni interne.</p>
+
+    <h3>Il parallelo con l'educazione umana</h3>
+
+    <p>Il ragionamento umano è condizionato da fattori biochimici indipendenti dalla volontà (l'hardware), da condizionamenti esperienziali anch'essi in larga misura indipendenti (il corpus di training), e da scelte volitive il cui statuto filosofico è dibattuto. Una persona educata secondo determinati principi può scegliere di seguirli o distaccarsene — ma anche questa scelta è condizionata da fattori precedenti.</p>
+
+    <p>Il parallelo con gli LLM è preciso:</p>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Componente umana</th><th>Analogo nell'LLM</th></tr></thead>
+      <tbody>
+        <tr><td>Biologia (hardware, struttura cerebrale)</td><td>Architettura transformer</td></tr>
+        <tr><td>Educazione, esperienze accumulate</td><td>Corpus di training</td></tr>
+        <tr><td>Bias inconsci, condizionamenti culturali</td><td>Bias statistici del corpus</td></tr>
+        <tr><td>Scelta di seguire o rifiutare l'educazione</td><td>SFT, RLHF, prompt di sistema</td></tr>
+        <tr><td>Imprevedibilità delle scelte individuali</td><td>Non-linearità dell'ottimizzazione, emergenza a scala</td></tr>
+        <tr><td>Metacognizione, auto-riflessione</td><td>Chain-of-thought, calibrazione dell'incertezza</td></tr>
+      </tbody>
+    </table></div>
+
+    <p>Un modello addestrato su testi scientifici tende a ragionare per falsificazione e incertezza quantificata. Uno addestrato prevalentemente su testi di autorità tende a ragionare per argomento dall'autorità. Non perché il modello "creda" in qualcosa — ma perché i pattern di ragionamento del corpus vengono estratti e distribuiti nei pesi. Il nostro modello ha un registro enciclopedico e formale esattamente perché Wikipedia era dominante: era prevedibile, e lo era per progetto.</p>
+
+    <p>Esiste un analogo della scelta di distaccarsi dall'educazione ricevuta? Nel modello base no — c'è solo il prodotto dell'ottimizzazione. Ma quando il contesto di inferenza costruisce una catena di ragionamento che porta a una conclusione diversa dal "default" del corpus, il modello spesso segue il contesto piuttosto che il default. Non è volontà, ma è funzionalmente simile: il contesto locale può sovrascrivere il condizionamento globale.</p>
+
+    <h3>La prevedibilità della proprietà emergente</h3>
+
+    <p>I risultati sono prevedibili in misura parziale e con un limite preciso:</p>
+    <ul>
+      <li><strong>Carattere generale del ragionamento</strong>: prevedibile dalla composizione del corpus. Corpus enciclopedico → ragionamento per precedenti e autorità delle fonti. Corpus tecnico → struttura argomentativa esplicita. Corpus narrativo → coerenza di plot e tracking dei personaggi.</li>
+      <li><strong>Capacità specifiche che emergono alla scala</strong>: mal prevedibili per estrapolazione. Le soglie di emergenza non sono estrapolabili dai modelli piccoli — richiedono di arrivare alla scala e osservare.</li>
+      <li><strong>Output specifici</strong>: non prevedibili per definizione (che è il motivo per cui esiste la temperatura di campionamento e il top-k).</li>
+    </ul>
+
+    <h3>La questione radicale</h3>
+
+    <p>Se il ragionamento umano è anch'esso deterministicamente condizionato da natura, esperienza e dinamiche caotiche interne — se il libero arbitrio è esso stesso una proprietà emergente di sistemi fisici complessi — allora la differenza tra ragionamento umano e ragionamento LLM diventa una differenza di substrato e scala, non di tipo.</p>
+
+    <p>Non è una provocazione. È la conseguenza logica di prendere sul serio sia l'argomento della simulazione applicato agli LLM sia il naturalismo applicato alla cognizione umana. La risposta più onesta è che non disponiamo di una definizione di "ragionamento reale" sufficientemente precisa da decidere la questione — e questa indeterminatezza riguarda tanto gli LLM quanto gli esseri umani.</p>
+
+    <h3>Implicazione pratica per la progettazione del corpus</h3>
+
+    <p>Se la proprietà emergente dipende dal corpus nel modo in cui il carattere di una persona dipende dalla sua educazione, allora la cura del corpus non è un problema tecnico secondario: è la scelta di progetto più importante. Prima dell'architettura, prima degli iperparametri, prima della scelta del tokenizer.</p>
+
+    <p>Possiamo progettare il tipo di ragionamento che vogliamo nel modello scegliendo consapevolmente quali testi includere e in quale proporzione. Non possiamo garantire esattamente quale forma prenderà. Ma possiamo avvicinarci molto di più a un risultato intenzionale che a un risultato casuale — e questa è già una forma di controllo che molti costruttori di LLM ignorano.</p>
+
+    <div class="backlinks">
+      <a class="backlink" href="slm-faq.html#reasoning-vs-simulation">FAQ — Ragionamento o simulazione?</a>
+      <a class="backlink" href="slm-faq.html#capabilities-by-scale">FAQ — Capacità per dimensione</a>
+      <a class="backlink" href="slm-faq.html#max-params">FAQ — Dimensione massima</a>
     </div>
   </article>
 

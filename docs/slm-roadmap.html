@@ -154,7 +154,7 @@
     <p class="subtitle">11 fasi dalla architettura di base al deployment edge — stato corrente e componenti da aggiungere.</p>
 
     <div class="progress-wrap">
-      <div class="progress-label">Avanzamento · 7 di 11 fasi completate</div>
+      <div class="progress-label">Avanzamento · 9 di 11 fasi completate</div>
       <div class="progress-bar">
         <div class="seg done"></div>
         <div class="seg done"></div>
@@ -163,8 +163,8 @@
         <div class="seg done"></div>
         <div class="seg done"></div>
         <div class="seg done"></div>
-        <div class="seg plan"></div>
-        <div class="seg fut"></div>
+        <div class="seg done"></div>
+        <div class="seg done"></div>
         <div class="seg fut"></div>
         <div class="seg fut"></div>
       </div>
@@ -295,11 +295,11 @@
       </div>
 
       <!-- 08 -->
-      <div class="phase" data-s="plan">
+      <div class="phase" data-s="done">
         <div class="phase-header">
           <span class="phase-num">08</span>
           <span class="phase-name">Inference ottimizzata</span>
-          <span class="badge plan">Pianificato</span>
+          <span class="badge done">Completato</span>
         </div>
         <div class="phase-desc">KV-cache: riuso delle chiavi e dei valori già calcolati nei token precedenti, riduce la complessità per token da O(n²) a O(n). Streaming token-by-token. Batch inference per più prompt in parallelo.</div>
         <div class="chips">
@@ -311,11 +311,11 @@
       </div>
 
       <!-- 09 -->
-      <div class="phase" data-s="fut">
+      <div class="phase" data-s="done">
         <div class="phase-header">
           <span class="phase-num">09</span>
           <span class="phase-name">Fine-tuning supervisionato</span>
-          <span class="badge fut">Futuro</span>
+          <span class="badge done">Completato</span>
         </div>
         <div class="phase-desc">Loop SFT su dataset instruction-following in formato prompt→risposta. Fine-tuning sul corpus narrativo personale per adattare il modello alla voce dell'autore. Prerequisito per il writing assistant.</div>
         <div class="chips">

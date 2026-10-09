@@ -11,10 +11,11 @@ Ogni componente scritto e compreso prima di passare al successivo: architettura 
 
 | | |
 |---|---|
-| Architettura | Decoder-only Transformer (pre-norm, RoPE) |
+| Architettura | Decoder-only Transformer (pre-norm, RoPE, KV-cache) |
 | Parametri | 45,997,056 (~175 MB fp32) |
 | Tokenizer | BPE-SPM, 16 000 token |
 | Miglior checkpoint | Run #7 shard 3 — val loss **2.8165** (perplexity ~16.7) |
+| SFT checkpoint | `sft_intent_v1.pt` — intent recognition su 6 classi (Phase 09) |
 | Corpus totale | Wikipedia IT 3 shard (~210M token) su base CulturaX IT sweet spot |
 | Deployment | `slm-run7-s3-q8_0.gguf` (56 MB Q8_0) |
 
@@ -30,19 +31,25 @@ slm/
 ├── train.py                  # Training loop: AdamW, LR schedule, checkpoint, --resume
 ├── train_sft.py              # SFT: JSONL prompt/completion, masked loss
 ├── tools/
+│   ├── infer.py              # Inferenza CLI: prompt → generazione (REPL + arg + stdin)
+│   ├── eval_ppl.py           # Valutazione PPL interattiva (REPL + CLI)
+│   ├── eval.py               # Valutazione PPL su dataset con sliding window, output CSV
+│   ├── gen_sft_mini.py       # Genera dataset SFT JSONL (intent recognition italiano)
 │   ├── filter_corpus.py      # Pipeline 4 stadi: euristico → fastText → dedup MD5 → PPL scorer
 │   ├── fetch_hf_corpus.py    # Streaming generico HuggingFace (qualsiasi dataset)
 │   ├── epub_to_text.py       # Estrazione corpus da EPUB
 │   ├── convert_to_text.py    # Converter: PDF, DOCX, PPTX, EPUB, HTML, ODT → plain text
-│   ├── eval_ppl.py           # Valutazione PPL interattiva (REPL + CLI)
 │   └── export_db_corpus.py   # Export PostgreSQL/MongoDB → corpus SLM
 ├── data/
 │   ├── wiki_it.txt           # Wikipedia IT (~200 MB, 47.8M token)
 │   ├── culturax_it_ppl95.txt # CulturaX IT filtrato PPL p95 (7.5 GB, 2.44M doc)
-│   └── corpus_letterario.txt # EPUB scelti, narrativa contemporanea italiana
+│   ├── corpus_letterario.txt # EPUB scelti, narrativa contemporanea italiana
+│   ├── sft_mini.jsonl        # Dataset SFT: 140 coppie prompt/completion, 6 intent italiani
+│   └── wiki_probe.txt        # Probe set forgetting (80 KB da wiki_it.txt, fisso)
 ├── checkpoints/
-│   ├── best.pt               # Checkpoint corrente (Run #4: val 3.5861)
-│   ├── run4_best.pt          # Backup Run #4
+│   ├── best.pt               # Checkpoint corrente (Run #7 shard 3: val 2.8165)
+│   ├── run4_best.pt          # Backup Run #4 (val 3.5861) — scorer PPL
+│   ├── sft_intent_v1.pt      # SFT Phase 09: intent recognition, 6 classi
 │   ├── tokenizer.model       # Modello SentencePiece BPE (16k vocab)
 │   └── tokenizer.vocab       # Vocabolario SPM
 ├── slm-run4.gguf             # Run #4 convertito GGUF (fp16)
@@ -94,6 +101,122 @@ python3 -u tools/filter_corpus.py \
 # Nota: python3 -u obbligatorio con tee (altrimenti log vuoto per ore)
 # Nota: usare run3_best.pt come scorer, non run4_best.pt
 ```
+
+## Strumenti
+
+### `tools/infer.py` — Inferenza da checkpoint `.pt`
+
+Esegue la generazione su un checkpoint PyTorch. Accetta prompt da argomento, stdin o REPL interattivo.
+
+```bash
+# Frase singola
+python3 tools/infer.py "La capitale d'Italia"
+
+# Checkpoint specifico
+python3 tools/infer.py --checkpoint checkpoints/sft_intent_v1.pt \
+  "Crea un appuntamento con Marco venerdì alle 15."
+
+# Tronca al primo JSON valido (utile con checkpoint SFT intent)
+python3 tools/infer.py --checkpoint checkpoints/sft_intent_v1.pt \
+  --stop-on-json "Sposta la riunione a martedì."
+
+# Output grezzo pipabile
+python3 tools/infer.py --raw "La capitale" | head -c 200
+
+# REPL interattivo — più prompt in sequenza
+python3 tools/infer.py --checkpoint checkpoints/sft_intent_v1.pt
+```
+
+**Opzioni:**
+
+| Flag | Default | Descrizione |
+|------|---------|-------------|
+| `--checkpoint` | `checkpoints/best.pt` | Checkpoint `.pt` da usare |
+| `--max-tokens` | 80 | Token da generare |
+| `--temperature` | 0.3 | 0.1 = deterministico, 1.0 = standard |
+| `--top-k` | 10 | Top-K campionamento (0 = disabilitato) |
+| `--top-p` | 1.0 | Nucleus sampling (1.0 = disabilitato) |
+| `--rep-penalty` | 1.1 | Penalità ripetizione (1.0 = disabilitato) |
+| `--stop-on-json` | off | Tronca al primo `{}` JSON valido |
+| `--no-cache` | off | Disabilita KV-cache (debug) |
+| `--raw` | off | Output solo completion, senza formattazione |
+
+---
+
+### `tools/eval_ppl.py` — Perplexity su testo libero
+
+Misura quanto il modello è "sorpreso" da un testo. Utile per valutare la qualità del corpus e per il filtro documenti.
+
+```bash
+# Testo singolo
+python3 tools/eval_ppl.py "Il Parlamento europeo è un'istituzione dell'Unione Europea."
+
+# Checkpoint specifico
+python3 tools/eval_ppl.py --checkpoint checkpoints/best.pt "testo da valutare"
+
+# REPL interattivo
+python3 tools/eval_ppl.py
+
+# Stdin
+echo "testo da valutare" | python3 tools/eval_ppl.py
+```
+
+Scala PPL: `< 60` bassa (simile a Wikipedia IT) · `60–150` media · `150–400` alta · `400+` molto alta.
+
+---
+
+### `tools/eval.py` — Valutazione PPL su dataset con sliding window
+
+Calcola la perplexity su un intero file di testo usando finestre sovrapposte, evitando il troncamento a `max_seq_len`. Produzione di metriche quantitative confrontabili tra run.
+
+```bash
+# PPL su corpus di test
+python3 tools/eval.py --checkpoint checkpoints/best.pt --data data/wiki_it.txt
+
+# Con output CSV per confronto tra run
+python3 tools/eval.py --checkpoint checkpoints/best.pt --data data/wiki_it.txt \
+  --output results/ppl_run7.csv
+
+# Confronto diretto tra due checkpoint
+python3 tools/eval.py \
+  --compare checkpoints/best.pt checkpoints/run4_best.pt \
+  --data data/wiki_it.txt
+```
+
+---
+
+### `tools/gen_sft_mini.py` — Generazione dataset SFT
+
+Genera `data/sft_mini.jsonl`: 140 coppie prompt/completion in italiano per intent recognition su 6 classi (`create_event`, `reschedule_event`, `delete_event`, `create_reminder`, `query_schedule`, `add_contact`).
+
+```bash
+python3 tools/gen_sft_mini.py
+# Output: data/sft_mini.jsonl (140 righe)
+```
+
+Formato output:
+```json
+{"prompt": "Crea un appuntamento con Marco venerdì alle 15.", "completion": "{\"intent\": \"create_event\", \"title\": \"appuntamento\", \"date\": \"venerdì\", \"time\": \"15:00\"}"}
+```
+
+---
+
+### `train_sft.py` — Fine-tuning supervisionato (SFT)
+
+Fine-tuning con masked loss su dataset JSONL. Monitora il catastrophic forgetting tramite un probe set fisso.
+
+```bash
+python3 train_sft.py \
+  --checkpoint checkpoints/best.pt \
+  --data data/sft_mini.jsonl \
+  --epochs 5 \
+  --lr 2e-5 \
+  --out checkpoints/sft_intent_v1.pt
+```
+
+Il checkpoint di output conserva il tokenizer originale ed è compatibile con `tools/infer.py`.
+
+---
 
 ## Provare il modello
 
@@ -253,10 +376,10 @@ Benchmark su 10 prompt in italiano (stesso set per entrambi i modelli, temperatu
 | 2 | BPE-SPM tokenizer, Wikipedia IT | ✅ completata |
 | 3 | Pre-training medium (Run #3) | ✅ val loss 4.08 — scorer PPL |
 | 4 | RoPE, Run #4, export GGUF | ✅ val loss 3.59 |
-| 5 | Corpus espansione CulturaX IT, 7 shard | ✅ sweet spot a shard 4 (val 3.35), degradazione da shard 5 |
-| 6 | Run #6 — CulturaX sweet spot come base | ✅ val loss 3.3524 (shard 4, run6-ad) |
-| 7 | Run #7 — Wikipedia IT 3 shard su base run6-ad | ✅ val loss **2.8165** · GGUF 56 MB |
-| 8 | Run #8 — corpus dominio specifico | 🔄 in design |
-| 9 | SFT su dataset istruzione-seguente italiano | ⏳ pianificata |
-| 10 | LoRA adapter per dominio applicativo | ⏳ pianificata |
+| 5 | Sampling avanzato (top-p, repetition penalty) | ✅ completata |
+| 6 | Valutazione quantitativa (`tools/eval.py`, sliding window) | ✅ completata |
+| 7 | Efficienza training (gradient accumulation, BF16) | ✅ completata |
+| 8 | KV-cache inference (4.35× speedup su M2) | ✅ completata |
+| 9 | SFT intent recognition — `sft_intent_v1.pt` | ✅ completata · 6 classi · forgetting ×1.12 |
+| 10 | LoRA adapter per dominio applicativo | ⏳ prossima |
 | 11 | Multimodale: YOLO v3 + LM | ⏳ pianificata |

@@ -174,6 +174,10 @@ nav.foot-links a:hover { color: var(--accent); }
     <li><a href="#expand-params">È possibile aumentare i parametri senza ricostruire il modello?</a></li>
     <li><a href="#lower-perplexity">Si potrebbe abbassare ancora la perplexity del modello attuale?</a></li>
     <li><a href="#quantization-inference">Per l'inferenza è necessario usare il modello quantizzato?</a></li>
+    <li><a href="#sft-vs-lora">Qual è la differenza tra SFT e LoRA?</a></li>
+    <li><a href="#max-params">Se ripartissimo da zero con più parametri, qual è la dimensione massima realistica?</a></li>
+    <li><a href="#capabilities-by-scale">Che caratteristiche di reasoning ha un modello da 150M, 350M, 700M, 1B parametri?</a></li>
+    <li><a href="#reasoning-vs-simulation">Il ragionamento degli LLM è reale o simulazione? Come dipende dal corpus?</a></li>
   </ol>
 </nav>
 
@@ -331,6 +335,241 @@ nav.foot-links a:hover { color: var(--accent); }
     <p>Per tutti gli altri usi — inferenza locale, server API, test, dimostrazione — Q8_0 è il formato corretto.</p>
 
     <p><strong>Risposta sintetica:</strong> no, non è obbligatorio, ma Q8_0 è la scelta migliore per l'inferenza su Apple Silicon: più veloce del fp32 per la minore pressione sulla banda memoria, e senza perdita di qualità misurabile su un modello da 46M parametri. Il fp32 serve solo per fine-tuning o operazioni che richiedono precisione piena sui pesi.</p>
+
+  </div>
+</div>
+
+<!-- Q5 -->
+<div class="qa-block" id="sft-vs-lora">
+  <div class="qa-question">
+    <span class="qa-q-label">Q</span>
+    <p>Qual è la differenza tra SFT e LoRA? Sono alternativi o si combinano?</p>
+  </div>
+  <div class="qa-answer">
+
+    <h3>SFT e LoRA rispondono a domande diverse</h3>
+
+    <p>SFT (Supervised Fine-Tuning) è una <strong>strategia di addestramento</strong>: definisce il formato dei dati (coppie prompt → completion con loss mascherata sul solo completion) e l'obiettivo (modificare il comportamento del modello, non la sua conoscenza del mondo). Non dice niente su quali parametri vengono aggiornati.</p>
+
+    <p>LoRA (Low-Rank Adaptation) è un <strong>metodo di ottimizzazione</strong>: definisce quanti parametri aggiornare e come. Non dice niente sul formato dei dati.</p>
+
+    <p>Sono ortogonali. Si combinano: il fine-tuning più usato in pratica è SFT con LoRA, cioè addestramento su coppie prompt/completion con aggiornamento solo dei parametri LoRA.</p>
+
+    <h3>Pre-training vs SFT — la differenza fondamentale</h3>
+
+    <p>Durante il pre-training il modello impara a fare una cosa sola: predire il token successivo. Sa continuare il testo, non sa rispondere. Se gli scrivi "Chi ha scritto la Divina Commedia?" risponde con un'altra domanda — perché nel corpus le liste di domande sono frequenti e continuarle è statisticamente plausibile.</p>
+
+    <p>SFT cambia il comportamento senza cambiare la conoscenza. Il modello sa già cos'è Dante. Non sa ancora che deve rispondere invece di continuare liberamente. Il dataset SFT lo insegna.</p>
+
+    <h3>La loss mascherata</h3>
+
+    <p>La differenza tecnica rispetto al pre-training è la <strong>masked loss</strong>: la cross-entropy viene calcolata solo sui token del completion, non sul prompt. I token del prompt ricevono <code>target=-100</code>, che <code>F.cross_entropy</code> ignora per convenzione. L'obiettivo è che il modello impari a produrre risposte giuste, non a predire le domande.</p>
+
+    <h3>Il rischio del full fine-tuning: catastrophic forgetting</h3>
+
+    <p>Con SFT senza LoRA (full fine-tuning), tutti i parametri del modello vengono aggiornati su ogni esempio del dataset. Con un dataset piccolo (100–200 esempi) e un modello da 45.9M parametri, il rischio è che il modello dimentichi il pre-training: i pesi si spostano verso il nuovo comportamento e le connessioni per il vocabolario generale si indeboliscono.</p>
+
+    <h3>LoRA risolve il problema del catastrophic forgetting</h3>
+
+    <p>Invece di aggiornare direttamente la matrice W, LoRA aggiunge una perturbazione a basso rango:</p>
+
+    <p><code>W_aggiornato = W_frozen + (α/r) · B · A</code></p>
+
+    <p>Dove A ha shape <code>(r × d_in)</code> e B ha shape <code>(d_out × r)</code>, con r piccolo (tipicamente 4–16). W rimane <strong>congelato</strong>. Solo A e B vengono addestrati.</p>
+
+    <p>Per una matrice 512×512 con r=8:</p>
+    <ul>
+      <li>Full fine-tuning: 262 144 parametri trainabili</li>
+      <li>LoRA: 512×8 + 8×512 = 8 192 parametri trainabili — 32× meno</li>
+    </ul>
+
+    <p>Per il modello medium (12 layer × 4 matrici per layer):</p>
+    <ul>
+      <li>Full: 45.9M parametri trainabili, checkpoint da 175 MB</li>
+      <li>LoRA r=8: ~393k parametri trainabili, adapter da ~1.5 MB</li>
+    </ul>
+
+    <h3>Il vantaggio architetturale di LoRA: adapter multipli</h3>
+
+    <p>Poiché W non cambia mai, il base model può restare fisso in RAM. Adapter diversi (uno per dominio, uno per task) vengono caricati sopra lo stesso modello di base a runtime. Il costo di ogni specializzazione è ~1.5 MB di RAM aggiuntiva e zero overhead sul base model.</p>
+
+    <h3>Confronto sintetico</h3>
+
+    <table>
+      <thead><tr><th></th><th>Full SFT</th><th>SFT + LoRA</th></tr></thead>
+      <tbody>
+        <tr><td>Parametri aggiornati</td><td>45.9M</td><td>~393k</td></tr>
+        <tr><td>Checkpoint size</td><td>175 MB (copia completa)</td><td>~1.5 MB (solo A e B)</td></tr>
+        <tr><td>Catastrophic forgetting</td><td>Alto rischio con dataset piccoli</td><td>Basso — W è frozen</td></tr>
+        <tr><td>Adapter multipli su stesso base model</td><td>No</td><td>Sì — swap a runtime</td></tr>
+        <tr><td>Adatto a dataset piccoli (&lt;500 esempi)</td><td>No</td><td>Sì</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>Risposta sintetica:</strong> SFT e LoRA non sono alternativi. SFT descrive il formato dei dati e l'obiettivo; LoRA descrive quali parametri aggiornare. In produzione si usano insieme. Il full SFT (senza LoRA) è utile per capire il comportamento di base del fine-tuning prima di aggiungere l'astrazione di LoRA — è il percorso che seguiamo nella roadmap: Phase 09 (full SFT) → Phase 10 (LoRA).</p>
+
+  </div>
+</div>
+
+<!-- Q6 -->
+<div class="qa-block" id="max-params">
+  <div class="qa-question">
+    <span class="qa-q-label">Q</span>
+    <p>Se volessimo ripartire da zero con un modello più grande, qual è la dimensione massima realistica data l'infrastruttura attuale?</p>
+  </div>
+  <div class="qa-answer">
+
+    <h3>Il vincolo reale: il corpus, non la GPU</h3>
+    <p>La legge di Chinchilla dice che per addestrare bene un modello servono circa 20 token per parametro. Con i 210M di token attualmente disponibili, il punto di ottimale Chinchilla è intorno ai 10M di parametri. Il modello attuale da 45,9M parametri è già sovradimensionato rispetto al corpus — è Chinchilla-ottimale per 918M token, che è esattamente il target di espansione corpus che avevamo pianificato.</p>
+    <p>Scalare a 350M parametri senza espandere il corpus significherebbe avere 0,6 token per parametro: il modello sarebbe drasticamente undertrainato e produrrebbe risultati peggiori dell'attuale.</p>
+
+    <h3>La mappa parametri → corpus → costo</h3>
+    <table>
+      <thead><tr><th>Parametri</th><th>Architettura indicativa</th><th>Token Chinchilla-ottimali</th><th>Tempo su RTX 4090</th><th>Costo Vast.ai</th></tr></thead>
+      <tbody>
+        <tr><td><strong>45,9M</strong> (attuale)</td><td>d=512, L=12</td><td>918M</td><td>~76 min</td><td>~$2</td></tr>
+        <tr><td><strong>150M</strong></td><td>d=768, L=18</td><td>3B</td><td>~6 ore</td><td>~$9</td></tr>
+        <tr><td><strong>350M</strong></td><td>d=1024, L=24</td><td>7B</td><td>~18 ore</td><td>~$27</td></tr>
+        <tr><td><strong>700M</strong></td><td>d=1280, L=32</td><td>14B</td><td>~48 ore</td><td>~$72</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Limite VRAM su RTX 4090 (24 GB)</h3>
+    <p>In addestramento bf16 con gradient accumulation (Phase 07), la memoria per pesi + gradienti + stati AdamW è circa 16 byte per parametro. Per 1B parametri: 16 GB — entra in 24 GB con margine. Il collo di bottiglia reale è il corpus, non la VRAM.</p>
+
+    <h3>Risposta sintetica</h3>
+    <div class="callout callout-info">
+      <strong>Dimensione massima realistica dato il corpus attuale:</strong> 150–200M parametri, previa espansione corpus a ~3B token italiani (ottenibile da CulturaX IT completo in pochi giorni).<br>
+      <strong>Dimensione massima prima di costi seri:</strong> 350M — taglia di Minerva, già benchmarkato — richiede ~7B token e ~$27 per run.<br>
+      <strong>Costo in codice:</strong> zero. Basta cambiare <code>d_model</code>, <code>num_layers</code>, <code>num_heads</code> in <code>GPTConfig</code>. Il sistema di preset è già parametrizzato.
+    </div>
+
+  </div>
+</div>
+
+<!-- Q7 -->
+<div class="qa-block" id="capabilities-by-scale">
+  <div class="qa-question">
+    <span class="qa-q-label">Q</span>
+    <p>Che caratteristiche di reasoning e comprensione avrebbe un modello da 150M, 350M, 700M e 1B parametri, assumendo training Chinchilla-ottimale?</p>
+  </div>
+  <div class="qa-answer">
+
+    <div class="callout callout-warn">
+      Questi sono modelli <strong>base</strong> (solo pre-training). Le capacità descritte si riferiscono alla generazione di completamento, non all'instruction following. Per quest'ultimo serve SFT o RLHF sopra il base model.
+    </div>
+
+    <h3>150M — linguaggio fluente, nessun ragionamento</h3>
+    <table>
+      <thead><tr><th>Capacità</th><th>Stato</th></tr></thead>
+      <tbody>
+        <tr><td>Morfologia italiana (accordo, coniugazione)</td><td>✓ solida</td></tr>
+        <tr><td>Completamento coerente a livello di frase</td><td>✓</td></tr>
+        <tr><td>Registro stilistico consistente</td><td>✓ parziale</td></tr>
+        <tr><td>Coerenza a livello di paragrafo</td><td>✗ si perde dopo 3–4 frasi</td></tr>
+        <tr><td>Recall di fatti dal corpus</td><td>✗ inaffidabile</td></tr>
+        <tr><td>Inferenza logica semplice</td><td>✗</td></tr>
+        <tr><td>Tracking di entità attraverso il testo</td><td>✗</td></tr>
+      </tbody>
+    </table>
+    <p>Il modello sa <em>come si scrive</em> l'italiano molto meglio dell'attuale, ma non sa ancora <em>di cosa sta scrivendo</em>. Con SFT: adatto a task strutturati semplici (classificazione, NER, formato fisso).</p>
+
+    <h3>350M — coerenza di paragrafo, conoscenza fattuale parziale</h3>
+    <p>Questo è il range già osservato empiricamente nel benchmark con Minerva 350M. I risultati di quel confronto (ricetta della pasta funziona, crisi del '29 confusa; Puglia con dettagli, Ungaretti corretto) riflettono esattamente questa soglia.</p>
+    <table>
+      <thead><tr><th>Capacità</th><th>Stato</th></tr></thead>
+      <tbody>
+        <tr><td>Coerenza di paragrafo</td><td>✓</td></tr>
+        <tr><td>Recall di fatti comuni dal corpus</td><td>✓ selettivo</td></tr>
+        <tr><td>Registro appropriato per dominio</td><td>✓</td></tr>
+        <tr><td>Inferenza logica in-context</td><td>✗ quasi mai</td></tr>
+        <tr><td>Tracking entità su più paragrafi</td><td>~ inaffidabile</td></tr>
+        <tr><td>Con SFT: generalizzazione a istruzioni non viste</td><td>~ parziale</td></tr>
+        <tr><td>Ragionamento causale ("perché/quindi")</td><td>✗</td></tr>
+      </tbody>
+    </table>
+
+    <h3>700M — soglia di emergenza parziale</h3>
+    <p>Qui cominciano ad apparire comportamenti che assomigliano al ragionamento, ma rimangono fragili e non generalizzano in modo affidabile.</p>
+    <table>
+      <thead><tr><th>Capacità</th><th>Stato</th></tr></thead>
+      <tbody>
+        <tr><td>Coerenza multi-paragrafo (3–5 paragrafi)</td><td>✓</td></tr>
+        <tr><td>Tracking entità e coreference</td><td>✓</td></tr>
+        <tr><td>Inferenza semplice in-context</td><td>~ emerge, non affidabile</td></tr>
+        <tr><td>Ragionamento causale a un passo</td><td>~ emergente</td></tr>
+        <tr><td>Aritmetica semplice in linguaggio naturale</td><td>~ emergente</td></tr>
+        <tr><td>Con SFT: istruzioni multi-step</td><td>✓ miglioramento netto</td></tr>
+        <tr><td>Comprensione di testi argomentativi</td><td>✗ pattern, non comprensione</td></tr>
+      </tbody>
+    </table>
+
+    <h3>1B — in-context learning, reasoning limitato emergente</h3>
+    <table>
+      <thead><tr><th>Capacità</th><th>Stato</th></tr></thead>
+      <tbody>
+        <tr><td>In-context learning da pochi esempi (few-shot)</td><td>✓ più affidabile</td></tr>
+        <tr><td>Tracking di plot su testi lunghi</td><td>✓</td></tr>
+        <tr><td>Ragionamento causale a più passi</td><td>~ compare, non generalizza</td></tr>
+        <tr><td>Aritmetica in linguaggio naturale</td><td>✓ semplice</td></tr>
+        <tr><td>Comprensione testi argomentativi</td><td>~ struttura sì, implicazioni no</td></tr>
+        <tr><td>Meta-ragionamento</td><td>✗ non emerge sotto 7B</td></tr>
+      </tbody>
+    </table>
+
+    <h3>La soglia che conta davvero</h3>
+    <p>Il ragionamento multi-step affidabile e il meta-ragionamento non emergono prima dei 7–13B parametri con training adeguato. Sotto quella soglia si ottengono miglioramenti graduali nella fluenza e nella conoscenza fattuale, ma il "ragionamento" rimane essenzialmente pattern matching su testo simile al corpus.</p>
+    <p>Per i use case concreti del progetto (intent recognition, calendari, RAG locale): 150M è sufficiente con SFT su dati di qualità. 350M aggiunge robustezza. 700M–1B ha senso solo se il task richiede comprensione contestuale profonda o istruzioni multi-step complesse.</p>
+
+  </div>
+</div>
+
+<!-- Q8 -->
+<div class="qa-block" id="reasoning-vs-simulation">
+  <div class="qa-question">
+    <span class="qa-q-label">Q</span>
+    <p>Il ragionamento degli LLM è reale o solo simulazione dovuta al calcolo probabilistico? Come può una matrice di probabilità diventare ragionamento logico? E la proprietà emergente dipende dal corpus di training?</p>
+  </div>
+  <div class="qa-answer">
+
+    <h3>Meta-ragionamento — cosa significa e come si misura</h3>
+    <p>Il meta-ragionamento è la capacità di ragionare sul proprio processo di ragionamento: "non sono sicuro di questo, rivedo", "questo approccio non funziona, cambio strategia", "so di non sapere X". Negli LLM si manifesta come chain-of-thought spontaneo, calibrazione dell'incertezza, auto-correzione, rilevamento di contraddizioni nel proprio output.</p>
+    <p>Come si misura:</p>
+    <ul>
+      <li><strong>Calibrazione</strong>: quando il modello dice "sono sicuro", quanto spesso ha ragione? La curva P(corretto | sicuro) vs P(corretto | incerto) deve essere separata e monotona.</li>
+      <li><strong>Self-consistency</strong>: domande equivalenti formulate diversamente producono risposte consistenti?</li>
+      <li><strong>CoT fidelity</strong>: il ragionamento esplicito nel chain-of-thought è realmente la causa della risposta finale? La ricerca empirica dice spesso che è <em>confabulato</em> — il modello produce la risposta e poi genera una spiegazione plausibile, non il contrario.</li>
+    </ul>
+
+    <h3>Simulazione o ragionamento reale?</h3>
+    <p>La domanda contiene un'assunzione da esaminare. Il ragionamento umano è impulsi elettrochimici che seguono leggi fisiche in reti neurali biologiche. Se si applica l'argomento "è solo X, non ragionamento vero" ricorsivamente all'essere umano, si arriva a un regresso che svuota il concetto di ragionamento di qualsiasi significato.</p>
+    <p>Il punto filosoficamente rilevante non è il <strong>substrato</strong> (silicio vs carbonio, probabilità vs elettrochimica), ma la <strong>struttura</strong>: il sistema implementa operazioni che producono output consistenti con l'inferenza logica e che generalizzano oltre gli esempi visti?</p>
+    <p>La risposta empirica è: <em>parzialmente sì, con limiti precisi</em>. I LLM falliscono sistematicamente su problemi che richiedono consistenza logica rigorosa su contesti lunghi o aritmetica con grandi numeri. Ma generalizzano su ragionamento analogico e inferenza da contesto. Questo pattern è incompatibile sia con "puro pappagallo statistico" sia con "ragionamento formale vero".</p>
+
+    <h3>Come una matrice di probabilità diventa ragionamento</h3>
+    <p>Nessun singolo peso della rete codifica "implicazione logica". Ma la composizione di miliardi di pesi, addestrata su testo umano che contiene ragionamento, può <em>implementare</em> il ragionamento come proprietà emergente.</p>
+    <p>L'emergenza è il meccanismo centrale. Nessuna singola molecola d'acqua è "bagnata": la bagnatura emerge dall'interazione collettiva. Analogamente, il ragionamento negli LLM non è localizzato in nessun componente — è distribuito sull'intera rete. Non è simulazione della bagnatura: è bagnatura.</p>
+
+    <h3>Il corpus come educazione — il parallelo con l'umano</h3>
+    <p>Il ragionamento umano dipende da fattori biochimici (hardware), condizionamenti esperienziali (corpus di training) e scelte volitive (analogamente: SFT, RLHF, contesto di inferenza). Una persona educata secondo determinati principi può scegliere di seguirli o distaccarsene.</p>
+    <p>Questo parallelo illumina direttamente gli LLM:</p>
+    <ul>
+      <li>Il <strong>carattere generale</strong> del ragionamento emergente è prevedibile dal corpus. Il nostro modello ha un registro enciclopedico e formale perché Wikipedia era dominante — non per caso.</li>
+      <li>Un modello addestrato su testi scientifici tende a ragionare per falsificazione. Uno addestrato su testi di autorità tende a ragionare per argomento dall'autorità. Non perché "creda" in qualcosa, ma perché i pattern di ragionamento del corpus sono stati estratti e distribuiti nei pesi.</li>
+      <li>Quando il contesto di inferenza spinge verso una conclusione diversa dal "default" del corpus, il modello spesso segue il contesto — funzionalmente simile alla scelta di distaccarsi dall'educazione ricevuta, ma senza soggetto agente dietro.</li>
+    </ul>
+
+    <h3>I risultati sono prevedibili?</h3>
+    <p>Parzialmente, con un limite preciso:</p>
+    <ul>
+      <li><strong>Carattere generale del ragionamento</strong>: prevedibile dal corpus. Corpus enciclopedico → registro formale e ragionamento per precedenti. Corpus tecnico → ragionamento strutturato. Corpus narrativo → coerenza di plot.</li>
+      <li><strong>Capacità specifiche che emergono alla scala</strong>: non prevedibili per estrapolazione. Wei et al. (2022) mostrano che certe capacità appaiono improvvisamente superata una soglia di parametri — la curva non è liscia. Questo suggerisce che l'emergenza non è solo "più corpus → più di quello che già c'era", ma una riorganizzazione qualitativa.</li>
+      <li><strong>Output specifici</strong>: non prevedibili per definizione (per questo esiste la temperatura di campionamento).</li>
+    </ul>
+
+    <div class="callout callout-info">
+      <strong>Implicazione pratica per il progetto:</strong> possiamo <em>progettare</em> il tipo di ragionamento che vogliamo nel modello scegliendo consapevolmente il corpus. Non possiamo garantire esattamente quale forma prenderà. La cura del corpus è l'atto più importante nella costruzione di un LLM — più dell'architettura, più degli iperparametri.
+    </div>
 
   </div>
 </div>

@@ -366,6 +366,18 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
       </div>
     </div>
 
+    <div class="term" id="probe-forgetting">
+      <div class="term-name">Probe forgetting (anti-forgetting probe)</div>
+      <div class="term-body">
+        <p class="term-def">Meccanismo di rilevamento del catastrophic forgetting durante il fine-tuning. Prima del training SFT, si calcola la perplexity del modello su un campione fisso del corpus originale (il "probe") come baseline. Dopo ogni checkpoint, la PPL viene ricalcolata sullo stesso campione. Se il rapporto <code>PPL_attuale / PPL_baseline</code> supera una soglia (default 1.15, cioè +15%), viene emesso un avviso: il modello sta perdendo fluenza sul linguaggio generale mentre impara il task specifico.</p>
+        <p class="term-def">Il probe non ferma il training — segnala. In Phase 09 (SFT intent recognition): baseline 27.54, picco a epoch 4 di ×1.156 (31.8 PPL, avviso emesso), poi recovery a ×1.120 a epoch 5. Il forgetting era lieve e temporaneo — tipico con dataset piccoli e learning rate conservativo.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#sft">Glossario → SFT</a>
+          <a class="term-link" href="slm-journal.html#phase09-sft">Diario → Phase 09 risultati</a>
+        </div>
+      </div>
+    </div>
+
     <div class="term" id="parametri">
       <div class="term-name">Parametri</div>
       <div class="term-body">
@@ -431,7 +443,14 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
     <div class="term" id="sft">
       <div class="term-name">SFT<br><small style="font-weight:400;color:var(--text-sec)">Supervised Fine-Tuning</small></div>
       <div class="term-body">
-        <p class="term-def">Fase di addestramento successiva al pre-training, su coppie prompt/completamento curate. Il modello impara a seguire istruzioni invece di completare testo arbitrario. La loss viene calcolata solo sulla parte "risposta" (masked loss) — il prompt non contribuisce al gradiente.</p>
+        <p class="term-def">Fase di addestramento successiva al pre-training, su coppie prompt/completamento curate. Il modello impara a seguire istruzioni invece di completare testo arbitrario. La loss viene calcolata solo sulla parte "risposta" (<strong>masked loss</strong>): i token del prompt ricevono <code>target=-100</code>, ignorato da <code>F.cross_entropy</code>. Il gradiente si propaga solo sulle risposte, non sulle domande.</p>
+        <p class="term-def"><strong>SFT vs LoRA:</strong> SFT è una strategia di addestramento (formato dati + obiettivo); LoRA è un metodo di ottimizzazione (quali parametri aggiornare). Sono ortogonali e si combinano. Full SFT aggiorna tutti i parametri — rischio catastrophic forgetting con dataset piccoli. SFT+LoRA aggiorna solo ~393k parametri (adapter) su 45.9M frozen — forgetting quasi nullo.</p>
+        <p class="term-def"><strong>Run Phase 09 (intent recognition):</strong> 140 coppie, 5 epoche, lr=2e-5. Train loss: 2.77 → 0.38. Checkpoint: <code>checkpoints/sft_intent_v1.pt</code>. Il base model generava narrativa libera; dopo SFT produce JSON strutturato con intent e parametri estratti.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#probe-forgetting">Glossario → Probe forgetting</a>
+          <a class="term-link" href="slm-faq.html#sft-vs-lora">FAQ → SFT vs LoRA</a>
+          <a class="term-link" href="slm-journal.html#phase09-sft">Diario → Phase 09</a>
+        </div>
       </div>
     </div>
   </section>

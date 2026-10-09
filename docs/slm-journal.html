@@ -1462,3 +1462,185 @@ print(f'Senza cache: {t1-t0:.2f}s   Con cache: {t3-t2:.2f}s   Speedup: {(t1-t0)/
   <strong>Nota sul test di identità:</strong> il test usa <code>torch.manual_seed</code> implicito — con stessa sequenza logit e stesso campionamento (greedy o fissato) l'output deve essere bit-per-bit identico. Se non lo è, c'è un errore nell'indexing della cache (off-by-one nella concatenazione o nella maschera causale).
 </div>
 
+<h3>Risultati del test — run7_shard_s3.pt (vocab=16000, step=20000, val=2.8165)</h3>
+<div class="ck-table">
+  <table>
+    <thead><tr><th>Test</th><th>Risultato</th></tr></thead>
+    <tbody>
+      <tr><td>Identità output (200 token, temperature=0.01)</td><td><strong>OK</strong> — output bit-per-bit identico</td></tr>
+      <tr><td>Senza cache (200 token, 3 run, CPU M2)</td><td>3.296 s</td></tr>
+      <tr><td>Con cache (200 token, 3 run, CPU M2)</td><td>0.757 s</td></tr>
+      <tr><td>Speedup</td><td><strong>4.35×</strong></td></tr>
+    </tbody>
+  </table>
+</div>
+<p>Parametro <code>use_cache=True</code> è il default. Per disabilitare (debug, confronto): <code>use_cache=False</code>.</p>
+
+
+<h2 id="phase09-sft">Fase 09 — SFT: Supervised Fine-Tuning con intent recognition (2026-10-09)</h2>
+
+<div class="narr">Prima run SFT sul modello base. Orientamento scelto: <strong>intent recognition / instruction following</strong>. Il codice <code>train_sft.py</code> è già completo. Il lavoro di questa fase è costruire il dataset <code>data/sft_mini.jsonl</code>, eseguire il run e conservare il checkpoint risultante (<code>checkpoints/sft_intent_v1.pt</code>) come esempio documentato distinto dal base model.</div>
+
+<h3>Pre-training vs SFT — la differenza fondamentale</h3>
+
+<p>Durante il pre-training il modello impara a fare una cosa sola: predire il token successivo. Sa continuare il testo, non sa rispondere. Se gli scrivi "Chi ha scritto la Divina Commedia?" risponde con un'altra domanda — perché nel corpus le liste di domande sono frequenti e continuarle è statisticamente plausibile. Il modello non "sa" che deve rispondere: sa solo che dopo una domanda spesso viene un'altra domanda.</p>
+
+<p>SFT cambia il comportamento senza cambiare la conoscenza. Il modello sa già cos'è Dante. Non sa ancora che deve rispondere invece di continuare liberamente. Il dataset SFT lo insegna attraverso esempi.</p>
+
+<h3>La loss mascherata (masked loss)</h3>
+
+<p>La differenza tecnica rispetto al pre-training è nella funzione di loss. Il dataset SFT è una lista di coppie:</p>
+
+<div class="cmd">{"prompt": "Chi ha scritto la Divina Commedia?",
+ "completion": "La Divina Commedia fu scritta da Dante Alighieri."}</div>
+
+<p>Durante il pre-training la cross-entropy viene calcolata su <em>tutti</em> i token della sequenza. Durante SFT viene calcolata <strong>solo sui token del completion</strong>. I token del prompt ricevono <code>target=-100</code>, che <code>F.cross_entropy</code> ignora per convenzione PyTorch. Il modello impara a produrre risposte, non a predire le domande.</p>
+
+<h3>Catastrophic forgetting</h3>
+
+<p>Con full fine-tuning (SFT senza LoRA), tutti i parametri del modello vengono aggiornati su ogni esempio. Con un dataset piccolo (100–200 esempi) su un modello da 45.9M parametri, il rischio è che il modello dimentichi il pre-training: i pesi si spostano verso il nuovo dataset e le connessioni per il vocabolario generale si indeboliscono.</p>
+
+<p><code>train_sft.py</code> monitora questo con un <strong>probe set</strong>: un campione fisso di generazioni sul corpus originale, valutato prima e dopo ogni checkpoint. Se la qualità del testo libero degrada significativamente, il fine-tuning sta sovrascrivendo la conoscenza di base. Con pochi step (300–500) su dataset piccolo, il forgetting è generalmente limitato.</p>
+
+<h3>Orientamenti possibili del dataset SFT</h3>
+
+<p>Il dataset SFT non descrive il mondo (quello è il pre-training): descrive come il modello deve rispondere al mondo. Ogni orientamento corrisponde a un tipo di dataset:</p>
+
+<div class="ck-table">
+  <table>
+    <thead><tr><th>Orientamento</th><th>Use case</th><th>Formato completion</th></tr></thead>
+    <tbody>
+      <tr><td>Intent recognition</td><td>Calendario, routing comandi</td><td>JSON con intent + entità estratte</td></tr>
+      <tr><td>Structured output</td><td>Spesa Excel, parsing dati</td><td>JSON normalizzato pronto per import</td></tr>
+      <tr><td>Tool calling</td><td>Orchestrazione tool esterni</td><td><code>&lt;tool&gt;nome&lt;/tool&gt;&lt;params&gt;{...}&lt;/params&gt;</code></td></tr>
+      <tr><td>RAG / context-grounded</td><td>Sostituzione modelli esterni</td><td>Risposta ancorata al documento nel prompt</td></tr>
+      <tr><td>Stile / voce narrativa</td><td>Writing assistant</td><td>Testo nel registro specificato</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="note">Dataset misti con pochi esempi producono un modello confuso su tutti i task. Per il proof-of-concept: un solo orientamento preciso.</div>
+
+<h3>Orientamento scelto: intent recognition</h3>
+
+<p>Il modello deve imparare a classificare l'intenzione di una richiesta in linguaggio naturale e a estrarne i parametri strutturati. È il comportamento di base di qualsiasi sistema calendario o routing di comandi.</p>
+
+<div class="cmd">{"prompt": "Sposta la riunione con Marco a giovedì pomeriggio.",
+ "completion": "{\"intent\": \"reschedule_event\", \"contact\": \"Marco\", \"day\": \"giovedì\", \"time\": \"pomeriggio\"}"}
+
+{"prompt": "Aggiungi un promemoria per domani mattina: chiamare il medico.",
+ "completion": "{\"intent\": \"create_reminder\", \"date\": \"domani\", \"time\": \"mattina\", \"note\": \"chiamare il medico\"}"}
+
+{"prompt": "Cancella tutti gli appuntamenti di venerdì.",
+ "completion": "{\"intent\": \"delete_events\", \"date\": \"venerdì\", \"scope\": \"all\"}"}</div>
+
+<h3>Piano del dataset — sft_mini.jsonl</h3>
+
+<p>Target: 120–150 coppie in italiano, distribuite su 6 intent:</p>
+
+<div class="ck-table">
+  <table>
+    <thead><tr><th>Intent</th><th>Esempi</th><th>Descrizione</th></tr></thead>
+    <tbody>
+      <tr><td><code>create_event</code></td><td>~25</td><td>Creare un nuovo appuntamento</td></tr>
+      <tr><td><code>reschedule_event</code></td><td>~25</td><td>Spostare un appuntamento esistente</td></tr>
+      <tr><td><code>delete_event</code></td><td>~20</td><td>Cancellare uno o più appuntamenti</td></tr>
+      <tr><td><code>create_reminder</code></td><td>~25</td><td>Aggiungere un promemoria</td></tr>
+      <tr><td><code>query_schedule</code></td><td>~25</td><td>Chiedere info sull'agenda</td></tr>
+      <tr><td><code>add_contact</code></td><td>~20</td><td>Aggiungere un contatto o nota</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Comandi di esecuzione</h3>
+<div class="cmd"># Training SFT con intent dataset
+python3 train_sft.py \
+    --checkpoint checkpoints/run7_shard_s3.pt \
+    --data data/sft_mini.jsonl \
+    --steps 500 \
+    --lr 2e-5 \
+    --output checkpoints/sft_intent_v1.pt
+
+# Confronto generazioni prima/dopo SFT
+python3 -c "
+# base model
+..." 
+# → poi stesso prompt su sft_intent_v1.pt</div>
+
+<div class="note">
+  <strong>Checkpoint di output:</strong> <code>checkpoints/sft_intent_v1.pt</code> — conservato come esempio documentato distinto dal base model. Non sovrascrive <code>best.pt</code> né i checkpoint di training.
+</div>
+
+<h3>Risultati del run SFT — sft_intent_v1.pt</h3>
+
+<div class="narr">Run completato in 27 secondi su MPS (M2). 140 esempi, 5 epoche, 175 step totali. Il modello ha imparato il task — il comportamento è cambiato in modo netto rispetto al base model.</div>
+
+<h4>Metriche per epoca</h4>
+<div class="ck-table">
+  <table>
+    <thead><tr><th>Epoca</th><th>Train loss</th><th>Probe PPL</th><th>×baseline</th><th>Nota</th></tr></thead>
+    <tbody>
+      <tr><td>baseline</td><td>—</td><td>27.54</td><td>1.000</td><td>Run #7 shard s3</td></tr>
+      <tr><td>1 / 5</td><td>2.7731</td><td>29.1</td><td>1.056</td><td>ok</td></tr>
+      <tr><td>2 / 5</td><td>0.9494</td><td>29.6</td><td>1.074</td><td>ok</td></tr>
+      <tr><td>3 / 5</td><td>0.5510</td><td>30.5</td><td>1.107</td><td>ok</td></tr>
+      <tr><td>4 / 5</td><td>0.4261</td><td>31.8</td><td>1.156</td><td>⚠ FORGETTING (soglia 1.15)</td></tr>
+      <tr><td>5 / 5</td><td>0.3762</td><td>30.8</td><td>1.120</td><td>recovery</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>Il forgetting ha toccato il picco a epoch 4 (×1.156, appena sopra soglia) e si è ripreso spontaneamente a epoch 5 (×1.120). Il LR era già in discesa cosine nella fase finale — il modello ha smesso di "forzare" il nuovo task e le connessioni originali hanno parzialmente recuperato. Comportamento atteso con dataset piccolo e LR conservativo.</p>
+
+<h4>Confronto generazioni — base vs SFT</h4>
+<p>Stesso prompt, temperature=0.1, top_k=10:</p>
+
+<div class="ck-table">
+  <table>
+    <thead><tr><th>Prompt</th><th>Base model</th><th>SFT model</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Crea un appuntamento con Marco venerdì alle 15.</td>
+        <td>narrativa Wikipedia su "Marco"</td>
+        <td><code>{"intent": "create_event", "date": "venerdì", "time": "15:00"}</code> ✓</td>
+      </tr>
+      <tr>
+        <td>Sposta la riunione con Sara a martedì alle 10.</td>
+        <td>continua il testo liberamente</td>
+        <td><code>{"intent": "reschedule_event", "event_ref": "riunione Sara", "new_date": "mercoledì", "new_time": "10:00"}</code> ✓ (new_date sbagliato: mercoledì invece di martedì)</td>
+      </tr>
+      <tr>
+        <td>Cosa ho in agenda domani?</td>
+        <td>loop della stessa domanda</td>
+        <td><code>{"intent": "query_schedule", "date": "domani"}</code> ✓</td>
+      </tr>
+      <tr>
+        <td>Cancella tutti gli appuntamenti di lunedì.</td>
+        <td>narrativa su palinsesto TV</td>
+        <td><code>{"intent": "create_reminder"...}</code> ✗ intent sbagliato</td>
+      </tr>
+      <tr>
+        <td>Aggiungi un promemoria per stasera: chiamare la banca.</td>
+        <td>narrativa narrativa</td>
+        <td><code>{"intent": "create_reminder", "note": "ritirare la banca"...}</code> ✓ intent, ✗ note value</td>
+      </tr>
+      <tr>
+        <td>Aggiungi Giulia Neri, responsabile vendite, 339-1122334.</td>
+        <td>narrativa su festival di Cannes</td>
+        <td><code>{"intent": "add_contact", "name": "Sarah"...}</code> ✓ intent, ✗ nome allucinato</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h4>Osservazioni tecniche</h4>
+<ul>
+  <li><strong>Intent detection: 5/6 corretti</strong> — il task principale funziona. Il 6° errore (<code>delete_event</code> → <code>create_reminder</code>) è plausibile con 20 soli esempi per intent.</li>
+  <li><strong>Valori dei campi: parzialmente corretti</strong> — il modello capisce la struttura JSON ma allucinica alcuni valori. Con più esempi e più epoche migliora.</li>
+  <li><strong>Trailing brackets <code>"}"}"}"}}</code></strong> — artifact di generazione: il modello non ha un token di stop esplicito. In produzione: parser JSON che estrae il primo oggetto valido, oppure stop token <code>}\n</code>.</li>
+  <li><strong>Catastrophic forgetting: lieve e reversibile</strong> — il probe ha funzionato. Picco +15.6%, recovery spontaneo. LR conservativo (2e-5) ha protetto il base model.</li>
+</ul>
+
+<div class="note">
+  <strong>Checkpoint conservato:</strong> <code>checkpoints/sft_intent_v1.pt</code> — modello di esempio documentato, distinto dal base model. Non sovrascrive nessun checkpoint di training.
+</div>

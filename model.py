@@ -89,16 +89,20 @@ class GPT(nn.Module):
         elif isinstance(module, nn.Embedding):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, idx, targets=None):
+    def forward(self, idx, targets=None, past_key_values=None, return_cache=False):
         """
         Args:
-            idx:     (batch, seq_len) — token IDs, interi
-            targets: (batch, seq_len) — token IDs target per il training
-                     targets[b, t] = token corretto dopo idx[b, t]
+            idx:              (batch, seq_len) — token IDs, interi
+            targets:          (batch, seq_len) — token IDs target per il training
+            past_key_values:  lista di tuple (K_cache, V_cache) per ogni layer,
+                              oppure None. Usato da generate() con KV-cache attiva.
+            return_cache:     se True, restituisce anche present_key_values.
+                              Usato da generate(). Il training chiama sempre con
+                              return_cache=False (default) — comportamento invariato.
 
         Returns:
-            logits: (batch, seq_len, vocab_size) — score non normalizzati
-            loss:   scalare cross-entropy (None se targets non forniti)
+            (logits, loss)                          se return_cache=False (default)
+            (logits, loss, present_key_values)      se return_cache=True
         """
         # Token IDs → vettori densi
         x = self.token_embedding(idx)    # (batch, seq_len, d_model)
@@ -107,9 +111,12 @@ class GPT(nn.Module):
         if not self.config.use_rope:
             x = self.pos_encoding(x)     # (batch, seq_len, d_model)
 
-        # Passa attraverso ogni blocco Transformer
-        for block in self.blocks:
-            x, _ = block(x)              # (batch, seq_len, d_model)
+        # Passa attraverso ogni blocco Transformer, raccogliendo lo stato KV.
+        present_key_values = []
+        for i, block in enumerate(self.blocks):
+            past_kv = past_key_values[i] if past_key_values is not None else None
+            x, _, present_kv = block(x, past_kv=past_kv)
+            present_key_values.append(present_kv)
 
         x = self.norm_final(x)           # (batch, seq_len, d_model)
 
@@ -124,11 +131,13 @@ class GPT(nn.Module):
                 targets.view(-1)                           # (batch×seq,)
             )
 
+        if return_cache:
+            return logits, loss, present_key_values
         return logits, loss
 
     @torch.no_grad()
     def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None,
-                 top_p=1.0, repetition_penalty=1.0):
+                 top_p=1.0, repetition_penalty=1.0, use_cache=True):
         """
         Generazione autoregressiva: produce un token alla volta,
         aggiungendolo al contesto e ripetendo.
@@ -142,13 +151,27 @@ class GPT(nn.Module):
             top_p:              nucleus sampling — campiona dal minimo sottoinsieme di token
                                 la cui probabilità cumulata supera p (1.0 = disabilitato)
             repetition_penalty: >1.0 penalizza i token già presenti nel contesto (1.0 = disabilitato)
+            use_cache:          se True (default), usa KV-cache per inference O(n).
+                                se False, ricalcola l'intera sequenza ad ogni passo (O(n²)).
         """
         self.eval()
-        for _ in range(max_new_tokens):
-            # Tronca il contesto alla lunghezza massima del modello
-            ctx = idx[:, -self.config.max_seq_len:]
+        past_kv = None
 
-            logits, _ = self(ctx)
+        for _ in range(max_new_tokens):
+            if use_cache:
+                if past_kv is None:
+                    # Primo passo: elabora l'intero prompt, ottieni cache iniziale.
+                    ctx = idx[:, -self.config.max_seq_len:]
+                    logits, _, past_kv = self(ctx, return_cache=True)
+                else:
+                    # Passi successivi: solo l'ultimo token generato.
+                    # Il contesto completo è già nella cache.
+                    logits, _, past_kv = self(idx[:, -1:],
+                                              past_key_values=past_kv,
+                                              return_cache=True)
+            else:
+                ctx = idx[:, -self.config.max_seq_len:]
+                logits, _ = self(ctx)
 
             # Considera solo il logit dell'ultimo token (il "prossimo")
             logits = logits[:, -1, :]    # (batch, vocab_size)
