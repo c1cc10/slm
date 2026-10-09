@@ -1234,3 +1234,94 @@ Poi tokenizzare ogni shard con il tokenizer esistente (<code>--tokenizer bpe-spm
   <strong>Implicazione per architetture multi-modello:</strong> SLM s3 e Minerva 350M si completano senza sovrapporsi. Un router che seleziona il modello in base alla classe del prompt (enciclopedico vs pratico/sensoriale) otterrebbe qualità superiore a entrambi presi singolarmente. Questo è il design ipotetico per il sistema di gestione calendari (Run #8), dove la disambiguazione semantica è più importante della generazione fluente.
 </div>
 
+<h2 id="roadmap-completamento">Ritorno alla roadmap — fasi 05–10 (2026-10-08)</h2>
+
+<div class="narr">Decisione: le applicazioni pratiche (Run #8-cal e Run #8-ins) aspettano. Prima di procedere con fine-tuning di dominio, si completano le fasi architetturali 05–10 della roadmap originale, saltate durante i run #5–7. L'ordine è quello del piano: sampling avanzato → valutazione quantitativa → efficienza training → KV-cache → SFT → LoRA. Ogni fase è codificata, spiegata nel journal e registrata nel glossario prima di passare alla successiva.</div>
+
+<h2 id="phase05-sampling">Fase 05 — Sampling avanzato (2026-10-08)</h2>
+
+<div class="narr">Completamento del metodo <code>generate()</code> in <code>model.py</code>. Temperature e top_k erano già presenti fin da Run #4. Aggiunti top_p (nucleus sampling) e repetition_penalty. Entrambi disabilitati per default (top_p=1.0, repetition_penalty=1.0) per garantire retrocompatibilità con tutti i call-site esistenti.</div>
+
+<h3>Cosa esisteva già</h3>
+<ul>
+  <li><code>temperature</code> — scala i logit prima del softmax. Già presente, default 1.0.</li>
+  <li><code>top_k</code> — mantiene solo i top-k logit. Già presente, default None (disabilitato).</li>
+</ul>
+
+<h3>Aggiunto — repetition penalty</h3>
+<p>Prima di applicare la temperatura, penalizza i token già presenti nel contesto corrente. Per ogni token già generato: se il suo logit è positivo, viene diviso per il valore della penalità (abbassato); se negativo, viene moltiplicato (abbassato ulteriormente). Con <code>repetition_penalty=1.3</code> un token già visto diventa ~30% meno probabile al passo successivo.</p>
+
+<p>Questo risolve direttamente i loop osservati nel benchmark Run #7: "Foggia" × 20 (prompt Puglia) e "pourfail" (prompt pasta) erano entrambi casi di attrazione toponomastica senza penalty. La penalità viene applicata sui token nel contesto corrente (finestra max_seq_len), non sull'intera storia del training.</p>
+
+<div class="cmd">python3 train.py --generate "La regione Puglia è" --temp 0.8 --rep-penalty 1.3 --max-new-tokens 150</div>
+
+<h3>Aggiunto — nucleus sampling (top_p)</h3>
+<p>Dopo il filtro top_k (se attivo), ordina i logit per probabilità decrescente, calcola la probabilità cumulata e azzera tutto ciò che supera la soglia p. Si mantiene almeno il primo token.</p>
+
+<p>La differenza rispetto a top_k: top_k taglia sempre a un numero fisso di candidati. Top_p si adatta alla confidenza del modello. Quando la distribuzione è concentrata (il modello sa cosa dire) il nucleo è piccolo — 3–5 token. Quando è piatta (incertezza alta) ne include di più. Con <code>top_p=0.9</code> il campionamento avviene sempre sul 90% della massa probabilistica, mai sulla coda lunga di token improbabili.</p>
+
+<div class="note">
+  <strong>Ordine delle operazioni in generate():</strong>
+  <ol style="margin-top:6px;padding-left:18px">
+    <li>Repetition penalty (sui logit grezzi, prima della temperatura)</li>
+    <li>Divisione per temperatura</li>
+    <li>Filtro top_k (se attivo)</li>
+    <li>Filtro top_p / nucleus (se attivo)</li>
+    <li>Softmax → multinomial sampling</li>
+  </ol>
+  L'ordine è importante: la penalty sui logit grezzi è più stabile numericamente che applicarla dopo la temperatura.
+</div>
+
+<h2 id="phase06-eval">Fase 06 — Valutazione quantitativa: eval.py con sliding window (2026-10-08)</h2>
+
+<div class="narr">Creato <code>tools/eval.py</code>: script di valutazione PPL su corpus intero con sliding window. Differisce da <code>tools/eval_ppl.py</code> (interattivo, testa una singola stringa) nel metodo di aggregazione e nel fatto di iterare sull'intero corpus senza troncare nulla.</div>
+
+<h3>Il problema della stima stocastica</h3>
+<p>Durante tutti i run #5–7, la val loss registrata nel journal è il risultato di <code>estimate_loss()</code>: campiona <code>eval_steps=100</code> batch casuali dalla split di validazione e calcola la media. È una stima — due run sullo stesso checkpoint danno numeri leggermente diversi. Non è comparabile tra checkpoint quando il corpus di validazione cambia.</p>
+
+<p><code>eval.py</code> è deterministico: scorre tutto il corpus in ordine, nessun token escluso. Dato lo stesso checkpoint e lo stesso file, restituisce sempre la stessa PPL. Questo rende il confronto tra checkpoint affidabile.</p>
+
+<h3>Sliding window — perché non basta troncare</h3>
+<p>Il modello elabora al massimo <code>max_seq_len = 512</code> token alla volta. Per corpus da centinaia di migliaia di token, l'approccio naive divide il corpus in blocchi non sovrapposti di 512. Problema: i token all'inizio di ogni blocco non hanno contesto — il modello li vede "a freddo". La sua incertezza su quei token è artificialmente alta, alzando la PPL stimata.</p>
+
+<p>La soluzione è usare uno stride più piccolo di max_seq_len (default: <code>stride = max_seq_len // 2 = 256</code>). Ogni finestra si sovrappone con la precedente per 256 token. Di ogni finestra si scorano solo i token <em>nuovi</em> — quelli non ancora scorati dalla finestra precedente. In questo modo ogni token riceve il massimo contesto disponibile (fino a 511 token di storia) pur essendo scorato una volta sola.</p>
+
+<div class="table-wrap">
+<table class="ck-table">
+  <thead><tr><th>Posizione token</th><th>Contesto disponibile</th><th>Scorato in</th></tr></thead>
+  <tbody>
+    <tr><td class="num">0 – 511</td><td>0 – 511 (prima finestra)</td><td>Finestra 1 — tutti i token</td></tr>
+    <tr><td class="num">256 – 767</td><td>256 – 767 (seconda finestra)</td><td>Finestra 2 — solo token 512–767 (i 256 nuovi)</td></tr>
+    <tr><td class="num">512 – 1023</td><td>512 – 1023 (terza finestra)</td><td>Finestra 3 — solo token 768–1023</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Aggregazione corretta della PPL</h3>
+<p>La PPL totale non è la media delle PPL per finestra. Quello è biased perché finestre più corte (l'ultima del corpus) peserebbero uguale alle finestre complete. La formula corretta pesa ogni token allo stesso modo:</p>
+
+<p style="font-family:'IBM Plex Mono',monospace;background:var(--surface);padding:10px 14px;border-radius:5px;border:1px solid var(--border);margin:12px 0">
+PPL_totale = exp( (Σ NLL_i) / (Σ n_token_i) )
+</p>
+
+<p>dove la somma è su tutte le finestre e NLL_i è la negative log-likelihood totale (loss × n_token) della finestra i. È la media geometrica della perplexity per token sull'intero corpus.</p>
+
+<h3>Utilizzo</h3>
+<div class="cmd"># Baseline Run #7 su corpus Wikipedia
+python3 tools/eval.py --checkpoint checkpoints/best.pt --data data/wiki_it.txt
+
+# Con stride personalizzato (più basso = più preciso, più lento)
+python3 tools/eval.py --checkpoint checkpoints/best.pt --data data/wiki_it.txt --stride 128
+
+# Confronto tra due checkpoint
+python3 tools/eval.py --checkpoint checkpoints/run6_ad_best.pt \
+    --compare checkpoints/best.pt --data data/wiki_it.txt
+
+# Salvataggio PPL per chunk (per visualizzazione loss curve)
+python3 tools/eval.py --checkpoint checkpoints/best.pt \
+    --data data/wiki_it.txt --output eval_run7.csv</div>
+
+<div class="note">
+  <strong>Prossimo uso previsto:</strong> dopo Phase 07 (BF16), usare eval.py per verificare che la PPL non cambi rispetto al baseline. BF16 non dovrebbe alterare la qualità del modello, solo la velocità del training. Se la PPL diverge, c'è un bug nell'implementazione dell'autocast.
+</div>
+

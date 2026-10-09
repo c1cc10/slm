@@ -127,17 +127,21 @@ class GPT(nn.Module):
         return logits, loss
 
     @torch.no_grad()
-    def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None):
+    def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None,
+                 top_p=1.0, repetition_penalty=1.0):
         """
         Generazione autoregressiva: produce un token alla volta,
         aggiungendolo al contesto e ripetendo.
 
         Args:
-            idx:            (1, seq_len) — contesto iniziale (token IDs)
-            max_new_tokens: quanti token generare
-            temperature:    >1 = distribuzione più piatta (più sorprendente)
-                            <1 = distribuzione più concentrata (più prevedibile)
-            top_k:          campiona solo dai top-k token più probabili
+            idx:                (1, seq_len) — contesto iniziale (token IDs)
+            max_new_tokens:     quanti token generare
+            temperature:        >1 = distribuzione più piatta (più sorprendente)
+                                <1 = distribuzione più concentrata (più prevedibile)
+            top_k:              campiona solo dai top-k token più probabili (None = disabilitato)
+            top_p:              nucleus sampling — campiona dal minimo sottoinsieme di token
+                                la cui probabilità cumulata supera p (1.0 = disabilitato)
+            repetition_penalty: >1.0 penalizza i token già presenti nel contesto (1.0 = disabilitato)
         """
         self.eval()
         for _ in range(max_new_tokens):
@@ -147,12 +151,35 @@ class GPT(nn.Module):
             logits, _ = self(ctx)
 
             # Considera solo il logit dell'ultimo token (il "prossimo")
-            logits = logits[:, -1, :] / temperature    # (batch, vocab_size)
+            logits = logits[:, -1, :]    # (batch, vocab_size)
+
+            # Repetition penalty: penalizza i token già presenti nel contesto.
+            # Logit positivi vengono divisi (abbassati), negativi moltiplicati (abbassati).
+            # L'effetto è che i token già visti diventano meno probabili.
+            if repetition_penalty != 1.0:
+                for token_id in set(ctx[0].tolist()):
+                    if logits[0, token_id] > 0:
+                        logits[0, token_id] /= repetition_penalty
+                    else:
+                        logits[0, token_id] *= repetition_penalty
+
+            logits = logits / temperature
 
             if top_k is not None:
                 topk_vals, _ = torch.topk(logits, min(top_k, logits.size(-1)))
                 # Azzera tutto ciò che è sotto il k-esimo valore
                 logits[logits < topk_vals[:, [-1]]] = float('-inf')
+
+            # Nucleus sampling (top-p): mantieni il minimo insieme di token la cui
+            # probabilità cumulata supera p. Evita la coda lunga di token improbabili.
+            if top_p < 1.0:
+                sorted_logits, sorted_indices = torch.sort(logits, descending=True)
+                cumulative_probs = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
+                # Rimuove i token oltre la soglia p (shift di uno: il token che
+                # la supera per primo è ancora incluso nel campionamento)
+                remove_mask = (cumulative_probs - F.softmax(sorted_logits, dim=-1)) > top_p
+                sorted_logits[remove_mask] = float('-inf')
+                logits = torch.zeros_like(logits).scatter_(1, sorted_indices, sorted_logits)
 
             probs = F.softmax(logits, dim=-1)
             next_token = torch.multinomial(probs, num_samples=1)  # (batch, 1)

@@ -1,0 +1,369 @@
+<meta charset="UTF-8">
+<title>SLM Calendari — Glossario</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg:#F7F9FC; --surface:#FFFFFF; --surface2:#F0F5FA;
+  --text:#1C2333; --text-sec:#5A6478; --accent:#0A6E6E; --border:#DDE3EE;
+  --code-bg:#111827; --code-fg:#A8C4D8;
+  --narr-bg:#F0F5FA; --narr-br:#0A6E6E;
+  --info-bg:#EFF6FF; --info-text:#1E40AF; --info-br:#BFDBFE;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+    --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+    --code-bg:#010409; --code-fg:#79C0FF;
+    --narr-bg:#1C2128; --narr-br:#2BBFBF;
+    --info-bg:#051D40; --info-text:#79C0FF; --info-br:#1F6FEB;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0D1117; --surface:#161B22; --surface2:#1C2128;
+  --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF; --border:#21262D;
+  --code-bg:#010409; --code-fg:#79C0FF;
+  --narr-bg:#1C2128; --narr-br:#2BBFBF;
+  --info-bg:#051D40; --info-text:#79C0FF; --info-br:#1F6FEB;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0; padding: 0 0 4rem;
+  background: var(--bg); color: var(--text);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 16px; line-height: 1.7;
+}
+header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 1.5rem 2rem 1.2rem;
+}
+header nav { font-size: .85rem; color: var(--text-sec); margin-bottom: .6rem; }
+header nav a { color: var(--accent); text-decoration: none; }
+header nav a:hover { text-decoration: underline; }
+header h1 { margin: 0; font-size: 1.6rem; font-weight: 600; }
+header p.sub { margin: .3rem 0 0; color: var(--text-sec); font-size: .95rem; }
+main { max-width: 860px; margin: 0 auto; padding: 2rem 2rem 0; }
+.toc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.5rem; margin-bottom: 2rem;
+  display: flex; flex-wrap: wrap; gap: .4rem .8rem;
+}
+.toc a {
+  color: var(--accent); text-decoration: none; font-size: .88rem;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.toc a:hover { text-decoration: underline; }
+.entry {
+  border: 1px solid var(--border); background: var(--surface);
+  border-radius: 8px; padding: 1.2rem 1.5rem; margin-bottom: 1.2rem;
+  scroll-margin-top: 1.5rem;
+}
+.entry:target {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.entry h2 {
+  margin: 0 0 .15rem; font-size: 1.05rem; font-weight: 600;
+  color: var(--accent); display: flex; align-items: baseline; gap: .6rem;
+}
+.entry h2 .anchor { font-size: .78rem; color: var(--text-sec); font-weight: 400; font-family: 'IBM Plex Mono', monospace; }
+.entry .tag { font-size: .73rem; font-weight: 600; padding: .1rem .45rem;
+  border-radius: 99px; letter-spacing: .03em;
+  background: var(--info-bg); color: var(--info-text); }
+.entry .def { margin: .6rem 0 0; }
+.entry .formula {
+  background: var(--surface2); border-left: 3px solid var(--accent);
+  padding: .6rem 1rem; margin: .8rem 0; border-radius: 0 6px 6px 0;
+  font-family: 'IBM Plex Mono', monospace; font-size: .88rem; line-height: 1.7;
+  white-space: pre;
+}
+.entry .example {
+  background: var(--narr-bg); border-left: 3px solid var(--narr-br);
+  padding: .6rem 1rem; margin: .8rem 0; border-radius: 0 6px 6px 0;
+  font-size: .93rem;
+}
+.entry .ref { font-size: .83rem; color: var(--text-sec); margin-top: .8rem; }
+.entry .ref a { color: var(--accent); }
+p { margin: 0 0 .8rem; }
+a { color: var(--accent); }
+code { background: var(--surface2); color: var(--accent);
+       padding: .1em .35em; border-radius: 3px;
+       font-family: 'IBM Plex Mono', monospace; font-size: .88em; }
+</style>
+
+<header>
+  <nav>
+    <a href="index.html">SLM</a> /
+    <a href="slm-calendario.html">Gestione Calendari</a> /
+    Glossario
+  </nav>
+  <h1>SLM Calendari — Glossario</h1>
+  <p class="sub">Termini tecnici del percorso NLU applicato alla gestione di calendari in italiano</p>
+</header>
+
+<main>
+
+<div class="toc">
+  <a href="#speech-acts">Speech Acts</a>
+  <a href="#intent">Intent</a>
+  <a href="#slot">Slot / Slot Filling</a>
+  <a href="#nlu">NLU</a>
+  <a href="#semantic-parsing">Semantic Parsing</a>
+  <a href="#sequence-labeling">Sequence Labeling</a>
+  <a href="#bio">BIO Tagging</a>
+  <a href="#crf">CRF</a>
+  <a href="#joint-model">Joint Model</a>
+  <a href="#generative-parsing">Generative Parsing</a>
+  <a href="#out-of-scope">Out-of-Scope Detection</a>
+  <a href="#slot-implicit">Slot Implicito</a>
+</div>
+
+<!-- ── SPEECH ACTS ── -->
+<div class="entry" id="speech-acts">
+  <h2>Atti Linguistici (Speech Acts) <span class="anchor">#speech-acts</span> <span class="tag">linguistica</span></h2>
+  <div class="def">
+    <p>Teoria proposta da J.L. Austin (<em>How to Do Things with Words</em>, 1955) e formalizzata da J.R. Searle (1969). L'intuizione centrale: quando parliamo non stiamo solo descrivendo il mondo, stiamo compiendo <strong>azioni</strong>.</p>
+    <p>Ogni enunciato ha tre livelli:</p>
+    <ul>
+      <li><strong>Atto locutorio:</strong> il significato letterale delle parole</li>
+      <li><strong>Atto illocutorio:</strong> l'azione compiuta attraverso l'enunciato (promessa, ordine, richiesta, dichiarazione)</li>
+      <li><strong>Atto perlocutorio:</strong> l'effetto sull'interlocutore</li>
+    </ul>
+  </div>
+  <div class="example">
+    "Giovedì alle 15 ho riunione con Marco"<br>
+    Atto locutorio: descrizione di un appuntamento<br>
+    Atto illocutorio: <em>richiesta</em> di inserimento in calendario (se detto a un assistente)<br>
+    Atto perlocutorio: l'assistente crea l'evento
+  </div>
+  <div class="ref">Fondamento concettuale dell'<a href="#intent">intent</a>. L'intent NLU è la formalizzazione computazionale dell'atto illocutorio.</div>
+</div>
+
+<!-- ── INTENT ── -->
+<div class="entry" id="intent">
+  <h2>Intent <span class="anchor">#intent</span> <span class="tag">NLU</span></h2>
+  <div class="def">
+    <p>La categoria dell'azione che l'utente vuole che il sistema esegua, estratta dall'enunciato. Corrisponde all'atto illocutorio nella teoria degli <a href="#speech-acts">atti linguistici</a>.</p>
+    <p>In un sistema di gestione calendari, gli intent formano un insieme finito:</p>
+  </div>
+  <div class="formula">CREA          →  inserire un nuovo evento
+MODIFICA      →  cambiare un evento esistente
+ELIMINA       →  rimuovere un evento
+QUERY         →  interrogare lo stato del calendario
+DECISION-ALERT→  decidere come gestire una notifica</div>
+  <div class="def">
+    <p><strong>Classificazione dell'intent:</strong> il problema di predire l'intent corretto dato un enunciato. È una classificazione multiclasse sull'enunciato intero.</p>
+  </div>
+  <div class="formula">intent* = argmax_k  P(intent_k | u)
+
+dove u = (w₁, w₂, ..., wₙ) è l'enunciato
+e k scorre su tutti gli intent possibili</div>
+  <div class="example">
+    "Sposta la riunione di domani a venerdì" → intent: MODIFICA<br>
+    "Quando ho il prossimo appuntamento libero?" → intent: QUERY<br>
+    "Ignora il promemoria del dentista" → intent: DECISION-ALERT
+  </div>
+</div>
+
+<!-- ── SLOT ── -->
+<div class="entry" id="slot">
+  <h2>Slot / Slot Filling <span class="anchor">#slot</span> <span class="tag">NLU</span></h2>
+  <div class="def">
+    <p>I parametri dell'azione. Se l'<a href="#intent">intent</a> risponde a "cosa vuole fare l'utente?", gli slot rispondono a "con quali argomenti?". Corrispondono al contenuto proposizionale dell'atto linguistico.</p>
+    <p>Per il dominio calendario, gli slot tipici sono:</p>
+  </div>
+  <div class="formula">WHO       →  partecipanti / destinatari
+WHEN      →  espressione temporale (assoluta o relativa)
+WHERE     →  luogo dell'evento
+WHAT      →  descrizione / titolo
+DURATION  →  durata
+CHANNEL   →  canale di notifica (SMS, chat, email)
+PRIORITY  →  urgenza inferita o esplicita</div>
+  <div class="def">
+    <p><strong>Slot filling</strong> è il processo di estrarre i valori degli slot dal testo. È un problema di <a href="#sequence-labeling">sequence labeling</a>: ogni token dell'enunciato viene etichettato con il ruolo che ricopre (parte di quale slot, o nessuno).</p>
+    <p>La difficoltà aumenta con gli <a href="#slot-implicit">slot impliciti</a>: valori che non appaiono nel testo ma devono essere inferiti dal contesto.</p>
+  </div>
+  <div class="example">
+    "Crea una riunione con Marco giovedì alle 15 per un'ora"<br><br>
+    WHO = "Marco" · WHEN = "giovedì alle 15" · DURATION = "un'ora"<br>
+    WHERE = (null) · WHAT = (null) · PRIORITY = (null)
+  </div>
+</div>
+
+<!-- ── NLU ── -->
+<div class="entry" id="nlu">
+  <h2>NLU — Natural Language Understanding <span class="anchor">#nlu</span> <span class="tag">NLP</span></h2>
+  <div class="def">
+    <p>Sottodominio del Natural Language Processing (NLP) che si occupa di <em>comprendere</em> il significato di un testo, non solo di elaborarlo superficialmente. Nel contesto dei sistemi conversazionali e dei task-oriented dialogue systems, NLU comprende tipicamente due sottoproblemi congiunti:</p>
+    <ol>
+      <li>Classificazione dell'<a href="#intent">intent</a></li>
+      <li><a href="#slot">Slot filling</a></li>
+    </ol>
+    <p>I modelli che affrontano entrambi simultaneamente si chiamano <a href="#joint-model">joint models</a>.</p>
+  </div>
+  <div class="ref">Contrapposto a NLG (Natural Language Generation): NLU va da testo a struttura, NLG va da struttura a testo. Il progetto calendario usa entrambi: NLU per parsare l'input, NLG per comporre i messaggi di alert.</div>
+</div>
+
+<!-- ── SEMANTIC PARSING ── -->
+<div class="entry" id="semantic-parsing">
+  <h2>Semantic Parsing <span class="anchor">#semantic-parsing</span> <span class="tag">NLP</span></h2>
+  <div class="def">
+    <p>Mappatura da linguaggio naturale a una rappresentazione formale eseguibile: SQL, codice, JSON, lambda calcolo, grafi. Il task di parse intent + slot filling è una forma di semantic parsing dove la rappresentazione formale è la struttura dell'evento calendario.</p>
+  </div>
+  <div class="formula">input:   "Crea riunione con Marco giovedì alle 15"
+
+output:  {
+  "intent":   "CREA",
+  "who":      "Marco",
+  "when":     "giovedì alle 15",
+  "duration": null,
+  "what":     null
+}</div>
+  <div class="def">
+    <p>Due approcci principali si sono sviluppati storicamente:</p>
+    <ul>
+      <li><strong>Approccio discriminativo (classificatore + sequence labeling):</strong> due modelli separati, uno per l'intent e uno per gli slot. Preciso, richiede esempi per ogni intent.</li>
+      <li><strong>Approccio generativo (seq2seq):</strong> un unico modello genera la rappresentazione formale token per token. Si adatta naturalmente a modelli decoder-only come SLM.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ── SEQUENCE LABELING ── -->
+<div class="entry" id="sequence-labeling">
+  <h2>Sequence Labeling <span class="anchor">#sequence-labeling</span> <span class="tag">ML</span></h2>
+  <div class="def">
+    <p>Task in cui si assegna un'etichetta a ogni elemento di una sequenza. Per lo slot filling, ogni token dell'enunciato riceve un tag che specifica se fa parte di uno slot, quale slot, e in quale posizione.</p>
+    <p>La sfida rispetto alla classificazione indipendente per token: le etichette adiacenti sono dipendenti. "B-WHO I-WHO" è valido, "I-WHO B-WHEN" è valido, "I-WHO O I-WHEN" non lo è (una sequenza Inside non può iniziare senza un Beginning). Catturare queste dipendenze richiede modelli che ragionino sulla sequenza intera, non token per token in isolamento.</p>
+  </div>
+  <div class="ref">Lo schema di etichettatura standard per sequence labeling è il <a href="#bio">BIO tagging</a>. Il modello probabilistico che cattura le dipendenze tra tag adiacenti è il <a href="#crf">CRF</a>.</div>
+</div>
+
+<!-- ── BIO ── -->
+<div class="entry" id="bio">
+  <h2>BIO Tagging <span class="anchor">#bio</span> <span class="tag">ML</span></h2>
+  <div class="def">
+    <p>Schema di etichettatura per <a href="#sequence-labeling">sequence labeling</a>. Ogni token riceve un tag della forma:</p>
+    <ul>
+      <li><strong>B-SLOT</strong> (Beginning): primo token di uno span che appartiene allo slot SLOT</li>
+      <li><strong>I-SLOT</strong> (Inside): token successivi dello stesso span</li>
+      <li><strong>O</strong> (Outside): token che non appartiene ad alcuno slot</li>
+    </ul>
+  </div>
+  <div class="formula">Enunciato:   Crea   una    riunione  con    Marco  giovedì  alle  15   per  un'ora
+Tag BIO:     O      O      O         O      B-WHO  B-WHEN   I-WHEN I-WHEN O    B-DUR</div>
+  <div class="def">
+    <p>Lo schema BIO permette di rappresentare span di lunghezza arbitraria. Varianti più ricche esistono: BIOES aggiunge E (End) e S (Single) per distinguere span di un solo token e l'ultimo token di span più lunghi. Per il dominio calendario, BIO di base è sufficiente.</p>
+    <p>Il numero totale di tag possibili è <code>2 × num_slot + 1</code>: B e I per ogni slot, più O. Con 7 slot del calendario: 15 tag totali.</p>
+  </div>
+  <div class="example">
+    "Sposta quello di giovedì al giorno dopo"<br><br>
+    Sposta     → O<br>
+    quello     → B-REF  (riferimento a evento esistente)<br>
+    di         → I-REF<br>
+    giovedì    → I-REF<br>
+    al         → O<br>
+    giorno     → B-WHEN (nuovo orario, valore implicito: "venerdì")<br>
+    dopo       → I-WHEN<br><br>
+    Nota: il valore di WHEN ("venerdì") non appare nel testo — è uno <a href="#slot-implicit">slot implicito</a>.
+  </div>
+</div>
+
+<!-- ── CRF ── -->
+<div class="entry" id="crf">
+  <h2>CRF — Conditional Random Field <span class="anchor">#crf</span> <span class="tag">ML</span></h2>
+  <div class="def">
+    <p>Modello probabilistico per <a href="#sequence-labeling">sequence labeling</a> che modella la distribuzione congiunta sulle etichette dell'intera sequenza, condizionata sull'input osservato. A differenza di un classificatore che predice ogni tag in modo indipendente, il CRF cattura le dipendenze tra tag adiacenti.</p>
+  </div>
+  <div class="formula">P(t₁...tₙ | w₁...wₙ) = (1/Z) · exp( Σᵢ φ(tᵢ₋₁, tᵢ, w, i) )
+
+dove:
+  t₁...tₙ  = sequenza di tag
+  w₁...wₙ  = sequenza di token in input
+  φ         = funzioni di feature (emissione + transizione)
+  Z         = fattore di normalizzazione (partition function)</div>
+  <div class="def">
+    <p>Le funzioni φ catturano due tipi di informazione:</p>
+    <ul>
+      <li><strong>Feature di emissione:</strong> compatibilità tra il token wᵢ e il tag tᵢ (es: "Marco" ha alta compatibilità con B-WHO)</li>
+      <li><strong>Feature di transizione:</strong> compatibilità tra tag adiacenti tᵢ₋₁ → tᵢ (es: transizione I-WHO→B-WHEN valida, O→I-WHO non valida)</li>
+    </ul>
+    <p>Il vantaggio del CRF rispetto a softmax indipendente per token: garantisce che la sequenza di tag predetta sia globalmente coerente, non solo localmente plausibile. Nei modelli neurali moderni (BiLSTM+CRF, BERT+CRF) il CRF è aggiunto come layer finale sopra le rappresentazioni contestuali.</p>
+  </div>
+</div>
+
+<!-- ── JOINT MODEL ── -->
+<div class="entry" id="joint-model">
+  <h2>Joint Model <span class="anchor">#joint-model</span> <span class="tag">NLU</span></h2>
+  <div class="def">
+    <p>Modello che predice intent e slot <em>simultaneamente</em>, condividendo la rappresentazione dell'enunciato tra i due task. Contrapposto ai pipeline sequenziali dove prima si classifica l'intent, poi si esegue lo slot filling.</p>
+    <p>Il vantaggio del joint model: l'informazione sull'intent può aiutare lo slot filling e viceversa. Sapere che l'intent è CREA rende più probabile trovare uno slot WHEN; trovare "con Marco" rende più probabile che l'intent sia CREA e non QUERY.</p>
+  </div>
+  <div class="formula">h = Encoder(w₁...wₙ)           rappresentazione contestuale
+
+intent = softmax(W_i · h_[CLS] + b_i)    classificazione sull'enunciato
+slots_j = softmax(W_s · h_j + b_s)        labeling per ogni token j</div>
+  <div class="def">
+    <p>I paper fondativi: Liu &amp; Lane (2016) con BiLSTM+CRF, e successivamente l'architettura Joint BERT (Chen et al., 2019; Xu &amp; Hu, 2019) che usa il token [CLS] per l'intent e i token individuali per gli slot.</p>
+    <p>Per SLM (decoder-only), il concetto di joint model si trasforma nell'<a href="#generative-parsing">approccio generativo</a>: il modello genera direttamente la struttura completa (intent + tutti gli slot) in un'unica passata autoregressiva.</p>
+  </div>
+</div>
+
+<!-- ── GENERATIVE PARSING ── -->
+<div class="entry" id="generative-parsing">
+  <h2>Generative Parsing (approccio generativo) <span class="anchor">#generative-parsing</span> <span class="tag">NLU · SLM</span></h2>
+  <div class="def">
+    <p>Approccio al <a href="#semantic-parsing">semantic parsing</a> in cui un modello generativo (seq2seq o decoder-only) produce la struttura formale token per token, invece di classificarla con un classificatore separato.</p>
+    <p>Per un modello decoder-only come SLM, l'approccio naturale è trattare il parsing come un task di completamento condizionale:</p>
+  </div>
+  <div class="formula">input  (nel prompt): "Crea una riunione con Marco giovedì alle 15"
+output (generato):   {"intent":"CREA","who":"Marco","when":"giovedì alle 15"}</div>
+  <div class="def">
+    <p>Il training usa coppie (enunciato, JSON strutturato). Il modello impara a generare il formato JSON corretto dato qualsiasi enunciato del dominio. Rispetto ai classificatori, questo approccio:</p>
+    <ul>
+      <li>Si generalizza meglio a slot con valori fuori dal training (zero-shot generalization)</li>
+      <li>Gestisce nativamente la struttura variabile (slot assenti non appaiono nell'output)</li>
+      <li>Non richiede un layer CRF separato</li>
+    </ul>
+    <p>La debolezza: i modelli generativi piccoli possono produrre JSON malformato o hallucinations sui valori degli slot. Si mitiga con structured decoding o prompt engineering che vincola il formato.</p>
+  </div>
+</div>
+
+<!-- ── OUT OF SCOPE ── -->
+<div class="entry" id="out-of-scope">
+  <h2>Out-of-Scope Detection <span class="anchor">#out-of-scope</span> <span class="tag">NLU</span></h2>
+  <div class="def">
+    <p>Capacità di riconoscere quando un enunciato non appartiene a nessun intent del dominio gestito. Critica per un sistema reale: senza out-of-scope detection, ogni enunciato viene assegnato all'intent più simile tra quelli noti, anche quando non appartiene al dominio.</p>
+    <p>Tre approcci principali:</p>
+    <ol>
+      <li><strong>Intent "OTHER":</strong> aggiungere una classe esplicita per enunciati fuori dominio nel training</li>
+      <li><strong>Threshold su confidenza:</strong> se max P(intent_k) &lt; soglia, flaggare come out-of-scope</li>
+      <li><strong>PPL come segnale:</strong> un enunciato con alta perplexity sul modello dominio è probabilmente fuori dominio — lo stesso meccanismo del discriminatore AI-Know, applicato qui alla pipeline calendari</li>
+    </ol>
+  </div>
+  <div class="example">
+    "Dimmi la previsione del tempo per domani" in un sistema calendario<br>
+    → nessun intent calendario corrisponde<br>
+    → sistema deve rispondere "non gestisco questo tipo di richiesta"<br>
+    → invece di creare un evento vuoto o rispondere con errore silenzioso
+  </div>
+</div>
+
+<!-- ── SLOT IMPLICITO ── -->
+<div class="entry" id="slot-implicit">
+  <h2>Slot Implicito <span class="anchor">#slot-implicit</span> <span class="tag">NLU · italiano</span></h2>
+  <div class="def">
+    <p>Uno slot il cui valore non appare esplicitamente nel testo ma deve essere inferito dal contesto conversazionale, dalla storia del calendario dell'utente, o dalla conoscenza del mondo.</p>
+    <p>Gli slot impliciti sono il confine naturale tra il parser deterministico e l'LM: il parser classico può normalizzare "giovedì alle 15" ma non può risolvere "al solito orario" senza accesso al pattern storico dell'utente.</p>
+  </div>
+  <div class="formula">Tipi di implicito nel dominio calendario:
+
+Riferimento temporale relativo: "il giorno dopo" → dipende da quale evento
+Pattern utente:                  "al solito orario" → richiede storia
+Ellissi soggetto:                "Sposta" (chi?) → pro-drop italiano
+Riferimento indiretto:           "quello di giovedì" → entity resolution
+Incertezza esplicita:            "verso fine mese se si riesce" → softcommitment</div>
+  <div class="def">
+    <p>L'italiano è una lingua <strong>pro-drop</strong>: il soggetto è spesso omesso ("Domani prenota" invece di "Io domani prenoto"). I sistemi NLU per l'italiano devono gestire questa caratteristica esplicitamente, a differenza dei sistemi per l'inglese.</p>
+  </div>
+</div>
+
+</main>

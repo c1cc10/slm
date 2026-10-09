@@ -174,6 +174,18 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
   <section class="letter-section" id="E">
     <div class="letter-heading">E</div>
 
+    <div class="term" id="eval-corpus">
+      <div class="term-name">Eval corpus<br><small style="font-weight:400;color:var(--text-sec)">sliding window</small></div>
+      <div class="term-body">
+        <p class="term-def">Metodo di valutazione PPL su un intero file di testo usando finestre sovrapposte. Il corpus viene scorato con stride &lt; max_seq_len: ogni finestra condivide parte del contesto con la precedente, così ogni token viene valutato con il massimo contesto disponibile. Ogni token è scorato <em>esattamente una volta</em>. La PPL totale aggrega correttamente come exp(Σ NLL / Σ token), non come media delle PPL per finestra (che è biased).</p>
+        <p class="term-def">Differisce da <code>estimate_loss()</code> in <code>train.py</code>, che campiona batch casuali dalla split di validazione: quel valore ha varianza e dipende da quanti batch si campionano. L'eval con sliding window è deterministico e comparabile tra checkpoint diversi.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#perplexity">Glossario → Perplexity</a>
+          <a class="term-link" href="slm-glossario.html#val-split">Glossario → Val split</a>
+        </div>
+      </div>
+    </div>
+
     <div class="term" id="embedding">
       <div class="term-name">Embedding</div>
       <div class="term-body">
@@ -295,6 +307,17 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
   <section class="letter-section" id="N">
     <div class="letter-heading">N</div>
 
+    <div class="term" id="nucleus-sampling">
+      <div class="term-name">Nucleus sampling<br><small style="font-weight:400;color:var(--text-sec)">top-p</small></div>
+      <div class="term-body">
+        <p class="term-def">Strategia di campionamento che seleziona il minimo insieme di token la cui probabilità cumulata supera una soglia p (tipicamente 0.9). A differenza di top-k (che tiene un numero fisso di candidati), top-p si adatta alla situazione: quando la distribuzione è concentrata (il modello è sicuro) tiene pochi token; quando è piatta (incerto) ne include di più. Il vantaggio è che non viene mai campionata la "coda lunga" di token improbabili.</p>
+        <p class="term-def">Con p = 0.9 e distribuzione [0.4, 0.3, 0.2, 0.05, 0.05, ...]: il nucleo è {A, B, C} che insieme coprono 0.9. D e seguenti vengono esclusi dal campionamento.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#temperatura">Glossario → Temperatura</a>
+        </div>
+      </div>
+    </div>
+
     <div class="term" id="numpy-int16">
       <div class="term-name"><code>numpy int16</code></div>
       <div class="term-body">
@@ -356,6 +379,18 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
   <section class="letter-section" id="R">
     <div class="letter-heading">R</div>
 
+    <div class="term" id="repetition-penalty">
+      <div class="term-name">Repetition penalty</div>
+      <div class="term-body">
+        <p class="term-def">Meccanismo che penalizza i token già presenti nel contesto corrente durante la generazione. Se un token ha logit positivo, viene diviso per il valore della penalità (abbassato); se negativo, viene moltiplicato (abbassato ulteriormente). Con penalty = 1.3, un token già generato diventa ~30% meno probabile al passo successivo. Con penalty = 1.0 l'effetto è nullo.</p>
+        <p class="term-def">Risolve il problema dei loop di ripetizione — fenomeno frequente nei modelli senza questa correzione, visibile nel benchmark Run #7 dove "Foggia" veniva ripetuto 20+ volte nella generazione sul prompt Puglia.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#nucleus-sampling">Glossario → Nucleus sampling</a>
+          <a class="term-link" href="slm-glossario.html#temperatura">Glossario → Temperatura</a>
+        </div>
+      </div>
+    </div>
+
     <div class="term" id="rope">
       <div class="term-name">RoPE<br><small style="font-weight:400;color:var(--text-sec)">Rotary Position Embedding</small></div>
       <div class="term-body">
@@ -380,6 +415,17 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
 
   <section class="letter-section" id="T">
     <div class="letter-heading">T</div>
+
+    <div class="term" id="temperatura">
+      <div class="term-name">Temperatura<br><small style="font-weight:400;color:var(--text-sec)">temperature</small></div>
+      <div class="term-body">
+        <p class="term-def">Parametro che controlla la "nitidezza" della distribuzione di probabilità prima del campionamento. I logit vengono divisi per la temperatura T prima del softmax: T &lt; 1 concentra la distribuzione (output più prevedibili e coerenti), T &gt; 1 la appiattisce (output più creativi e variabili). Con T = 0 si ottiene il greedy decoding (sempre il token più probabile). Il valore T = 0.8 è il default usato in questo progetto.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#nucleus-sampling">Glossario → Nucleus sampling</a>
+          <a class="term-link" href="slm-glossario.html#repetition-penalty">Glossario → Repetition penalty</a>
+        </div>
+      </div>
+    </div>
 
     <div class="term" id="tensor">
       <div class="term-name">Tensor</div>
