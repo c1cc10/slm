@@ -154,15 +154,15 @@
     <p class="subtitle">11 fasi dalla architettura di base al deployment edge — stato corrente e componenti da aggiungere.</p>
 
     <div class="progress-wrap">
-      <div class="progress-label">Avanzamento · 4 di 11 fasi completate</div>
+      <div class="progress-label">Avanzamento · 7 di 11 fasi completate</div>
       <div class="progress-bar">
         <div class="seg done"></div>
         <div class="seg done"></div>
         <div class="seg done"></div>
         <div class="seg done"></div>
-        <div class="seg next"></div>
-        <div class="seg plan"></div>
-        <div class="seg plan"></div>
+        <div class="seg done"></div>
+        <div class="seg done"></div>
+        <div class="seg done"></div>
         <div class="seg plan"></div>
         <div class="seg fut"></div>
         <div class="seg fut"></div>
@@ -242,11 +242,11 @@
       </div>
 
       <!-- 05 -->
-      <div class="phase" data-s="next">
+      <div class="phase" data-s="done">
         <div class="phase-header">
           <span class="phase-num">05</span>
           <span class="phase-name">Sampling avanzato</span>
-          <span class="badge next">Prossimo sprint</span>
+          <span class="badge done">Completato</span>
         </div>
         <div class="phase-desc">Temperatura (T) per controllare l'entropia dell'output, top-k per limitare il campionamento ai k candidati più probabili, top-p (nucleus) per adattare dinamicamente la finestra di campionamento, repetition penalty per evitare loop.</div>
         <div class="chips">
@@ -263,11 +263,11 @@
       </div>
 
       <!-- 06 -->
-      <div class="phase" data-s="plan">
+      <div class="phase" data-s="done">
         <div class="phase-header">
           <span class="phase-num">06</span>
           <span class="phase-name">Valutazione quantitativa</span>
-          <span class="badge plan">Pianificato</span>
+          <span class="badge done">Completato</span>
         </div>
         <div class="phase-desc">Loop di valutazione su validation set separato, calcolo della perplexity (= exp(loss_val)), loss curves su training e validation, confronto automatico tra checkpoint.</div>
         <div class="chips">
@@ -279,11 +279,11 @@
       </div>
 
       <!-- 07 -->
-      <div class="phase" data-s="plan">
+      <div class="phase" data-s="done">
         <div class="phase-header">
           <span class="phase-num">07</span>
           <span class="phase-name">Efficienza del training</span>
-          <span class="badge plan">Pianificato</span>
+          <span class="badge done">Completato</span>
         </div>
         <div class="phase-desc">Gradient accumulation per simulare batch più grandi senza aumentare la RAM. BF16 mixed precision per dimezzare la memoria dei pesi mantenendo la stabilità numerica. Prerequisito per scalare a seq_len 512+ su 24 GB.</div>
         <div class="chips">

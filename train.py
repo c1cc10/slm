@@ -87,6 +87,10 @@ class TrainConfig:
     # Positional encoding: False = sinusoidale (default), True = RoPE
     use_rope:      bool  = False
 
+    # Efficienza del training
+    accum_steps:   int   = 1      # gradient accumulation: batch effettivo = batch_size × accum_steps
+    bf16:          bool  = False  # BF16 mixed precision (solo CUDA; su MPS ignorato)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TOKENIZER — interfaccia comune, tre implementazioni
@@ -602,8 +606,11 @@ def train(cfg: TrainConfig):
                 print(f"  Re-warmup: {cfg.warmup_steps} step")
 
     # ── Loop di training ──────────────────────────────────────────────────────
-    total_tokens = cfg.max_steps * cfg.batch_size * cfg.seq_len
-    print(f"\n  Steps  : {cfg.max_steps}  batch={cfg.batch_size}  seq={cfg.seq_len}")
+    eff_batch    = cfg.batch_size * cfg.accum_steps
+    total_tokens = cfg.max_steps * eff_batch * cfg.seq_len
+    print(f"\n  Steps  : {cfg.max_steps}  batch={cfg.batch_size}"
+          f"  accum={cfg.accum_steps}  eff_batch={eff_batch}  seq={cfg.seq_len}")
+    print(f"  BF16   : {'on (CUDA)' if cfg.bf16 and device == 'cuda' else 'off'}")
     print(f"  Token totali training : {total_tokens:,}")
     print(f"  Loss attesa (inizio)  : {math.log(vocab_size):.3f}  (= log({vocab_size}))")
     print(f"\n{'─'*60}")
@@ -653,16 +660,28 @@ def train(cfg: TrainConfig):
         for group in optimizer.param_groups:
             group['lr'] = lr
 
-        x, y = train_ds.get_batch(cfg.batch_size, device)
-        _, loss = model(x, y)
-
         optimizer.zero_grad()
-        loss.backward()
+        accum_loss = 0.0
+
+        for _ in range(cfg.accum_steps):
+            x, y = train_ds.get_batch(cfg.batch_size, device)
+
+            if cfg.bf16 and device == 'cuda':
+                with torch.autocast(device_type='cuda', dtype=torch.bfloat16):
+                    _, loss = model(x, y)
+            else:
+                _, loss = model(x, y)
+
+            # Scala la loss per l'accumulo: i gradienti si sommano ad ogni backward,
+            # quindi ogni contributo deve essere 1/accum_steps del totale.
+            (loss / cfg.accum_steps).backward()
+            accum_loss += loss.item()
+
         torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
         optimizer.step()
 
         if step % cfg.log_interval == 0 and step > 0:
-            print(f"  step {step:5d}  loss {loss.item():.4f}  lr {lr:.2e}")
+            print(f"  step {step:5d}  loss {accum_loss / cfg.accum_steps:.4f}  lr {lr:.2e}")
 
     mins, secs = divmod(int(time.time() - t_start), 60)
     print(f"\n{'═'*60}")
@@ -771,6 +790,10 @@ if __name__ == '__main__':
                         help='usa Rotary Position Embedding invece di PE sinusoidale')
     parser.add_argument('--reset-best',  action='store_true',
                         help='resetta best_val_loss a inf anche con --resume (per training sequenziale multi-shard)')
+    parser.add_argument('--accumulate',  type=int, default=1,
+                        help='gradient accumulation steps (batch effettivo = batch × N, default: 1)')
+    parser.add_argument('--bf16',        action='store_true',
+                        help='BF16 mixed precision (torch.autocast, solo CUDA; ignorato su MPS/CPU)')
     args = parser.parse_args()
 
     # ── Preset architettura ────────────────────────────────────────────────────
@@ -810,5 +833,7 @@ if __name__ == '__main__':
         num_heads    = arch['num_heads'],
         d_ff         = arch['d_ff'],
         use_rope     = args.rope,
+        accum_steps  = args.accumulate,
+        bf16         = args.bf16,
     )
     train(cfg)

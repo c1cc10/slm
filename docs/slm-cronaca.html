@@ -552,4 +552,38 @@ a:hover { text-decoration: underline; }
     </div>
   </article>
 
+  <article id="phase08-kvcache">
+    <div class="article-meta">Fase 08 · Ottobre 2026</div>
+    <h2>Rileggere dall'inizio, ogni volta — e come smettere di farlo</h2>
+
+    <p>Immaginate di stare scrivendo una lettera a mano, lentamente, una parola alla volta. Prima di scrivere ogni nuova parola, tornate all'inizio della lettera, la rileggete dall'inizio, e solo allora aggiungete la parola successiva. La lettera diventa più lunga, la rilettura diventa più lenta, e il tempo per aggiungere ogni parola cresce senza fermarsi.</p>
+
+    <p>Questo è esattamente il problema che il nostro modello ha con la generazione del testo. Ogni volta che produce un nuovo token — una nuova parola, o parte di essa — rilegge l'intera sequenza precedente dall'inizio. Non perché non ricordi quello che ha già visto, ma perché il codice non gli dà la possibilità di conservare i risultati intermedi di quella lettura.</p>
+
+    <div class="pull">Il problema non è dimenticare. È non conservare.</div>
+
+    <p>Dentro un transformer, leggere una sequenza significa eseguire un'operazione chiamata <em>attention</em>: il modello calcola, per ogni parola nella sequenza, una coppia di valori che rappresentano il suo contributo al contesto. Questi valori si chiamano K (key) e V (value). Sono deterministici: per una parola in una certa posizione, K e V sono sempre gli stessi, indipendentemente da quante altre parole verranno dopo. Ricalcolarli ogni volta è lavoro inutile.</p>
+
+    <p>La soluzione è ovvia una volta che si capisce il problema: tenere quei valori in memoria e non ricalcolarli. Si chiama KV-cache, dove KV sta per le iniziali di Key e Value. Al primo passo, si calcola tutto per il prompt iniziale. Ai passi successivi, si calcola solo il K e il V del nuovo token appena generato, si aggiungono a quelli già salvati, e si fa l'operazione di attention su tutto l'insieme.</p>
+
+    <p>Il costo di generare cento token passa dall'equivalente di 1+2+3+...+100 operazioni (la somma fa 5050) a cento operazioni identiche, una per token. Su sequenze lunghe, il guadagno in velocità è nell'ordine di decine di volte.</p>
+
+    <div class="pull">La memoria qui non è un'aggiunta — è la correzione di una mancanza.</div>
+
+    <p>C'è un aspetto che vale la pena sottolineare, perché può sembrare controintuitivo: questa modifica non tocca in nessun modo il training. Quando il modello si addestra, elabora sequenze intere in parallelo e ha bisogno di ricaricare tutto ogni volta, perché sta imparando e il suo grafo di calcolo deve restare intatto per la backpropagation. La cache è uno strumento per l'inferenza — per quando il modello è già addestrato e deve semplicemente generare. I due percorsi del codice non si incrociano.</p>
+
+    <p>L'implementazione tocca tre punti: il meccanismo di attention, la struttura del modello che lo coordina, e il ciclo di generazione che accumula lo stato passo per passo. Ogni modifica aggiunge un parametro opzionale con valore predefinito invariato rispetto al passato — il codice di training non vede la differenza.</p>
+
+    <p>Dopo l'implementazione, il primo test che eseguiremo è di identità: generare duecento token con e senza cache, e verificare che il risultato sia esattamente lo stesso. Se c'è un errore di un solo indice nella concatenazione, i token divergono. Solo se i due output coincidono bit per bit il meccanismo è corretto. Il secondo test misura il tempo: quanto ci vuole adesso, quanto ci vorrà dopo.</p>
+
+    <div class="risultato">
+      <div class="risultato-label">Fase 08 — KV-cache</div>
+      Documentata · Implementazione in corso · Test: identità output + speedup wall-clock
+    </div>
+
+    <div class="atoms">
+      <a class="atom tecnico" href="slm-journal.html#phase08-kvcache">Diario tecnico → KV-cache</a>
+    </div>
+  </article>
+
 </div>

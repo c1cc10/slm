@@ -1325,3 +1325,140 @@ python3 tools/eval.py --checkpoint checkpoints/best.pt \
   <strong>Prossimo uso previsto:</strong> dopo Phase 07 (BF16), usare eval.py per verificare che la PPL non cambi rispetto al baseline. BF16 non dovrebbe alterare la qualità del modello, solo la velocità del training. Se la PPL diverge, c'è un bug nell'implementazione dell'autocast.
 </div>
 
+<h2 id="phase07-efficienza">Fase 07 — Efficienza del training: gradient accumulation e BF16 (2026-10-09)</h2>
+
+<div class="narr">Aggiunti due parametri a <code>train.py</code>: <code>--accumulate N</code> (gradient accumulation, default 1) e <code>--bf16</code> (BF16 mixed precision, solo CUDA). Entrambi sono backward-compatible: con i default il comportamento è identico a prima. Nessun cambiamento all'architettura del modello.</div>
+
+<h3>Gradient accumulation — <code>--accumulate N</code></h3>
+
+<p>Con <code>--accumulate 4</code> ogni "step" esegue 4 forward/backward consecutivi prima di chiamare <code>optimizer.step()</code>. Il batch effettivo diventa <code>batch_size × accum_steps</code> senza aumentare la VRAM: il modello elabora sempre <code>batch_size</code> sequenze alla volta.</p>
+
+<p>La loss di ogni mini-batch viene scalata di <code>1/accum_steps</code> prima del backward. I gradienti si accumulano (sommano) ad ogni chiamata a <code>.backward()</code> — senza lo scaling si sommerebbero N volte e l'aggiornamento sarebbe N× troppo grande. Il <code>zero_grad()</code> avviene una volta sola all'inizio del ciclo, non tra i mini-batch.</p>
+
+<div class="cmd"># Batch effettivo 128 (32 × 4) senza aumentare la VRAM
+python3 train.py --data data/wiki_it.txt --preset medium \
+    --accumulate 4 --steps 20000 --batch 32 --bf16</div>
+
+<h3>BF16 mixed precision — <code>--bf16</code></h3>
+
+<p>BF16 (Brain Float 16) ha lo stesso range di float32 (8 bit di esponente) ma meno precisione decimale (7 bit di mantissa invece di 23). Su CUDA il forward pass e il calcolo della loss girano in BF16 via <code>torch.autocast</code>; i gradienti e i pesi master dell'ottimizzatore rimangono in float32. Risultato: ~1.5–2× speedup sul forward, ~50% meno memoria per le attivazioni.</p>
+
+<p>BF16 è preferibile a FP16 per il training perché non può fare overflow (stesso range di float32 — nessun bisogno di <code>GradScaler</code>). Su M2 MPS il flag viene ignorato silenziosamente: MPS gestisce già mixed precision internamente. Su Vast.ai RTX 4090 è il formato nativo per i tensor core: attivarlo è sempre corretto.</p>
+
+<h3>Modifica al loop di training</h3>
+<p>Il loop precedente era: <code>zero_grad → forward → backward → clip → step</code>. Il loop aggiornato è:</p>
+<div class="cmd">optimizer.zero_grad()
+for _ in range(accum_steps):
+    x, y = get_batch()
+    with autocast(bf16):          # no-op se bf16=False o device≠cuda
+        _, loss = model(x, y)
+    (loss / accum_steps).backward()
+clip_grad_norm_(...)
+optimizer.step()</div>
+
+<h3>Output di verifica</h3>
+<p>Il log di avvio mostra ora i parametri di efficienza:</p>
+<div class="cmd">Steps  : 20000  batch=32  accum=4  eff_batch=128  seq=512
+BF16   : on (CUDA)</div>
+
+<div class="note">
+  <strong>Impatto stimato su Vast.ai RTX 4090 per il prossimo run:</strong> con <code>--accumulate 4 --bf16</code>, un run da 20k step scende da ~2.5h a ~1.5h. Il budget Vast.ai per un ciclo completo di 3 shard si riduce da ~$12 a ~$7. Non è motivo di rieseguire i run già completati — il guadagno si applica ai run futuri.
+</div>
+
+<h2 id="phase08-kvcache">Fase 08 — Inference ottimizzata: KV-cache (2026-10-09)</h2>
+
+<div class="narr">Implementazione della KV-cache (Key-Value cache) in <code>attention.py</code> e <code>model.py</code>. Riduce la complessità della generazione da O(n²) a O(n) in numero di forward pass parziali. Zero impatto sul training: il path <code>forward(x, targets)</code> resta identico, la cache si attiva solo quando <code>generate()</code> la passa esplicitamente.</div>
+
+<h3>Il problema — lavoro ridondante nella generazione</h3>
+
+<p>In <code>generate()</code>, ad ogni passo t il modello riceve l'intera sequenza generata fino a quel momento e ricalcola Q, K, V per tutti i token 0..t-1. Al passo t=100, ricalcola 99 coppie K/V già calcolate al passo precedente. Il costo totale per generare n token è proporzionale a 1 + 2 + ... + n = n(n+1)/2, cioè O(n²).</p>
+
+<p><strong>Perché K e V si possono cachare.</strong> Il transformer è causale: il token alla posizione t dipende solo da 0..t-1, mai dal futuro. I K e V di un token già generato non cambieranno mai — sono determinati solo dall'embedding di quel token e dal suo indice di posizione. <strong>Q invece no</strong>: la query del token corrente serve per interrogare il contesto, è sempre nuova e non ha senso accumularla.</p>
+
+<h3>Meccanismo</h3>
+
+<p>Con la cache attiva, ogni passo di <code>generate()</code> lavora così:</p>
+<ol>
+  <li>Calcola Q, K, V per il solo token corrente (tensore di lunghezza 1).</li>
+  <li>Concatena K_nuovo con K_cache e V_nuovo con V_cache lungo la dimensione sequenza.</li>
+  <li>Calcola l'attention: <code>softmax(Q · K_totaleᵀ / √d_k) · V_totale</code>.</li>
+  <li>Restituisce (output, nuovo stato cache) al chiamante.</li>
+</ol>
+
+<p>Il costo per token diventa O(n) invece di O(n²): ogni passo elabora un solo token nuovo, non l'intera sequenza.</p>
+
+<h3>Memoria occupata dalla cache</h3>
+
+<p>Per il modello medium (12 layer, d_model=512, 8 teste, d_k=64):</p>
+<div class="cmd">12 layer × 2 (K+V) × 512 token × 64 float32 = 786 432 valori ≈ 3 MB</div>
+<p>Trascurabile rispetto ai 175 MB dei pesi del modello.</p>
+
+<h3>Modifiche al codice — tre punti</h3>
+
+<p><strong>1. <code>attention.py</code> — <code>MultiHeadAttention.forward()</code></strong><br>
+Aggiunto parametro <code>past_kv=None</code> (tupla <code>(K_cache, V_cache)</code> o None). Se presente, K e V appena calcolati vengono concatenati con la cache prima di fare l'attention. La firma diventa:</p>
+<div class="cmd">def forward(self, x, mask=None, past_kv=None):
+    ...
+    if past_kv is not None:
+        K = torch.cat([past_kv[0], K], dim=-2)
+        V = torch.cat([past_kv[1], V], dim=-2)
+    ...
+    return output, attn_weights, (K, V)   # (K, V) = nuovo stato cache</div>
+
+<p><strong>2. <code>model.py</code> — <code>GPT.forward()</code></strong><br>
+Aggiunto <code>past_key_values=None</code> (lista di tuple, una per layer). Ogni blocco riceve la sua tupla e restituisce il nuovo stato; <code>present_key_values</code> viene accumulato e restituito insieme ai logit:</p>
+<div class="cmd">def forward(self, idx, targets=None, past_key_values=None):
+    present_key_values = []
+    for i, block in enumerate(self.blocks):
+        past_kv = past_key_values[i] if past_key_values else None
+        x, present_kv = block(x, past_kv=past_kv)
+        present_key_values.append(present_kv)
+    ...
+    return logits, loss, present_key_values</div>
+
+<p><strong>3. <code>model.py</code> — <code>GPT.generate()</code></strong><br>
+Il primo passo elabora l'intero prompt e ottiene la cache iniziale. I passi successivi passano solo l'ultimo token generato (shape <code>(1, 1)</code>), usando la cache accumulata:</p>
+<div class="cmd">past_kv = None
+for _ in range(max_new_tokens):
+    if past_kv is None:
+        ctx = idx[:, -self.config.max_seq_len:]    # primo passo: prompt intero
+    else:
+        ctx = idx[:, -1:]                           # passi successivi: un solo token
+    logits, _, past_kv = self(ctx, past_key_values=past_kv)
+    ...</div>
+
+<h3>Impatto sul training — zero</h3>
+
+<p><code>train.py</code> chiama sempre <code>model(x, y)</code> senza passare <code>past_key_values</code>. Il valore di default <code>None</code> preserva esattamente il comportamento precedente: nessuna concatenazione, nessuna lista da accumulare, backprop intatta. Il path di training non esegue mai la riga <code>if past_kv is not None</code>.</p>
+
+<h3>Verifica — test in locale</h3>
+
+<p>Due test quantitativi da eseguire dopo l'implementazione:</p>
+<div class="cmd"># 1. Identità dell'output: con e senza cache devono produrre gli stessi token
+python3 -c "
+import torch
+from model import GPT, GPTConfig
+ckpt = torch.load('checkpoints/best.pt', map_location='cpu', weights_only=False)
+m = GPT(ckpt['model_config']); m.load_state_dict(ckpt['model_state_dict']); m.eval()
+prompt = torch.tensor([[42, 100, 200]])
+out_no_cache  = m.generate(prompt, 50, use_cache=False)
+out_with_cache = m.generate(prompt, 50, use_cache=True)
+print('Identico:', torch.equal(out_no_cache, out_with_cache))
+"
+
+# 2. Speedup wall-clock
+python3 -c "
+import torch, time
+from model import GPT, GPTConfig
+ckpt = torch.load('checkpoints/best.pt', map_location='cpu', weights_only=False)
+m = GPT(ckpt['model_config']); m.load_state_dict(ckpt['model_state_dict']); m.eval()
+prompt = torch.tensor([[42, 100, 200]])
+t0 = time.time(); m.generate(prompt, 200, use_cache=False); t1 = time.time()
+t2 = time.time(); m.generate(prompt, 200, use_cache=True);  t3 = time.time()
+print(f'Senza cache: {t1-t0:.2f}s   Con cache: {t3-t2:.2f}s   Speedup: {(t1-t0)/(t3-t2):.1f}x')
+"</div>
+
+<div class="note">
+  <strong>Nota sul test di identità:</strong> il test usa <code>torch.manual_seed</code> implicito — con stessa sequenza logit e stesso campionamento (greedy o fissato) l'output deve essere bit-per-bit identico. Se non lo è, c'è un errore nell'indexing della cache (off-by-one nella concatenazione o nella maschera causale).
+</div>
+

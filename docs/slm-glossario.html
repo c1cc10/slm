@@ -113,6 +113,17 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
   <section class="letter-section" id="B">
     <div class="letter-heading">B</div>
 
+    <div class="term" id="bf16">
+      <div class="term-name">BF16<br><small style="font-weight:400;color:var(--text-sec)">Brain Float 16</small></div>
+      <div class="term-body">
+        <p class="term-def">Formato floating point a 16 bit con 8 bit di esponente (stesso range di float32) e 7 bit di mantissa. Usato come mixed precision nel training via <code>torch.autocast</code>: il forward pass e la loss girano in BF16, i pesi master e i gradienti rimangono in float32. Risultato: ~1.5–2× speedup sul forward pass, ~50% meno memoria per le attivazioni, senza rischio di overflow (a differenza di FP16 che ha solo 5 bit di esponente e richiede GradScaler).</p>
+        <p class="term-def">Utile su GPU CUDA con tensor core (es. RTX 4090). Su M2 MPS ignorato — MPS gestisce già mixed precision internamente. Si attiva con <code>--bf16</code> in <code>train.py</code>.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#gradient-accumulation">Glossario → Gradient accumulation</a>
+        </div>
+      </div>
+    </div>
+
     <div class="term" id="bpe">
       <div class="term-name">BPE<br><small style="font-weight:400;color:var(--text-sec)">tokenizer</small></div>
       <div class="term-body">
@@ -211,6 +222,18 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
 
   <section class="letter-section" id="G">
     <div class="letter-heading">G</div>
+
+    <div class="term" id="gradient-accumulation">
+      <div class="term-name">Gradient accumulation</div>
+      <div class="term-body">
+        <p class="term-def">Tecnica che simula un batch grande eseguendo più forward/backward consecutivi prima di aggiornare i pesi. Con <code>accum_steps=4</code> e <code>batch_size=32</code>, il batch effettivo è 128: ogni passo dell'ottimizzatore usa i gradienti di 128 sequenze invece di 32, con la stessa VRAM. La loss di ogni mini-batch va scalata di <code>1/accum_steps</code> prima del backward — altrimenti i gradienti si sommerebbero N volte e l'aggiornamento sarebbe troppo grande.</p>
+        <p class="term-def">Perché serve: batch più grandi producono stime del gradiente più stabili (meno rumore), migliorando la convergenza. Su GPU con VRAM limitata è l'alternativa al ridurre seq_len o d_model.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#bf16">Glossario → BF16</a>
+          <a class="term-link" href="slm-glossario.html#gradiente">Glossario → Gradiente</a>
+        </div>
+      </div>
+    </div>
 
     <div class="term" id="gguf">
       <div class="term-name">GGUF</div>
