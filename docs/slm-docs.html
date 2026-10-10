@@ -1196,6 +1196,136 @@ curl http://localhost:8080/completion \
   <p>Per completare il Chinchilla parity (2 shard mancanti, ~262M token) partendo da run6-ad, il corpus sostitutivo deve essere ortogonale a CulturaX: Wikipedia dump più completo, Wikisource IT, corpus letterario.</p>
 </section>
 
+<!-- ─────────────────────────────────────── SFT -->
+<section id="sft">
+  <h2>SFT — Supervised Fine-Tuning</h2>
+  <p>Il pre-training insegna al modello la lingua: grammatica, coerenza, stile, conoscenza enciclopedica. Non insegna al modello come rispondere. Un modello pre-addestrato dato il prompt "Qual è la capitale della Francia?" continua liberamente — magari producendo altre domande o un paragrafo enciclopedico su Parigi. SFT lo allena a rispondere.</p>
+
+  <h3>Differenza tecnica: loss su tutti i token vs solo la risposta</h3>
+  <p>Il dataset SFT è una lista di coppie <code>(prompt, completion)</code>:</p>
+  <pre><code>{"prompt": "Fissa un appuntamento con Marco venerdì alle 15", "completion": "{\"intent\": \"create_event\", \"title\": \"Appuntamento\", \"person\": \"Marco\", \"date\": \"venerdì\", \"time\": \"15:00\"}"}</code></pre>
+  <p>Nel pre-training la cross-entropy è calcolata su <em>tutti</em> i token. Nell'SFT è calcolata <strong>solo sui token del completion</strong>. I token del prompt ricevono <code>target = -100</code>, che <code>F.cross_entropy</code> ignora per costruzione PyTorch. Il modello apprende a produrre risposte, non a predire le domande.</p>
+  <pre><code><span class="cm"># Masked loss: ignora il prompt, calcola solo sul completion</span>
+labels = torch.full_like(input_ids, -100)
+labels[:, prompt_len:]  = input_ids[:, prompt_len:]   <span class="cm"># solo completion</span>
+loss = F.cross_entropy(logits.view(-1, vocab), labels.view(-1), ignore_index=-100)</code></pre>
+
+  <h3>Catastrophic forgetting</h3>
+  <p>Con full SFT tutti i 45.9M parametri vengono aggiornati ad ogni esempio. Con un dataset piccolo (100–200 esempi), il modello ha troppa capacità rispetto al segnale disponibile. I pesi si spostano verso il nuovo dataset e le connessioni per il vocabolario generale si indeboliscono. Un probe set (frasi del pre-training non toccate dall'SFT) permette di misurare il forgetting in tempo reale: se la perplexity sul probe sale durante l'SFT, il modello sta dimenticando.</p>
+
+  <h3>Risultati del test SFT (intent recognition, Phase 09)</h3>
+  <p>140 esempi, 6 intent, 500 step. Full SFT insufficiente: overfitting, hallucination sui valori degli entity, classi minoritarie collassate sulla dominante. Diagnosi: 20-25 esempi per intent è troppo poco per la vastità dei parametri. Decisione: passare a LoRA per ridurre la superficie trainabile.</p>
+</section>
+
+<!-- ─────────────────────────────────────── LORA -->
+<section id="lora">
+  <h2>LoRA — Low-Rank Adaptation</h2>
+
+  <h3>Il problema che LoRA risolve</h3>
+  <p>Specializzare un modello su un task con full fine-tuning significa aggiornare tutti i 45.9M parametri ad ogni passo di training. Con un dataset piccolo (100–500 esempi) questo produce overfitting: i parametri si adattano al dataset di training invece che al task. Con un dataset grande, il costo computazionale è proibitivo su hardware domestico.</p>
+  <p>L'intuizione di LoRA (Hu et al., 2021): le modifiche utili ai pesi durante il fine-tuning tendono a vivere in uno <strong>spazio di bassa dimensione</strong>. Non servono 45.9M gradi di libertà per specializzare il modello — ne bastano molti di meno, purché siano posizionati nei posti giusti.</p>
+
+  <h3>La decomposizione a basso rango</h3>
+  <p>Ogni matrice di peso W ha dimensioni (d_out × d_in). Invece di aggiornare W direttamente, LoRA aggiunge due matrici piccole A e B:</p>
+  <pre><code>W' = W  +  ΔW     dove  ΔW = (alpha/r) · B @ A
+
+A ∈ ℝ^(r × d_in)       — rango r, inizializzata random (Kaiming uniform)
+B ∈ ℝ^(d_out × r)      — rango r, inizializzata a zero
+ΔW ∈ ℝ^(d_out × d_in)  — stessa shape di W, ma rango al più r</code></pre>
+  <p>Il <em>rango</em> r di una matrice è il numero di dimensioni linearmente indipendenti. Una matrice (512 × 512) di rango r=8 può essere scritta esattamente come il prodotto di due matrici (512 × 8) e (8 × 512). ΔW "vive" in uno spazio 8-dimensionale all'interno dello spazio 512-dimensionale di W. Questo è sufficiente per catturare la specializzazione di dominio, che è tendenzialmente a bassa dimensione.</p>
+
+  <h3>Perché B inizializzata a zero?</h3>
+  <p>All'inizio del training, ΔW = B @ A. Con B=0, ΔW=0 e W'=W. Il modello LoRA si comporta <em>esattamente</em> come il base model per i primi passi di training, senza perturbazioni iniziali. Questo garantisce uno starting point stabile: il gradiente della loss parte da un punto noto (il base model) invece che da un punto casuale disturbato.</p>
+  <p>Se si inizializzasse anche A a zero, i gradienti di A e B sarebbero entrambi zero al primo passo (nessun apprendimento). L'asimmetria A≠0, B=0 è scelta per garantire delta nullo ma gradienti non nulli.</p>
+
+  <h3>Il parametro alpha/r</h3>
+  <p>Il fattore di scala alpha/r modula quanto peso dare al delta rispetto ai pesi originali. Con alpha=16 e r=8, scale=2. Con alpha=r, scale=1 (delta non scalato). Il parametro esiste per separare la geometria del problema (r, che determina la capacità) dalla scala dell'aggiornamento (alpha, che determina l'intensità). Nella pratica:</p>
+  <ul>
+    <li>alpha = r: scala neutra. L'LR dell'ottimizzatore controlla tutto.</li>
+    <li>alpha = 2r: il delta scala del doppio. Si può usare un LR più basso.</li>
+    <li>Regola empirica: tenere alpha/r costante quando si fa sweep su r.</li>
+  </ul>
+
+  <h3>Forward pass con LoRALinear</h3>
+  <pre><code><span class="cm"># W(x) + (alpha/r) · B(A(x))  — nota: B inizialmente = 0</span>
+<span class="kw">def</span> forward(self, x):
+    <span class="kw">return</span> self.linear(x) + self.lora_B(self.lora_A(x)) * self.scale
+
+<span class="cm"># Equivalente in algebra: se A.shape=(r,d_in) e B.shape=(d_out,r):</span>
+<span class="cm"># output = x @ W.T  +  x @ A.T @ B.T  × scale</span>
+<span class="cm">#        = x @ (W + scale · B @ A).T  ← stesso risultato di W'</span></code></pre>
+
+  <h3>Quale rango scegliere?</h3>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>r</th><th>Parametri trainabili (su 45.9M)</th><th>Adapter (KB)</th><th>Uso tipico</th></tr></thead>
+    <tbody>
+      <tr><td>4</td><td>196,608 — 0.43%</td><td>~780</td><td>Task molto semplici, classificazione</td></tr>
+      <tr><td><strong>8</strong></td><td><strong>393,216 — 0.85%</strong></td><td><strong>~1,564</strong></td><td><strong>Default: buon bilanciamento capacità/efficienza</strong></td></tr>
+      <tr><td>16</td><td>786,432 — 1.71%</td><td>~3,128</td><td>Task complessi, instruction following</td></tr>
+      <tr><td>32</td><td>1,572,864 — 3.43%</td><td>~6,256</td><td>Specializzazione profonda di dominio</td></tr>
+      <tr><td>64</td><td>3,145,728 — 6.86%</td><td>~12,512</td><td>Avvicina il costo di full fine-tuning — raramente necessario</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Un rango più alto non è sempre meglio: con dataset piccoli, un r grande dà più capacità di overfitting. r=8 è il punto di partenza standard; si aumenta solo se la val loss non scende abbastanza.</p>
+
+  <h3>Perché solo le proiezioni attention?</h3>
+  <p>Le quattro matrici di attenzione (W_q, W_k, W_v, W_o) determinano <em>come</em> il modello pesa e combina l'informazione nel contesto. Specializzarle equivale a cambiare il "cosa guarda" del modello, non il "cosa sa". Le FFN (W_1, W_2 in ogni blocco) contengono invece la conoscenza fattuale — l'associazione token↔concetto appresa durante il pre-training. Toccarle rischia catastrophic forgetting.</p>
+  <p>In pratica: specializzare attention è sufficiente per orientare il comportamento su nuovi task (instruction following, intent recognition, stile), senza degradare la conoscenza linguistica.</p>
+
+  <h3>SFT vs LoRA vs Full fine-tuning</h3>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Approccio</th><th>Param trainabili</th><th>Dataset minimo</th><th>Rischio forgetting</th><th>Checkpoint</th></tr></thead>
+    <tbody>
+      <tr><td>Full fine-tuning</td><td>45.9M (100%)</td><td>5.000–50.000 esempi</td><td>Alto su dataset piccoli</td><td>553 MB (copia completa)</td></tr>
+      <tr><td>SFT (masked loss)</td><td>45.9M (100%)</td><td>500–5.000 esempi</td><td>Alto se LR troppo alto</td><td>553 MB</td></tr>
+      <tr><td><strong>LoRA r=8</strong></td><td><strong>393k (0.85%)</strong></td><td><strong>100–1.000 esempi</strong></td><td><strong>Basso (W frozen)</strong></td><td><strong>1.5 MB (adapter)</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Con dataset piccoli (come il nostro sft_mini.jsonl con 140 esempi), LoRA è l'unica scelta praticabile: l'adapter ha 393k parametri invece di 45.9M, il rischio di overfitting è strutturalmente ridotto di due ordini di grandezza.</p>
+
+  <h3>Merge vs adapter separato</h3>
+  <p>Al termine del training LoRA ci sono due opzioni:</p>
+  <ul>
+    <li><strong>Adapter separato</strong>: si salvano solo A e B (~1.5 MB). Per l'inferenza si carica il base model + adapter. Permette di avere N adapter per lo stesso base model, switchabili a runtime. Il base model non viene mai modificato.</li>
+    <li><strong>Merge</strong>: si calcolano W' = W + ΔW e si salva un GPT standard. Il checkpoint merged (~553 MB) è compatibile con tutti gli strumenti esistenti (infer.py, GGUF converter) senza modifiche. Non si può tornare al base model originale senza tenerlo separato.</li>
+  </ul>
+  <pre><code><span class="cm"># Merge: fonde l'adapter nel base model</span>
+merged = merge_lora_model(lora_model)  <span class="cm"># ritorna GPT standard, eval mode</span>
+torch.save({'model': merged.state_dict(), 'config': cfg}, 'merged.pt')
+
+<span class="cm"># Adapter separato: porta solo A e B</span>
+save_lora(lora_model, 'adapter.pt')    <span class="cm"># ~1.5 MB</span>
+
+<span class="cm"># Riapplica adapter al base model in un altro momento</span>
+model = GPT(cfg)
+model.load_state_dict(torch.load('best.pt')['model'])
+model = load_lora(model, 'adapter.pt')</code></pre>
+
+  <h3>Ordine corretto nella pipeline</h3>
+  <pre><code>Pre-training  →  SFT (opzionale)  →  LoRA</code></pre>
+  <p>Un run di pre-training aggiuntivo invalida tutti gli adapter LoRA e i checkpoint SFT già prodotti: l'adapter è calibrato per specifici pesi W, se W cambia la somma porta il modello in un punto scorretto. LoRA è sempre l'ultimo passo. Prima di qualsiasi nuovo run di pre-training, fare un backup del base model che si intende usare come base per LoRA.</p>
+
+  <h3>Parametri del progetto — riepilogo</h3>
+  <table>
+    <thead><tr><th>Config</th><th>Valore</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>Base model</td><td>run6-ad (val 3.3524)</td><td>Sweet spot qualitativo — non run6-ag (contaminato)</td></tr>
+      <tr><td>Target modules</td><td>W_q, W_k, W_v, W_o</td><td>Tutte le proiezioni attention, tutti i 12 blocchi</td></tr>
+      <tr><td>r (rank)</td><td>8</td><td>Default — 48 coppie A+B totali</td></tr>
+      <tr><td>alpha</td><td>16</td><td>scale = alpha/r = 2</td></tr>
+      <tr><td>Parametri trainabili</td><td>393,216</td><td>0.85% del totale</td></tr>
+      <tr><td>Adapter su disco</td><td>~1,564 KB</td><td>Solo A e B, senza base model</td></tr>
+      <tr><td>Dataset</td><td>data/sft_mini.jsonl</td><td>140 esempi, 6 intent — da espandere</td></tr>
+    </tbody>
+  </table>
+</section>
+
 <!-- ─────────────────────────────────────── GLOSSARIO -->
 <section id="glossario">
   <h2>Glossario</h2>
