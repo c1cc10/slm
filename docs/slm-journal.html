@@ -1677,3 +1677,75 @@ python3 -c "
 <div class="note">
   <strong>Decisione:</strong> si passa a <strong>Phase 10 — LoRA</strong>. L'approccio LoRA + SFT è corretto per questo use case: W frozen riduce il rischio di overfitting su dataset piccoli, il checkpoint adapter è ~1.5 MB vs 175 MB, e la base pre-addestrata è preservata. I risultati di Phase 09 confermano che full SFT su 140 esempi è insufficiente — LoRA con ~393k parametri trainabili è il percorso più solido. Opzioni A e B rimangono valide per iterazioni future su Phase 09 qualora si voglia confrontare full SFT vs LoRA sullo stesso task.
 </div>
+
+<h2 id="phase10-lora">Fase 10 — LoRA: Low-Rank Adaptation (2026-10-10)</h2>
+
+<div class="narr">LoRA è il modo più efficiente per specializzare un modello senza modificarne i pesi. Invece di aggiornare tutti i 45,9M parametri, si aggiungono due matrici piccole A e B per ogni proiezione lineare target. Solo A e B vengono addestrate. Al termine del fine-tuning, si possono fondere (merge) in W per produrre un checkpoint standard, oppure tenere separati come adapter portatile da ~1.5 MB.</div>
+
+<h3>Il meccanismo matematico</h3>
+
+<p>Ogni proiezione lineare target (W_q, W_k, W_v, W_o in ogni blocco attention) viene sostituita da:</p>
+
+<pre><code>y = W·x  +  (alpha/r) · B(A(x))</code></pre>
+
+<p>Dove:</p>
+<ul>
+  <li><strong>W</strong> — peso originale congelato, shape (d_out, d_in)</li>
+  <li><strong>A</strong> — matrice (r × d_in), inizializzata con Kaiming uniform</li>
+  <li><strong>B</strong> — matrice (d_out × r), inizializzata a zero → delta nullo all'inizio</li>
+  <li><strong>r</strong> — rango (rank), tipicamente 4–32. Con r=8: delta = 512×8 + 8×512 = 8192 parametri per layer</li>
+  <li><strong>alpha/r</strong> — fattore di scala (hyperparameter di stabilità)</li>
+</ul>
+
+<p>Il delta effettivo su W è ΔW = (alpha/r) · B @ A, shape (d_out, d_in) — identica a W. L'inizializzazione B=0 garantisce che all'inizio del training il modello LoRA si comporti esattamente come il base model, senza perturbazioni.</p>
+
+<h3>Perché solo le proiezioni attention</h3>
+
+<p>Le matrici W_q, W_k, W_v, W_o controllano come il modello dirige l'attenzione: cosa guardare, come pesare le informazioni e come ricombinarle. Specializzare queste quattro proiezioni è sufficiente per orientare il modello su task nuovi mantenendo la conoscenza pre-addestrata nelle FFN (che rimangono congelate). I feed-forward contengono la "memoria fattuale"; le attention heads controllano il "ragionamento procedurale". Si modifica il secondo senza toccare il primo.</p>
+
+<h3>Parametri trainabili</h3>
+
+<table>
+  <thead><tr><th>Componente</th><th>Count</th><th>Parametri</th></tr></thead>
+  <tbody>
+    <tr><td>Base model (congelato)</td><td>—</td><td>45,997,056</td></tr>
+    <tr><td>LoRA adapter (r=8, 12 blocchi × 4 matrici)</td><td>48 coppie A+B</td><td>393,216</td></tr>
+    <tr><td>Totale trainabili</td><td>—</td><td>393,216 (0.85%)</td></tr>
+    <tr><td>Adapter su disco</td><td>—</td><td>~1,564 KB</td></tr>
+  </tbody>
+</table>
+
+<h3>Implementazione — lora.py</h3>
+
+<p>Il file <code>lora.py</code> espone quattro funzioni:</p>
+
+<ul>
+  <li><strong>apply_lora(model, r, alpha, target_modules)</strong>: congela tutti i parametri, sostituisce i Linear target con <code>LoRALinear</code> (wrapper frozen W + trainabili A,B). Ritorna (model, n_trainable, n_total).</li>
+  <li><strong>save_lora(model, path)</strong>: salva solo A e B in un file ~1.5 MB. Include anche r, alpha e target_modules per il reload.</li>
+  <li><strong>load_lora(model, path)</strong>: applica la struttura LoRA al base model e carica i pesi A,B salvati. Uso tipico: caricare best.pt, poi load_lora.</li>
+  <li><strong>merge_lora_model(model)</strong>: crea un nuovo GPT plain con W' = W + ΔW. Compatibile con infer.py e tutti gli strumenti esistenti. Il modello restituito è in eval mode.</li>
+</ul>
+
+<h3>Bug risolto — dropout nel test di merge</h3>
+
+<p>Il test confrontava i logits del modello LoRA con quelli del modello merged in <em>train mode</em>. In train mode il dropout applica maschere casuali diverse ai due modelli → diff logits ~1.6. Con <code>model.eval()</code> il dropout viene disabilitato e i logits sono identici (diff = 0.00e+00). La funzione <code>merge_lora_model</code> è corretta; il test era nel contesto sbagliato. Fix: aggiunto <code>.eval()</code> nel test e nel modello restituito da merge.</p>
+
+<h3>Bug risolto — weight tying nel merge</h3>
+
+<p>In GPT, <code>lm_head.weight</code> e <code>embedding.weight</code> condividono la stessa memoria (weight tying). <code>named_parameters()</code> deduplica e salta <code>lm_head.weight</code>; <code>state_dict()</code> le include entrambe. La prima implementazione di merge usava <code>named_parameters()</code> e non trasferiva correttamente tutte le chiavi. Fix: switch a <code>state_dict()</code> con remap delle chiavi <code>.linear.weight → .weight</code>.</p>
+
+<h3>Risultati dei test (lora.py —— main)</h3>
+
+<pre><code>Parametri totali  : 46,390,272
+Parametri trainabili (LoRA): 393,216  (0.85%)
+Parametri congelati: 45,997,056
+Forward ok — logits shape: torch.Size([2, 64, 16000])
+Merge ok — diff max logits: 0.00e+00  (atteso ~0)
+Adapter salvato: 1564 KB  (atteso ~1500 KB)
+Reload ok — diff max logits: 0.00e+00  (atteso ~0)
+
+Tutti i test passati.</code></pre>
+
+<div class="note">
+  <strong>Stato:</strong> lora.py completo e testato. Prossimo passo: aggiungere i flag <code>--lora</code>, <code>--lora-rank</code>, <code>--lora-alpha</code> a train.py per integrare LoRA nel loop di training standard.
+</div>

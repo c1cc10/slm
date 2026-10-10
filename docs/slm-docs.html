@@ -543,13 +543,13 @@ x = x + dropout( FeedForward( LayerNorm(x) ) )  <span class="cm"># ← residual<
 <!-- ─────────────────────────────────────── TOKENIZER -->
 <section id="tokenizer">
   <h2>Tokenizer</h2>
-  <p>Il progetto ha usato due tokenizer in fasi successive. Il passaggio da char-level a BPE-SPM non ha richiesto modifiche all'architettura: solo il vocabolario e la dimensione dell'embedding sono cambiate.</p>
+  <p>Il progetto ha usato due tokenizer in fasi successive. Il passaggio da char-level a BPE-SPM non ha richiesto modifiche all'architettura: solo il vocabolario e la dimensione dell'embedding sono cambiate. Il tokenizer BPE-SPM è invariato da Run #3 a tutti i run successivi (SFT, LoRA) — il vocabolario è fissato nel primo run e non cambia.</p>
 
   <div class="table-wrap">
   <table>
     <tr><th>Approccio</th><th>Vocab size</th><th>Fase</th><th>Pro</th><th>Contro</th></tr>
-    <tr><td><strong>Char-level</strong></td><td>102</td><td>Run #1 — completata</td><td>Zero dipendenze, comprensibile, baseline ideale</td><td>Sequenze lunghe, meno efficiente, nessuna morfologia appresa</td></tr>
-    <tr><td><strong>BPE-SPM</strong></td><td>16 000</td><td>Run #3 — in corso</td><td>Standard industriale, gestisce morfologia italiana, efficiente su corpus enciclopedico</td><td>Richiede training separato del tokenizer (SentencePiece)</td></tr>
+    <tr><td><strong>Char-level</strong></td><td>102</td><td>Run #1 — completato ✓</td><td>Zero dipendenze, comprensibile, baseline ideale</td><td>Sequenze lunghe, meno efficiente, nessuna morfologia appresa</td></tr>
+    <tr><td><strong>BPE-SPM</strong></td><td>16 000</td><td>Run #3, #4, #5, #6 — completati ✓</td><td>Standard industriale, gestisce morfologia italiana, efficiente su corpus enciclopedico</td><td>Richiede training separato del tokenizer (SentencePiece)</td></tr>
     <tr><td><strong>Word-level</strong></td><td>50.000+</td><td>non usato</td><td>Intuitivo</td><td>OOV problem, non gestisce parole nuove o morfologia flessiva</td></tr>
   </table>
   </div>
@@ -565,15 +565,38 @@ encode(<span class="st">"gatto"</span>, stoi)    <span class="cm"># → [1, 0, 3
 decode([1,0,3,3,2], itos)  <span class="cm"># → "gatto"</span></code></pre>
   <p>Risultato: val loss 1.7256 in 46 minuti su MPS. Morfologia italiana corretta (suffissi -zione, -mente), nessuna coerenza semantica. Obiettivo centrato: validare che ogni componente funzionasse prima di scalare.</p>
 
-  <h3>Fase 2 — BPE-SPM (Run #3, in corso)</h3>
-  <p>BPE (Byte Pair Encoding) via SentencePiece. Vocabolario da 16 000 token addestrato sul corpus concatenato Wikipedia IT + narrativa. Il tokenizer è salvato nel checkpoint ed è autocontenuto: nessuna dipendenza esterna a runtime.</p>
-  <pre><code><span class="cm"># Training del tokenizer (una volta sola)</span>
+  <h3>Fase 2 — BPE-SPM (Run #3 e successivi, completati)</h3>
+  <p>BPE (Byte Pair Encoding) via SentencePiece. Vocabolario da 16 000 token addestrato sul corpus concatenato Wikipedia IT + narrativa. Il tokenizer è salvato nel checkpoint ed è autocontenuto: nessuna dipendenza esterna a runtime. Ogni checkpoint successivo (Run #4 con RoPE, SFT, LoRA adapter) riusa lo stesso vocabolario — il tokenizer è addestrato una volta sola e mai rigenerato.</p>
+  <pre><code><span class="cm"># Training del tokenizer (una volta sola, già fatto in Run #3)</span>
 python3 train.py --tokenizer bpe-spm \
     --bpe-corpus data/corpus_bpe.txt --bpe-vocab 16000
 
-<span class="cm"># Uso successivo (riusa il modello SPM salvato)</span>
-python3 train.py --tokenizer bpe-spm --data data/wiki_it.txt</code></pre>
+<span class="cm"># Uso successivo — riusa il modello SPM già nel checkpoint</span>
+python3 train.py --tokenizer bpe-spm --resume --data data/nuovi_shard.txt
+
+<span class="cm"># Inferenza con infer.py</span>
+python3 tools/infer.py --checkpoint checkpoints/best.pt "Descrivi Roma"
+
+<span class="cm"># SFT: stesso tokenizer, solo masked loss cambia</span>
+python3 train_sft.py --checkpoint checkpoints/best.pt --data data/sft_mini.jsonl
+
+<span class="cm"># LoRA: applica adapter al base model — tokenizer invariato</span>
+python3 train.py --lora --lora-rank 8 --checkpoint checkpoints/best.pt --data data/sft_mini.jsonl</code></pre>
   <p>Il BPE unisce iterativamente le coppie di token più frequenti. Sul corpus Wikipedia IT impara token come <code>chiesa</code>, <code>comune</code>, <code>provincia</code>, <code>arcivescovo</code> come unità atomiche — rilevanti per il registro enciclopedico. Loss iniziale attesa: log(16 000) ≈ 9.68.</p>
+
+  <h3>Tokenizer nei run successivi</h3>
+  <p>Il tokenizer non cambia dopo Run #3. Ogni run successivo (Run #4 con RoPE, SFT, LoRA) usa il modello SPM già salvato in <code>best.pt</code>. L'unico scenario in cui va rigenerato è se si vuole cambiare vocabolario o dominio linguistico in modo drastico — cosa che invaliderebbe tutti i checkpoint esistenti.</p>
+
+  <div class="table-wrap">
+  <table>
+    <tr><th>Run</th><th>Tokenizer</th><th>Vocab</th><th>Novità rispetto al run precedente</th></tr>
+    <tr><td>Run #1</td><td>Char-level</td><td>102</td><td>Baseline char-level, prima architettura completa</td></tr>
+    <tr><td>Run #3</td><td>BPE-SPM</td><td>16 000</td><td>Tokenizer addestrato, Wikipedia IT 47.8M token, val 4.0768</td></tr>
+    <tr><td>Run #4</td><td>BPE-SPM (invariato)</td><td>16 000</td><td>+RoPE, +seq_len 512, 12 layer, val 3.5861 — modello corrente</td></tr>
+    <tr><td>SFT (Phase 09)</td><td>BPE-SPM (invariato)</td><td>16 000</td><td>Masked loss, dataset JSONL 140 esempi, checkpoint sft_intent_v1.pt</td></tr>
+    <tr><td>LoRA (Phase 10)</td><td>BPE-SPM (invariato)</td><td>16 000</td><td>W frozen, adapter A+B trainabili, ~393k param, 1.5 MB</td></tr>
+  </table>
+  </div>
 </section>
 
 <!-- ─────────────────────────────────────── DATASET -->

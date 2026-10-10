@@ -178,6 +178,7 @@ nav.foot-links a:hover { color: var(--accent); }
     <li><a href="#max-params">Se ripartissimo da zero con più parametri, qual è la dimensione massima realistica?</a></li>
     <li><a href="#capabilities-by-scale">Che caratteristiche di reasoning ha un modello da 150M, 350M, 700M, 1B parametri?</a></li>
     <li><a href="#reasoning-vs-simulation">Il ragionamento degli LLM è reale o simulazione? Come dipende dal corpus?</a></li>
+    <li><a href="#training-order">Se faccio un run di pre-training aggiuntivo, impatta SFT e LoRA già prodotti?</a></li>
   </ol>
 </nav>
 
@@ -571,6 +572,40 @@ nav.foot-links a:hover { color: var(--accent); }
       <strong>Implicazione pratica per il progetto:</strong> possiamo <em>progettare</em> il tipo di ragionamento che vogliamo nel modello scegliendo consapevolmente il corpus. Non possiamo garantire esattamente quale forma prenderà. La cura del corpus è l'atto più importante nella costruzione di un LLM — più dell'architettura, più degli iperparametri.
     </div>
 
+  </div>
+</div>
+
+<div class="qa-block" id="training-order">
+  <div class="question">
+    <span class="q-number">9</span>
+    <h3>Se faccio un run di pre-training aggiuntivo, impatta SFT e LoRA già prodotti?</h3>
+  </div>
+  <div class="answer">
+    <p>Sì, in modo irreversibile. L'ordine corretto è una pipeline a senso unico:</p>
+    <pre><code>Pre-training  →  SFT (opzionale)  →  LoRA</code></pre>
+
+    <h4>Perché il pre-training invalida l'SFT</h4>
+    <p>L'SFT modifica tutti i pesi W del modello su un punto di convergenza specifico. Se riprendi il pre-training su un corpus più grande, quel punto cambia — anche di poco — e l'allineamento sintattico e semantico introdotto dall'SFT si disintegra. Va rifatto.</p>
+
+    <h4>Perché il pre-training invalida i LoRA adapter</h4>
+    <p>Un adapter LoRA è calibrato per sommarsi a specifici pesi W: ΔW = (α/r) · B @ A. Se W cambia, la somma porta il modello in un punto diverso dello spazio dei parametri. Il risultato può essere degradazione delle performance, output incoerenti, o entrambe le cose. L'adapter non è portabile tra versioni del base model.</p>
+
+    <h4>Ordine corretto e perché</h4>
+    <table>
+      <thead><tr><th>Step</th><th>Cosa fa</th><th>Dipende da</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Pre-training</strong></td><td>Apprende lingua, morfologia, semantica su corpus ampio</td><td>Corpus generale</td></tr>
+        <tr><td><strong>SFT</strong></td><td>Orienta il modello al formato istruzione/risposta</td><td>Base model stabile</td></tr>
+        <tr><td><strong>LoRA</strong></td><td>Specializza su dominio specifico con pochi parametri trainabili</td><td>Base model stabile (+ SFT se presente)</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Regola pratica</h4>
+    <p>Prima di qualsiasi run di pre-training aggiuntivo, considera tutti gli adapter LoRA e i checkpoint SFT esistenti come <em>deprecati</em>. LoRA è sempre l'ultimo passo della pipeline. Se vuoi specializzare dominio senza perdere il lavoro fatto, l'unica strada è freezare il base model e fare LoRA — non pre-training.</p>
+
+    <div class="callout info">
+      <strong>Caso reale per questo progetto:</strong> best.pt (Run #4, val 3.5861) è il base model. Run #6 o successivi che lo sostituiscono rendono il LoRA adapter prodotto in Phase 10 incompatibile. Salvare sempre il base model <em>prima</em> di produrre un adapter che si intende riutilizzare.
+    </div>
   </div>
 </div>
 
