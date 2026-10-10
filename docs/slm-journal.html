@@ -1644,3 +1644,36 @@ python3 -c "
 <div class="note">
   <strong>Checkpoint conservato:</strong> <code>checkpoints/sft_intent_v1.pt</code> — modello di esempio documentato, distinto dal base model. Non sovrascrive nessun checkpoint di training.
 </div>
+
+<h3>Test di inferenza con tools/infer.py — esiti (2026-10-10)</h3>
+
+<p>Eseguiti 4 test con <code>python3 tools/infer.py --checkpoint checkpoints/sft_intent_v1.pt --stop-on-json</code>.</p>
+
+<table>
+  <thead><tr><th>Prompt</th><th>Intent atteso</th><th>Intent prodotto</th><th>Esito</th></tr></thead>
+  <tbody>
+    <tr><td>Crea un appuntamento con Marco venerdì alle 15.</td><td>create_event</td><td>create_event ✓</td><td>Intent corretto, title errato ("martedì" invece di "Marco")</td></tr>
+    <tr><td>Cancella appuntamento Dentista lunedì alle 10.</td><td>delete_event</td><td>create_event ✗</td><td>Intent sbagliato, valori hallucinate ("gioco")</td></tr>
+    <tr><td>Sposta appuntamento con il commercialista dalle 10:00 alle 15:00.</td><td>reschedule_event</td><td>create_reminder ✗</td><td>Intent sbagliato, entity extraction confusa</td></tr>
+    <tr><td>Dammi il numero di telefono di Alessandro Boni.</td><td>query_contacts (fuori dataset)</td><td>create_reminder ✗</td><td>Out-of-distribution: intent non esiste nel training set</td></tr>
+  </tbody>
+</table>
+
+<h3>Analisi delle cause</h3>
+
+<ul>
+  <li><strong>Dataset troppo piccolo per l'entity extraction.</strong> Con 20–25 esempi per intent il modello classifica parzialmente l'intent ma non ha visto abbastanza variazioni per imparare a estrarre correttamente i campi. Risultato: hallucina valori ("gioco", "martedì" come title) invece di estrarli dal testo.</li>
+  <li><strong>Classi difficili sottorappresentate.</strong> <code>delete_event</code> (20 esempi) è semanticamente vicino a <code>create_event</code> (25). Il modello collassa verso la classe dominante. Stesso meccanismo per <code>reschedule_event</code> vs <code>create_reminder</code>.</li>
+  <li><strong>Nessun intent "sconosciuto".</strong> Il dataset non contiene esempi di query fuori distribuzione. Il modello non può rifiutare: produce sempre uno degli intent di training, anche quando il prompt non corrisponde a nessuno.</li>
+  <li><strong>Full SFT su dataset piccolo = overfitting.</strong> Con 45,9M parametri aggiornati e soli 140 esempi, il modello ha troppa capacità per troppo poco segnale. Le hallucination sui valori degli entity sono un segnale di overfit locale su pattern lessicali specifici.</li>
+</ul>
+
+<h3>Proposte</h3>
+
+<p><strong>Opzione A — Espansione dataset:</strong> portare ogni intent a 60–80 esempi con variazioni lessicali ampie ("annulla"/"elimina"/"rimuovi" per <code>delete_event</code>), aggiungere 20–30 esempi con completion <code>{"intent": "unknown"}</code> per query fuori distribuzione.</p>
+
+<p><strong>Opzione B — Semplificazione dello schema:</strong> rimuovere l'entity extraction dalla completion (solo <code>{"intent": "..."}</code>) finché la classificazione non è affidabile, poi reintrodurre le entità in un secondo SFT. Isola il problema di classificazione da quello di estrazione.</p>
+
+<div class="note">
+  <strong>Decisione:</strong> si passa a <strong>Phase 10 — LoRA</strong>. L'approccio LoRA + SFT è corretto per questo use case: W frozen riduce il rischio di overfitting su dataset piccoli, il checkpoint adapter è ~1.5 MB vs 175 MB, e la base pre-addestrata è preservata. I risultati di Phase 09 confermano che full SFT su 140 esempi è insufficiente — LoRA con ~393k parametri trainabili è il percorso più solido. Opzioni A e B rimangono valide per iterazioni future su Phase 09 qualora si voglia confrontare full SFT vs LoRA sullo stesso task.
+</div>

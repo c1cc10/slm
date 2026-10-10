@@ -1,6 +1,9 @@
 # Corpus e dati di training (grandi, copyright, non pubblici)
 data/
 
+# Cose private e appunti personali
+private/*.*
+
 # Checkpoint del modello (grandi file binari)
 checkpoints/*.pt
 checkpoints/*.bin
