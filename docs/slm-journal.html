@@ -388,6 +388,14 @@ tr.hl td { background: var(--surface2); }
 <h2 id="run6-shard7">Run #6 — Shard 7/7 (shard_ag.txt) — completato 2026-10-05 18:40 UTC — RUN #6 COMPLETO</h2>
 <div class="narr">Shard ag avviato alle 17:59 UTC al completamento di shard af (val 3.3040). Corpus: shard_ag.txt (1.18 GB, 290,180,642 token). In Run #5, questo corpus aveva val 4.027 a step 4000 — il più difficile tra i sette. In Run #6, il pattern è lo stesso di af: la val parte alta (3.4670 a step 500) per poi scendere man mano che il modello si adatta. La caratteristica rilevante: il minimo non è a step 7500 come in af, ma al passo finale (step 8000), con val <strong>3.2965</strong>. La loss era ancora in calo alla fine del shard. Riduzione −0.008 rispetto ad af — piccola, ma la curva era discendente: con più step sarebbe scesa ulteriormente.</div>
 <div class="narr"><strong>Run #6 completato alle 18:40:09 UTC del 2026-10-05.</strong> 7 shard × 8000 step × batch 32 × seq 512 ≈ 917 M token processati. Val loss complessiva: 3.5861 (Run #4, punto di partenza) → <strong>3.2965</strong> (best, shard ag). Riduzione totale −0.290.</div>
+
+<div class="note" style="border-left-color:#c0392b">
+  <strong>⚠ Shard af e ag: corpus inquinato — non usare come base per training futuro</strong><br>
+  I shard af e ag appartengono alla sezione "late" di CulturaX, con distribuzione web pesante: menu di navigazione, cookie banner, testo pubblicitario, spam marketing, caratteri di controllo da HTML mal decodificato. Il val loss basso (3.3040, 3.2965) riflette apprendimento del corpus, non qualità generativa. I test semantici mostrano:<br>
+  — run6-af: output sconnesso su tutti i domini tranne geografico<br>
+  — run6-ag: frammenti di spam ("LE ARTI E SEGUITO: ALBERGHA - ROMANIA"), loop di ripetizione ("di di di di…") che resiste a repeat_penalty, peggior qualità tra tutti i checkpoint<br>
+  Il best.pt al termine di Run #6 corrisponde a run6-ag e <em>non deve essere usato come base</em> per fine-tuning o LoRA. Il punto di partenza corretto per operazioni successive è <strong>run6-ad</strong> (val 3.3524), checkpoint salvato in <code>checkpoints/run6_shard_ad.pt</code>.
+</div>
 <h3>Checkpoint shard_ag.txt</h3>
 <table>
   <thead><tr><th>Step</th><th>Train</th><th>Val</th><th>Elapsed</th><th>Note</th></tr></thead>
