@@ -201,20 +201,46 @@ Formato output:
 
 ---
 
-### `train_sft.py` — Fine-tuning supervisionato (SFT)
+### `train_sft.py` — Fine-tuning supervisionato (SFT + opzione LoRA)
 
-Fine-tuning con masked loss su dataset JSONL. Monitora il catastrophic forgetting tramite un probe set fisso.
+Fine-tuning con masked loss su dataset JSONL. Supporta due modalità:
 
+**Modalità full SFT** (aggiorna tutti i parametri, rischio overfitting su dataset piccoli):
 ```bash
 python3 train_sft.py \
   --checkpoint checkpoints/best.pt \
-  --data data/sft_mini.jsonl \
-  --epochs 5 \
-  --lr 2e-5 \
+  --train data/sft_mini.jsonl \
+  --epochs 5 --lr 2e-5 \
   --out checkpoints/sft_intent_v1.pt
 ```
 
-Il checkpoint di output conserva il tokenizer originale ed è compatibile con `tools/infer.py`.
+**Modalità LoRA** (W frozen, solo A e B trainabili — consigliata per dataset piccoli):
+```bash
+python3 train_sft.py \
+  --checkpoint checkpoints/best.pt \
+  --train data/sft_mini.jsonl \
+  --lora --lora-rank 8 --lora-alpha 16 \
+  --epochs 10 --lr 2e-4 \
+  --lora-out checkpoints/lora_calendar.pt \
+  --out checkpoints/lora_calendar_merged.pt
+```
+
+Produce due file: l'adapter (`lora_calendar.pt`, ~1.5 MB) per il dynamic mode e il merged checkpoint per `tools/infer.py`.
+
+**Caricare l'adapter a runtime (dynamic/unmerged mode):**
+```python
+from model import GPT
+from lora import load_lora
+import torch
+
+ckpt = torch.load('checkpoints/best.pt', map_location='cpu', weights_only=False)
+model = GPT(ckpt['model_config'])
+model.load_state_dict(ckpt['model_state_dict'])
+model = load_lora(model, 'checkpoints/lora_calendar.pt')
+model.eval()
+```
+
+Il checkpoint merged conserva il tokenizer originale ed è compatibile con `tools/infer.py`.
 
 ---
 
@@ -381,5 +407,5 @@ Benchmark su 10 prompt in italiano (stesso set per entrambi i modelli, temperatu
 | 7 | Efficienza training (gradient accumulation, BF16) | ✅ completata |
 | 8 | KV-cache inference (4.35× speedup su M2) | ✅ completata |
 | 9 | SFT intent recognition — `sft_intent_v1.pt` | ✅ completata · 6 classi · forgetting ×1.12 |
-| 10 | LoRA adapter per dominio applicativo | ⏳ prossima |
+| 10 | LoRA adapter per dominio applicativo | ✅ completata |
 | 11 | Multimodale: YOLO v3 + LM | ⏳ pianificata |

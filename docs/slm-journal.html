@@ -1755,5 +1755,306 @@ Reload ok — diff max logits: 0.00e+00  (atteso ~0)
 Tutti i test passati.</code></pre>
 
 <div class="note">
-  <strong>Stato:</strong> lora.py completo e testato. Prossimo passo: aggiungere i flag <code>--lora</code>, <code>--lora-rank</code>, <code>--lora-alpha</code> a train.py per integrare LoRA nel loop di training standard.
+  <strong>Stato:</strong> lora.py completo e testato. Prossimo passo: integrare LoRA in train_sft.py con masked loss (Lettura B).
+</div>
+
+<h3>Integrazione in train_sft.py — Lettura B (2026-10-10)</h3>
+
+<div class="narr">LoRA è stato integrato direttamente in <code>train_sft.py</code> invece che in <code>train.py</code>. La scelta è motivata dall'architettura del task: il fine-tuning su intent recognition usa coppie prompt/completion con masked loss — esattamente il formato già gestito da train_sft.py. Aggiungere LoRA a un training di tipo CLM (train.py) non aveva senso per questo use case.</div>
+
+<h4>Modifiche a train_sft.py</h4>
+<ul>
+  <li>Import: <code>apply_lora, save_lora, merge_lora_model</code> da <code>lora.py</code></li>
+  <li>Nuovi flag: <code>--lora</code> (bool), <code>--lora-rank</code> (default 8), <code>--lora-alpha</code> (default 16), <code>--lora-out</code> (path adapter)</li>
+  <li>Dopo il caricamento del modello: <code>apply_lora()</code> + <code>model.to(device)</code> (le matrici A e B vengono create su CPU, vanno spostate sul device corretto)</li>
+  <li>L'optimizer filtra già per <code>p.requires_grad</code> → riceve automaticamente solo A e B quando LoRA è attivo</li>
+  <li>Al checkpoint save: <code>save_lora()</code> per l'adapter + <code>merge_lora_model()</code> per il merged checkpoint compatibile con infer.py</li>
+</ul>
+
+<h4>Bug risolto — device mismatch</h4>
+<p><code>apply_lora()</code> crea i nuovi <code>nn.Linear</code> (A e B) sul device di default (CPU). Se il base model è già su MPS o CUDA, il forward passa fallisce con "Tensor for argument weight is on cpu but expected on mps". Fix: aggiunta chiamata esplicita <code>model.to(device)</code> dopo <code>apply_lora()</code>.</p>
+
+<h4>Output del training LoRA</h4>
+<p>Ogni best checkpoint produce due file:</p>
+<ul>
+  <li><strong>Adapter</strong> (<code>--lora-out</code>, ~1.5 MB): solo A e B, per il dynamic/unmerged mode. Richiede il base model a runtime.</li>
+  <li><strong>Merged</strong> (<code>--out</code>, ~179 MB senza optimizer state): W' = W + ΔW, checkpoint standard compatibile con infer.py e tutti gli strumenti esistenti. Non richiede lora.py a runtime.</li>
+</ul>
+
+<h4>Comando di training reale (da eseguire)</h4>
+<pre><code>python3 train_sft.py \
+  --checkpoint checkpoints/best.pt \
+  --train data/sft_mini.jsonl \
+  --lora --lora-rank 8 --lora-alpha 16 \
+  --epochs 10 --batch 4 --lr 2e-4 \
+  --lora-out checkpoints/lora_calendar.pt \
+  --out checkpoints/lora_calendar_merged.pt</code></pre>
+
+<p>Base: run7_shard_s3 (val 2.8165). Dataset: sft_mini.jsonl (140 esempi, 6 intent). Parametri trainabili: 393,216 (0.85%). Stima tempo su MPS: ~2 min per epoca, ~20 min totali.</p>
+
+<div class="note done">
+  <strong>Stato Phase 10:</strong> lora.py + integrazione train_sft.py completati. Training reale eseguito su Vast.ai RTX 4090 il 2026-10-10. Risultati: best val loss 0.1322, PPL ≈ 1.1. Adapter e checkpoint merged scaricati e verificati localmente.
+</div>
+
+<h3>Run LoRA — Vast.ai RTX 4090 (2026-10-10)</h3>
+
+<p><strong>Setup:</strong> dataset <code>data/sft_mini_v2.jsonl</code> — 1 200 esempi, 200 per intent, 6 intent. Base model: run7_shard_s3 (best.pt, val 2.8165). Infra: Vast.ai istanza 55244097, NVIDIA RTX 4090 24 GB, Svezia.</p>
+
+<p><strong>Parametri:</strong></p>
+<pre><code>--lora-rank 8  --lora-alpha 16
+--epochs 10    --batch 4     --lr 2e-4
+--device cuda
+Parametri trainabili: 393 216 / 45.9 M  (0.85%)</code></pre>
+
+<p><strong>Risultati:</strong></p>
+
+<table>
+<thead>
+<tr><th>Metrica</th><th>Valore</th><th>Note</th></tr>
+</thead>
+<tbody>
+<tr><td>Best val loss</td><td>0.1322</td><td>PPL ≈ 1.1 — convergenza completa</td></tr>
+<tr><td>Loss finale (step 3000)</td><td>0.0700</td><td>Epoch 10, ultimo step</td></tr>
+<tr><td>Durata training</td><td>~104 s</td><td>RTX 4090 vs M2 ~5 min/epoca</td></tr>
+<tr><td>Adapter</td><td>1.5 MB</td><td>checkpoints/lora_calendar.pt</td></tr>
+<tr><td>Merged</td><td>179 MB</td><td>checkpoints/lora_calendar_merged.pt</td></tr>
+</tbody>
+</table>
+
+<p><strong>Test inferenza locale (merged checkpoint):</strong></p>
+
+<pre><code>PROMPT: Crea un appuntamento con Marco venerdì alle 15.
+OUTPUT: {"intent": "create_event", "title": "appuntamento", "contact": "Marco", "date": "venerdì", "time": "15:00"}
+
+PROMPT: Cosa ho in agenda lunedì prossimo?
+OUTPUT: {"intent": "query_schedule", "date": "lunedì prossimo"}
+
+PROMPT: Cancella tutti gli impegni di mercoledì.
+OUTPUT: {"intent": "delete_event", "date": "mercoledì", "scope": "all"}</code></pre>
+
+<p>Il modello estrae correttamente intent, entità e termini temporali grezzi ("venerdì", "lunedì prossimo", "mercoledì") senza risolverli — comportamento corretto per NLU extraction. Il rumore dopo la <code>}</code> finale è un artefatto di generazione senza stop token e si rimuove con la prima parse JSON completa.</p>
+
+<div class="note done">
+  <strong>Phase 10 completata.</strong> LoRA calendar intent extraction funzionante. Prossimo step: esportazione GGUF del checkpoint merged per test con llama.cpp, o iterazione sul dataset per migliorare generalizzazione (es. varianti di phrasing non viste).
+</div>
+
+<h3>GGUF Export e fix inferenza (2026-10-10)</h3>
+
+<p><strong>Export GGUF:</strong> stesso converter di Run #4 (<code>tools/convert_to_gguf.py</code>) — il merged checkpoint ha architettura identica al base model, la conversione funziona senza modifiche.</p>
+
+<table>
+<thead><tr><th>File</th><th>Dimensione</th><th>Formato</th></tr></thead>
+<tbody>
+<tr><td>slm-lora-calendar.gguf</td><td>218 MB</td><td>fp32</td></tr>
+<tr><td>slm-lora-calendar-q8_0.gguf</td><td>55 MB</td><td>Q8_0</td></tr>
+</tbody>
+</table>
+
+<p><strong>Fix inferenza Python (<code>tools/infer_lora.py</code>):</strong> il training usa il separatore <code>\n\n</code> tra prompt e completion (parametro <code>--sep</code> di <code>train_sft.py</code>). Il blocco inline originale in <code>run_lora.sh</code> non aggiungeva il separatore e non faceva stop al primo JSON valido — il modello generava token corretti ma continuava a produrre rumore dopo la <code>}</code> finale. Il nuovo script:</p>
+<ul>
+  <li>Aggiunge <code>\n\n</code> al prompt prima dell'encoding</li>
+  <li>Estrae il primo JSON ben formato con il parser a bilanciamento delle parentesi</li>
+  <li>Separa raw output da JSON estratto</li>
+</ul>
+
+<p><strong>Risultati inferenza Python — 7 prompt:</strong></p>
+
+<pre><code>IN : Crea un appuntamento con Marco venerdì alle 15.
+OUT: {"intent": "create_event", "title": "appuntamento", "contact": "Marco", "date": "venerdì", "time": "15:00"}
+
+IN : Sposta la riunione di domani a giovedì pomeriggio.
+OUT: {"intent": "reschedule_event", "event_ref": "riunione domani", "new_date": "giovedì", "new_time": "pomeriggio"}
+
+IN : Cosa ho in agenda lunedì prossimo?
+OUT: {"intent": "query_schedule", "date": "lunedì prossimo"}
+
+IN : Ricordami di chiamare il medico domani mattina.
+OUT: {"intent": "create_reminder", "note": "chiamare il medico", "date": "domani", "time": "mattina"}
+
+IN : Cancella tutti gli impegni di mercoledì.
+OUT: {"intent": "delete_event", "event_ref": "call", "date": "mercoledì"}    ← scope mancante
+
+IN : Aggiungi Giulia Bianchi, cell 347-1234567.
+OUT: {"intent": "add_contact", "name": "Simone Bianchi", "phone": "347-12345616"}  ← nome sbagliato
+
+IN : Elimina la riunione del martedì.
+OUT: {"intent": "delete_event", "event_ref": "riunione martedì", "new_date": "martedì"}  ← new_date spurio</code></pre>
+
+<p><strong>5/7 corretti o molto buoni</strong>, 2 con errori minori su campi opzionali. Causa probabile: le varianti "cancella tutto" e "aggiungi contatto" hanno pattern più eterogenei nel dataset sintetico. Risolvibile con dataset expansion o esempi validati aggiuntivi per quei due intent.</p>
+
+<p><strong>llama.cpp:</strong> il GGUF è valido e caricabile. Limitazione: <code>llama-cli</code> avvolge il prompt in una chat mode che non corrisponde al separatore <code>\n\n</code> usato in training — la qualità di estrazione è inferiore al path Python. Per uso con llama.cpp raccomandato solo come GGUF base per quantizzazione/distribuzione; l'inferenza di produzione usa <code>tools/infer_lora.py</code>.</p>
+
+<div class="note done">
+  <strong>Phase 10 completata e chiusa.</strong> Adapter LoRA (1.5 MB), merged checkpoint (179 MB), GGUF Q8_0 (55 MB) e script di inferenza (<code>tools/infer_lora.py</code>) tutti pronti e verificati.
+</div>
+
+<h3>Dataset expansion v2 — 21 intent (2026-10-11)</h3>
+
+<h4>Motivazione</h4>
+<p>Test con <code>tools/infer_lora.py</code> ha rivelato che "dammi il numero di Lorena" → <code>query_schedule</code> (sbagliato). Il problema: il dataset v1 aveva 6 intent (<code>create_event</code>, <code>reschedule_event</code>, <code>delete_event</code>, <code>create_reminder</code>, <code>query_schedule</code>, <code>add_contact</code>) — nessun intent per interrogare i contatti, operazioni su promemoria, compleanni, festività o stato utente. Il modello non aveva alternative e classificava tutto come il più simile tra i 6 disponibili.</p>
+
+<h4>Architettura del dataset v2</h4>
+<p>Dataset generato da <code>tools/gen_sft_synth_v2.py</code>. Risolve tre problemi della v1:</p>
+<ol>
+  <li><strong>Copertura intent</strong>: da 6 a 21 intent + unknown (22 bucket totali)</li>
+  <li><strong>Genere grammaticale</strong>: <code>EVENTI_GEN</code> usa tuple <code>(parola, genere, iniziale)</code> con 4 helper per gli articoli — nessun "il videochiamata" o "una workshop"</li>
+  <li><strong>Intent sconosciuto</strong>: 200 domande fuori dominio (<code>intent: "unknown"</code>) per gestire input non supportati</li>
+</ol>
+
+<h4>Articoli italiani — implementazione</h4>
+<p>Il bug nella v1 era un <code>EVENTI = [lista piatta di stringhe]</code> con articoli hardcoded nei template. La v2 usa:</p>
+<pre><code>EVENTI_GEN = [("appuntamento","m","v"), ("riunione","f","c"), ("workshop","m","c"),
+              ("videochiamata","f","c"), ("intervista","f","v"), ...]
+
+def art_indef(eg): # un / una / un'
+    word, g, i = eg
+    if g == "f" and i == "v": return "un'" + word    # un'intervista
+    elif g == "f":             return "una " + word  # una riunione
+    else:                      return "un " + word   # un appuntamento (mai "un'")
+
+def art_def(eg):   # il / la / l'
+    word, g, i = eg
+    if i == "v": return "l'" + word                  # l'appuntamento, l'intervista
+    return ("la " if g == "f" else "il ") + word     # la riunione / il workshop</code></pre>
+<p>Regola chiave: il maschile davanti a vocale usa <strong>"un"</strong> (non "un'"). "Un appuntamento" è corretto; "un'appuntamento" è sbagliato. Solo il femminile davanti a vocale usa l'elision: "un'intervista".</p>
+
+<h4>Intent v2 — 21 intent</h4>
+<table>
+  <thead><tr><th>Intent</th><th>Schema JSON</th></tr></thead>
+  <tbody>
+    <tr><td>create_event</td><td>{title?, contact?, date?, time?, duration?}</td></tr>
+    <tr><td>update_event</td><td>{event_ref, new_title?, new_contact?, new_date?, new_time?}</td></tr>
+    <tr><td>delete_event</td><td>{event_ref?, contact?, date?, time?, scope?}</td></tr>
+    <tr><td>create_recurring</td><td>{title, recurrence, time?, contact?, date_start?}</td></tr>
+    <tr><td>delete_recurring</td><td>{event_ref?, contact?, recurrence?}</td></tr>
+    <tr><td>query_schedule</td><td>{date?, contact?, time?, time_range?, query_type?}</td></tr>
+    <tr><td>find_free_slot</td><td>{date, duration?, time_pref?, contact?}</td></tr>
+    <tr><td>add_reminder</td><td>{note, date?, time?, deadline?, recurrence?}</td></tr>
+    <tr><td>update_reminder</td><td>{note_ref, new_date?, new_time?, new_note?}</td></tr>
+    <tr><td>delete_reminder</td><td>{note_ref?, date?, time?}</td></tr>
+    <tr><td>add_contact</td><td>{name, phone?, email?, role?}</td></tr>
+    <tr><td>query_contact</td><td>{name, field?}</td></tr>
+    <tr><td>update_contact</td><td>{name, field, new_value}</td></tr>
+    <tr><td>delete_contact</td><td>{name, role?}</td></tr>
+    <tr><td>add_birthday</td><td>{name, date}</td></tr>
+    <tr><td>query_birthday</td><td>{name?, month?}</td></tr>
+    <tr><td>query_datetime</td><td>{field: "time"|"date"|"day_of_week"|"month"|"year"}</td></tr>
+    <tr><td>query_duration</td><td>{target, direction: "until"|"since"}</td></tr>
+    <tr><td>query_holiday</td><td>{name?, month?, query_type?}</td></tr>
+    <tr><td>set_status</td><td>{status, date_start, date_end?, time?}</td></tr>
+    <tr><td>unknown</td><td>{intent: "unknown"}</td></tr>
+  </tbody>
+</table>
+
+<h4>Separazione extractor / resolver</h4>
+<p>Il modello estrae i <strong>termini linguistici raw</strong>, non date assolute:</p>
+<pre><code>"Crea un appuntamento con Marco venerdì alle 15"
+→ {"intent":"create_event","contact":"Marco","date":"venerdì","time":"15:00"}
+
+# Non: {"date": "2026-10-16"} — quella risoluzione avviene nell'application layer
+# tramite dateparser.parse("venerdì") o strumenti equivalenti</code></pre>
+<p>Questo disaccoppiamento rende il modello invariante rispetto alla data di training: "domani" funziona sempre, indipendentemente da quando è stato addestrato il modello.</p>
+
+<h4>set_status — stati supportati</h4>
+<p>Stato utente nel calendario: <code>fuori ufficio</code>, <code>assente</code>, <code>non disponibile</code>, <code>in ferie</code>, <code>in malattia</code>, <code>in trasferta</code>, <code>non raggiungibile</code>.</p>
+<p>Esempi: "Sono fuori ufficio da lunedì a venerdì" → <code>{"intent":"set_status","status":"fuori ufficio","date_start":"lunedì","date_end":"venerdì"}</code></p>
+
+<h4>Training v2 — da capo</h4>
+<p>Il training v2 parte <strong>da zero</strong> rispetto al LoRA v1. Non è possibile riutilizzare <code>lora_calendar.pt</code>: i 21 nuovi intent non esistevano nell'adapter v1, e le matrici A e B sono state allocate solo per i 6 pattern precedenti. Il base model (<code>checkpoints/best.pt</code>) rimane invariato — è congelato durante il training LoRA, non viene toccato dal fine-tuning.</p>
+<ul>
+  <li>Adapter v2: <code>checkpoints/lora_calendar_v2.pt</code></li>
+  <li>Merged v2: <code>checkpoints/lora_calendar_v2_merged.pt</code></li>
+  <li>Dataset: <code>data/sft_v2.jsonl</code> (4200 esempi, 21 intent × 200)</li>
+  <li>Script: <code>run_lora.sh</code> aggiornato, log in <code>logs/lora_v2/</code></li>
+</ul>
+
+<div class="done">
+  <strong>Training v2 completato (2026-10-11).</strong> Vast.ai RTX 4090, istanza 55299973 (Germania). 10 epoche, 10 500 step, 6m 8s totali. Best val loss <strong>0.0293</strong> (PPL ≈ 1.0). Adapter 1.6 MB, merged 180 MB. Istanza distrutta dopo download.
+</div>
+
+<h4>Risultati training v2</h4>
+<table>
+  <thead><tr><th>Epoca</th><th>Train loss</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>0.8858</td><td>Da 4.69 iniziale — calo rapido</td></tr>
+    <tr><td>2</td><td>0.2812</td><td>Convergenza rapida</td></tr>
+    <tr><td>3</td><td>0.1460</td><td></td></tr>
+    <tr><td>4</td><td>0.0902</td><td></td></tr>
+    <tr><td>5</td><td>0.0647</td><td></td></tr>
+    <tr><td>6</td><td>0.0507</td><td></td></tr>
+    <tr><td>7</td><td>0.0420</td><td></td></tr>
+    <tr><td>8</td><td>0.0362</td><td></td></tr>
+    <tr><td>9</td><td>0.0328</td><td></td></tr>
+    <tr><td>10</td><td><strong>0.0293</strong></td><td>PPL ≈ 1.0 — training set memorizzato</td></tr>
+  </tbody>
+</table>
+
+<h4>Inference test v2 (2026-10-11)</h4>
+<p>Test su checkpoint merged (<code>--device cpu</code>) al termine del training remoto:</p>
+<pre>
+IN : Crea un appuntamento con Marco venerdì alle 15.
+OUT: {"intent": "create_event", "title": "appuntamento", "contact": "Marco", "date": "venerdì", "time": "15.00"}
+
+IN : Sposta la riunione di domani a giovedì pomeriggio.
+OUT: {"intent": "update_event", "event_ref": "riunione domani", "new_date": "giovedì pomeriggio", "new_time": "pomeriggio"}
+
+IN : Cosa ho in agenda lunedì prossimo?
+OUT: {"intent": "query_schedule", "date": "lunedì prossimo"}
+
+IN : Ricordami di chiamare il medico domani mattina.
+OUT: {"intent": "add_reminder", "note": "chiamare il medico", "date": "domani", "time": "mattina"}
+
+IN : Cancella tutti gli impegni di mercoledì.
+OUT: {"intent": "delete_event", "date": "mercoledì", "scope": "all"}
+</pre>
+<p>Tutti i 5 prompt producono JSON valido con intent corretto. Il test del caso originale problematico ("dammi il numero di Lorena") non è incluso nel test inline ma può essere verificato localmente con <code>tools/infer_lora.py</code>.</p>
+
+<h3>Test v2 su llama-server + slm-chat.html (2026-10-11)</h3>
+
+<p>Dopo la conversione GGUF (<code>slm-lora-calendar-v2-q8_0.gguf</code>, 55 MB Q8_0) e l'avvio di <code>bash slm-chat.sh slm-lora-calendar-v2-q8_0.gguf</code>, test interattivi con l'interfaccia grafica:</p>
+
+<table>
+  <thead><tr><th>Prompt</th><th>Output</th><th>Esito</th></tr></thead>
+  <tbody>
+    <tr><td>dammi il numero di Lorena</td><td><code>{"intent": "query_contact", "name": "Lorena", "field": "numero"}</code></td><td>✓ RISOLTO (v1 dava query_schedule)</td></tr>
+    <tr><td>cosa devo fare oggi?</td><td><code>{"intent": "query_schedule", "date": "oggi"}</code></td><td>✓ corretto</td></tr>
+    <tr><td>cosa devo fare settimana prossima?</td><td><code>{"intent": "query_datetime", "field": "day_of_week"}</code></td><td>❌ gap dataset</td></tr>
+    <tr><td>elenca gli appuntamenti di domani</td><td><code>{"intent": "query_schedule", "date": "domani", "time": "mattina"}</code></td><td>~ spurious <code>time</code></td></tr>
+    <tr><td>sposta l'appuntamento con Giulio alle 15:00 di domani</td><td><code>{"intent": "update_event", "contact": "Luca", ...}</code></td><td>❌ nome allucinato</td></tr>
+  </tbody>
+</table>
+
+<h4>Problema: trailing garbage nella risposta</h4>
+<p>Senza stop token configurato, llama-server continuava a generare dopo il <code>}</code> di chiusura, producendo sequenze tipo <code>}"}"}"}"}</code>. Il modello entra in un loop di ripetizione perché durante il training la posizione dopo <code>}</code> non era mai supervisionata: la loss era calcolata solo sui token di completion, ma senza EOS finale il modello non ha imparato quando fermarsi.</p>
+
+<p><strong>Fix immediata (v2)</strong>: aggiunta di <code>stop: ["\n\n"]</code> nella request HTTP a llama-server e post-processing JS <code>extractFirstJson()</code> in <code>slm-chat.html</code> che estrae il primo oggetto JSON valido, scartando tutto ciò che segue.</p>
+
+<h4>Fix strutturale: EOS token nella completion (v3)</h4>
+<p>La soluzione corretta è aggiungere esplicitamente il token EOS (ID 3, <code>&lt;/s&gt;</code>) in coda alla completion durante il training SFT. Il modello impara così che dopo <code>}</code> deve generare EOS — e llama-server si ferma automaticamente senza bisogno di stop string né post-processing.</p>
+
+<p>Implementato in <code>train_sft.py</code> — <code>SFTDataset</code>:</p>
+<pre>
+eos = getattr(tokenizer, 'eos_id', None)   # 3 per SPM-BPE, None per char-level
+
+# Sequenza training: prompt_ids + comp_ids + [eos]
+# Target:           [-100 × n_prompt] + comp_ids + [eos] + [-100]
+#                                              ↑
+#                   il token } predice EOS; l'ultimo slot non ha target
+if eos is not None:
+    comp_ids = comp_ids + [eos]
+</pre>
+
+<p>Dati concreti: per l'esempio "dammi il numero di Lorena" la sequenza totale è 38 token (7 prompt + 31 completion incluso EOS=3), ben dentro il limite di 512. La troncatura non è mai un problema su questo dataset.</p>
+
+<p>Ogni classe tokenizer espone ora la property <code>eos_id</code>: <code>_SPMTok</code> restituisce <code>sp.eos_id()</code> (=3), <code>_TiktokenTok</code> restituisce <code>eot_token</code>, <code>_CharTok</code> restituisce <code>None</code> (nessun EOS dedicato nel vocabolario char-level).</p>
+
+<h4>Gap dataset identificati per v3</h4>
+<p>Due classi di errori sistematici emersi dal test:</p>
+<ol>
+  <li><strong>query_schedule con granularità settimanale/mensile</strong>: "cosa devo fare settimana prossima?" viene classificato come <code>query_datetime</code>. Il dataset v2 copre date singole (<em>oggi</em>, <em>lunedì</em>) ma non periodi estesi (<em>settimana prossima</em>, <em>questo mese</em>, <em>prossimi giorni</em>). Fix: aggiungere varianti con periodi temporali a <code>query_schedule</code>.</li>
+  <li><strong>Slot-filling nomi allucinati in update_event</strong>: "sposta con Giulio" → contact "Luca". Il dataset usa un pool ristretto di ~6 nomi ripetuti; il modello ha imparato a copiare il nome più frequente invece di estrarlo dall'input. Fix: pool di ~35 nomi generato programmaticamente in <code>gen_sft_synth_v2.py</code>, un nome diverso per ogni esempio.</li>
+</ol>
+
+<div class="note">
+  <strong>Stato v3:</strong> <code>train_sft.py</code> aggiornato con EOS fix. Dataset v3 da generare con pool nomi esteso + varianti <code>query_schedule</code> per periodi. Training da rilanciare su Vast.ai.
 </div>

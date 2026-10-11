@@ -30,6 +30,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 
 from model import GPT, GPTConfig
+from lora import apply_lora, save_lora, merge_lora_model
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -43,6 +44,9 @@ class _CharTok:
 
     @property
     def vocab_size(self): return len(self._stoi)
+
+    @property
+    def eos_id(self): return None  # char-level non ha EOS dedicato
 
     def encode(self, text):
         return [self._stoi[c] for c in text if c in self._stoi]
@@ -62,6 +66,9 @@ class _TiktokenTok:
 
     @property
     def vocab_size(self): return self._enc.n_vocab
+
+    @property
+    def eos_id(self): return self._enc.eot_token
 
     def encode(self, text):
         return self._enc.encode(text, disallowed_special=())
@@ -90,6 +97,9 @@ class _SPMTok:
 
     @property
     def vocab_size(self): return self._sp.vocab_size()
+
+    @property
+    def eos_id(self): return self._sp.eos_id()
 
     def encode(self, text):
         return self._sp.encode(text, out_type=int)
@@ -122,11 +132,15 @@ class SFTDataset(Dataset):
     Carica un file JSONL {"prompt": "...", "completion": "..."}.
 
     Per ogni coppia costruisce:
-      input_ids : [p0, ..., pm, c0, ..., cn]          lunghezza N
-      targets   : [-100]*(m-1) + [c0,...,cn] + [-100]  lunghezza N
+      input_ids : [p0, ..., pm, c0, ..., cn, EOS]          lunghezza N
+      targets   : [-100]*(m-1) + [c0,...,cn, EOS] + [-100]  lunghezza N
 
     Dove targets[i] è il token da predire alla posizione i, cioè input_ids[i+1].
     Le posizioni prompt ricevono -100 → il gradiente non viene calcolato su di esse.
+
+    EOS (tokenizer.eos_id) è appeso alla completion: il modello impara a generare
+    il token di stop dopo la completion, eliminando il trailing garbage all'inferenza.
+    Se il tokenizer non espone eos_id (char-level), EOS non viene appeso.
     """
 
     def __init__(self, path, tokenizer, max_seq_len, sep="\n\n"):
@@ -134,6 +148,8 @@ class SFTDataset(Dataset):
         self.tok     = tokenizer
         self.max_len = max_seq_len
         skipped      = 0
+
+        eos = getattr(tokenizer, 'eos_id', None)
 
         with open(path, encoding='utf-8') as f:
             for lineno, raw in enumerate(f, 1):
@@ -155,11 +171,18 @@ class SFTDataset(Dataset):
                 prompt_ids = tokenizer.encode(item['prompt'] + sep)
                 comp_ids   = tokenizer.encode(item['completion'])
 
+                # Appende EOS alla completion: il modello impara a fermarsi dopo il JSON.
+                # Richiede 1 slot extra; viene rispettato nella troncatura sotto.
+                if eos is not None:
+                    comp_ids = comp_ids + [eos]
+
                 if not comp_ids:
                     skipped += 1
                     continue
 
-                # Tronca la completion se l'esempio supera max_seq_len
+                # Tronca la completion se l'esempio supera max_seq_len.
+                # EOS è già incluso in comp_ids: se viene troncato (caso raro su seq 512)
+                # il training non ne risente — EOS era assente anche nei run precedenti.
                 total = len(prompt_ids) + len(comp_ids)
                 if total > max_seq_len:
                     budget = max_seq_len - len(prompt_ids)
@@ -187,7 +210,8 @@ class SFTDataset(Dataset):
 
         if skipped:
             print(f"  [SFTDataset] {skipped} esempi saltati")
-        print(f"  [SFTDataset] {len(self.pairs)} esempi caricati da {path}")
+        eos_info = f"EOS={eos}" if eos is not None else "EOS=nessuno"
+        print(f"  [SFTDataset] {len(self.pairs)} esempi caricati da {path}  ({eos_info})")
 
     def __len__(self):
         return len(self.pairs)
@@ -273,7 +297,8 @@ def train_sft(args):
         device = args.device
 
     print(f"\n{'═'*60}")
-    print(f"  SLM — Supervised Fine-Tuning")
+    mode_label = "SFT + LoRA  (masked loss, W frozen)" if args.lora else "Supervised Fine-Tuning  (full)"
+    print(f"  SLM — {mode_label}")
     print(f"{'═'*60}")
     print(f"  Device     : {device}")
     print(f"  Checkpoint : {args.checkpoint}")
@@ -282,7 +307,10 @@ def train_sft(args):
         print(f"  Val        : {args.val}")
     if args.probe:
         print(f"  Probe      : {args.probe}")
-    print(f"  Output     : {args.out}")
+    if args.lora:
+        print(f"  LoRA rank  : {args.lora_rank}   alpha={args.lora_alpha}")
+        print(f"  Adapter out: {args.lora_out}")
+    print(f"  Merged out : {args.out}")
 
     # ── Carica checkpoint core ────────────────────────────────────────────────
     if not os.path.exists(args.checkpoint):
@@ -307,10 +335,21 @@ def train_sft(args):
     model.load_state_dict(ckpt['model_state_dict'])
     print(f" ok")
     print(f"  Step base  : {ckpt['step']}  val_loss={ckpt['val_loss']:.4f}")
-    print(f"  Parametri  : {model.count_params():,}")
     print(f"  Vocab      : {tok.vocab_size:,}  max_seq={max_seq_len}")
     tok_type = _get_tok_state(ckpt).get('type', 'char')
     print(f"  Tokenizer  : {tok_type}")
+
+    # ── LoRA — congela W, aggiunge adapter A e B ──────────────────────────────
+    if args.lora:
+        model, n_train, n_total = apply_lora(
+            model, r=args.lora_rank, alpha=args.lora_alpha
+        )
+        model = model.to(device)   # A e B vengono creati su CPU, vanno spostati
+        print(f"  Param totali   : {n_total:,}")
+        print(f"  Param trainabili (LoRA): {n_train:,}  ({n_train/n_total*100:.2f}%)")
+        print(f"  Param congelati: {n_total - n_train:,}")
+    else:
+        print(f"  Parametri  : {model.count_params():,}")
 
     # ── Dataset ───────────────────────────────────────────────────────────────
     print(f"\n  Caricamento dataset...")
@@ -445,25 +484,52 @@ def train_sft(args):
         # ── Checkpoint best ───────────────────────────────────────────────────
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            ckpt_out = {
-                'step':                 ckpt['step'],
-                'sft_epoch':            epoch,
-                'sft_step':             global_step,
-                'model_state_dict':     model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                'val_loss':             best_val_loss,
-                'model_config':         model_cfg,
-                'tokenizer_state':      _get_tok_state(ckpt),
-                'sft_args':             vars(args),
-            }
-            torch.save(ckpt_out, args.out)
-            print(f"  ✓ Checkpoint → {args.out}  (val={best_val_loss:.4f})")
+            if args.lora:
+                # Salva adapter (A e B, ~1.5 MB) per il dynamic/unmerged mode
+                os.makedirs(os.path.dirname(args.lora_out) or '.', exist_ok=True)
+                save_lora(model, args.lora_out,
+                          r=args.lora_rank, alpha=args.lora_alpha)
+                print(f"  ✓ Adapter  → {args.lora_out}  (val={best_val_loss:.4f})")
+                # Salva anche il merged checkpoint per compatibilità con infer.py
+                merged = merge_lora_model(model)
+                merged.train()
+                ckpt_out = {
+                    'step':             ckpt['step'],
+                    'sft_epoch':        epoch,
+                    'sft_step':         global_step,
+                    'model_state_dict': merged.state_dict(),
+                    'val_loss':         best_val_loss,
+                    'model_config':     model_cfg,
+                    'tokenizer_state':  _get_tok_state(ckpt),
+                    'sft_args':         vars(args),
+                    'lora_config':      {'r': args.lora_rank, 'alpha': args.lora_alpha},
+                }
+                torch.save(ckpt_out, args.out)
+                print(f"  ✓ Merged   → {args.out}  (val={best_val_loss:.4f})")
+            else:
+                ckpt_out = {
+                    'step':                 ckpt['step'],
+                    'sft_epoch':            epoch,
+                    'sft_step':             global_step,
+                    'model_state_dict':     model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'val_loss':             best_val_loss,
+                    'model_config':         model_cfg,
+                    'tokenizer_state':      _get_tok_state(ckpt),
+                    'sft_args':             vars(args),
+                }
+                torch.save(ckpt_out, args.out)
+                print(f"  ✓ Checkpoint → {args.out}  (val={best_val_loss:.4f})")
 
     mins, secs = divmod(int(time.time() - t_start), 60)
     print(f"\n{'═'*60}")
     print(f"  SFT completato in {mins}m {secs}s")
     print(f"  Best val loss : {best_val_loss:.4f}  (ppl ≈ {math.exp(best_val_loss):.1f})")
-    print(f"  Checkpoint    : {args.out}")
+    if args.lora:
+        print(f"  Adapter       : {args.lora_out}")
+        print(f"  Merged        : {args.out}")
+    else:
+        print(f"  Checkpoint    : {args.out}")
     print(f"{'═'*60}\n")
 
 
@@ -524,6 +590,19 @@ if __name__ == '__main__':
                         help='ratio probe_ppl/baseline oltre cui avvisare (default: 1.15)')
     parser.add_argument('--device',     default='auto',
                         help='device: auto | mps | cuda | cpu (default: auto)')
+
+    # ── LoRA ──────────────────────────────────────────────────────────────────
+    parser.add_argument('--lora',       action='store_true',
+                        help='attiva LoRA: W frozen, solo A e B trainabili (Lettura B)')
+    parser.add_argument('--lora-rank',  type=int, default=8,
+                        dest='lora_rank',
+                        help='rango LoRA r (default: 8)')
+    parser.add_argument('--lora-alpha', type=float, default=16.0,
+                        dest='lora_alpha',
+                        help='alpha LoRA per lo scaling alpha/r (default: 16)')
+    parser.add_argument('--lora-out',   default='checkpoints/lora_adapter.pt',
+                        dest='lora_out',
+                        help='path adapter LoRA (~1.5 MB) (default: checkpoints/lora_adapter.pt)')
 
     args = parser.parse_args()
     train_sft(args)

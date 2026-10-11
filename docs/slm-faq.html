@@ -179,6 +179,7 @@ nav.foot-links a:hover { color: var(--accent); }
     <li><a href="#capabilities-by-scale">Che caratteristiche di reasoning ha un modello da 150M, 350M, 700M, 1B parametri?</a></li>
     <li><a href="#reasoning-vs-simulation">Il ragionamento degli LLM è reale o simulazione? Come dipende dal corpus?</a></li>
     <li><a href="#training-order">Se faccio un run di pre-training aggiuntivo, impatta SFT e LoRA già prodotti?</a></li>
+    <li><a href="#nlu-date-resolution">Il modello estrae "domani" o la data risolta? Chi converte le espressioni temporali?</a></li>
   </ol>
 </nav>
 
@@ -605,6 +606,65 @@ nav.foot-links a:hover { color: var(--accent); }
 
     <div class="callout info">
       <strong>Caso reale per questo progetto:</strong> best.pt (Run #4, val 3.5861) è il base model. Run #6 o successivi che lo sostituiscono rendono il LoRA adapter prodotto in Phase 10 incompatibile. Salvare sempre il base model <em>prima</em> di produrre un adapter che si intende riutilizzare.
+    </div>
+  </div>
+</div>
+
+<div class="qa-block" id="nlu-date-resolution">
+  <div class="question">
+    <span class="q-number">10</span>
+    <h3>Il modello estrae "domani" o la data risolta? Chi converte le espressioni temporali?</h3>
+  </div>
+  <div class="answer">
+    <p>Il modello estrae l'espressione temporale <em>così come appare nel testo</em>: <code>"date": "domani"</code>, <code>"date": "venerdì prossimo"</code>, <code>"deadline": "primo del mese"</code>. Non risolve mai le date in valori assoluti. Questo è il contratto corretto tra il layer di comprensione del linguaggio e il layer applicativo.</p>
+
+    <h4>I due livelli del sistema</h4>
+    <p>Un assistente calendario completo ha due livelli distinti con responsabilità separate:</p>
+    <table>
+      <thead><tr><th>Layer</th><th>Input</th><th>Output</th><th>Strumento</th></tr></thead>
+      <tbody>
+        <tr><td><strong>NLU (questo modello)</strong></td><td>Frase in italiano</td><td>JSON con intent + entità grezze</td><td>LoRA adapter SLM</td></tr>
+        <tr><td><strong>Date resolver</strong></td><td>Espressione temporale + data corrente</td><td>Data ISO assoluta</td><td><code>dateparser</code> o logica custom</td></tr>
+        <tr><td><strong>Calendar API</strong></td><td>JSON con date assolute</td><td>Evento creato</td><td>Google Calendar, CalDAV…</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Perché non far risolvere le date al modello</h4>
+    <p>Tre ragioni concrete:</p>
+    <ol>
+      <li><strong>Il modello non conosce la data corrente.</strong> Per risolvere "venerdì prossimo" serve sapere che oggi è sabato 10 ottobre. Quella informazione va iniettata nel prompt — e allora il modello deve anche fare aritmetica su date, un task che richiede reasoning non garantito a 46M parametri.</li>
+      <li><strong>Ridondanza inutile.</strong> La risoluzione delle espressioni temporali italiane è un problema deterministico risolto da librerie come <code>dateparser</code>. Addestrare un modello a fare la stessa cosa è spreco di capacità parametrica.</li>
+      <li><strong>Fragilità al cambio di data.</strong> Un modello addestrato con date assolute nel training set apprende pattern specifici ("31 ottobre" ricorre spesso) invece di generalizzare la struttura relativa.</li>
+    </ol>
+
+    <h4>Il resolver in pratica</h4>
+    <p>Con <code>dateparser</code> (supporto italiano nativo) la risoluzione è tre righe:</p>
+    <pre><code>import dateparser
+from datetime import datetime
+
+def resolve(expr: str, anchor: datetime = None) -> str | None:
+    dt = dateparser.parse(expr, languages=["it"], settings={
+        "PREFER_DATES_FROM": "future",
+        "RELATIVE_BASE": anchor or datetime.now(),
+    })
+    return dt.date().isoformat() if dt else None
+
+resolve("venerdì prossimo")   # → "2026-10-16"
+resolve("primo del mese")     # → "2026-11-01"
+resolve("domani")             # → "2026-10-11"
+resolve("31 ottobre")         # → "2026-10-31"</code></pre>
+
+    <h4>Pipeline completa</h4>
+    <pre><code>Utente:  "Crea appuntamento con Marco venerdì alle 15"
+          ↓  SLM + LoRA adapter
+          {"intent":"create_event","contact":"Marco","date":"venerdì","time":"15:00"}
+          ↓  date resolver (anchor = oggi 2026-10-10)
+          {"contact":"Marco","start":"2026-10-16T15:00:00","end":"2026-10-16T16:00:00"}
+          ↓  Calendar API
+          Evento creato ✓</code></pre>
+
+    <div class="callout info">
+      <strong>Implicazione sul dataset SFT:</strong> gli esempi di training sono corretti con espressioni temporali grezze. Il LoRA impara a estrarre l'espressione linguistica fedele all'input — non a risolverla. La data corrente non deve mai comparire nel dataset.
     </div>
   </div>
 </div>

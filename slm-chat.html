@@ -533,9 +533,28 @@ function getSettings() {
     repeat_penalty:    parseFloat(document.getElementById('repeatPen').value),
     repeat_last_n:     parseInt(document.getElementById('repeatLastN').value),
     logit_bias:        LOGIT_BIAS_VOCAB_CAP,
+    stop:              ["\n\n"],
   };
   if (ngram > 0) s.no_repeat_ngram_size = ngram;
   return s;
+}
+
+// Estrae il primo oggetto JSON valido da una stringa (stessa logica di infer_lora.py)
+function extractFirstJson(text) {
+  let depth = 0, start = null;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '{') {
+      if (depth === 0) start = i;
+      depth++;
+    } else if (text[i] === '}') {
+      depth--;
+      if (depth === 0 && start !== null) {
+        const candidate = text.slice(start, i + 1);
+        try { JSON.parse(candidate); return candidate; } catch(_) { start = null; depth = 0; }
+      }
+    }
+  }
+  return null;
 }
 
 function serverBase() {
@@ -759,6 +778,13 @@ async function handleGenerate() {
       if (document.documentElement.scrollHeight - window.scrollY < 600) {
         block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
+    }
+
+    // Se la risposta contiene un JSON valido, mostra solo quello (taglia garbage post-})
+    const firstJson = extractFirstJson(generated);
+    if (firstJson && firstJson !== generated.trim()) {
+      generated = firstJson;
+      genSpan.textContent = generated;
     }
 
     const elapsed = ((Date.now() - t0) / 1000).toFixed(1);

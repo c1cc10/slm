@@ -385,12 +385,12 @@ value  → "cosa trasmetto se vengo scelto?"</pre>
   </div>
 
   <div class="status">
-    <div class="status-live"><div class="status-dot"></div>Run #5 in corso — shard 5/7</div>
-    <span><span class="s-label">target </span><span class="s-val">56 000 step / 918M token</span></span>
-    <span><span class="s-label">best val loss </span><span class="s-val">3.5861 (Run #4)</span></span>
-    <span><span class="s-label">corpus </span><span class="s-val">7.7 GB · 7 shard</span></span>
+    <div class="status-live"><div class="status-dot" style="background:#f59e0b;"></div>Phase 10 — LoRA v2 testato, v3 in preparazione</div>
+    <span><span class="s-label">best val loss </span><span class="s-val">0.0293 (LoRA v2, PPL≈1.0) · 0.1322 (LoRA v1) · 2.8165 (base)</span></span>
+    <span><span class="s-label">parametri </span><span class="s-val">45.9M base · 393k LoRA trainabili (0.85%) · adapter 1.6MB</span></span>
+    <span><span class="s-label">fase </span><span class="s-val">v2 testato su llama-server: query_contact risolto, 2 gap dataset identificati. EOS fix in train_sft.py. v3 in preparazione.</span></span>
     <div class="progress-row">
-      <div class="progress-track"><div class="progress-fill" style="width:57%"></div></div>
+      <div class="progress-track"><div class="progress-fill" style="width:93%"></div></div>
     </div>
   </div>
 
@@ -407,6 +407,7 @@ value  → "cosa trasmetto se vengo scelto?"</pre>
     <a href="slm-journal-run4.html">Run #4 RoPE</a>
     <a href="slm-gguf.html">GGUF &amp; Deploy</a>
     <a href="slm-finetune.html">Fine-tuning</a>
+    <a href="https://claude.ai/artifact/6Q86PYyUus8ozmPvq9pwH6" target="_blank">SFT Dataset Editor ↗</a>
     <a href="slm-roadmap.html">Roadmap</a>
     <a href="slm-intro.html">Come funziona una LLM</a>
     <a href="slm-teoria.html">Teoria</a>

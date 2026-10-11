@@ -1321,9 +1321,33 @@ model = load_lora(model, 'adapter.pt')</code></pre>
       <tr><td>alpha</td><td>16</td><td>scale = alpha/r = 2</td></tr>
       <tr><td>Parametri trainabili</td><td>393,216</td><td>0.85% del totale</td></tr>
       <tr><td>Adapter su disco</td><td>~1,564 KB</td><td>Solo A e B, senza base model</td></tr>
-      <tr><td>Dataset</td><td>data/sft_mini.jsonl</td><td>140 esempi, 6 intent — da espandere</td></tr>
+      <tr><td>Dataset</td><td>data/sft_mini.jsonl + sft_synth_raw.jsonl</td><td>140 validati + 1060 sintetici (in validazione) → target 1200</td></tr>
     </tbody>
   </table>
+
+  <h3>Output del modello e pipeline applicativa</h3>
+  <p>Il LoRA adapter produce <strong>NLU extraction</strong>, non risoluzione delle date. L'output è JSON con entità grezze fedeli al testo in input:</p>
+  <pre><code>{"intent": "create_event", "contact": "Marco", "date": "venerdì", "time": "15:00"}</code></pre>
+  <p>La trasformazione in un datetime assoluto usabile da una calendar API è responsabilità del layer applicativo, non del modello. Separare i due livelli è la scelta corretta per tre ragioni: il modello non conosce la data corrente a inference time; la risoluzione di espressioni come "domani" o "primo del mese" è un problema deterministico risolto meglio da un parser che da un LLM; addestrare il modello a fare date arithmetic spreca capacità parametrica su un task che non richiede comprensione linguistica.</p>
+
+  <table>
+    <thead><tr><th>Layer</th><th>Input</th><th>Output</th><th>Strumento</th></tr></thead>
+    <tbody>
+      <tr><td><strong>NLU — questo adapter</strong></td><td>Frase italiana</td><td>JSON intent + entità grezze</td><td>SLM + LoRA</td></tr>
+      <tr><td><strong>Date resolver</strong></td><td>Espressione + data corrente</td><td>Data ISO assoluta</td><td><code>dateparser</code></td></tr>
+      <tr><td><strong>Calendar API</strong></td><td>JSON con datetime assoluto</td><td>Evento creato</td><td>Google Calendar, CalDAV</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code>Utente:  "Crea appuntamento con Marco venerdì alle 15"
+          ↓  SLM + LoRA adapter
+          {"intent":"create_event","contact":"Marco","date":"venerdì","time":"15:00"}
+          ↓  dateparser (anchor = data corrente)
+          {"contact":"Marco","start":"2026-10-16T15:00:00"}
+          ↓  Calendar API
+          Evento creato ✓</code></pre>
+
+  <p>Conseguenza diretta sul dataset: gli esempi di training devono contenere espressioni temporali grezze, non date assolute. La data corrente non deve mai comparire nel dataset SFT.</p>
 </section>
 
 <!-- ─────────────────────────────────────── GLOSSARIO -->
