@@ -141,10 +141,8 @@
 
     <div class="nav-label">Stato fasi</div>
     <div class="legend">
-      <div class="legend-item"><span class="dot done"></span> Completato (4)</div>
-      <div class="legend-item"><span class="dot next"></span> Prossimo sprint (1)</div>
-      <div class="legend-item"><span class="dot plan"></span> Pianificato (3)</div>
-      <div class="legend-item"><span class="dot fut"></span> Futuro (3)</div>
+      <div class="legend-item"><span class="dot done"></span> Completato (10)</div>
+      <div class="legend-item"><span class="dot fut"></span> Pianificata (1)</div>
     </div>
   </nav>
 
@@ -154,7 +152,7 @@
     <p class="subtitle">11 fasi dalla architettura di base al deployment edge — stato corrente e componenti da aggiungere.</p>
 
     <div class="progress-wrap">
-      <div class="progress-label">Avanzamento · 9 di 11 fasi completate</div>
+      <div class="progress-label">Avanzamento · 10 di 11 fasi completate</div>
       <div class="progress-bar">
         <div class="seg done"></div>
         <div class="seg done"></div>
@@ -165,7 +163,7 @@
         <div class="seg done"></div>
         <div class="seg done"></div>
         <div class="seg done"></div>
-        <div class="seg fut"></div>
+        <div class="seg done"></div>
         <div class="seg fut"></div>
       </div>
     </div>
@@ -327,18 +325,19 @@
       </div>
 
       <!-- 10 -->
-      <div class="phase" data-s="fut">
+      <div class="phase" data-s="done">
         <div class="phase-header">
           <span class="phase-num">10</span>
           <span class="phase-name">LoRA — Low-Rank Adaptation</span>
-          <span class="badge fut">Futuro</span>
+          <span class="badge done">Completato</span>
         </div>
-        <div class="phase-desc">Frozen base model + adapter trainabili a basso rango (A·B matrici). ~25 MB per dominio invece di 190 MB di fine-tuning completo. Più adapter possono coesistere in RAM. Stesso approccio del Track 2 (LLaMA/Mistral).</div>
+        <div class="phase-desc">Frozen base model + adapter trainabili a basso rango (A·B matrici). lora.py implementato e integrato in train_sft.py. LoRA v2: 21 intent calendario, 4200 esempi, val loss 0.0293 (PPL ≈ 1.0) su RTX 4090. Adapter 1.6 MB vs 175 MB checkpoint completo. Export GGUF Q8_0 e deployment su llama-server con UI chat.</div>
         <div class="chips">
-          <span class="chip f">lora.py</span>
-          <span class="chip f">model.py</span>
-          <span class="chip">rank=8</span>
-          <span class="chip">~25 MB / adpt.</span>
+          <span class="chip">lora.py</span>
+          <span class="chip">train_sft.py --lora</span>
+          <span class="chip">rank=8, alpha=16</span>
+          <span class="chip">393k param trainabili</span>
+          <span class="chip">llama-server</span>
         </div>
       </div>
 
@@ -346,15 +345,16 @@
       <div class="phase" data-s="fut">
         <div class="phase-header">
           <span class="phase-num">11</span>
-          <span class="phase-name">Quantizzazione e deployment</span>
-          <span class="badge fut">Futuro</span>
+          <span class="phase-name">Multimodale — YOLO v3 + LM</span>
+          <span class="badge fut">Pianificata</span>
         </div>
-        <div class="phase-desc">INT8/INT4 per ridurre il footprint in memoria, compatibilità GGUF per esportazione verso llama.cpp, inferenza edge su CPU senza dipendenza da MPS/CUDA. Necessario per deployment in ambienti a RAM limitata.</div>
+        <div class="phase-desc">Pipeline vision + language: immagine → YOLO v3 (object detection) → lista oggetti rilevati → SLM (descrizione in linguaggio naturale). Il LM riceve descrizione strutturata dal detector, non l'immagine diretta. Training: LoRA+SFT su coppie (lista oggetti → testo descrittivo). Nuovo territorio: CNN, feature maps, anchor boxes, multi-scale detection.</div>
         <div class="chips">
-          <span class="chip f">quantize.py</span>
-          <span class="chip">INT4/INT8</span>
-          <span class="chip">GGUF</span>
-          <span class="chip">llama.cpp</span>
+          <span class="chip f">yolo.py</span>
+          <span class="chip f">detect.py</span>
+          <span class="chip">YOLO v3</span>
+          <span class="chip">Darknet-53</span>
+          <span class="chip">multimodal pipeline</span>
         </div>
       </div>
 

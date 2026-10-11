@@ -12,12 +12,14 @@ Ogni componente scritto e compreso prima di passare al successivo: architettura 
 | | |
 |---|---|
 | Architettura | Decoder-only Transformer (pre-norm, RoPE, KV-cache) |
-| Parametri | 45,997,056 (~175 MB fp32) |
+| Parametri | 45,997,056 base (~175 MB fp32) · 393k LoRA trainabili |
 | Tokenizer | BPE-SPM, 16 000 token |
-| Miglior checkpoint | Run #7 shard 3 — val loss **2.8165** (perplexity ~16.7) |
-| SFT checkpoint | `sft_intent_v1.pt` — intent recognition su 6 classi (Phase 09) |
+| Miglior checkpoint base | Run #7 shard 3 — val loss **2.8165** (perplexity ~16.7) |
+| LoRA v2 | 21 intent calendario · val loss **0.0293** (PPL ≈ 1.0) · adapter 1.6 MB |
 | Corpus totale | Wikipedia IT 3 shard (~210M token) su base CulturaX IT sweet spot |
-| Deployment | `slm-run7-s3-q8_0.gguf` (56 MB Q8_0) |
+| Deployment base | `slm-run7-s3-q8_0.gguf` (56 MB Q8_0) |
+| Deployment LoRA | `slm-lora-calendar-v2-q8_0.gguf` (55 MB Q8_0) — serve via llama-server |
+| Fasi completate | **01–10** — esplorazione architetturale conclusa |
 
 ---
 
@@ -41,20 +43,27 @@ slm/
 │   ├── convert_to_text.py    # Converter: PDF, DOCX, PPTX, EPUB, HTML, ODT → plain text
 │   └── export_db_corpus.py   # Export PostgreSQL/MongoDB → corpus SLM
 ├── data/
-│   ├── wiki_it.txt           # Wikipedia IT (~200 MB, 47.8M token)
-│   ├── culturax_it_ppl95.txt # CulturaX IT filtrato PPL p95 (7.5 GB, 2.44M doc)
-│   ├── corpus_letterario.txt # EPUB scelti, narrativa contemporanea italiana
-│   ├── sft_mini.jsonl        # Dataset SFT: 140 coppie prompt/completion, 6 intent italiani
-│   └── wiki_probe.txt        # Probe set forgetting (80 KB da wiki_it.txt, fisso)
+│   ├── wiki_it.txt               # Wikipedia IT (~200 MB, 47.8M token)
+│   ├── culturax_it_ppl95.txt     # CulturaX IT filtrato PPL p95 (7.5 GB, 2.44M doc)
+│   ├── corpus_letterario.txt     # EPUB scelti, narrativa contemporanea italiana
+│   ├── sft_mini.jsonl            # Dataset SFT: 140 coppie, 6 intent (Phase 09)
+│   ├── sft_calendar_v2.jsonl     # Dataset LoRA v2: 4200 coppie, 21 intent + unknown
+│   └── wiki_probe.txt            # Probe set forgetting (80 KB, fisso)
 ├── checkpoints/
-│   ├── best.pt               # Checkpoint corrente (Run #7 shard 3: val 2.8165)
-│   ├── run4_best.pt          # Backup Run #4 (val 3.5861) — scorer PPL
-│   ├── sft_intent_v1.pt      # SFT Phase 09: intent recognition, 6 classi
-│   ├── tokenizer.model       # Modello SentencePiece BPE (16k vocab)
-│   └── tokenizer.vocab       # Vocabolario SPM
-├── slm-run4.gguf             # Run #4 convertito GGUF (fp16)
-├── slm-run4-q8_0.gguf        # Run #4 quantizzato Q8_0
-└── docs/                     # Documentazione HTML (GitHub Pages)
+│   ├── best.pt                   # Checkpoint corrente (Run #7 shard 3: val 2.8165)
+│   ├── run4_best.pt              # Backup Run #4 (val 3.5861) — scorer PPL
+│   ├── sft_intent_v1.pt          # SFT Phase 09: intent recognition, 6 classi
+│   ├── lora_calendar_v2.pt       # LoRA adapter v2: 21 intent, val 0.0293 (~1.6 MB)
+│   ├── lora_calendar_v2_merged.pt# Checkpoint merged per infer.py (~179 MB)
+│   ├── tokenizer.model           # Modello SentencePiece BPE (16k vocab)
+│   └── tokenizer.vocab           # Vocabolario SPM
+├── slm-run4.gguf                 # Run #4 GGUF fp16
+├── slm-run4-q8_0.gguf            # Run #4 Q8_0
+├── slm-lora-calendar-v2.gguf     # LoRA v2 merged fp32 (218 MB)
+├── slm-lora-calendar-v2-q8_0.gguf# LoRA v2 Q8_0 (55 MB) — usato con llama-server
+├── slm-chat.html                 # UI chat per llama-server (porta 8080)
+├── slm-chat.sh                   # Lancia llama-server + http server + apre browser
+└── docs/                         # Documentazione HTML (GitHub Pages)
     ├── index.html
     ├── slm-journal.html      # Diario: decisioni, run, corpus, caveats
     ├── slm-intro.html        # Come funziona una LLM
@@ -75,13 +84,13 @@ pip install torch sentencepiece fasttext
 ## Training
 
 ```bash
-# Resume Run #5 (corpus espanso, da checkpoint Run #4)
-python3 -u train.py --tokenizer bpe-spm --data data/corpus_run5.txt \
-  --resume 2>&1 | tee /tmp/run5.log
-
 # Pre-training da zero (preset medium: 45.9M parametri)
 python3 train.py --tokenizer bpe-spm --data data/wiki_it.txt \
   --preset medium --steps 30000 --batch 32 --seq-len 512
+
+# Continued pre-training su nuovo corpus (training sequenziale shard)
+python3 train.py --tokenizer bpe-spm --data data/shard_aa.txt \
+  --resume --reset-best 2>&1 | tee /tmp/run.log
 
 # Generazione testo da checkpoint
 python3 train.py --generate "La capitale d'Italia"
@@ -241,6 +250,24 @@ model.eval()
 ```
 
 Il checkpoint merged conserva il tokenizer originale ed è compatibile con `tools/infer.py`.
+
+---
+
+## Chat UI (LoRA v2 — 21 intent calendario)
+
+```bash
+# Avvia llama-server (porta 8080) + http server (porta 8081) + apre browser
+bash slm-chat.sh
+```
+
+Richiede `llama-server` installato (da llama.cpp) e `slm-lora-calendar-v2-q8_0.gguf` nella directory.
+
+Il modello interpreta richieste in linguaggio naturale per il calendario e risponde con JSON strutturato:
+```json
+{"intent": "create_event", "title": "riunione", "date": "venerdì", "time": "15:00"}
+{"intent": "query_contact", "name": "Giulio"}
+{"intent": "update_event", "title": "appuntamento", "date": "mercoledì", "time": "10:00"}
+```
 
 ---
 
@@ -407,5 +434,7 @@ Benchmark su 10 prompt in italiano (stesso set per entrambi i modelli, temperatu
 | 7 | Efficienza training (gradient accumulation, BF16) | ✅ completata |
 | 8 | KV-cache inference (4.35× speedup su M2) | ✅ completata |
 | 9 | SFT intent recognition — `sft_intent_v1.pt` | ✅ completata · 6 classi · forgetting ×1.12 |
-| 10 | LoRA adapter per dominio applicativo | ✅ completata |
+| 10 | LoRA adapter per dominio — calendario 21 intent | ✅ val loss 0.0293 · adapter 1.6 MB |
 | 11 | Multimodale: YOLO v3 + LM | ⏳ pianificata |
+
+Fasi 01–10 completate. L'esplorazione architetturale del decoder-only è conclusa: ogni componente è stato costruito, compreso e testato. Per task NLU in produzione su dominio ristretto la scelta corretta è un encoder BERT (deterministico, nessuna allucinazione strutturale). Per assistenti o RAG in produzione: LoRA su un base model da 7B+.

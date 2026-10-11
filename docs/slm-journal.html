@@ -238,9 +238,9 @@ tr.hl td { background: var(--surface2); }
   <h1>Run #6 in poi — diario attivo</h1>
   <p class="subtitle">Training sequenziale su Vast.ai, sweet spot run6-ad, confronto Minerva, strategia corpus Run #7 e Run #8.</p>
   <div class="meta-row">
-    <span><span class="k">aggiornato </span><span class="v">2026-10-07</span></span>
-    <span><span class="k">modello attivo </span><span class="v">slm-run6-shard-ad-q8_0.gguf</span></span>
-    <span><span class="k">val loss sweet spot </span><span class="v">3.3524 (shard ad)</span></span>
+    <span><span class="k">aggiornato </span><span class="v">2026-10-11</span></span>
+    <span><span class="k">modello attivo </span><span class="v">slm-lora-calendar-v2-q8_0.gguf (LoRA 21 intent)</span></span>
+    <span><span class="k">val loss LoRA v2 </span><span class="v">0.0293 (PPL ≈ 1.0)</span></span>
     <span><span class="k">hardware </span><span class="v">M5 32 GB + Vast.ai RTX 4090</span></span>
   </div>
 
@@ -252,6 +252,11 @@ tr.hl td { background: var(--surface2); }
     <a href="#run6-avvio">Run #6</a>
     <a href="#minerva-confronto">Minerva</a>
     <a href="#run7-strategia">Run #7 / #8</a>
+    <a href="#phase09-sft">SFT</a>
+    <a href="#phase10-lora">LoRA</a>
+    <a href="#lora-generativo">Task generativi</a>
+    <a href="#phase11-yolo-plan">YOLO v3</a>
+    <a href="#base-model-scouting">Scouting modelli</a>
   </nav>
 
   <!-- ── STATO CORRENTE ─────────────────────────────────────────────────── -->
@@ -2130,4 +2135,251 @@ GBNF:      il modello non può fisicamente continuare  (vincolo strutturale, non
 
 <div class="note">
   <strong>Implicazione per il progetto SLM:</strong> l'approccio generativo + LoRA è corretto per lo studio — insegna masked loss, EOS, sampling, GBNF e le relative tradeoff. Per un sistema NLU in produzione su dominio ristretto (come il calendario), un encoder BERT italiano fine-tunato su 200–500 esempi supererebbe il LoRA in determinismo e robustezza. L'encoder-decoder sarebbe la scelta naturale se si volesse anche generare risposte in linguaggio naturale dallo stesso modello.
+</div>
+
+<h2 id="lora-generativo">LoRA+SFT per task generativi (2026-10-11)</h2>
+
+<p>L'uso di LoRA+SFT per la classificazione degli intent è un task <em>discriminativo travestito da generazione</em>: la completion è sempre un JSON di 30 token con vocabolario chiuso. Ma lo stesso meccanismo si applica a task genuinamente generativi — dove l'output è linguaggio naturale di lunghezza variabile.</p>
+
+<h3>Il meccanismo è identico, cambia la natura della completion</h3>
+
+<p>LoRA+SFT non insegna al modello a <em>capire</em> — gli insegna a mappare un formato di input su un formato di output. Quando il pattern di questa mappatura è regolare e copribile con esempi, funziona indipendentemente dalla comprensione semantica profonda. Il pretraining su Wikipedia italiana ha già fornito grammatica, vocabolario e strutture di testo — LoRA reindirizza questi pattern verso il task specifico senza modificare quei pesi.</p>
+
+<h3>Task adatti — requisiti</h3>
+
+<p>Tre criteri identificano i task dove LoRA+SFT generativo funziona bene a questa scala:</p>
+<ol>
+  <li><strong>Pattern regolare</strong> — la mappatura input→output è sistematica e copribile con esempi</li>
+  <li><strong>Output strutturalmente definito</strong> — l'output ha una forma riconoscibile (email, lista, paragrafo con apertura/corpo/chiusura)</li>
+  <li><strong>Input che segnala il formato</strong> — il prompt stesso indica chiaramente il tipo di output atteso</li>
+</ol>
+
+<h3>Esempi concreti applicabili</h3>
+
+<table>
+  <thead><tr><th>Task</th><th>Input</th><th>Output</th><th>Affidabilità</th></tr></thead>
+  <tbody>
+    <tr><td>Email formale da bullet points</td><td>"Punti: riunione lunedì, agenda Q4"</td><td>Email con apertura, corpo, chiusura</td><td>Alta</td></tr>
+    <tr><td>Espansione outline → paragrafo</td><td>Titolo + 3 punti</td><td>Paragrafo sviluppato</td><td>Alta</td></tr>
+    <tr><td>Verbale da note riunione</td><td>Note disorganizzate</td><td>Struttura: decisioni, azioni, responsabili</td><td>Media-alta</td></tr>
+    <tr><td>RAG su dominio ristretto</td><td>Chunk contesto + domanda</td><td>Risposta estratta dal contesto</td><td>Media-alta</td></tr>
+    <tr><td>Writing assistant (voce personale)</td><td>Inizio paragrafo / tema</td><td>Continuazione nello stesso stile</td><td>Media</td></tr>
+    <tr><td>Tono affettivo / emotivo</td><td>"gli voglio bene"</td><td>Espansione nel registro appropriato</td><td>Variabile</td></tr>
+  </tbody>
+</table>
+
+<p>La categoria "tono affettivo" è la più incerta: richiede espansione semantica, non semplice slot copy. Il modello potrebbe scrivere correttamente "ti voglio molto bene e mi dispiace" oppure produrre qualcosa di stilisticamente incongruo — dipende dalla copertura di quei pattern nel dataset SFT e nel pretraining.</p>
+
+<h3>Dataset per generazione vs. NLU</h3>
+
+<table>
+  <thead><tr><th></th><th>NLU intent (fatto)</th><th>Task generativo</th></tr></thead>
+  <tbody>
+    <tr><td>Lunghezza completion</td><td>~30 token</td><td>100–400 token</td></tr>
+    <tr><td>Volume esempi</td><td>200/intent (alto)</td><td>50–150 task (più basso)</td></tr>
+    <tr><td>Diversità input</td><td>Critica per i nomi</td><td>Critica per tono/registro</td></tr>
+    <tr><td>EOS</td><td>Fix implementato in train_sft.py</td><td>Stesso meccanismo, più importante</td></tr>
+    <tr><td>LoRA rank ottimale</td><td>8 (sufficiente)</td><td>16–32 (pattern stilistici più ricchi)</td></tr>
+  </tbody>
+</table>
+
+<p>Per task generativi il rank più alto è giustificato: la mappatura stilistica è più complessa di una classificazione e richiede più gradi di libertà nelle matrici A e B di LoRA.</p>
+
+<h3>RAG — architettura e ruolo del modello</h3>
+
+<p>Nel RAG il modello non fa retrieval — non sa nemmeno che esiste un vector DB. Riceve solo il chunk e la domanda nel prompt:</p>
+
+<pre>
+Contesto: [testo recuperato dal vector store]
+
+Domanda: [query dell'utente]
+
+Risposta:
+</pre>
+
+<p>Il compito del modello si riduce da "generazione libera" a "lettura + parafrasi": estrarre la risposta dal contesto fornito. Questo è più tractable di qualsiasi task generativo aperto, perché la risposta è già nel prompt — il modello deve solo trovarla e riformularla.</p>
+
+<p>Il dataset SFT per RAG include esempi negativi (contesto irrilevante → "questa informazione non è presente nel testo") per evitare che il modello risponda sempre inventando. La pipeline completa:</p>
+
+<pre>
+query → [embedding model separato] → [FAISS/ChromaDB top-k chunks]
+      → build prompt template → [SLM genera risposta]
+</pre>
+
+<p>Il SLM è solo il terzo step. L'embedding, il retrieval e il template building sono infrastruttura Python esterna. Questa separazione di responsabilità è il motivo per cui un modello a 45M può fare RAG utile su dominio ristretto: il problema difficile (trovare il documento rilevante) è già risolto dalla pipeline.</p>
+
+<h3>Limite pratico del modello a questa scala</h3>
+
+<p>Funziona bene per risposte <em>estrattive</em> — la risposta è una frase nel chunk. Cede quando:</p>
+<ul>
+  <li>La risposta richiede di sintetizzare due chunk diversi</li>
+  <li>Il contesto è lungo (il modello "dimentica" l'inizio prima di rispondere)</li>
+  <li>La domanda richiede inferenza ("se faccio X, cosa succede a Y?")</li>
+</ul>
+
+<p>Per documenti brevi con domande semplici (note personali, schede prodotto, manuali tecnici interni) il task è perfettamente adatto.</p>
+
+<h2 id="limiti-esplorativi">Limiti esplorativi del modello (2026-10-11)</h2>
+
+<p>Dopo LoRA v2 e la serie di riflessioni architetturali, il progetto ha raggiunto il suo obiettivo primario: ogni componente è stato costruito, compreso e testato. Vale la pena chiedersi esplicitamente cosa mancherebbe ancora da imparare da questo modello.</p>
+
+<h3>Cosa è stato completato</h3>
+
+<table>
+  <thead><tr><th>Area</th><th>Stato</th></tr></thead>
+  <tbody>
+    <tr><td>Architettura (attention, RoPE, FFN, norme, weight tying)</td><td>Costruita da zero, compresa</td></tr>
+    <tr><td>Training CLM (pretraining su Wikipedia IT)</td><td>Completato — val 2.8165 (Run #7)</td></tr>
+    <tr><td>Sampling avanzato (top-p, repetition penalty)</td><td>Implementato e testato</td></tr>
+    <tr><td>Valutazione quantitativa (eval.py, sliding window)</td><td>Implementato</td></tr>
+    <tr><td>Efficienza training (grad accumulation, BF16)</td><td>Implementato</td></tr>
+    <tr><td>KV-cache per inference</td><td>Implementato e verificato</td></tr>
+    <tr><td>SFT con masked loss e forgetting probe</td><td>Completato</td></tr>
+    <tr><td>LoRA (lora.py, integrazione train_sft.py)</td><td>Completato</td></tr>
+    <tr><td>GGUF export + llama-server</td><td>Completato</td></tr>
+    <tr><td>Limiti architetturali (floor qualitativo, allucinazione slot, NLU vs NLG)</td><td>Compresi e documentati</td></tr>
+  </tbody>
+</table>
+
+<h3>Cosa rimarrebbe — e cosa insegnerebbe</h3>
+
+<table>
+  <thead><tr><th>Esperimento</th><th>Cosa insegnerebbe</th><th>Valore marginale</th></tr></thead>
+  <tbody>
+    <tr><td>Training v3 (EOS fix, dataset ampliato)</td><td>Impatto della qualità del dataset, EOS su testo lungo</td><td>Medio — conferma principi noti</td></tr>
+    <tr><td>RAG proof-of-concept</td><td>Template learning per generazione estrattiva</td><td>Basso–medio — valida quanto già discusso</td></tr>
+    <tr><td>Writing assistant SFT (voce personale)</td><td>Mapping stilistico, rank ottimale per generazione</td><td>Medio — genuinamente inesplorato</td></tr>
+    <tr><td>GBNF in slm-chat.html</td><td>Constraint strutturale vs EOS appreso</td><td>Alto tecnico, basso concettuale (già discusso)</td></tr>
+    <tr><td>Phase 11 YOLO v3 multimodale</td><td>Pipeline vision → language, architettura multimodale</td><td>Alto — territorio genuinamente nuovo</td></tr>
+  </tbody>
+</table>
+
+<h3>Valutazione onesta</h3>
+
+<p>Il valore marginale di ogni ulteriore esperimento su questo modello è in discesa. Gli esperimenti rimanenti confermerebbero principi già compresi — la qualità del dataset conta, il rank ottimale per generazione è più alto, il GBNF termina in modo deterministico. Questi sono dettagli implementativi, non scoperte architetturali.</p>
+
+<p>Il modello ha fatto il suo lavoro: è uno strumento di comprensione, non di produzione. Il passo successivo naturale dipende dall'obiettivo:</p>
+
+<ul>
+  <li><strong>NLU in produzione su dominio ristretto</strong> → encoder BERT italiano fine-tunato su 200–500 esempi — deterministico per costruzione, nessun allucinazione strutturale</li>
+  <li><strong>Assistente o RAG in produzione</strong> → LoRA su Minerva o Mistral 7B (track 2 già definito nel progetto) — il floor qualitativo a 45M è reale, e non è una questione di training ma di scala</li>
+  <li><strong>Ricerca multimodale</strong> → Phase 11 YOLO v3, territorio genuinamente nuovo rispetto a tutto quello che abbiamo esplorato</li>
+</ul>
+
+<div class="note">
+  <strong>Conclusione:</strong> la formazione sul modello SLM da 45M è completa. Ogni componente è stato scritto, capito e testato. I limiti del modello sono compresi non come fallimenti ma come caratteristiche attese di quella scala. Il journal che stai leggendo è il risultato principale di questo progetto — non il modello stesso, ma la comprensione che ha prodotto.
+</div>
+
+<h2 id="phase11-yolo-plan">Phase 11 — Piano YOLO v3 from scratch (2026-10-11)</h2>
+
+<p>YOLO v3 (You Only Look Once, versione 2018) è un modello di object detection: prende un'immagine e produce una lista di bounding box con classe e confidenza per ogni oggetto rilevato. L'architettura ha tre componenti costruibili in sequenza, ciascuno con concetti nuovi rispetto a quanto fatto con il transformer.</p>
+
+<h3>Componente 1 — Darknet-53 (backbone)</h3>
+
+<p>Il backbone estrae feature gerarchiche dall'immagine attraverso 53 layer convoluzionali con residual connections. Il principio del residual è identico a quello dei TransformerBlock: <code>output = f(x) + x</code>. La differenza è l'operazione di base:</p>
+
+<table>
+  <thead><tr><th></th><th>Transformer (SLM)</th><th>CNN (Darknet-53)</th></tr></thead>
+  <tbody>
+    <tr><td>Operazione base</td><td>matmul Q·K^T (globale)</td><td>convoluzione 2D (locale, 3×3)</td></tr>
+    <tr><td>Normalizzazione</td><td>LayerNorm (per token)</td><td>BatchNorm (per feature map, su batch)</td></tr>
+    <tr><td>Downsampling</td><td>nessuno (sequenza fissa)</td><td>stride=2 (dimezza la risoluzione spaziale)</td></tr>
+    <tr><td>Inductive bias</td><td>nessuno (impara tutto)</td><td>locality + translation equivariance</td></tr>
+  </tbody>
+</table>
+
+<p>Darknet-53 non usa pooling per il downsampling — usa stride=2 nelle convoluzioni, come i transformer usano pos. encoding invece di pooling. Output: feature map a 3 scale per un input 416×416:</p>
+<pre>
+Input  416×416  →  52×52  (dettaglio fine, oggetti piccoli)
+               →  26×26  (scala media)
+               →  13×13  (contesto ampio, oggetti grandi)
+</pre>
+
+<h3>Componente 2 — Feature Pyramid Network + detection heads</h3>
+
+<p>La FPN combina le tre scale top-down: le feature map 13×13 (contesto) vengono upsamplate e concatenate con le 26×26 (dettaglio), poi di nuovo con le 52×52. Ogni cella della griglia a ogni scala predice 3 anchor box — forme predefinite che coprono diverse proporzioni (orizzontale, verticale, quadrato).</p>
+
+<p>Per ogni anchor box l'output è un vettore di 85 valori (per COCO 80 classi):</p>
+<pre>
+[x_offset, y_offset, w_log, h_log, objectness, class_1, ..., class_80]
+     2           +      2       +       1     +      80       = 85
+</pre>
+<p>Il modello non predice coordinate assolute — predice offset rispetto alla cella e logaritmi rispetto all'anchor. Questo è analogo al modo in cui il decoder predice logit relativi, non valori assoluti.</p>
+
+<h3>Componente 3 — Loss multi-componente</h3>
+
+<pre>
+L_total = L_xy + L_wh + L_obj + L_noobj + L_class
+</pre>
+
+<p><code>L_xy</code>, <code>L_obj</code>, <code>L_class</code>: binary cross-entropy (come la nostra cross-entropy per token). <code>L_wh</code>: MSE sui log-ratio bounding box. Anchor matching: ogni ground-truth viene assegnata all'anchor con IoU più alta. Il 99% delle celle non contiene oggetti → <code>L_noobj</code> con peso ridotto per evitare che domini.</p>
+
+<h3>File da costruire</h3>
+
+<table>
+  <thead><tr><th>File</th><th>Contenuto</th><th>Concetti nuovi</th></tr></thead>
+  <tbody>
+    <tr><td><code>darknet.py</code></td><td>ConvBN, ResBlock, Darknet-53 backbone</td><td>Conv2D, BatchNorm, stride downsampling</td></tr>
+    <tr><td><code>yolo.py</code></td><td>FPN + detection heads, modello completo</td><td>Feature pyramid, anchor boxes</td></tr>
+    <tr><td><code>loss.py</code></td><td>Multi-part detection loss, anchor matching</td><td>IoU, objectness, mixed losses</td></tr>
+    <tr><td><code>dataset.py</code></td><td>COCO/Pascal VOC loading, augmentation</td><td>Mosaic, flip, resize with boxes</td></tr>
+    <tr><td><code>train_yolo.py</code></td><td>Loop training, warm-up, cosine LR, checkpoint</td><td>Multi-scale training, gradient freeze backbone</td></tr>
+    <tr><td><code>detect.py</code></td><td>Inferenza + NMS</td><td>Non-Maximum Suppression, confidence threshold</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Dataset consigliato per studio:</strong> Pascal VOC (20 classi, 16k immagini train, 4.9 GB) invece di COCO (80 classi, 118k immagini, 20 GB). Stessa architettura, tempi di training significativamente più bassi. I pesi pre-trainati su ImageNet possono essere usati come backbone initialization per ridurre il training da zero.</p>
+
+<h3>Dove si toccano CNN e transformer</h3>
+
+<p>La pipeline descritta (YOLO → lista testo → SLM) non connette le due architetture internamente. Ma esiste un secondo livello di integrazione — quello che LLaVA, CLIP e i moderni VLM fanno:</p>
+
+<pre>
+Immagine → CNN encoder → feature vectors [N × d_vision]
+                                   ↓
+                       layer di proiezione lineare
+                       (apprende a mappare d_vision → d_model)
+                                   ↓
+                    token visivi nello spazio del LM
+                                   ↓
+         cross-attention con i token della domanda
+</pre>
+
+<p>Il "ponte" è un layer <code>nn.Linear(d_vision, d_model)</code> addestrato congiuntamente. I feature vector della CNN diventano "token visivi" che il decoder può attendere via cross-attention. Questo è il punto di contatto architetturale vero — non a livello di componenti interni, ma a livello di spazio delle rappresentazioni.</p>
+
+<h2 id="base-model-scouting">Scouting modelli base per LoRA production (2026-10-11)</h2>
+
+<p>L'esplorazione architetturale from-scratch è conclusa. Per i task pratici identificati (NLU calendario, writing assistant, RAG, email) serve un modello base a 7B+ su cui applicare LoRA+SFT. La scelta del base model è il punto di partenza critico.</p>
+
+<h3>Trovato dalla ricerca — insight chiave</h3>
+
+<p>Un benchmark del 2025 sull'italiano (Challenging the Abilities of Large Language Models in Italian) ha misurato che il <strong>base LLaMA 3.1 8B supera LLaMAntino-3-ANITA-8B</strong> (Italian-tuned) su commonsense, factual, linguistic, reasoning, machine translation e summarization. Conclusione degli autori: <em>la scala del modello pesa più della supervisione language-specific</em>. Implicazione pratica: un modello generico forte + LoRA su dominio specifico è più efficace di un modello italiano specializzato partendo da un base più debole.</p>
+
+<h3>Modelli candidati</h3>
+
+<table>
+  <thead><tr><th>Modello</th><th>Param</th><th>Italiano</th><th>License</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Qwen2.5 7B Instruct</strong></td><td>7B</td><td>★★★★</td><td>Apache 2.0</td><td>Multilingual 29+ lingue, instruction following eccellente, Q4 ≈ 4.5 GB. Benchmark italiano non pubblicati separatamente ma linguaggio confermato nel report tecnico.</td></tr>
+    <tr><td><strong>LLaMA 3.1 8B</strong></td><td>8B</td><td>★★★★</td><td>Meta license*</td><td>Base forte su italiano per volume di training. Più grande del Qwen in RAM. Community vastissima per LoRA.</td></tr>
+    <tr><td><strong>DeepMount00/Llama-3.1-8b-ITA</strong></td><td>8B</td><td>★★★★½</td><td>Meta license*</td><td>LLaMA 3.1 adattato con CulturaX IT (9B token) + 3B English. Self-reported: supera LLaMA 3.1 originale su metriche italiane. Da verificare su benchmark terzi.</td></tr>
+    <tr><td><strong>EuroLLM-9B</strong></td><td>9B</td><td>★★★★</td><td>Apache 2.0</td><td>Progetto EU, addestrato su 35 lingue europee + internazionali. 4T token. Italiano nativo come priorità. Versione 22B disponibile (EuroLLM-22B-Instruct).</td></tr>
+    <tr><td><strong>LLaMAntino-3-ANITA-8B</strong></td><td>8B</td><td>★★★★★</td><td>Meta license*</td><td>Miglior score su Italian leaderboard tra i modelli nativi (49.39 few-shot). QLoRA + DPO su italiano. Da Univ. Bari, pubblicato Feb 2026. GGUF disponibile.</td></tr>
+    <tr><td><strong>Mistral 7B v0.3</strong></td><td>7B</td><td>★★★</td><td>Apache 2.0</td><td>Classico workhorse, tooling LoRA maturo, Apache 2.0 pulito. Meno italiano nativo di LLaMA 3.1 ma eccellente per task strutturati.</td></tr>
+    <tr><td><strong>Minerva 7B</strong></td><td>7B</td><td>★★★</td><td>Apache 2.0</td><td>Italian-native (Sapienza NLP). 1.14T token IT. Score leaderboard: 35.06 (vs 57.42 del top). Attualmente sottoperforma rispetto ai modelli generici. Versione 20B annunciata per autunno 2026 — da rivalutare.</td></tr>
+  </tbody>
+</table>
+
+<p>* La Meta license di LLaMA 3.1 consente uso commerciale fino a 700M utenti mensili — sufficientemente libera per progetti professionali.</p>
+
+<h3>Raccomandazione</h3>
+
+<p><strong>Per iniziare subito:</strong> Qwen2.5 7B Instruct — Apache 2.0 pulito (nessuna ambiguità legale), instruction following eccellente come baseline SFT, Q4 a 4.5 GB entra facilmente su M2 32GB, tooling LoRA maturo su HuggingFace.</p>
+
+<p><strong>Se l'italiano nativo è prioritario:</strong> LLaMAntino-3-ANITA-8B — miglior benchmark nativo disponibile oggi, GGUF disponibile, costruito su LLaMA 3.1 quindi stesso ecosistema di tooling.</p>
+
+<p><strong>Da monitorare:</strong> Minerva 20B (autunno 2026), EuroLLM-22B Instruct (già disponibile, da valutare su task specifici).</p>
+
+<div class="note">
+  <strong>Implicazione strategica:</strong> non ha senso scegliere un modello italiano-nativo più debole per "garantire la qualità italiana". La ricerca 2025 mostra che un base model forte con LoRA su dati italiani di dominio supera i modelli italian-specialized con base più debole. La scelta corretta è: base model con il miglior instruction following generale → LoRA+SFT su corpus italiano di dominio proprio.
 </div>
