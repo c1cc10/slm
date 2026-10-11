@@ -2058,3 +2058,76 @@ if eos is not None:
 <div class="note">
   <strong>Stato v3:</strong> <code>train_sft.py</code> aggiornato con EOS fix. Dataset v3 da generare con pool nomi esteso + varianti <code>query_schedule</code> per periodi. Training da rilanciare su Vast.ai.
 </div>
+
+<h3>Riflessioni architetturali — NLU deterministico e scelte di design (2026-10-11)</h3>
+
+<p>Dopo i test v2 è emersa una domanda strategica: stiamo usando lo strumento giusto? Il modello generativo decoder-only produce risposte NLU corrette ma non deterministiche — allucinazione di nomi, confusione tra intent simili, trailing garbage. Vale la pena capire perché e quali alternative esistono.</p>
+
+<h4>Il disallineamento architetturale</h4>
+
+<p>Il nostro SLM è <strong>decoder-only</strong>: predice il prossimo token vedendo solo i token a sinistra (causal mask). È costruito per <em>generare</em>. Classificare un intent e estrarre slot è invece un task <em>discriminativo</em> — mappare un input su una struttura fissa. Usare un modello generativo per un task discriminativo eredita tutti i problemi della generazione: output non vincolato, sensibilità ai phrasing non visti in training, slot-filling per memorizzazione invece che per copia.</p>
+
+<p>L'allucinazione di "Luca" per "Giulio" in <code>update_event</code> è un sintomo preciso: il decoder genera il nome più probabile in quella posizione del template, non copia il nome dall'input. Un encoder bidirezionale, avendo visto l'intera frase prima di produrre l'output, estrarrebbe il valore dall'input — non lo inventa.</p>
+
+<h4>Encoder BERT — costruzione e differenze</h4>
+
+<p>BERT è <strong>encoder-only</strong>: ogni token vede tutti gli altri simultaneamente (attenzione bidirezionale, senza causal mask). Non genera — <em>capisce</em>. La differenza rispetto al nostro decoder è minima a livello di codice ma fondamentale per funzione:</p>
+
+<table>
+  <thead><tr><th></th><th>Decoder (SLM)</th><th>Encoder (BERT)</th></tr></thead>
+  <tbody>
+    <tr><td>Attenzione</td><td>Causale — solo token precedenti</td><td>Bidirezionale — tutti i token</td></tr>
+    <tr><td>Token speciali</td><td><code>&lt;s&gt;</code>, <code>&lt;/s&gt;</code></td><td><code>[CLS]</code>, <code>[SEP]</code>, <code>[MASK]</code></td></tr>
+    <tr><td>Positional enc.</td><td>RoPE in attention</td><td>Embedding sommato all'input</td></tr>
+    <tr><td>Training obj.</td><td>CLM — predice ogni prossimo token</td><td>MLM — predice 15% token mascherati</td></tr>
+    <tr><td>Loss su</td><td>tutte le posizioni</td><td>solo posizioni mascherate</td></tr>
+    <tr><td>Genera testo</td><td>✓</td><td>✗</td></tr>
+    <tr><td>Classifica frasi</td><td>✗ diretto</td><td>✓ via head lineare su [CLS]</td></tr>
+  </tbody>
+</table>
+
+<p>Il token <code>[CLS]</code> viene preposto a ogni sequenza. Dopo i layer di attenzione bidirezionale, il suo vettore di output aggrega il significato dell'intera frase. Un layer lineare <code>nn.Linear(d_model, 21)</code> su questo vettore produce la distribuzione di probabilità sui 21 intent. L'output è sempre esattamente uno dei 21 valori: zero garbage strutturale possibile.</p>
+
+<p>Per lo slot filling si usa l'output di <em>ogni</em> token — classificazione BIO (Begin-Inside-Outside) per posizione:</p>
+<pre>
+"sposta  l'appuntamento  con  Giulio  alle  15:00  di  domani"
+   O           O          O   B-name   O    B-time  O   B-date
+</pre>
+<p>"Giulio" viene marcato come <code>B-name</code> indipendentemente da quale nome compare nella frase — il modello impara il pattern posizionale, non memorizza nomi. Questo elimina l'allucinazione per definizione.</p>
+
+<p>Nel nostro codebase la distanza tra SLM e BERT è piccola: rimuovere la causal mask in <code>attention.py</code>, preporre <code>[CLS]</code> a ogni sequenza, cambiare il training objective da CLM a MLM (mascherare il 15% dei token, calcolare loss solo su quelli), aggiungere una classification head. I blocchi transformer, la FFN, le norme — identici.</p>
+
+<h4>GBNF — Grammar-constrained decoding</h4>
+
+<p>Se si vuole mantenere il modello generativo e renderlo deterministico a runtime, llama-server supporta GBNF (Generalized Backus-Naur Form): una grammatica formale che vincola il sampler token per token. A ogni step, dopo temperatura e top-k, vengono azzerati tutti i token che produrrebbero una stringa non valida secondo la grammatica.</p>
+
+<pre>
+root       ::= "{" ws "\"intent\":" ws intent-val ws "}"
+intent-val ::= "\"create_event\"" | "\"query_contact\"" | ... (21 opzioni)
+</pre>
+
+<p>Quando il modello deve scegliere l'intent, solo i token che iniziano una delle 21 stringhe valide sopravvivono al sampling. Quando l'oggetto JSON si chiude, la grammatica è esaurita e la generazione termina — non per EOS appreso, ma perché non esiste nessun token ammissibile come continuazione.</p>
+
+<p>La differenza concettuale rispetto al fix EOS:</p>
+<pre>
+EOS fix:   il modello impara a voler smettere  (comportamento appreso, può fallire)
+GBNF:      il modello non può fisicamente continuare  (vincolo strutturale, non fallisce)
+</pre>
+
+<p>I grandi modelli producono JSON affidabile per i tool call principalmente grazie a logit masking e grammar constraints — non solo per training. La differenza tra "di solito produce JSON valido" e "produce sempre JSON valido" è quasi sempre un vincolo a runtime.</p>
+
+<h4>Serve un encoder e un decoder separati per NLU + NLG?</h4>
+
+<p>No, non necessariamente. Tre architetture risolvono il problema con approcci diversi:</p>
+
+<p><strong>Encoder-Decoder (T5, BART)</strong> — un singolo modello con due metà. L'encoder (bidirezionale) capisce l'input in profondità; il decoder genera condizionato al contesto dell'encoder tramite cross-attention. T5 usa prefix task: <code>"classify: &lt;input&gt;"</code> produce JSON, <code>"respond: &lt;input&gt;"</code> produce linguaggio naturale. Architettura nata esattamente per use case misti NLU + NLG.</p>
+
+<p><strong>Decoder-only a sufficiente scala</strong> — con abbastanza parametri e dati, la comprensione bidirezionale emerge implicitamente anche in un decoder. I modelli da 7B+ gestiscono NLU e NLG con un solo modello decoder. Questa emergenza non avviene a piccola scala: a 45M parametri un decoder non capisce davvero, genera — ed è per questo che il nostro modello allucina nomi e confonde intent vicini.</p>
+
+<p><strong>Due modelli in pipeline</strong> — encoder per NLU → JSON, decoder per NLG → risposta in linguaggio naturale. Separazione netta ma complessità doppia: due checkpoint, due inference, stato da passare tra i due.</p>
+
+<p>Conclusione pratica: a piccola scala la soluzione elegante è l'<strong>encoder-decoder</strong> (un modello, due modalità). A grande scala (7B+) un decoder-only è sufficiente per entrambe. Il motivo per cui i sistemi in produzione usano modelli grandi via API invece di due modelli piccoli locali è esattamente il floor qualitativo già discusso: sotto una certa soglia di parametri, nessuna architettura risolve il problema in modo affidabile indipendentemente dalle scelte di design.</p>
+
+<div class="note">
+  <strong>Implicazione per il progetto SLM:</strong> l'approccio generativo + LoRA è corretto per lo studio — insegna masked loss, EOS, sampling, GBNF e le relative tradeoff. Per un sistema NLU in produzione su dominio ristretto (come il calendario), un encoder BERT italiano fine-tunato su 200–500 esempi supererebbe il LoRA in determinismo e robustezza. L'encoder-decoder sarebbe la scelta naturale se si volesse anche generare risposte in linguaggio naturale dallo stesso modello.
+</div>
