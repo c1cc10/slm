@@ -40,3 +40,25 @@ env/
 # Log e output temporanei
 *.log
 runs/
+
+# Documentazione di lavoro loop strategico (privata, non per repo pubblico)
+loop/
+
+# Tool loop bancario (privati — second wave del progetto)
+tools/loop*.py
+tools/bank_chat.py
+tools/benchmark_models.py
+
+# Docs loop privati
+docs/slm-journal-bank-agent.html
+
+# Modelli scaricati (grandi, non versionare)
+models/
+
+# Risultati benchmark (privati)
+results/
+
+# File dati di lavoro nella root (parquet, Excel — privati)
+*.parquet
+*.xlsx
+*.xls

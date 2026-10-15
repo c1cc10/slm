@@ -139,6 +139,45 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
   <section class="letter-section" id="C">
     <div class="letter-heading">C</div>
 
+    <div class="term" id="catastrophic-forgetting">
+      <div class="term-name">Catastrophic forgetting</div>
+      <div class="term-body">
+        <p class="term-def">Fenomeno per cui un modello neurale, addestrato sequenzialmente su task diversi, "dimentica" ciò che aveva appreso nei task precedenti. Le nuove ottimizzazioni aggiornano gli stessi pesi che codificavano la conoscenza precedente, sovrascrivendola. È il problema centrale del <em>continual learning</em>.</p>
+        <p class="term-def">Con LoRA il rischio è ridotto: i pesi del modello base rimangono congelati, e solo i parametri dell'adapter vengono aggiornati. Il forgetting riguarda allora la conoscenza domain-specific accumulata nell'adapter nei task precedenti, non le capacità linguistiche di base. Strategie di mitigazione: replay buffer, EWC, adapter separati per task con merge progressivo.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#continual-learning">Glossario → Continual learning</a>
+          <a class="term-link" href="slm-glossario.html#replay-buffer">Glossario → Replay buffer</a>
+          <a class="term-link" href="slm-glossario.html#ewc">Glossario → EWC</a>
+          <a class="term-link" href="slm-glossario.html#probe-forgetting">Glossario → Probe forgetting</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="term" id="continual-learning">
+      <div class="term-name">Continual learning<br><small style="font-weight:400;color:var(--text-sec)">lifelong learning</small></div>
+      <div class="term-body">
+        <p class="term-def">Paradigma di training in cui un modello impara da un flusso sequenziale di dati o task, aggiornando i propri pesi man mano senza accesso all'intero dataset passato. L'obiettivo è acquisire nuova conoscenza senza perdere quella precedente (catastrophic forgetting) e senza dover ripartire ogni volta dall'inizio (efficienza computazionale).</p>
+        <p class="term-def">Si distingue dal fine-tuning classico perché non presuppone un dataset statico e completo: i dati arrivano in ordine, spesso come stream, e ogni aggiornamento deve bilanciare plasticità (imparare il nuovo) e stabilità (mantenere il vecchio). Le strategie principali sono: replay buffer, EWC, architetture progressive (adapter separati per task), e meta-learning.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#catastrophic-forgetting">Glossario → Catastrophic forgetting</a>
+          <a class="term-link" href="slm-glossario.html#replay-buffer">Glossario → Replay buffer</a>
+          <a class="term-link" href="slm-glossario.html#pseudo-label">Glossario → Pseudo-label</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="term" id="coreset">
+      <div class="term-name">Coreset</div>
+      <div class="term-body">
+        <p class="term-def">Sottoinsieme compatto di esempi che approssima statisticamente l'intero dataset. Nel continual learning, un coreset per ogni task passato preserva la diversità delle distribuzioni viste senza dover memorizzare tutti i dati storici. Un buon coreset non seleziona gli esempi più frequenti — seleziona quelli più informativi: esempi che coprono regioni diverse dello spazio degli input, casi limite, rappresentanti di ogni classe.</p>
+        <p class="term-def">Selezione pratica: per ogni categoria/classe, prendi i K esempi con la distribuzione di confidenza più ampia (non solo i più confidenti — quelli rischiano di essere tutti uguali). Alternativa: campionamento k-means sui vettori di embedding, con K centroidi per task.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#replay-buffer">Glossario → Replay buffer</a>
+          <a class="term-link" href="slm-glossario.html#continual-learning">Glossario → Continual learning</a>
+        </div>
+      </div>
+    </div>
+
     <div class="term" id="chinchilla">
       <div class="term-name">Chinchilla optimal</div>
       <div class="term-body">
@@ -180,10 +219,48 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
         <p class="term-def">Architettura transformer che usa solo la parte "decoder" (con attenzione causale — ogni token vede solo i token precedenti, non quelli successivi). È l'architettura di GPT, LLaMA, Mistral e di questo modello. Adatta per generazione di testo e completamento.</p>
       </div>
     </div>
+
+    <div class="term" id="data-preparation-agent">
+      <div class="term-name">Data preparation agent</div>
+      <div class="term-body">
+        <p class="term-def">Sistema agente che analizza autonomamente la struttura di un dataset (colonne, tipi, valori mancanti, anomalie semantiche) e propone operazioni di pulizia e trasformazione prima che i dati vengano usati per l'analisi o il training. A differenza di un pipeline statico, il data preparation agent usa un LLM per inferire il <em>significato semantico</em> delle colonne — non solo il tipo tecnico — e adatta le trasformazioni al contesto specifico del dataset.</p>
+        <p class="term-def">Il ciclo operativo è: analisi struttura → proposta operazioni → approvazione umana (HITL) → esecuzione → salvataggio nel playbook. Le operazioni approvate diventano strategie riutilizzabili: <em>a priori</em> (applicate automaticamente ad ogni nuovo file dello stesso tipo) o <em>condizionali</em> (applicate quando una precondizione sul dato è verificata). Separare la preparazione dall'analisi garantisce che il modello a valle lavori su dati puliti e coerenti, e che le decisioni di pulizia siano tracciate e reversibili.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#playbook">Glossario → Playbook</a>
+          <a class="term-link" href="slm-glossario.html#idempotenza">Glossario → Idempotenza</a>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="letter-section" id="E">
     <div class="letter-heading">E</div>
+
+    <div class="term" id="ewc">
+      <div class="term-name">EWC<br><small style="font-weight:400;color:var(--text-sec)">Elastic Weight Consolidation</small></div>
+      <div class="term-body">
+        <p class="term-def">Tecnica di regolarizzazione per il continual learning (Kirkpatrick et al., 2017). Identifica quali pesi del modello erano più importanti per i task precedenti — usando la matrice di Fisher come approssimazione della curvatura della loss — e li penalizza durante il nuovo fine-tuning: possono cambiare poco, come fossero "elastici". I pesi meno importanti per i task precedenti rimangono liberi di adattarsi al nuovo task.</p>
+        <p class="term-def">La penalizzazione EWC si aggiunge alla loss normale: <em>L_totale = L_nuovo + λ · Σ F_i · (θ_i − θ*_i)²</em>, dove F_i è l'importanza del peso i (da Fisher), θ*_i il suo valore dopo il task precedente, λ il coefficiente di regolarizzazione. Costo: calcolare la matrice di Fisher richiede un passaggio aggiuntivo sui dati del task precedente. Con LoRA, si applica solo sull'adapter — computazionalmente leggero.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#catastrophic-forgetting">Glossario → Catastrophic forgetting</a>
+          <a class="term-link" href="slm-glossario.html#continual-learning">Glossario → Continual learning</a>
+          <a class="term-link" href="slm-glossario.html#lora">Glossario → LoRA</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="term" id="exemplar">
+      <div class="term-name">Exemplar</div>
+      <div class="term-body">
+        <p class="term-def">Esempio rappresentativo selezionato da un task o dataset precedente e conservato nel replay buffer. A differenza di un campione casuale, un exemplar è scelto perché è massimamente informativo: copre una regione dello spazio degli input non rappresentata da altri exemplar già selezionati. L'obiettivo è che un piccolo insieme di exemplar sia sufficiente per "ricordare" la distribuzione di un task passato durante il fine-tuning su task nuovi.</p>
+        <p class="term-def">Nel contesto del fine-tuning con feedback umano, gli exemplar corretti dall'umano hanno un valore superiore ai pseudo-label ad alta confidenza: sono etichettati in modo affidabile e spesso rappresentano casi difficili (outlier, ambiguità) che il modello da solo non avrebbe classificato correttamente.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#replay-buffer">Glossario → Replay buffer</a>
+          <a class="term-link" href="slm-glossario.html#coreset">Glossario → Coreset</a>
+          <a class="term-link" href="slm-glossario.html#pseudo-label">Glossario → Pseudo-label</a>
+        </div>
+      </div>
+    </div>
 
     <div class="term" id="eval-corpus">
       <div class="term-name">Eval corpus<br><small style="font-weight:400;color:var(--text-sec)">sliding window</small></div>
@@ -274,6 +351,18 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
   <section class="letter-section" id="I">
     <div class="letter-heading">I</div>
 
+    <div class="term" id="idempotenza">
+      <div class="term-name">Idempotenza</div>
+      <div class="term-body">
+        <p class="term-def">Proprietà di un'operazione che, applicata più volte, produce sempre lo stesso risultato dell'applicazione singola. Nel contesto dei pipeline di data preparation, ogni trasformazione dovrebbe essere idempotente: eseguire <code>pd.to_datetime(df['Data'])</code> su una colonna già convertita non deve generare errori né alterare i dati.</p>
+        <p class="term-def">L'idempotenza si implementa tramite <em>precondizioni</em>: prima di applicare una trasformazione, il sistema verifica se la condizione che la giustifica è ancora vera. Se la colonna è già in datetime, la trasformazione viene saltata. Questo rende i playbook rieseguibili senza effetti collaterali — proprietà essenziale quando lo stesso playbook viene applicato a file diversi dello stesso tipo nel corso del tempo.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#data-preparation-agent">Glossario → Data preparation agent</a>
+          <a class="term-link" href="slm-glossario.html#playbook">Glossario → Playbook</a>
+        </div>
+      </div>
+    </div>
+
     <div class="term" id="iperparametri">
       <div class="term-name">Iperparametri</div>
       <div class="term-body">
@@ -309,9 +398,17 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
     </div>
 
     <div class="term" id="lora">
-      <div class="term-name">LoRA</div>
+      <div class="term-name">LoRA<br><small style="font-weight:400;color:var(--text-sec)">Low-Rank Adaptation</small></div>
       <div class="term-body">
-        <p class="term-def">Low-Rank Adaptation — tecnica di fine-tuning efficiente. Invece di aggiornare tutti i parametri (costoso), aggiunge due matrici piccole (A e B, con rango r basso) a ogni layer. Solo queste vengono addestrate. Risultato: adapter da ~25 MB che specializzano il modello su un dominio senza modificare i pesi base.</p>
+        <p class="term-def">Tecnica di fine-tuning efficiente (Hu et al., 2021). Invece di aggiornare tutti i parametri del modello (costoso, rischio di forgetting), aggiunge due matrici a basso rango A ∈ ℝ^(d×r) e B ∈ ℝ^(r×k) a ogni layer scelto. Durante il fine-tuning solo A e B vengono aggiornate; i pesi originali W rimangono congelati. L'output è W·x + B·A·x, con r ≪ min(d,k). Parametri tipici: r=8–64, alpha=16–128. Risultato: adapter da 1–50 MB per task di specializzazione, contro 4–40 GB per il modello base.</p>
+        <p class="term-def"><strong>LoRA nel continual learning:</strong> il congelamento dei pesi base è un vantaggio strutturale — le capacità linguistiche generali non vengono mai toccate. Il catastrophic forgetting riguarda solo l'adapter, che è piccolo. Questo rende possibile mantenere adapter separati per task diversi e combinarli (LoRA merging). In un loop sequenziale, ogni ciclo di fine-tuning aggiorna lo stesso adapter usando un replay buffer per bilanciare la conoscenza dei task precedenti con quella del task nuovo.</p>
+        <p class="term-def"><strong>QLoRA:</strong> variante che carica il modello base in quantizzazione a 4-bit (NF4) e addestra l'adapter in float16. Riduce il requisito di VRAM di ~4×, rendendo il fine-tuning su 7–13B modelli fattibile su GPU consumer.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#catastrophic-forgetting">Glossario → Catastrophic forgetting</a>
+          <a class="term-link" href="slm-glossario.html#continual-learning">Glossario → Continual learning</a>
+          <a class="term-link" href="slm-glossario.html#replay-buffer">Glossario → Replay buffer</a>
+          <a class="term-link" href="slm-finetune.html">Fine-tuning → LoRA completo</a>
+        </div>
       </div>
     </div>
   </section>
@@ -366,6 +463,32 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
       </div>
     </div>
 
+    <div class="term" id="pseudo-label">
+      <div class="term-name">Pseudo-label</div>
+      <div class="term-body">
+        <p class="term-def">Etichetta generata automaticamente dal modello stesso su dati non etichettati, usata come se fosse ground truth per il training. Il modello assegna una classe a un input con una certa confidenza; se la confidenza supera una soglia (es. 70–90%), l'etichetta viene accettata come pseudo-label e inserita nel dataset di training.</p>
+        <p class="term-def">Il rischio principale è l'<em>error propagation</em>: se il modello sbaglia con alta confidenza, l'errore viene rinforzato nei cicli successivi. La qualità dei pseudo-label dipende dalla capacità del modello base e dalla soglia scelta. Una soglia alta (95%+) produce pochi esempi ma affidabili; una soglia bassa (60%) produce molti esempi ma rumorosi. In un loop con replay buffer, i pseudo-label ad alta confidenza alimentano l'apprendimento automatico; i casi sotto soglia vengono accantonati per revisione umana (HITL) e, una volta corretti, diventano exemplar di qualità superiore.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#continual-learning">Glossario → Continual learning</a>
+          <a class="term-link" href="slm-glossario.html#exemplar">Glossario → Exemplar</a>
+          <a class="term-link" href="slm-glossario.html#replay-buffer">Glossario → Replay buffer</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="term" id="playbook">
+      <div class="term-name">Playbook</div>
+      <div class="term-body">
+        <p class="term-def">Registro persistente delle strategie di trasformazione apprese e approvate da un data preparation agent. Ogni entry descrive un'operazione (es. conversione di tipo, rimozione di colonne ridondanti, filtraggio di righe nulle), la sua precondizione, la motivazione e lo stato di approvazione. Il playbook è il meccanismo di memoria del sistema: permette di rieseguire in autonomia le stesse trasformazioni su nuovi file dello stesso tipo, senza ripetere l'analisi.</p>
+        <p class="term-def">Le strategie nel playbook si dividono in due classi. <em>A priori</em>: applicate automaticamente a ogni nuovo file, senza condizioni — sono state giudicate invarianti del dataset (es. la colonna Data_Operazione contiene sempre tipi misti in questo formato). <em>Condizionali</em>: applicate solo quando una precondizione è verificata sul dato corrente (es. "se una colonna di tipo object ha nome che contiene 'data', convertila in datetime"). Le strategie condizionali generalizzano a dataset non ancora visti.</p>
+        <p class="term-def">La struttura minima di un'entry: <code>{ id, tipo, colonna_target, codice, precondizione, motivazione, approvato_da, approvato_il }</code>. L'idempotenza è garantita dalla precondizione: se la trasformazione è già stata applicata, la precondizione è falsa e l'operazione viene saltata.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#data-preparation-agent">Glossario → Data preparation agent</a>
+          <a class="term-link" href="slm-glossario.html#idempotenza">Glossario → Idempotenza</a>
+        </div>
+      </div>
+    </div>
+
     <div class="term" id="probe-forgetting">
       <div class="term-name">Probe forgetting (anti-forgetting probe)</div>
       <div class="term-body">
@@ -413,6 +536,24 @@ code { font-family: 'IBM Plex Mono', monospace; font-size: .875em;
 
   <section class="letter-section" id="R">
     <div class="letter-heading">R</div>
+
+    <div class="term" id="replay-buffer">
+      <div class="term-name">Replay buffer<br><small style="font-weight:400;color:var(--text-sec)">experience replay</small></div>
+      <div class="term-body">
+        <p class="term-def">Memoria di esempi passati usata nel continual learning per contrastare il catastrophic forgetting. Ad ogni ciclo di fine-tuning, il batch di training include sia esempi del task corrente sia esempi campionati dal buffer. Il modello "rivede" periodicamente la conoscenza passata, impedendo ai nuovi gradienti di sovrascriverla completamente.</p>
+        <p class="term-def"><strong>Dimensione e selezione:</strong> il buffer non può contenere tutti i dati passati (altrimenti il fine-tuning sarebbe costoso quanto ripartire da zero). Si mantiene un sottoinsieme — gli <em>exemplar</em> — selezionati per massimizzare la copertura della distribuzione passata con il minimo numero di esempi. Strategie di selezione: casualità uniforme (semplice, rischio squilibrio), campionamento bilanciato per classe (preserva proporzioni), reservoir sampling (garantisce rappresentatività statistica senza accesso all'intero storico), coreset selection (massimizza la diversità).</p>
+        <p class="term-def"><strong>Mixing ratio:</strong> la proporzione tra esempi nuovi e esempi da buffer in ogni batch. Tipicamente 70% nuovo / 30% buffer. Con un ratio troppo alto verso il buffer, il modello non converge sui nuovi pattern; troppo basso, il forgetting riprende. Il valore ottimale dipende dal grado di differenza tra task successivi.</p>
+        <p class="term-def"><strong>Warm-up period:</strong> nei primi N task/shard il buffer è troppo piccolo per essere utile. Il fine-tuning automatico conviene iniziarlo solo dopo che il buffer ha raggiunto una dimensione minima (es. ≥ 100 exemplar, ≥ 3 task distinti). Prima di allora si accumula solo conoscenza esplicita senza aggiornare i pesi.</p>
+        <div class="term-links">
+          <a class="term-link" href="slm-glossario.html#continual-learning">Glossario → Continual learning</a>
+          <a class="term-link" href="slm-glossario.html#catastrophic-forgetting">Glossario → Catastrophic forgetting</a>
+          <a class="term-link" href="slm-glossario.html#exemplar">Glossario → Exemplar</a>
+          <a class="term-link" href="slm-glossario.html#coreset">Glossario → Coreset</a>
+          <a class="term-link" href="slm-glossario.html#pseudo-label">Glossario → Pseudo-label</a>
+          <a class="term-link" href="slm-glossario.html#ewc">Glossario → EWC</a>
+        </div>
+      </div>
+    </div>
 
     <div class="term" id="repetition-penalty">
       <div class="term-name">Repetition penalty</div>

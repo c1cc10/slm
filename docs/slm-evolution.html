@@ -1,0 +1,567 @@
+<title>Le dimensioni contano</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* ── Token system ── */
+:root {
+  --bg:        #F8F6F1;
+  --surface:   #FFFFFF;
+  --surface2:  #F0EDE6;
+  --border:    #DDD9D0;
+  --text:      #1A1714;
+  --text-sec:  #6B6560;
+  --accent:    #7C3F1E;
+  --accent2:   #2A5F8F;
+  --mark:      #FFF3CD;
+  --ok:        #D4EDDA;
+  --ok-text:   #155724;
+  --warn:      #FFF3CD;
+  --warn-text: #856404;
+
+  --f-display: 'Lora', Georgia, serif;
+  --f-body:    'Inter', system-ui, sans-serif;
+  --f-mono:    'JetBrains Mono', monospace;
+
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:        #111009;
+    --surface:   #1C1A14;
+    --surface2:  #252218;
+    --border:    #35301F;
+    --text:      #EDE8DE;
+    --text-sec:  #9B9488;
+    --accent:    #D4845A;
+    --accent2:   #6AB0E0;
+    --mark:      #3D3010;
+    --ok:        #0D2B18;
+    --ok-text:   #6EE7B7;
+    --warn:      #3D3010;
+    --warn-text: #FDE68A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:        #111009;
+  --surface:   #1C1A14;
+  --surface2:  #252218;
+  --border:    #35301F;
+  --text:      #EDE8DE;
+  --text-sec:  #9B9488;
+  --accent:    #D4845A;
+  --accent2:   #6AB0E0;
+  --mark:      #3D3010;
+  --ok:        #0D2B18;
+  --ok-text:   #6EE7B7;
+  --warn:      #3D3010;
+  --warn-text: #FDE68A;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.7;
+  margin: 0;
+  padding-inline: 20px;
+}
+
+.wrap { max-width: 720px; margin: 0 auto; padding-block: 60px 80px; }
+
+/* Header */
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+h1 {
+  font-family: var(--f-display);
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  font-weight: 600;
+  line-height: 1.2;
+  text-wrap: balance;
+  margin: 0 0 16px;
+}
+.subtitle {
+  font-family: var(--f-display);
+  font-style: italic;
+  color: var(--text-sec);
+  font-size: 1.08rem;
+  margin: 0 0 10px;
+}
+.meta {
+  font-family: var(--f-mono);
+  font-size: 0.72rem;
+  color: var(--text-sec);
+  letter-spacing: 0.06em;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 56px;
+  display: flex;
+  gap: 0 28px;
+  flex-wrap: wrap;
+}
+.meta span { white-space: nowrap; }
+.meta b { color: var(--text); }
+
+/* Sections */
+h2 {
+  font-family: var(--f-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 56px 0 16px;
+  color: var(--text);
+}
+h3 {
+  font-family: var(--f-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin: 40px 0 12px;
+}
+p { margin: 0 0 16px; max-width: 65ch; color: var(--text); }
+p:last-child { margin-bottom: 0; }
+
+/* Running large text */
+.lead {
+  font-family: var(--f-display);
+  font-size: 1.08rem;
+  line-height: 1.75;
+  color: var(--text);
+}
+
+/* Pull quote */
+.pull {
+  border-left: 3px solid var(--accent);
+  margin: 28px 0;
+  padding: 4px 20px;
+}
+.pull p {
+  font-family: var(--f-display);
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--text);
+  max-width: none;
+}
+
+/* Table */
+.table-wrap { overflow-x: auto; margin: 20px 0 28px; }
+table { border-collapse: collapse; font-size: 0.84rem; min-width: 440px; width: 100%; }
+th {
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--surface2);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-sec);
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+td:first-child { font-weight: 500; }
+td.mono { font-family: var(--f-mono); font-size: 0.78rem; }
+td.good { color: var(--ok-text); }
+td.warn { color: var(--warn-text); }
+
+/* Badge */
+.badge {
+  display: inline-block;
+  font-family: var(--f-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  padding: 1px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.b-ok   { background: var(--ok);   color: var(--ok-text); }
+.b-warn { background: var(--warn); color: var(--warn-text); }
+.b-acc  { background: color-mix(in srgb, var(--accent) 15%, var(--bg)); color: var(--accent); }
+
+/* Code */
+code {
+  font-family: var(--f-mono);
+  font-size: 0.83em;
+  background: var(--surface2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--accent2);
+}
+
+/* Section divider */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 56px 0 0;
+}
+
+/* Footnote / annotation */
+.note {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin: 24px 0;
+  font-size: 0.87rem;
+  color: var(--text-sec);
+}
+.note strong { color: var(--text); }
+
+/* Conclusion box */
+.conclusion {
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 24px 28px;
+  margin: 48px 0 0;
+  background: var(--surface);
+}
+.conclusion h3 {
+  margin-top: 0;
+  color: var(--accent);
+}
+.conclusion p { color: var(--text); }
+
+/* Number markers */
+.n {
+  display: inline-block;
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: var(--accent);
+  color: var(--surface);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  line-height: 20px;
+  text-align: center;
+  margin-right: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+ul { margin: 8px 0 16px; padding-left: 24px; }
+li { margin-bottom: 5px; }
+
+@media (max-width: 500px) {
+  h1 { font-size: 1.75rem; }
+}
+</style>
+
+<div class="wrap">
+
+<p class="eyebrow">SLM Project · Retrospettiva</p>
+<h1>Le dimensioni contano</h1>
+<p class="subtitle">Dal modello from scratch al riconoscimento di un limite — e cosa fare dopo</p>
+<div class="meta">
+  <span><b>Periodo</b> ago–ott 2026</span>
+  <span><b>Parametri SLM</b> 45.9 M</span>
+  <span><b>Modello attuale</b> Ministral-3B (3.4 B)</span>
+  <span><b>Licenza</b> Apache 2.0</span>
+</div>
+
+<!-- ── 1 ── -->
+<h2>Il punto di partenza</h2>
+
+<p class="lead">Il progetto SLM nasce con un obiettivo dichiarato didattico: costruire un language model da zero, componente per componente, capendo ogni scelta prima di procedere alla successiva. Nessuna black box.</p>
+
+<p>Dall'attention sinusoidale al Rotary Position Embedding, da char-level a BPE-SPM 16 000 token, dall'ottimizzatore AdamW al gradient clipping, dal pre-training sequenziale su Wikipedia italiana al confronto empirico con modelli esterni — tutto è stato costruito, rotto, corretto e documentato.</p>
+
+<p>Al termine di sette run di training, il modello raggiunge una val loss di <strong>3.5861</strong> (Run #4, RoPE, 45.9 M parametri, 47.8 M token) poi migliorata a <strong>3.3524</strong> (Run #6 shard ad, ~400 M token, Wikipedia + CulturaX). Un modello che produce italiano grammaticalmente corretto, costruisce subordinate complesse, mantiene il registro enciclopedico.</p>
+
+<div class="pull">
+  <p>Costruire un transformer from scratch ha un valore che nessun tutorial può dare: sai esattamente dove qualcosa può andare storto, perché l'hai rotto tu stesso durante la costruzione.</p>
+</div>
+
+<!-- ── 2 ── -->
+<hr class="divider">
+<h2>Quando il limite diventa visibile</h2>
+
+<p>Il confronto con Minerva — i modelli italiani di Sapienza NLP, FAIR e CINECA — ha reso il limite misurabile per la prima volta. Su un benchmark di 10 prompt in italiano (storia, scienza, letteratura, geografia, ricette), con parametri identici:</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Prompt</th><th>SLM (45.9 M)</th><th>Minerva 3B</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Dante Alighieri</td>
+      <td class="warn">Date e opere plausibili ma errate</td>
+      <td class="good">1265 ✓, Firenze ✓, morte Ravenna ✓</td>
+    </tr>
+    <tr>
+      <td>Crisi del 1929</td>
+      <td class="warn">Confonde con eventi WWII</td>
+      <td class="good">Grande Depressione, Wall Street ✓</td>
+    </tr>
+    <tr>
+      <td>Tramonto sul mare</td>
+      <td class="good">"La luna piena di luce" — risposta più poetica del test</td>
+      <td class="warn">Testo turistico generico</td>
+    </tr>
+    <tr>
+      <td>Ricetta pasta al burro</td>
+      <td class="good">Più precisa (parmigiano, cottura, tempi)</td>
+      <td class="warn">Più vaga</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>Il risultato finale: <strong>SLM vince su 3 prompt su 10 contro Minerva 3B</strong>, e su 4 prompt contro Minerva 350M. Non è una sconfitta — è la mappa precisa di dove si trova il pavimento qualitativo.</p>
+
+<h3>La diagnosi sul pavimento</h3>
+
+<p>Un modello da 46 M parametri non ha sufficiente capacità per memorizzare conoscenze fattuali specifiche. Apprende la <em>struttura sintattica</em> dell'italiano, non i <em>contenuti</em>. La conoscenza fattuale affidabile emerge intorno a 1–3 B parametri — un ordine di grandezza più in alto.</p>
+
+<div class="note">
+  <strong>Finding chiave dal confronto Minerva:</strong> Minerva 350M confonde la crisi del 1929 con la Seconda guerra mondiale (URSS, Hiroshima). Minerva 3B risolve correttamente: Grande Depressione, crollo del mercato azionario USA. Questo fissa empiricamente un pavimento minimo per la conoscenza storica affidabile.
+</div>
+
+<!-- ── 3 ── -->
+<hr class="divider">
+<h2>Il tentativo: SFT e LoRA sul caso calendario</h2>
+
+<p>Il limite del modello generativo libero era evidente su domande fattuali. Ma c'era un'ipotesi alternativa: e se il task fosse sufficientemente <em>vincolato</em> da non richiedere conoscenza del mondo, solo pattern matching su un formato chiuso?</p>
+
+<p>Il caso d'uso era un <strong>gestore di eventi a calendario</strong>: dato un messaggio in linguaggio naturale ("sposta la riunione con Sara a mercoledì mattina"), il sistema deve estrarre intent e parametri strutturati in JSON.</p>
+
+<h3>Phase 09 — Supervised Fine-Tuning</h3>
+
+<p>Dataset: 140 esempi, 6 intent, 5 epoche, 175 step. Training completato in 27 secondi su MPS. Il comportamento è cambiato in modo netto:</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Prompt</th><th>Base model</th><th>SFT model</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>"Fissa un appuntamento venerdì alle 15"</td>
+      <td class="warn">Testo libero narrativo</td>
+      <td class="good"><code>{"intent":"create_event","date":"venerdì","time":"15:00"}</code> ✓</td>
+    </tr>
+    <tr>
+      <td>"Sposta con Sara a martedì"</td>
+      <td class="warn">Continua il testo come narrazione</td>
+      <td class="warn">Intent corretto ✓, data sbagliata (mercoledì invece di martedì)</td>
+    </tr>
+    <tr>
+      <td>"Cosa ho domani?"</td>
+      <td class="warn">Nessuna struttura</td>
+      <td class="good"><code>{"intent":"query_schedule","date":"domani"}</code> ✓</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p><strong>Intent detection: 5/6 corretti.</strong> Il task principale funziona. Ma i valori dei campi sono parzialmente corretti: il modello capisce la struttura JSON ma <em>allucinan alcuni valori</em>. Con 140 esempi e 20 per intent, la copertura è troppo bassa per l'entity extraction.</p>
+
+<h3>Phase 10 — LoRA v1 e v2</h3>
+
+<p>Decisione: passare a LoRA invece di full SFT. Con <code>r=8</code>, i parametri trainabili scendono da 45.9 M a 393 216 (0.85%) — riduzione del rischio di catastrophic forgetting, adapter da 1.5 MB invece di 175 MB.</p>
+
+<p>LoRA v1: 6 intent, 1 200 esempi. LoRA v2: <strong>21 intent</strong>, 4 200 esempi generati programmaticamente. Training su RTX 4090 (Vast.ai, 6 minuti), val loss <strong>0.0293</strong> (PPL ≈ 1.0). Il modello sembra aver imparato perfettamente il task.</p>
+
+<div class="pull">
+  <p>PPL ≈ 1.0 su un task a output chiuso dice solo che il modello ha imparato i pattern del training set. Non dice nulla su cosa succede con input che non ha mai visto.</p>
+</div>
+
+<h3>I problemi reali, emersi nei test interattivi</h3>
+
+<p>Tre difetti strutturali sono comparsi nei test con l'interfaccia grafica (<code>slm-chat.html</code> + llama-server):</p>
+
+<ul>
+  <li><strong>Nomi propri allucinati.</strong> "Sposta con Giulio" → contact: "Luca". Il dataset usava un pool di ~6 nomi ripetuti; il modello ha imparato a copiare il nome più frequente invece di estrarlo dall'input. Causa: il problema non era nel numero di esempi, ma nella <em>varietà</em> del pool.</li>
+  <li><strong>Confusione tra intent simili.</strong> "Cosa devo fare settimana prossima?" → <code>query_datetime</code> invece di <code>query_schedule</code>. Il dataset v2 copriva date singole, non periodi temporali estesi.</li>
+  <li><strong>Output non deterministici.</strong> Due run con lo stesso prompt producevano JSON diversi — a volte corretti, a volte no. Un sistema calendario in produzione ha bisogno di determinismo totale.</li>
+</ul>
+
+<!-- ── 4 ── -->
+<hr class="divider">
+<h2>La diagnosi architetturale</h2>
+
+<p>La riflessione sui limiti di LoRA v2 ha portato a una conclusione più profonda: stavamo usando lo strumento sbagliato per il problema giusto.</p>
+
+<p>Un decoder-only generativo produce la risposta token per token, con sampling — ogni run è diverso. Il task di intent recognition è <em>discriminativo</em>: per ogni input esiste una e una sola risposta corretta. Usare un modello generativo per un task discriminativo significa accettare varianza strutturale nel risultato.</p>
+
+<div class="note">
+  <strong>Il paragone con BERT:</strong> un encoder bidirezionale come BERT, fine-tunato su 200–500 esempi su 21 intent, produrrebbe sempre esattamente uno dei 21 output — zero garbage strutturale possibile, nessun trailing bracket, nessun nome allucinato. Il trade-off: nessuna generazione in linguaggio naturale dallo stesso modello.
+</div>
+
+<p>LoRA+SFT generativo è lo strumento corretto quando il task è genuinamente generativo — stile narrativo, Q&A aperta, writing assistant. Per NLU su dominio ristretto con classi chiuse, un encoder è più appropriato. La scelta tra i due dipende dal task, non dalla dimensione del modello.</p>
+
+<!-- ── 5 ── -->
+<hr class="divider">
+<h2>Lo scouting: la mappa dei modelli italiani</h2>
+
+<p>Arrivati al limite del modello from scratch, la domanda naturale era: esiste un modello open-weight italiano su cui fare LoRA di dominio, evitando di ripartire da zero su una scala più grande?</p>
+
+<p>La risposta è: <strong>non esiste un modello italiano davvero open-weight con licenza libera.</strong></p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Modello</th><th>Parametri</th><th>Licenza</th><th>Situazione</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>LLaMAntino-3-ANITA-8B</td>
+      <td>8B</td>
+      <td class="warn">Meta license*</td>
+      <td>Miglior benchmark italiano disponibile (49.39 few-shot). QLoRA + DPO su italiano. Ma costruito su LLaMA 3.1 → vincolato dalla licenza Meta.</td>
+    </tr>
+    <tr>
+      <td>DeepMount00/Llama-3.1-8b-ITA</td>
+      <td>8B</td>
+      <td class="warn">Meta license*</td>
+      <td>LLaMA 3.1 adattato con CulturaX IT (9B token). Supera il base su metriche italiane self-reported.</td>
+    </tr>
+    <tr>
+      <td>Minerva 3B instruct</td>
+      <td>3B</td>
+      <td class="warn">Inutilizzabile</td>
+      <td>Il wrapper [INST] attiva pattern da corpus web dove [INST] era tag HTML. Ogni prompt produce output fuori topic.</td>
+    </tr>
+    <tr>
+      <td>Minerva 350M base</td>
+      <td>350M</td>
+      <td>Ricerca</td>
+      <td>Competitivo su testo libero ma non su conoscenza strutturata. Non adatto a task di produzione.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p class="note" style="font-size:.82rem">* La Meta license di LLaMA 3.1 consente uso commerciale fino a 700 M utenti mensili — sufficientemente libera per progetti professionali, ma non Apache 2.0.</p>
+
+<h3>Il finding dalla ricerca 2025</h3>
+
+<p>Un benchmark pubblicato nel 2025 (<em>Challenging the Abilities of Large Language Models in Italian</em>) ha misurato che <strong>il base LLaMA 3.1 8B supera LLaMAntino-3-ANITA-8B</strong> (Italian-tuned) su commonsense, factual, linguistic, reasoning, machine translation e summarization.</p>
+
+<div class="pull">
+  <p>La scala del modello pesa più della supervisione language-specific. Un modello generico forte + LoRA su dati italiani di dominio supera un modello italiano specializzato con base più debole.</p>
+</div>
+
+<p>Implicazione pratica: non ha senso scegliere un modello italiano-nativo più debole per "garantire la qualità italiana". La scelta corretta è un base model con il miglior instruction following generale, poi LoRA+SFT su corpus italiano di dominio proprio.</p>
+
+<!-- ── 6 ── -->
+<hr class="divider">
+<h2>La scelta: Ministral-3B</h2>
+
+<p>Criteri di selezione: licenza Apache 2.0 pulita, parametri sufficienti per reasoning strutturato, qualità sull'italiano verificabile, architettura compatibile con LoRA.</p>
+
+<p>La valutazione benchmark su 10 task di estrazione strutturata da estratti conto bancari (formato JSON, categorie, merchant, date) ha dato:</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Modello</th><th>Score</th><th>Confidenza media</th><th>Tempo medio</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Ministral-3B Instruct</strong></td>
+      <td class="good"><strong>10/10</strong></td>
+      <td class="good">0.96</td>
+      <td>1.5 s</td>
+      <td>Apache 2.0, multimodale (Pixtral encoder)</td>
+    </tr>
+    <tr>
+      <td>Qwen3.5-4B</td>
+      <td class="warn">0/10</td>
+      <td class="warn">0.00</td>
+      <td>30–35 s</td>
+      <td>Output in reasoning_content, content sempre vuoto via llama-server</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>Ministral-3B è un modello da 3.4 B parametri con un encoder visivo Pixtral da 0.4 B aggiuntivi. Architettura decoder-only con sliding window attention, tokenizer esteso, addestrato su corpus multilingue con buona copertura italiana. Licenza Apache 2.0 — nessuna ambiguità legale per uso commerciale.</p>
+
+<p>La disponibilità in due varianti — <strong>Instruct</strong> (FP8, per inferenza) e <strong>Base</strong> (BF16, per LoRA fine-tuning) — permette di separare il modello di produzione da quello di addestramento senza conversioni costose.</p>
+
+<!-- ── 6b ── -->
+<hr class="divider">
+<h2>La tangente visiva: YOLO v3 e il ponte tra CNN e transformer</h2>
+
+<p>Prima di chiudere la fase SLM, il progetto ha esplorato un territorio diverso: la visione artificiale con YOLO v3. Non per necessità immediata, ma per capire se i principi costruiti sul transformer si potessero ritrovare in un'architettura completamente diversa.</p>
+
+<p>La risposta è stata sì — e il punto di contatto è sorprendentemente preciso.</p>
+
+<h3>Darknet-53: residual connections come nei TransformerBlock</h3>
+
+<p>Il backbone di YOLO v3 estrae feature gerarchiche dall'immagine attraverso 53 layer convoluzionali. Il principio del residual è identico a quello dei TransformerBlock del SLM: <code>output = f(x) + x</code>. La differenza è solo nell'operazione di base:</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th></th><th>Transformer (SLM)</th><th>CNN (Darknet-53)</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Operazione base</td>
+      <td>matmul Q·Kᵀ — attenzione globale</td>
+      <td>convoluzione 2D 3×3 — contesto locale</td>
+    </tr>
+    <tr>
+      <td>Normalizzazione</td>
+      <td>LayerNorm (per token)</td>
+      <td>BatchNorm (per feature map, su batch)</td>
+    </tr>
+    <tr>
+      <td>Downsampling</td>
+      <td>Nessuno — sequenza fissa</td>
+      <td>stride=2 nelle convoluzioni (no pooling)</td>
+    </tr>
+    <tr>
+      <td>Residual</td>
+      <td><code>x + Attention(x)</code></td>
+      <td><code>x + Conv(x)</code></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>La Feature Pyramid Network combina poi tre scale di feature map (13×13, 26×26, 52×52), combinando contesto globale e dettaglio locale — la stessa tensione tra contesto ampio e precisione locale che nei transformer viene gestita dalla lunghezza del contesto e dall'attenzione multi-testa.</p>
+
+<h3>Il ponte architetturale: dove CNN e transformer si uniscono</h3>
+
+<p>La pipeline di base (YOLO → lista di oggetti rilevati → testo → language model) non connette le due architetture internamente — è una pipeline a stadi. Ma esiste un secondo livello di integrazione, quello che LLaVA, CLIP e i moderni Vision-Language Models fanno:</p>
+
+<div class="note">
+  <strong>Il ponte:</strong><br>
+  Immagine → CNN encoder → feature vectors [N × d_vision]<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓ nn.Linear(d_vision, d_model)<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"token visivi" → decoder attende su di loro via cross-attention
+</div>
+
+<p>Il "ponte" è un layer <code>nn.Linear(d_vision, d_model)</code> addestrato congiuntamente. I feature vector della CNN diventano <em>token visivi</em> che il decoder tratta esattamente come token di testo. L'attenzione non distingue tra un token che rappresenta "gatto" e un token che rappresenta un patch 16×16 di un'immagine: entrambi sono vettori nello stesso spazio.</p>
+
+<div class="pull">
+  <p>Questo è il punto in cui il progetto si è congiunto con la scelta di Ministral-3B: il modello include già un encoder visivo Pixtral da 0.4 B parametri, connesso al decoder esattamente con questa architettura. Il percorso teorico from scratch e il percorso pratico si sono incontrati nello stesso punto.</p>
+</div>
+
+<!-- ── 7 ── -->
+<hr class="divider">
+<h2>Chiusura della prima fase</h2>
+
+<p>Il progetto SLM from scratch è concluso. Ogni componente è stato costruito, compreso e testato: attention, RoPE, FeedForward, LayerNorm, weight tying, AdamW, gradient clipping, LR schedule, BPE tokenizer, SFT con masked loss, LoRA con adapter separabili, quantizzazione GGUF, confronto con modelli esterni.</p>
+
+<p>Il modello finale — run6 shard ad, val loss 3.3524, 45.9 M parametri — è pubblico su HuggingFace. Non è un modello di produzione. È la prova che ogni componente è stato capito fino in fondo.</p>
+
+<div class="note">
+  <strong>Cosa rimane da esplorare in questa direzione:</strong> YOLO v3 from scratch (Darknet-53, FPN, detection heads, loss multi-parte) è pianificato ma non ancora eseguito. L'esplorazione architectturale è aperta — la multimodalità è il territorio genuinamente nuovo rispetto a tutto ciò che è stato costruito finora.
+</div>
+
+<p>La seconda fase — applicazioni pratiche su Ministral-3B, pipeline di analisi strutturata, LoRA su task di dominio — parte da dove questa si ferma. Gli strumenti teorici sono costruiti. Ora si usano.</p>
+
+<div class="conclusion">
+  <h3>Le tre conclusioni</h3>
+  <p><strong>Le dimensioni contano, ma non per tutto.</strong> Sotto i 350 M parametri, la conoscenza fattuale è inaffidabile. Sopra i 3 B, il reasoning strutturato diventa praticabile. La grammatica e lo stile si imparano a scale molto più piccole.</p>
+  <p><strong>Il task determina l'architettura.</strong> Un encoder per NLU discriminativa, un decoder per generazione. Usare un decoder per classificare intent significa accettare varianza strutturale — che in produzione è inaccettabile.</p>
+  <p><strong>Non esiste un modello italiano open-weight.</strong> La ricerca mostra che un base model forte con LoRA di dominio supera modelli nativi italiani costruiti su basi più deboli. La licenza Apache 2.0 rimuove le ambiguità legali e permette di costruire prodotti senza vincoli di scala.</p>
+</div>
+
+</div>
