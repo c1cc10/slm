@@ -1,18 +1,19 @@
-<meta charset="UTF-8">
 <title>SLM — Small Language Model</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
+/* Layout: single-column editorial, max 680px */
 :root {
-  --bg:      #F7F9FC;
-  --surface: #FFFFFF;
-  --surface2:#F0F5FA;
-  --text:    #1C2333;
-  --text-sec:#5A6478;
-  --accent:  #0A6E6E;
-  --pub:     #7A4F1E;
-  --border:  #DDE3EE;
-  --code-bg: #111827;
-  --code-fg: #A8C4D8;
+  --bg:       #F7F9FC;
+  --surface:  #FFFFFF;
+  --surface2: #F0F5FA;
+  --text:     #1C2333;
+  --text-sec: #5A6478;
+  --accent:   #0A6E6E;
+  --pub:      #7A4F1E;
+  --border:   #DDE3EE;
+  --code-bg:  #111827;
+  --code-fg:  #A8C4D8;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -20,6 +21,7 @@
     --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF;
     --pub:#C97B30; --border:#21262D;
     --code-bg:#0A0C14; --code-fg:#79B8FF;
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
@@ -27,6 +29,7 @@
   --text:#E6EDF3; --text-sec:#8B949E; --accent:#2BBFBF;
   --pub:#C97B30; --border:#21262D;
   --code-bg:#0A0C14; --code-fg:#79B8FF;
+  color-scheme: dark;
 }
 *, *::before, *::after { box-sizing: border-box; }
 body {
@@ -35,7 +38,7 @@ body {
   font-size: 15px; line-height: 1.7; margin: 0;
   padding: 0 20px 72px;
 }
-.container { max-width: 640px; margin: 0 auto; padding-top: 56px; }
+.container { max-width: 680px; margin: 0 auto; padding-top: 56px; }
 
 .eyebrow {
   font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem;
@@ -47,40 +50,28 @@ h1 {
   margin: 0 0 20px; line-height: 1.2; text-wrap: balance;
 }
 
-/* ── Intro prose ── */
-.intro-lead {
-  font-size: 1rem; color: var(--text-sec);
-  margin: 0 0 28px; line-height: 1.75;
-  border-left: 3px solid var(--accent);
-  padding-left: 16px;
+/* ── Sezione tematica ── */
+.sec { margin: 0 0 32px; }
+.sec-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.69rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 10px; display: block;
 }
+.sec p {
+  margin: 0 0 14px; color: var(--text-sec);
+  font-size: 0.93rem; line-height: 1.75;
+}
+.sec p:last-child { margin-bottom: 0; }
+.sec strong { color: var(--text); }
+.sec em { font-style: italic; }
 
-.intro-note {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 8px; padding: 16px 20px;
-  margin: 0 0 32px; font-size: 0.88rem; color: var(--text-sec);
-  line-height: 1.7;
+.highlight {
+  background: var(--surface2); border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding: 12px 16px; margin: 12px 0 16px;
+  font-size: 0.88rem; color: var(--text-sec); line-height: 1.7;
 }
-.intro-note strong { color: var(--text); }
-
-.intro-section { margin: 0 0 32px; }
-.intro-section h3 {
-  font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--accent); margin: 0 0 10px;
-}
-.intro-section p {
-  margin: 0 0 12px; font-size: 0.92rem; color: var(--text-sec); line-height: 1.75;
-}
-.intro-section p:last-child { margin-bottom: 0; }
-.intro-section strong { color: var(--text); }
-.intro-section a { color: var(--accent); text-decoration: none; }
-.intro-section a:hover { text-decoration: underline; }
-
-.step-label {
-  font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem;
-  color: var(--accent); font-weight: 500; margin: 16px 0 4px;
-}
+.highlight strong { color: var(--accent); }
 
 pre {
   background: var(--code-bg); color: var(--code-fg);
@@ -88,43 +79,24 @@ pre {
   border-radius: 5px; padding: 12px 16px; overflow-x: auto;
   margin: 6px 0 14px; line-height: 1.6;
 }
-
 code {
   font-family: 'IBM Plex Mono', monospace; font-size: 0.84em;
   background: var(--surface2); padding: 1px 5px; border-radius: 3px;
 }
 pre code { background: none; padding: 0; }
 
-.intro-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; margin: 10px 0 16px; }
-.intro-table th {
-  text-align: left; font-size: 0.72rem; font-weight: 600;
-  letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-sec);
-  border-bottom: 2px solid var(--border); padding: 6px 10px;
-}
-.intro-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-sec); }
-.intro-table td:first-child { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--text); }
-.intro-table tr:last-child td { border-bottom: none; }
-
-.callout {
-  background: var(--surface2); border-left: 3px solid var(--accent);
-  border-radius: 0 6px 6px 0; padding: 12px 16px;
-  font-size: 0.88rem; color: var(--text-sec); margin: 12px 0 20px;
-  line-height: 1.7;
-}
-.callout strong { color: var(--accent); }
-
 .divider { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
 
-/* ── Path cards ── */
+/* ── Path cards 2×2 ── */
 .paths {
   display: grid; grid-template-columns: 1fr 1fr;
-  gap: 14px; margin-bottom: 36px;
+  gap: 12px; margin-bottom: 36px;
 }
 .path-card {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 9px; padding: 20px 18px;
+  border-radius: 9px; padding: 18px 16px;
   text-decoration: none; color: var(--text);
-  display: flex; flex-direction: column; gap: 7px;
+  display: flex; flex-direction: column; gap: 6px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .path-card:hover {
@@ -133,16 +105,12 @@ pre code { background: none; padding: 0; }
 }
 .path-card-pub  { --pc: var(--pub); }
 .path-card-tech { --pc: var(--accent); }
-
 .path-eye {
   font-family: 'IBM Plex Mono', monospace; font-size: 0.67rem;
   letter-spacing: 0.09em; text-transform: uppercase; color: var(--pc);
 }
-.path-title { font-weight: 600; font-size: 0.97rem; line-height: 1.3; }
-.path-desc  {
-  font-size: 0.83rem; color: var(--text-sec);
-  line-height: 1.55; flex: 1;
-}
+.path-title { font-weight: 600; font-size: 0.95rem; line-height: 1.3; }
+.path-desc  { font-size: 0.82rem; color: var(--text-sec); line-height: 1.5; flex: 1; }
 .path-arrow {
   font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
   color: var(--pc); margin-top: 4px;
@@ -155,12 +123,8 @@ pre code { background: none; padding: 0; }
   display: flex; flex-wrap: wrap; align-items: center; gap: 5px 18px;
   font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
 }
-.status-live { display: flex; align-items: center; gap: 7px; color: var(--accent); }
-.status-dot  {
-  width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
-  animation: pulse 2.2s ease-in-out infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+.status-live { display: flex; align-items: center; gap: 7px; color: #6366f1; }
+.status-dot  { width: 7px; height: 7px; border-radius: 50%; background: #6366f1; }
 .s-label { color: var(--text-sec); }
 .s-val   { color: var(--text); }
 .progress-row { width: 100%; }
@@ -168,11 +132,9 @@ pre code { background: none; padding: 0; }
   width: 100%; height: 3px; background: var(--border);
   border-radius: 2px; overflow: hidden; margin-top: 3px;
 }
-.progress-fill {
-  height: 100%; background: var(--accent); border-radius: 2px;
-}
+.progress-fill { height: 100%; background: #6366f1; border-radius: 2px; }
 
-/* ── Footer links ── */
+/* ── Footer nav ── */
 .foot-links {
   display: flex; flex-wrap: wrap; gap: 6px 0;
   border-top: 1px solid var(--border); padding-top: 16px;
@@ -183,11 +145,11 @@ pre code { background: none; padding: 0; }
   padding-right: 16px;
 }
 .foot-links a:hover { color: var(--accent); }
+.foot-sep { width: 100%; border-top: 1px solid var(--border); margin: 10px 0; }
 
-@media (max-width: 460px) {
+@media (max-width: 480px) {
   .paths { grid-template-columns: 1fr; }
-  h1 { font-size: 1.55rem; }
-  .intro-table { font-size: 0.8rem; }
+  h1 { font-size: 1.5rem; }
 }
 </style>
 
@@ -196,182 +158,255 @@ pre code { background: none; padding: 0; }
   <p class="eyebrow">SLM · Small Language Model</p>
   <h1>Un transformer italiano costruito dall'interno</h1>
 
-  <p class="intro-lead">
-    I grandi modelli linguistici sembrano capire l'italiano. Scrivono, rispondono, ragionano.
-    SLM è un esperimento per capire cosa c'è davvero dietro — costruendone uno da zero, piccolo,
-    con un laptop da 8 GB e qualche mese di lavoro. Non è un'alternativa ai grandi modelli.
-    È uno strumento per capire come funzionano dall'interno, perché costruire qualcosa è il modo
-    più onesto per capirlo davvero.
-  </p>
+  <!-- ══════════════════════════════════════════
+       AI COSA È — testo integrale
+       ══════════════════════════════════════════ -->
 
-  <div class="intro-note">
-    <strong>Una nota prima di cominciare.</strong> Le dimensioni che troverete in questa
-    documentazione — 46 milioni di parametri, un vocabolario di 16.000 unità, 512 dimensioni
-    per ogni rappresentazione, 12 livelli di elaborazione — non sono la forma obbligata di un
-    transformer. Sono scelte deliberate, fatte per un progetto con due obiettivi espliciti:
-    essere comprensibile e girare su hardware piccolo, un Mac con 8 GB di memoria.
-    Un transformer può avere 7 miliardi di parametri, come LLaMA 3, oppure 70 miliardi, come
-    i modelli di fascia alta, oppure 46 milioni, come questo. Il meccanismo è lo stesso in tutti
-    i casi: stessa architettura, stesse operazioni, stessa logica. Cambiano le dimensioni, e con
-    le dimensioni cambiano le capacità. I numeri che seguono sono un'istanza di un continuum,
-    non valori assoluti.
+  <div class="sec">
+    <span class="sec-label">Cos'è l'AI</span>
+
+    <p>Parliamo chiaro, parliamo semplice.</p>
+
+    <p>Oggi parliamo di AI, ma di solito intendiamo un Modello di Linguaggio. Per molti utenti
+    finali, è la classica chat in cui un sistema risponde alle nostre domande. Per aziende e
+    sistemi automatici, è la fonte di risposte a task più o meno complessi ed è inserita in
+    strumenti di interazione altrettanto complicati.</p>
+
+    <p>Cosa è, in definitiva, questa forma di Intelligenza Artificiale? È un <strong>motore
+    matematico</strong>. Una <strong>CALCOLATRICE</strong>. Le formule che contiene servono a
+    calcolare la probabilità. Quale? Quella di scrivere o meno una sillaba.</p>
+
+    <p>Le sillabe, nel linguaggio di questi motori — che chiamiamo <strong>LLM</strong>
+    (Large Language Models, ovvero Grandi Modelli di Linguaggio) — sono chiamate
+    <strong>Token</strong>. Perché? Perché non chiamarle "sillabe"? Perché gli LLM sono motori
+    matematici e non usano le lettere, ma soltanto i numeri.</p>
   </div>
 
-  <!-- ── Sezione 1: Dal testo ai numeri ── -->
-  <div class="intro-section">
-    <h3>Dal testo ai numeri</h3>
+  <div class="sec">
+    <span class="sec-label">I Token</span>
 
-    <p>Prima di entrare nell'architettura, c'è una cosa da tenere a mente per tutto il resto
-    della lettura: <strong>il modello non vede mai il testo</strong>. Da quando il corpus viene
-    processato, il testo scompare. Quello che rimane sono numeri, e da numeri si parte fino
-    alla fine.</p>
+    <p>La prima fase della costruzione di un LLM è la <strong>tokenizzazione</strong>: la
+    trasformazione di un testo da analizzare in una serie di numeri che ne rappresenta la
+    maggior parte, se non tutte, le sillabe che contiene. Una volta finita questa trasformazione,
+    il testo non verrà mai più visto e si lavorerà solo sui numeri.</p>
 
-    <p class="step-label">Step 1 — Tokenizzazione (avviene una volta sola, offline)</p>
-    <p>Un <a href="slm-glossario.html#bpe">tokenizer</a> — nel nostro caso BPE-SPM con un
-    vocabolario di 16.000 unità — divide il testo in pezzi chiamati
-    <a href="slm-glossario.html#token">token</a> e assegna a ciascuno un numero identificativo.
-    "il" potrebbe essere il token 312. "gatto" potrebbe essere due token: "gat" e "to".
-    "addestramento" potrebbe diventare "addestr" e "amento". La suddivisione è statistica,
-    non grammaticale. Il risultato è una sequenza di interi salvata in un file <code>.pt</code>
-    su disco. Quel file è l'unica forma in cui il corpus esiste per il modello. Il testo
-    originale non viene mai più letto.</p>
-<pre>"il gatto dorme sul tetto"
-        ↓
-[312, 8741, 2093, 451, 9834]</pre>
+    <p>Infatti gli LLM sono motori che si alimentano con testo. Qualsiasi testo, anche se è
+    molto meglio usare contenuti filtrati e di buon livello. Cosa significa? Che se dessimo in
+    pasto a questi motori solo le pubblicità che compaiono su internet
+    (<em>"La prostata ingrossata non è un segno dell'età: è…"</em> oppure
+    <em>"Il trucco giapponese per dimagrire che sta spopolando tra le donne dopo la menopausa
+    (è geniale)"</em>), il modello "parlerebbe" solo in quel modo, conoscerebbe solo quei
+    contenuti e sarebbe perfettamente inutile — e pure fastidioso.</p>
 
-    <p class="step-label">Step 2 — Embedding (primo strato del modello)</p>
-    <p>Una sequenza di interi non è ancora qualcosa su cui si possa fare algebra utile.
-    Il primo strato del modello — l'<a href="slm-glossario.html#embedding">embedding</a> —
-    è una tabella di lookup: per ogni intero da 0 a 15.999, associa un vettore di 512
-    numeri float. Questa tabella è parte del modello e viene appresa durante il training.
-    All'inizio i vettori sono casuali. Dopo milioni di step, token con significati simili
-    si troveranno vicini nello stesso spazio geometrico.
-    <strong>L'embedding è l'unico punto in cui un intero diventa un vettore.</strong>
-    Da qui in avanti, il modello non sa più che c'era del testo.</p>
-<pre>312  →  [0.12, −0.45, 0.87, …, 0.33]   ← 512 dimensioni
-8741 →  [−0.91, 0.22, 0.04, …, 0.67]</pre>
+    <p>Quindi, ricapitolando: un LLM è un motore matematico che, dopo una fase di addestramento
+    su molti contenuti testuali (possibilmente selezionati), è in grado di predire le sillabe da
+    scrivere.</p>
 
-    <p class="step-label">Step 3 — Transformer (pura algebra lineare)</p>
-    <p>I <a href="slm-glossario.html#layer">layer</a> elaborano la sequenza di vettori
-    attraverso meccanismi di <a href="slm-glossario.html#attenzione">attenzione</a> e reti
-    <a href="slm-glossario.html#ffn">feed-forward</a>. Nessun riferimento al testo originale:
-    solo operazioni su <a href="slm-glossario.html#tensor">tensori</a> float.</p>
-
-    <p class="step-label">Step 4 — Prediction e loss</p>
-    <p>L'output finale è una distribuzione di probabilità su tutti i 16.000 token del
-    vocabolario. Il modello risponde: "dato questo contesto, quale token viene dopo?"
-    Il target è il token successivo reale, letto direttamente dal <code>.pt</code>.
-    La <a href="slm-glossario.html#loss">loss</a> misura l'errore; la backpropagation
-    aggiusta i pesi.</p>
+    <p>Detta così, è completamente diversa dall'esperienza della chat in cui scriviamo le nostre
+    esigenze e vediamo risposte qualificate. Eppure, di fondo, funziona esattamente in questo
+    modo. I sistemi che usiamo si chiamano GPT e questa sigla sta per: <strong>Generative
+    Pre-trained Transformer</strong> (in italiano, Trasformatore Generativo Pre-addestrato).</p>
   </div>
 
-  <hr class="divider">
+  <div class="sec">
+    <span class="sec-label">Il Trasformatore</span>
 
-  <!-- ── Sezione 2: Embedding, attenzione, parametri ── -->
-  <div class="intro-section">
-    <h3>Embedding, attenzione, parametri</h3>
+    <p>I Trasformatori sono la famiglia di Intelligenze Artificiali usate per l'analisi del
+    linguaggio. Possono essere <strong>Encoder</strong> o <strong>Decoder</strong>. I primi
+    capiscono quello che viene scritto (lettura); i secondi sono in grado di scrivere qualcosa
+    (scrittura). Usiamo ormai soltanto i Decoder.</p>
 
-    <p><strong>L'embedding — lo spazio delle rappresentazioni.</strong>
-    La tabella di embedding non codifica relazioni tra token: rappresenta ogni token
-    individualmente come un punto in uno spazio di 512 dimensioni. Dopo il training,
-    token simili per significato tendono a stare vicini in quello spazio, ma questa
-    vicinanza emerge come effetto del training, non è programmata. L'embedding costruisce
-    il terreno su cui l'attenzione può lavorare.</p>
+    <p>Perché? Perché un Decoder abbastanza grande e abbastanza profondo riesce a fare anche
+    il lavoro di un Encoder: mentre genera, comprende. Non ha bisogno di una parte separata
+    che "legga" prima e un'altra che "scriva" dopo. Il Transformer nella sua forma originale
+    — con Encoder e Decoder separati — crea un problema: il significato che l'Encoder ha
+    capito deve passare dall'altra parte, come se si dovesse tradurre da una lingua all'altra.
+    Qualcosa si perde in quel passaggio. Con un'architettura solo Decoder questo trasferimento
+    non esiste: il modello lavora con gli stessi meccanismi per leggere e per scrivere, e i
+    due compiti si rinforzano invece di dividersi.</p>
 
-    <p><strong>L'attenzione — il calcolo delle relazioni.</strong>
-    Le relazioni tra token non vengono memorizzate: vengono calcolate ogni volta che una
-    sequenza passa attraverso il modello. Per ogni token, il meccanismo di
-    <a href="slm-glossario.html#attenzione">attenzione</a> calcola tre proiezioni usando
-    tre matrici di pesi (W_Q, W_K, W_V) che il modello impara durante il training:</p>
-<pre>query  → "cosa sto cercando?"
-key    → "cosa offro agli altri?"
-value  → "cosa trasmetto se vengo scelto?"</pre>
-    <p>Il prodotto scalare tra la query di un token e le key di tutti gli altri produce
-    punteggi di rilevanza. Dopo una normalizzazione (softmax), questi punteggi diventano
-    pesi per una media dei value. Le matrici W_Q, W_K, W_V non contengono relazioni
-    memorizzate: contengono funzioni per rilevarle.</p>
-    <p>Un singolo meccanismo di questo tipo si chiama
-    <a href="slm-glossario.html#head">head</a>. Il nostro modello usa 8 head in parallelo,
-    ognuna con le proprie matrici. Ciascuna impara a rilevare un tipo diverso di relazione.
-    Questa specializzazione emerge dal training, non è progettata.</p>
+    <p>I nostri LLM Decoder possono fare il calcolo della prossima sillaba solo esaminando le
+    parole precedenti: non possono "sbirciare" nel futuro per predire la parola successiva. Come
+    funzionano? Una volta stabilite le forme di statistica, ciascuna AI ha un processo chiamato
+    <strong>addestramento</strong>. È la fase in cui la calcolatrice esamina il testo (ovvero la
+    sua tokenizzazione) e inizia a stabilire i <strong>rapporti matematici tra le sillabe</strong>.</p>
 
-    <p><strong>I parametri — la conoscenza distribuita.</strong>
-    I <a href="slm-glossario.html#parametri">parametri</a> sono tutti i numeri che compongono
-    le matrici del modello. Prima del training, sono valori casuali. Dopo milioni di step,
-    ogni numero è stato aggiustato finché il modello non ha imparato a predire l'italiano.
-    La conoscenza non è localizzata in nessun posto specifico: è distribuita su tutti
-    i 45.997.056 numeri insieme.</p>
+    <p>Ad esempio: dopo un po' di analisi, saprà che a un articolo maschile (<em>"il"</em>,
+    <em>"lo"</em>) farà seguito un set di sillabe di tipo maschile, e che a uno femminile,
+    altrettanto. Non conoscerà il significato di "articolo" e non saprà nemmeno cosa sia un
+    sostantivo, ma saprà legare matematicamente questa relazione, perché è un'occorrenza sempre
+    frequente nel testo che analizza.</p>
 
-    <table class="intro-table">
-      <thead>
-        <tr><th>Matrice</th><th>Dimensioni</th><th>Parametri</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Embedding</td><td>16.000 × 512</td><td>8.192.000</td></tr>
-        <tr><td>W_Q, W_K, W_V, W_O (per layer)</td><td>512 × 512 × 4</td><td>1.048.576</td></tr>
-        <tr><td>FFN W1 + W2 (per layer)</td><td>512×2048 + 2048×512</td><td>2.097.152</td></tr>
-        <tr><td>Layer norm ×2 (per layer)</td><td>512 × 2 × 2</td><td>2.048</td></tr>
-        <tr><td>× 12 layer</td><td></td><td>~37,8M</td></tr>
-        <tr><td>Embedding</td><td></td><td>8,2M</td></tr>
-        <tr><td><strong>Totale</strong></td><td></td><td><strong>45.997.056</strong></td></tr>
-      </tbody>
-    </table>
+    <p>La fase di allenamento avviene in questo modo: il sistema elabora matematicamente un po'
+    di testo e poi prova a prevedere delle concatenazioni di sillabe. Fatta questa concatenazione,
+    mette in paragone il risultato (sono numeri) con un esempio di testo vero. Se c'è vicinanza
+    numerica, ci ha azzeccato — e quindi premia questa possibilità statistica. Altrimenti le
+    toglie valore e prova con altre combinazioni.</p>
 
-    <p>Il file <code>best.pt</code> è esattamente questo: un dizionario di matrici con i
-    valori appresi. Caricarlo significa copiare quei numeri in memoria. Il
-    <a href="slm-glossario.html#continued-pretraining">continued pre-training</a> riparte
-    da quei numeri invece che dal caos iniziale. I numeri che non vengono mai toccati dal
-    training si chiamano <a href="slm-glossario.html#iperparametri">iperparametri</a>:
-    <code>d_model</code>, <code>n_heads</code>, <code>n_layers</code>,
-    <code>learning_rate</code>. Definiscono la struttura e il processo, non il contenuto.</p>
+    <p>Alla fine di un training "base", ci si aspetta che questo motore sia in grado di scrivere
+    rispettando le regole della lingua su cui è stato addestrato e tendenzialmente senza inventare
+    parole (che, lo ricordiamo, sono gruppi di sillabe).</p>
+
+    <p>Cosa sa fare, quindi, un LLM a questo punto? Sa completare le frasi che gli vengono
+    passate, sa valutare se quello che è stato scritto è nella lingua che ha imparato o se è
+    stilisticamente vicino ai testi su cui è stato addestrato. Non è in grado di chattare, non
+    capisce quello che gli viene scritto.</p>
+
+    <p>Come viene usato? Si fanno dei test: ad esempio si scrive <em>"Dante Alighieri è nato"</em>
+    e si aspetta che il motore completi la frase. In base a quanti token ha letto e calcolato, la
+    sua risposta sarà formalmente corretta, e in base a <em>quali</em> testi (e token) ha
+    analizzato, lo sarà anche come contenuto. Se addestro un LLM solo su ricette di cucina,
+    <em>"Dante Alighieri è nato"</em> porterà a frasi su come cucinare qualcosa che contenga il
+    maggior numero di sillabe della frase che ho passato. Di Dante, non dirà nulla. Risponderà
+    con quella che si chiama <strong>allucinazione</strong>: un'invenzione di risposta basata
+    sugli argomenti letti dall'LLM e da quanti ne ha letti.</p>
   </div>
 
-  <hr class="divider">
+  <div class="sec">
+    <span class="sec-label">La legge di Chinchilla</span>
 
-  <!-- ── Sezione 3: Capacità del modello ── -->
-  <div class="intro-section">
-    <h3>Cosa può fare questo modello</h3>
+    <p>E questa quantità è importante. È stato scoperto, facendo varie prove, che esiste una
+    proporzione matematica tra numero di token e grandezza del modello. La grandezza si esprime
+    in numero di <strong>parametri</strong>. Per un addestramento efficace, ci vogliono
+    <strong>venti volte il numero di token per ciascun parametro</strong>.</p>
 
-    <p>Un <a href="slm-glossario.html#decoder-only">decoder-only transformer</a> impara
-    un'unica cosa: predire il token successivo. Tutto il resto — grammatica, coerenza, fatti,
-    stile — emerge come side effect di questa previsione ripetuta su enormi quantità di testo.
-    La capacità di un decoder dipende da tre fattori che interagiscono:</p>
-
-    <table class="intro-table">
-      <thead>
-        <tr><th>Fattore</th><th>In questo modello</th><th>Cosa determina</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Numero di parametri</td><td>45.997.056</td><td>Quanti pattern il modello può memorizzare e distinguere</td></tr>
-        <tr><td>Numero di layer</td><td>12</td><td>La profondità dell'elaborazione — quanti livelli di astrazione sopra la sequenza grezza</td></tr>
-        <tr><td>Dimensione embedding</td><td>512</td><td>La risoluzione delle rappresentazioni — quanta sfumatura ogni token può portare</td></tr>
-      </tbody>
-    </table>
-
-    <p>Con 46 milioni di parametri addestrati su corpus italiano di qualità, questo modello
-    può produrre italiano grammaticalmente corretto, sviluppare coerenza a livello di frase
-    e di paragrafo breve, e riflettere lo stile del corpus su cui è stato addestrato. Non può
-    costruire ragionamenti complessi a più passi, non copre in modo affidabile la conoscenza
-    enciclopedica, e la sua finestra di contesto è limitata a 512 token.</p>
-
-    <p>I grandi modelli — GPT-4, LLaMA 3 70B — hanno parametri nell'ordine dei miliardi.
-    Il meccanismo è lo stesso: stessa architettura, più numeri, più layer, finestre di contesto
-    molto più lunghe, e quantità di testo di training su scala industriale.
-    La <a href="slm-glossario.html#perplexity">perplexity</a> misura la distanza: Run #4 è a
-    PPL ~36. I modelli di riferimento sull'italiano sono a PPL ~5–8.</p>
-
-    <div class="callout">
-      <strong>I due percorsi qui sotto</strong> permettono di esplorare questo progetto da due
-      angolature diverse: la storia e le ragioni, oppure l'architettura e il codice.
+    <div class="highlight">
+      Un modello da <strong>46 Milioni di parametri</strong> (un modello piccolino, credetemi)
+      ha bisogno di <strong>920 Milioni di token</strong>.<br>
+      Questa proporzione si chiama <strong>legge di Chinchilla</strong>, perché è stata scoperta
+      empiricamente durante l'addestramento del modello omonimo.<br>
+      Ora, considerato che tutta Wikipedia in italiano è grande circa
+      <strong>48 Milioni di token</strong>, potete capire la quantità di testo qualitativamente
+      alto di cui si ha bisogno.
     </div>
+
+    <p>Per tornare al nostro esempio su Dante Alighieri: anche se addestraste il modello su
+    conoscenze specifiche e su un po' di italiano generico, non è detto che risponda
+    correttamente. Questa capacità dipende dalla <strong>dimensione</strong>. Un modello da 46
+    Milioni di parametri non ha sufficiente capacità per memorizzare conoscenze fattuali
+    specifiche. Apprende la struttura sintattica dell'italiano, non i contenuti. La conoscenza
+    fattuale affidabile emerge intorno a 1–3 Miliardi di parametri — circa dieci volte più
+    grande.</p>
   </div>
+
+  <div class="sec">
+    <span class="sec-label">Il ragionamento emergente</span>
+
+    <p>Avere un modello capace di ragionare — nel senso di ricevere una richiesta e proporre
+    una risposta valutandone la bontà strategica — è la parte più magica delle AI. Questa
+    capacità la vediamo <strong>emergere come una caratteristica spontanea</strong>. Non è,
+    almeno per quanto ho capito, ricercata. A furia di calcolare probabilità e prossimità di
+    sillabe, un motore riesce anche a cogliere il senso di sostantivi e verbi, anche se in un
+    modo per noi alieno: come vicinanza di valori matematici.</p>
+
+    <p>La grammatica e lo stile si imparano con modelli piccoli, sotto i 350 Milioni di
+    parametri — questi sono pappagalli. Sopra i 3 Miliardi di parametri, il ragionamento
+    strutturato diventa praticabile. Sopra i 7 Miliardi di parametri, assistiamo all'emergere
+    del <strong>meta-ragionamento</strong>: la capacità di ragionare sul proprio processo di
+    ragionamento, correggere un'inferenza a metà percorso, riconoscere i propri limiti, cambiare
+    strategia quando un approccio non funziona. Negli LLM si manifesta come chain-of-thought
+    spontaneo, calibrazione dell'incertezza, auto-correzione.</p>
+
+    <p>Non basta la grandezza del modello — ormai si sarà capito. Conta molto la qualità dei
+    testi su cui è avvenuto il training. È una capacità di ordine elevato che richiede che il
+    modello abbia, in qualche senso distribuito, una rappresentazione del proprio comportamento,
+    e questo richiede sia sufficiente capacità parametrica sia un corpus che contenga esempi di
+    esseri umani che ragionano sulla propria cognizione.</p>
+  </div>
+
+  <div class="sec">
+    <span class="sec-label">Come una matrice di probabilità diventa ragionamento</span>
+
+    <p>Nessun singolo peso della rete codifica "implicazione logica". La rete non ha un modulo
+    del ragionamento, non ha un'area del linguaggio, non ha rappresentazioni simboliche
+    esplicite. Eppure produce output che esibiscono struttura logica.</p>
+
+    <p>Il meccanismo è <strong>l'emersione</strong>: una proprietà che non è presente in nessun
+    componente ma che appare dall'interazione collettiva. Nessuna singola molecola d'acqua è
+    bagnata; l'umidità emerge dall'interazione collettiva a scala macroscopica. Non è simulazione
+    dell'umidità: è umidità. Analogamente, il ragionamento negli LLM non è localizzato: è
+    distribuito sull'intera rete ed emerge dalla composizione di trasformazioni addestrate su
+    testo umano che contiene ragionamento.</p>
+
+    <p>Se la proprietà emergente dipende dal corpus nel modo in cui il carattere di una persona
+    dipende dalla sua educazione, allora la <strong>cura del corpus non è un problema tecnico
+    secondario: è la scelta di progetto più importante</strong>. Prima dell'architettura, prima
+    degli iperparametri, prima della scelta del tokenizer.</p>
+
+    <p>Possiamo progettare il tipo di ragionamento che vogliamo nel modello scegliendo
+    consapevolmente quali testi includere e in quale proporzione. Non possiamo garantire
+    esattamente quale forma prenderà. Ma possiamo avvicinarci molto di più a un risultato
+    intenzionale che a un risultato casuale.</p>
+  </div>
+
+  <div class="sec">
+    <span class="sec-label">SFT e cosa fanno bene</span>
+
+    <p>Ci sono anche altre tecniche che cambiano (e migliorano) le risposte di un LLM:
+    l'<strong>allenamento di fino supervisionato</strong>, in inglese SFT (Supervised Fine-Tuning). Si tratta di far ricalcolare al modello il peso dei token dandogli delle frasi
+    tipiche di interrogazione e delle tipologie di risposta. Gli si preparano, ad esempio,
+    qualche migliaio di esempi domanda/risposta su un argomento specifico — ed ecco che il
+    modello è in grado di gestire quel tipo di conversazione.</p>
+
+    <p>Che non significa che conosca quell'argomento. Per avere risposte corrette, bisognerà
+    spiegargli che deve usare uno strumento (un <em>tool</em>) per andare su internet a cercare
+    su siti specializzati le informazioni necessarie. Il tool eseguirà la ricerca e restituirà
+    il testo. Il modello sarà poi bravissimo, con le sue competenze, a rimaneggiarlo facendolo
+    suo. SFT si usa anche per definire lo stile della risposta e, in una misura psicologica, il
+    carattere del modello.</p>
+
+    <p>Questi motori non possono tacere. Un programma può non rispondere: può aspettare,
+    restituire un errore, non fare nulla. Un Decoder no: data una sequenza di token, produce
+    una sequenza di token. È la sua natura. Se non ha le informazioni per rispondere
+    correttamente, risponde lo stesso — con quello che ha, con qualcosa di simile, con qualcosa
+    di inventato. Lo chiamano allucinazione, ma è più preciso chiamarla compulsione: il modello
+    non sa di sbagliare, sa solo che deve continuare.</p>
+
+    <p>È per questo che i tool sono importanti: non cambiano la <em>forma</em> della risposta
+    (che rimane testo), ma definiscono il <em>contenuto</em> su cui il modello può lavorare.
+    Un tool per il meteo non insegna al modello la meteorologia: gli porta il dato esatto nel
+    momento esatto, e il modello lo trasforma in linguaggio.</p>
+
+    <p>Stesso principio per il <strong>RAG</strong> — Retrieval Augmented Generation, ovvero
+    Generazione Aumentata dal Recupero. Invece di uno strumento specifico, il RAG permette al
+    modello di recuperare documenti pertinenti da un archivio (aziendale, normativo, tecnico)
+    e usarli come contesto prima di rispondere. Il modello non sa niente di quei documenti fino
+    al momento della domanda: li legge, li elabora, risponde. Non memorizza, non impara: usa.
+    È come dare al modello, ogni volta che deve rispondere, i libri giusti aperti alla pagina
+    giusta.</p>
+
+    <p>Quindi, cosa fanno bene questi modelli (data una certa grandezza di parametri)?
+    <strong>Interpretano il testo e sanno trascrivere in un linguaggio naturale informazioni
+    che magari sono in un formato differente.</strong></p>
+  </div>
+
+  <div class="sec">
+    <span class="sec-label">Il loop strategico</span>
+
+    <p>C'è poi una capacità che emerge nei modelli più grandi e che cambia il tipo di lavoro
+    che possono fare: la pianificazione. I modelli piccoli reagiscono — ricevono un input e
+    producono un output. I modelli grandi, sopra i 7 Miliardi di parametri, cominciano a fare
+    qualcosa di diverso: pianificano. Ricevono un obiettivo complesso, lo scompongono in passi,
+    usano strumenti per raccogliere informazioni, valutano i risultati intermedi e decidono il
+    passo successivo. Questo si chiama <strong>loop strategico</strong>, o loop agentico.</p>
+
+    <p>Non è magia: è meta-ragionamento applicato all'azione. Il modello sa che ci sono cose
+    che non sa, sa che ci sono strumenti che possono colmare quel vuoto, sa che il risultato
+    di un'azione cambia il contesto per quella successiva. La differenza con un modello piccolo
+    non è solo quantitativa — è qualitativa: non si tratta di fare le stesse cose meglio, ma
+    di fare cose che prima non erano possibili.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══ Path cards ══ -->
 
   <div class="paths">
 
     <a class="path-card path-card-pub" href="slm-storia.html">
       <div class="path-eye">Il progetto</div>
       <div class="path-title">L'idea, il percorso, il perché</div>
-      <div class="path-desc">Per chi vuole capire cosa sta succedendo, senza tecnicismi. La storia del progetto e le ragioni che lo muovono.</div>
+      <div class="path-desc">Per chi vuole capire cosa è successo senza tecnicismi. La storia del progetto e le ragioni che lo muovono.</div>
       <div class="path-arrow">Leggi →</div>
     </a>
 
@@ -382,17 +417,35 @@ value  → "cosa trasmetto se vengo scelto?"</pre>
       <div class="path-arrow">Esplora →</div>
     </a>
 
+    <a class="path-card path-card-pub" href="slm-dimensioni.html">
+      <div class="path-eye">Riflessioni</div>
+      <div class="path-title">Le dimensioni contano</div>
+      <div class="path-desc">SLM ha esaurito la sua funzione didattica. Cosa significa, cosa è emerso e la domanda aperta sul mercato italiano.</div>
+      <div class="path-arrow">Leggi →</div>
+    </a>
+
+    <a class="path-card path-card-tech" href="slm-costo-architetturale.html">
+      <div class="path-eye">Applicazione</div>
+      <div class="path-title">Prima i dati, poi l'AI</div>
+      <div class="path-desc">Un sistema AI su dati bancari reali: pulizia, normalizzazione, loop agentico e le lezioni sul costo architetturale.</div>
+      <div class="path-arrow">Leggi →</div>
+    </a>
+
   </div>
 
+  <!-- ══ Status ══ -->
+
   <div class="status">
-    <div class="status-live"><div class="status-dot" style="background:#6366f1;"></div>Phase 10 completata — esplorazione architetturale conclusa</div>
-    <span><span class="s-label">best val loss </span><span class="s-val">0.0293 (LoRA v2, PPL≈1.0) · 0.1322 (LoRA v1) · 2.8165 (base)</span></span>
-    <span><span class="s-label">parametri </span><span class="s-val">45.9M base · 393k LoRA trainabili (0.85%) · adapter 1.6MB</span></span>
-    <span><span class="s-label">fase </span><span class="s-val">Tutte le fasi 01–10 completate. Riflessioni architetturali documentate: BERT encoder, GBNF, limiti del decoder a 45M. Prossimo: YOLO v3 multimodale (Phase 11) o LoRA su modello base più grande.</span></span>
+    <div class="status-live"><div class="status-dot"></div>Phase 10 completata — esplorazione architetturale conclusa</div>
+    <span><span class="s-label">best val loss </span><span class="s-val">3.3524 (Run #6 shard ad) · 3.5861 (Run #4 RoPE)</span></span>
+    <span><span class="s-label">parametri </span><span class="s-val">45,9M base · 393k LoRA trainabili · adapter 1,6 MB</span></span>
+    <span><span class="s-label">fase </span><span class="s-val">Fasi 01–10 completate. Documentazione riflessioni pubblicata.</span></span>
     <div class="progress-row">
-      <div class="progress-track"><div class="progress-fill" style="width:93%"></div></div>
+      <div class="progress-track"><div class="progress-fill" style="width:95%"></div></div>
     </div>
   </div>
+
+  <!-- ══ Footer nav ══ -->
 
   <nav class="foot-links">
     <a href="slm-storia.html">Il Progetto</a>
@@ -413,6 +466,9 @@ value  → "cosa trasmetto se vengo scelto?"</pre>
     <a href="slm-teoria.html">Teoria</a>
     <a href="slm-ottimizzatore.html">AdamW</a>
     <a href="slm-docs.html">Documentazione completa</a>
+    <div class="foot-sep"></div>
+    <a href="slm-dimensioni.html">Le dimensioni contano</a>
+    <a href="slm-costo-architetturale.html">Prima i dati, poi l'AI</a>
     <a href="https://github.com/c1cc10/slm" target="_blank">GitHub →</a>
   </nav>
 
