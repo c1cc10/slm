@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Il costo nascosto dell'AI</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;1,8..60,300&display=swap">
+<style>
+:root {
+  --bg:        #f7f5f0;
+  --surface:   #ffffff;
+  --border:    #e0dbd2;
+  --fg:        #1a1814;
+  --muted:     #6b6558;
+  --accent:    #c8411a;
+  --accent-bg: #fdf0eb;
+  --code-bg:   #1e1c18;
+  --code-fg:   #e8e4da;
+  --accent2:   #2A5F8F;
+  --mono:      'IBM Plex Mono', monospace;
+  --serif:     'Source Serif 4', Georgia, serif;
+  --display:   'Syne', system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:        #111009;
+    --surface:   #1a1814;
+    --border:    #2e2b24;
+    --fg:        #e8e4da;
+    --muted:     #8c8578;
+    --accent:    #e05a30;
+    --accent-bg: #1e1208;
+    --code-bg:   #0d0c09;
+    --code-fg:   #d6d1c4;
+    --accent2:   #6b9fd4;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:        #111009;
+  --surface:   #1a1814;
+  --border:    #2e2b24;
+  --fg:        #e8e4da;
+  --muted:     #8c8578;
+  --accent:    #e05a30;
+  --accent-bg: #1e1208;
+  --code-bg:   #0d0c09;
+  --code-fg:   #d6d1c4;
+  --accent2:   #6b9fd4;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--serif);
+  font-size: clamp(16px, 1.8vw, 18px);
+  line-height: 1.75;
+  padding-inline: 16px;
+}
+.wrap { max-width: 720px; margin: 0 auto; padding-block: 4rem; }
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+h1 {
+  font-family: var(--display);
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  text-wrap: balance;
+  margin: 0 0 1.2rem;
+}
+.deck {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--muted);
+  max-width: 580px;
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+}
+.byline {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  margin-bottom: 3rem;
+  letter-spacing: .04em;
+}
+h2 {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 3rem 0 0.8rem;
+  color: var(--fg);
+  text-wrap: balance;
+}
+p { margin: 0 0 1.2rem; }
+p + p { text-indent: 1.4em; margin-top: -0.6rem; }
+strong { font-weight: 600; }
+.pull {
+  border-left: 3px solid var(--accent);
+  margin: 2rem 0;
+  padding: 1rem 1.5rem;
+  background: var(--accent-bg);
+  border-radius: 0 6px 6px 0;
+  font-style: italic;
+  font-size: 1.05rem;
+  font-weight: 300;
+  color: var(--fg);
+  line-height: 1.6;
+}
+.terminal {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  padding: 1.2rem 1.4rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  line-height: 1.6;
+  border: 1px solid rgba(255,255,255,.05);
+}
+.terminal .prompt { color: #6b7a5e; }
+.terminal .err    { color: #e05a30; }
+.terminal .ok     { color: #6aab7a; }
+.terminal .muted  { color: #6b6558; }
+.cost-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin: 1.5rem 0;
+}
+.cost-table th {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 0.5rem 0.8rem;
+  border-bottom: 2px solid var(--border);
+}
+.cost-table td {
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.cost-table tr:last-child td { border-bottom: none; }
+.cost-table .pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 20px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+.pill-llm   { background: #1e3a1e; color: #6aab7a; }
+.pill-arch  { background: #1e1208; color: var(--accent); }
+.pill-both  { background: #1e2a3a; color: #6b9fd4; }
+.metric-row {
+  display: flex;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+.metric {
+  flex: 1;
+  min-width: 140px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+}
+.metric .label {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+.metric .value {
+  font-family: var(--mono);
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: var(--fg);
+}
+.metric .sub {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+.note {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 18px;
+  font-size: 0.87rem;
+  color: var(--muted);
+  margin: 2rem 0;
+}
+.note strong { color: var(--fg); }
+.closer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.8;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Campo &amp; codice — note dal progetto</p>
+
+  <h1>L'AI non risolve magicamente i problemi.<br>Risolve la parte che non ti aspettavi.</h1>
+
+  <p class="deck">
+    Resoconto di un esperimento reale: un agente LLM locale per analizzare estratti conto.
+    Cosa ha funzionato senza scrivere una riga, e quanto lavoro architetturale è servito a tenerlo in piedi.
+  </p>
+
+  <div class="byline">
+    Francesco Rana · ottobre 2026 · progetto SLM
+  </div>
+
+  <p>
+    L'idea di partenza era semplice: un modello locale da 3–8 miliardi di parametri, un file Excel, un prompt.
+    Il modello avrebbe letto le transazioni, categorizzato i merchant, costruito un profilo mensile della spesa.
+    Nessun codice a mano, nessuna regola scritta da noi — solo linguaggio naturale e ragionamento.
+  </p>
+
+  <p>
+    In parte ha funzionato esattamente così. E in parte no.
+  </p>
+
+  <h2>Cosa l'LLM ha fatto senza che glielo chiedessimo</h2>
+
+  <p>
+    Il nucleo dell'agente è un loop ReAct: il modello riceve un DataFrame pandas,
+    scrive Python da solo, esegue il codice, legge l'output, e usa quell'output per decidere
+    il passo successivo. Non gli abbiamo insegnato come analizzare un estratto conto.
+    Gli abbiamo dato gli strumenti e descritto il problema.
+  </p>
+
+  <p>
+    Quello che è emerso spontaneamente: la capacità di esplorare la struttura del dataset
+    senza istruzioni esplicite, di raggruppare descrizioni simili sotto un merchant canonico
+    (<em>"ESSELUNGA P.ZA XXXX"</em>, <em>"ESSELUNGA VIA YYYY"</em> → <em>"Esselunga"</em>),
+    di proporre categorie coerenti, di calcolare aggregati mensili.
+    Compiti che con pandas puro avrebbero richiesto decine di regole scritte a mano —
+    il modello li ha risolti per inferenza semantica sul testo delle descrizioni.
+  </p>
+
+  <div class="pull">
+    "Un programma Python con pandas non avrebbe mai capito da solo che
+    'FARMACIA COMUNALE' e 'FARMA DR.' appartengono alla stessa categoria.
+    L'LLM lo sa perché ha visto milioni di testi dove quelle parole co-occorrono
+    con lo stesso significato."
+  </div>
+
+  <h2>Il primo muro: la memoria a breve termine</h2>
+
+  <p>
+    Alla seconda domanda nella stessa sessione, il modello ricominciava da capo.
+    Riesplorava le colonne, ricalcolava i merchant già mappati, come se non avesse memoria
+    di ciò che aveva appena fatto. L'architettura del loop partiva con
+    <code>messages = [system_prompt, user_message]</code>: ogni turno era una conversazione nuova.
+  </p>
+
+  <div class="terminal">
+<span class="prompt">>>> </span>presentami lo stato dell'analisi
+<span class="ok">  [exec #1] print(df.shape)   → (1733, 6)</span>
+<span class="ok">  [exec #2] print(df['Descrizione'].value_counts().head(20))   → ...</span>
+
+<span class="prompt">>>> </span>quante categorie hai trovato finora?
+<span class="err">  [exec #1] # Controlliamo le colonne disponibili nel DataFrame...
+  [exec #1] print(df.dtypes.to_string())</span>
+<span class="muted">  ↑ ricomincia da zero — ha dimenticato il turno precedente</span>
+  </div>
+
+  <p>
+    La soluzione non era nel modello: era nell'architettura.
+    Il loop ora mantiene una lista <code>messages</code> tra i turni,
+    la inserisce tra il system prompt e la domanda corrente,
+    e gestisce una finestra di contesto per mantenere la coerenza
+    senza eccedere i limiti del modello.
+  </p>
+
+  <h2>Il secondo muro: i protocolli del server</h2>
+
+  <p>
+    Un errore meno ovvio, emerso in produzione. Il server llama.cpp pretende che
+    gli ID dei tool call siano stringhe alfanumeriche di esattamente 9 caratteri.
+    Il modello generava ID come <code>call_0</code>. La richiesta successiva —
+    quella che includeva il risultato dell'esecuzione — veniva rifiutata con HTTP 400.
+  </p>
+
+  <div class="terminal">
+<span class="err">Errore server: {'error': {'code': 400, 'message': 'Tool call IDs
+should be alphanumeric strings with length 9!', 'type': 'invalid_request_error'}}</span>
+  </div>
+
+  <p>
+    Il modello non aveva fatto niente di sbagliato dal punto di vista del ragionamento.
+    Il problema era nel contratto non documentato tra client e server — un dettaglio
+    implementativo di llama.cpp che il modello non poteva conoscere.
+    La correzione: una funzione di sanitizzazione che normalizza
+    gli ID ricevuti prima di appenderli alla cronologia dei messaggi.
+  </p>
+
+  <h2>Il terzo muro: la persistenza della conoscenza</h2>
+
+  <p>
+    Il modello costruiva una mappa merchant valida, poi la perdeva alla sessione successiva.
+    Ogni avvio ripartiva da zero — stessa esplorazione, stesse categorizzazioni,
+    stesso tempo sprecato. La soluzione era un dizionario permanente
+    che salvava ogni decisione approvata: se un merchant era già noto,
+    la risposta veniva da lì senza interrogare il modello.
+  </p>
+
+  <p>
+    Allo stesso modo, una cache del DataFrame preparato evita di rileggere
+    e riapplicare le trasformazioni a ogni avvio. La chiave dell'invalidazione
+    è un fingerprint del playbook di trasformazioni: se il playbook cambia,
+    il DataFrame viene ricostruito; altrimenti si carica dalla cache.
+  </p>
+
+  <h2>Il quarto muro: i dati anomali</h2>
+
+  <p>
+    Alcune righe avevano <code>Data_Operazione</code> vuota. Il modello le saltava silenziosamente,
+    oppure le attribuiva al mese sbagliato. Né il modello né noi potevamo "fixarle"
+    automaticamente senza rischiare di introdurre dati falsi.
+    La risposta architetturale era una HITL queue (<em>Human In The Loop</em>):
+    le righe anomale finiscono in una lista separata, il modello sa che esistono
+    e le esclude dalle aggregazioni, l'umano le rivede manualmente a parte.
+  </p>
+
+  <h2>La tabella dei costi reali</h2>
+
+  <table class="cost-table">
+    <tr>
+      <th>Problema</th>
+      <th>Chi lo risolve</th>
+      <th>Dove</th>
+    </tr>
+    <tr>
+      <td>Categorizzazione semantica dei merchant</td>
+      <td><span class="pill pill-llm">LLM</span></td>
+      <td>Inferenza dal pre-training, nessun codice</td>
+    </tr>
+    <tr>
+      <td>Generazione di Python per aggregazioni</td>
+      <td><span class="pill pill-llm">LLM</span></td>
+      <td>Loop ReAct, tool <code>python_exec</code></td>
+    </tr>
+    <tr>
+      <td>Memoria tra turni della stessa sessione</td>
+      <td><span class="pill pill-arch">Architettura</span></td>
+      <td>Lista <code>messages</code> con finestra di contesto configurabile</td>
+    </tr>
+    <tr>
+      <td>Persistenza tra sessioni diverse</td>
+      <td><span class="pill pill-arch">Architettura</span></td>
+      <td>Dizionario permanente JSON — cresce per accumulazione</td>
+    </tr>
+    <tr>
+      <td>Compatibilità con il server locale</td>
+      <td><span class="pill pill-arch">Architettura</span></td>
+      <td>Sanitizzazione ID tool call prima dell'append alla history</td>
+    </tr>
+    <tr>
+      <td>Evitare ri-esplorazione struttura dataset</td>
+      <td><span class="pill pill-both">Entrambi</span></td>
+      <td>Metadati dataset iniettati nel system prompt + cache parquet</td>
+    </tr>
+    <tr>
+      <td>Righe con dati mancanti o ambigui</td>
+      <td><span class="pill pill-both">Entrambi</span></td>
+      <td>HITL queue: LLM le segnala, umano le risolve</td>
+    </tr>
+    <tr>
+      <td>Trasformazioni permanenti al dataset</td>
+      <td><span class="pill pill-both">Entrambi</span></td>
+      <td>Playbook JSON: LLM propone, umano approva</td>
+    </tr>
+    <tr>
+      <td>Normalizzazione merchant coerente nel tempo</td>
+      <td><span class="pill pill-both">Entrambi</span></td>
+      <td>Loop supervisionato: dizionario umano + LLM few-shot + HITL deviazioni</td>
+    </tr>
+  </table>
+
+  <h2>Un passo oltre: misurare il contributo del modello</h2>
+
+  <p>
+    C'è un problema che la tabella sopra non cattura: come sai se il modello
+    sta diventando più bravo nel tempo? O se il dizionario di correzioni umane
+    sta compensando una debolezza strutturale del modello che non migliorerà mai?
+  </p>
+
+  <p>
+    Nel sistema di preparazione del dataset questo problema
+    è stato affrontato con un ciclo di valutazione supervisionata.
+    A ogni run, dopo aver applicato le correzioni umane permanenti,
+    il sistema rileva le <em>deviazioni</em>: canonici prodotti dall'LLM
+    che sono simili — ma non identici — a un canonico già approvato nel dizionario.
+    Per esempio: <code>"DECATHLON"</code> invece di <code>"Decathlon"</code>,
+    o <code>"Mima X Baranzate"</code> invece di <code>"Mimax Baranzate"</code>.
+  </p>
+
+  <p>
+    Quelle deviazioni vengono reinviate all'LLM con il dizionario aggiornato come
+    esempi few-shot. Se il modello produce ora il canonico corretto, la deviazione
+    è risolta autonomamente — senza intervento umano. Il numero di deviazioni
+    risolte in questo modo è la metrica che misura la qualità della generalizzazione
+    del modello: se cresce run dopo run, il modello sta imparando a estrapolare
+    correttamente dagli esempi; se rimane costante, le correzioni umane compensano
+    ma non insegnano.
+  </p>
+
+  <div class="metric-row">
+    <div class="metric">
+      <div class="label">Score</div>
+      <div class="value">83%</div>
+      <div class="sub">merchant con canonico<br>nel dizionario</div>
+    </div>
+    <div class="metric">
+      <div class="label">Auto-corrette</div>
+      <div class="value">12</div>
+      <div class="sub">solo differenze<br>di maiuscole</div>
+    </div>
+    <div class="metric">
+      <div class="label">LLM resolved</div>
+      <div class="value">31/68</div>
+      <div class="sub">deviazioni risolte<br>autonomamente</div>
+    </div>
+    <div class="metric">
+      <div class="label">HITL pending</div>
+      <div class="value">37</div>
+      <div class="sub">ancora da<br>revisionare</div>
+    </div>
+  </div>
+
+  <p>
+    Le deviazioni che l'LLM non riesce a correggere vengono proposte all'umano
+    una per una — con il canonico prodotto dal modello, il canonico corretto dal dizionario,
+    e la percentuale di similarità. L'umano sceglie: accetta, mantiene, o inserisce
+    un nome diverso. La decisione entra nel dizionario e diventa un esempio
+    per il run successivo.
+  </p>
+
+  <div class="pull">
+    "Il dizionario non è solo una lista di correzioni. È la memoria del sistema —
+    e ogni voce che entra è un esempio in più per il modello.
+    Lo score <code>llm_resolved_deviations</code> misura quanto quella memoria
+    sta diventando istruzione."
+  </div>
+
+  <p>
+    Questa struttura — LLM propone, architettura misura, umano corregge dove il modello
+    non riesce, la correzione rientra nel loop — è la forma più onesta di collaborazione
+    tra modello e sistema. Non si assume che il modello sia perfetto.
+    Non si assume nemmeno che migliori. Si misura, run dopo run.
+  </p>
+
+  <h2>La lezione che si ripete</h2>
+
+  <p>
+    Un LLM è straordinariamente bravo a fare la parte che non puoi pre-codificare:
+    il riconoscimento semantico, la generalizzazione da esempi, il ragionamento in linguaggio naturale
+    su dati strutturati. È quella la magia, ed è reale.
+  </p>
+
+  <p>
+    Ma attorno a quella magia, ogni problema di ingegneria software rimane irrisolto.
+    La memoria, la persistenza, la gestione degli errori, la compatibilità con le API,
+    la coerenza dello stato tra chiamate — niente di tutto questo viene "gratis".
+    Un agente AI non è un programma che si scrive da solo: è un programma che
+    delega una parte del suo comportamento a un modello, e quella delega ha un costo
+    architetturale preciso.
+  </p>
+
+  <div class="pull">
+    Il rischio non è sopravvalutare il modello. È sottovalutare il contorno —
+    e arrivare al deploy con uno strato di scaffolding fragile, non documentato,
+    scritto in fretta per tappare i buchi che il modello non copre.
+  </div>
+
+  <p>
+    Il modo in cui questo progetto ha gestito quel costo: progettare il contorno
+    con la stessa cura del modello. Ogni problema emerso sul campo — la memoria,
+    gli ID anomali, la persistenza, i dati mancanti — ha ricevuto una soluzione
+    esplicita, testabile, documentata nel codice. Non un workaround.
+    Un pezzo di architettura con un motivo.
+  </p>
+
+  <p>
+    Questo è il lavoro reale con i modelli linguistici. Non il prompt.
+    Il sistema che lo circonda.
+  </p>
+
+  <div class="note">
+    <strong>Approfondimento:</strong> <a href="slm-dimensioni.html" style="color:var(--accent2)">Le dimensioni contano</a> — il percorso teorico dal modello from scratch al riconoscimento del pavimento qualitativo, e la mappa dei modelli italiani disponibili.
+  </div>
+
+  <div class="closer">
+    Progetto: SLM · Modelli testati: Ministral-3B, Mistral-Nemo-Instruct-2407<br>
+    Stack: llama.cpp · Python 3.12 · pandas · ReAct loop · dizionario supervisionato
+  </div>
+
+</div>
+</body>
+</html>

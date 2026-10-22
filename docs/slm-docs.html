@@ -1360,6 +1360,7 @@ model = load_lora(model, 'adapter.pt')</code></pre>
     <tr><td><strong>Backpropagation</strong></td><td>Algoritmo che calcola il gradiente della loss rispetto a ogni parametro applicando la chain rule all'indietro nel grafo computazionale</td></tr>
     <tr><td><strong>BPE</strong></td><td>Byte Pair Encoding — algoritmo che costruisce un vocabolario di sotto-parole fondendo iterativamente le coppie di caratteri più frequenti</td></tr>
     <tr><td><strong>Causal mask</strong></td><td>Matrice triangolare inferiore che impedisce a ogni token di vedere i token futuri durante l'attenzione</td></tr>
+    <tr><td><strong>Context window</strong></td><td>Numero massimo di token che il modello può ricevere in una singola richiesta (prompt + risposta). Oltre questa soglia il modello non vede il testo precedente. Nei modelli locali dipende dall'architettura e dalla RAM disponibile — ad es. Ministral-3B ha una finestra di 32k token</td></tr>
     <tr><td><strong>Cross-entropy loss</strong></td><td>$-\log(p_{\text{corretta}})$ — misura quanto il modello è sorpreso dal token corretto. Valore atteso con pesi casuali: $\log(\text{vocab\_size})$</td></tr>
     <tr><td><strong>Decoder-only</strong></td><td>Architettura transformer senza encoder: riceve solo il contesto precedente, genera un token alla volta</td></tr>
     <tr><td><strong>Dropout</strong></td><td>Regolarizzazione: spegne casualmente una frazione di neuroni durante il training, prevenendo l'overfitting</td></tr>
